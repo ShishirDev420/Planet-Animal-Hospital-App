@@ -1,5 +1,5 @@
 {
   "name": "Planet Animal Hospital App",
   "description": "A mobile-first progressive web app for pet parents to track health, earn rewards, and consult with an AI vet assistant.",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["microphone"]
 }
