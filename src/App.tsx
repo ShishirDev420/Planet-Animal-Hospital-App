@@ -8,6 +8,9 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ProactivePlans from './pages/ProactivePlans';
 import AIVet from './pages/AIVet';
+import ProfileSelection from './pages/ProfileSelection';
+import CreateProfile from './pages/CreateProfile';
+import ProfileSettings from './pages/ProfileSettings';
 
 // Placeholders for other routes
 const Placeholder = ({ title }: { title: string }) => (
@@ -23,6 +26,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/profiles" element={<ProfileSelection />} />
+        <Route path="/create-profile" element={<CreateProfile />} />
+        <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="plans" element={<ProactivePlans />} />

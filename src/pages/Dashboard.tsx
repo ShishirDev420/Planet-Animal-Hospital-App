@@ -1,14 +1,97 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, CheckCircle2, Syringe, Sparkles, Stethoscope } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2 
+} from 'lucide-react';
+import Logo from '../components/Logo';
+import DualAvatar from '../components/DualAvatar';
+import { useProfileImages } from '../hooks/useProfileImages';
+
+const SERVICE_MENU = [
+  {
+    category: "Grooming Spa",
+    icon: <Sparkles size={18} />,
+    items: [
+      { name: "Standard Spa Session", price: "₹1,199" },
+      { name: "Medicated Bath (Tick/Flea/Fungal)", price: "₹1,499" }
+    ]
+  },
+  {
+    category: "General Checkup",
+    icon: <Stethoscope size={18} />,
+    items: [
+      { name: "Standard Wellness Check", price: "₹500" },
+      { name: "Emergency Checkup (Skip the line)", price: "₹1,200" }
+    ]
+  },
+  {
+    category: "Dental Scaling",
+    icon: <Dog size={18} />,
+    items: [
+      { name: "Dental Scaling Consultation", price: "₹450" },
+      { name: "Full Dental Scaling", price: "₹2,500" }
+    ]
+  },
+  {
+    category: "Vaccinations (Dog Specific)",
+    icon: <Syringe size={18} />,
+    items: [
+      { name: "Anti-Rabies", price: "₹400" },
+      { name: "7-in-1 Combo (DHPPiL)", price: "₹950" },
+      { name: "Bordetella (Kennel Cough)", price: "₹800" }
+    ]
+  },
+  {
+    category: "Skin Checkup",
+    icon: <FileText size={18} />,
+    items: [
+      { name: "Skin Issues Consultation", price: "₹650" }
+    ]
+  }
+];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { harshalImage, johnnyImage } = useProfileImages();
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  
+  // Booking State
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>("Grooming Spa");
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const closeModal = () => {
     setActiveModal(null);
-    setTimeout(() => setBookingConfirmed(false), 300); // reset after close animation
+    setTimeout(() => {
+      setSelectedServices([]);
+      setExpandedCategory("Grooming Spa");
+      setIsConnecting(false);
+    }, 300); // reset after close animation
+  };
+
+  const toggleService = (serviceName: string) => {
+    setSelectedServices(prev => 
+      prev.includes(serviceName) 
+        ? prev.filter(s => s !== serviceName)
+        : [...prev, serviceName]
+    );
+  };
+
+  const handleConfirmBooking = () => {
+    if (selectedServices.length === 0) return;
+    setIsConnecting(true);
+    
+    setTimeout(() => {
+      const serviceList = selectedServices.map(s => `- ${s}`).join('\n');
+      const message = `Hi Planet Animal Hospital! 🐾 I am reaching out from the app. I would like to book the following for my pet:\n${serviceList}\nCould you let me know what times are available today or tomorrow?`;
+      
+      window.open('https://wa.me/919004290923?text=' + encodeURIComponent(message), '_blank');
+      
+      setIsConnecting(false);
+      closeModal();
+    }, 500);
   };
 
   return (
@@ -16,18 +99,27 @@ export default function Dashboard() {
       {/* Header with Logo */}
       <header className="flex justify-between items-start pt-4">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 bg-planet-yellow rounded-full flex items-center justify-center shadow-sm">
-              <Dog size={16} className="text-black" />
+          <button onClick={() => navigate('/profiles')} className="flex items-center gap-3 mb-4 group text-left">
+            <div className="animate-sync-heartbeat origin-left">
+              <Logo className="!w-16 !h-16" />
             </div>
-            <span className="font-black tracking-tight text-sm uppercase text-slate-800">Planet Animal</span>
+            <div>
+              <span className="font-black tracking-tight text-lg uppercase text-slate-800 block leading-none">Planet Animal</span>
+              <span className="text-planet-yellow font-bold tracking-[0.2em] text-[9px] uppercase">Hospital & Wellness</span>
+            </div>
+          </button>
+          <h1 className="text-2xl font-bold tracking-tight">Hi, Harshal 👋</h1>
+          <p className="text-slate-500 text-sm">Let's keep Johnny healthy today.</p>
+        </div>
+        <button onClick={() => navigate('/settings')} className="shrink-0">
+          <div className="animate-sync-heartbeat origin-center">
+            <DualAvatar 
+              leftImage={harshalImage}
+              rightImage={johnnyImage}
+              className="w-16 h-16"
+            />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Hi, Sarah 👋</h1>
-          <p className="text-slate-500 text-sm">Let's keep Max healthy today.</p>
-        </div>
-        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0">
-          <img src="https://picsum.photos/seed/sarah/100/100" alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-        </div>
+        </button>
       </header>
 
       {/* Points Wallet - Glass Card */}
@@ -121,52 +213,94 @@ export default function Dashboard() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-2xl rounded-t-3xl z-[70] p-6 pb-12 border-t border-white/50 shadow-2xl max-h-[85vh] overflow-y-auto hide-scrollbar"
+              className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-2xl rounded-t-3xl z-[70] p-6 pb-12 border-t border-white/50 shadow-2xl max-h-[85vh] overflow-y-auto hide-scrollbar flex flex-col"
             >
-              <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-6 shrink-0" />
               
               {activeModal === 'book' && (
-                <div>
-                  <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col h-full">
+                  <div className="flex justify-between items-center mb-6 shrink-0">
                     <h2 className="text-2xl font-bold">Book a Visit</h2>
                     <button onClick={closeModal} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={20}/></button>
                   </div>
                   
-                  {!bookingConfirmed ? (
-                    <div className="space-y-3">
-                      <ServiceOption icon={<Stethoscope />} title="General Checkup" points="+100 pts" />
-                      <ServiceOption icon={<Sparkles />} title="Grooming Spa" points="+150 pts" />
-                      <ServiceOption icon={<Syringe />} title="Vaccination" points="+50 pts" />
-                      <ServiceOption icon={<Dog />} title="Dental Scaling" points="+300 pts" />
-                      
-                      <button 
-                        onClick={() => setBookingConfirmed(true)}
-                        className="w-full mt-6 bg-planet-yellow text-black py-4 rounded-xl font-bold text-lg shadow-lg shadow-planet-yellow/20 active:scale-95 transition-transform"
-                      >
-                        Confirm Booking
-                      </button>
-                    </div>
-                  ) : (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-8"
-                    >
-                      <div className="w-20 h-20 bg-teal-100 text-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 size={40} />
+                  <div className="space-y-4 overflow-y-auto hide-scrollbar pb-4 flex-1">
+                    {SERVICE_MENU.map((category) => (
+                      <div key={category.category} className="bg-white/60 rounded-2xl border border-white overflow-hidden shadow-sm">
+                        <button 
+                          onClick={() => setExpandedCategory(expandedCategory === category.category ? null : category.category)}
+                          className="w-full flex items-center justify-between p-4 bg-white/40 active:bg-white/60 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="text-slate-500">{category.icon}</div>
+                            <span className="font-bold text-slate-800">{category.category}</span>
+                          </div>
+                          {expandedCategory === category.category ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+                        </button>
+                        
+                        <AnimatePresence>
+                          {expandedCategory === category.category && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-2 space-y-2 bg-slate-50/50">
+                                {category.items.map((item) => {
+                                  const isSelected = selectedServices.includes(item.name);
+                                  return (
+                                    <div 
+                                      key={item.name}
+                                      onClick={() => toggleService(item.name)}
+                                      className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border ${
+                                        isSelected 
+                                          ? 'bg-planet-yellow/10 border-planet-yellow shadow-sm' 
+                                          : 'bg-white border-transparent hover:border-slate-200'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                                          isSelected ? 'border-planet-yellow bg-planet-yellow text-black' : 'border-slate-300'
+                                        }`}>
+                                          {isSelected && <CheckCircle2 size={14} />}
+                                        </div>
+                                        <span className={`text-sm ${isSelected ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
+                                          {item.name}
+                                        </span>
+                                      </div>
+                                      <span className="text-xs font-bold text-slate-500">{item.price}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                      <h3 className="text-xl font-bold mb-2">Booking Requested!</h3>
-                      <p className="text-slate-500 text-sm leading-relaxed">
-                        We've received your request. Our front desk will call you shortly to confirm the exact time and details.
-                      </p>
-                      <button 
-                        onClick={closeModal}
-                        className="w-full mt-8 bg-slate-900 text-white py-4 rounded-xl font-bold active:scale-95 transition-transform"
-                      >
-                        Done
-                      </button>
-                    </motion.div>
-                  )}
+                    ))}
+                  </div>
+
+                  <div className="pt-4 mt-auto shrink-0 bg-white/90 backdrop-blur-md border-t border-slate-100">
+                    <button 
+                      onClick={handleConfirmBooking}
+                      disabled={selectedServices.length === 0 || isConnecting}
+                      className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${
+                        selectedServices.length === 0
+                          ? 'bg-slate-200 text-slate-400 shadow-none'
+                          : 'bg-planet-yellow text-black shadow-planet-yellow/20 active:scale-95'
+                      }`}
+                    >
+                      {isConnecting ? (
+                        <>
+                          <Loader2 size={20} className="animate-spin" />
+                          Connecting to WhatsApp...
+                        </>
+                      ) : (
+                        `Confirm Booking (${selectedServices.length})`
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -223,18 +357,6 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
         <h4 className="font-bold text-slate-800 text-sm">{title}</h4>
         <p className="text-xs text-slate-500">{subtitle}</p>
       </div>
-    </div>
-  );
-}
-
-function ServiceOption({ icon, title, points }: { icon: React.ReactNode, title: string, points: string }) {
-  return (
-    <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-white/50 active:bg-slate-50 cursor-pointer transition-colors">
-      <div className="flex items-center gap-4">
-        <div className="text-slate-400">{icon}</div>
-        <span className="font-bold text-slate-700">{title}</span>
-      </div>
-      <span className="text-xs font-bold text-planet-yellow bg-planet-yellow/10 px-2 py-1 rounded-md">{points}</span>
     </div>
   );
 }

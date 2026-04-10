@@ -1,10 +1,12 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { Home, ShieldPlus, Bot, Map, HeartHandshake } from 'lucide-react';
 import { cn } from '../lib/utils';
+import SplashScreen from './SplashScreen';
 
 export default function Layout() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans relative overflow-hidden flex justify-center">
+      <SplashScreen />
       {/* Background Blobs for Glassmorphism - Fixed to prevent scroll flickering */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
         <div className="relative w-full max-w-md h-full">
