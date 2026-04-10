@@ -97,29 +97,34 @@ export default function Dashboard() {
   return (
     <div className="p-6 space-y-8 pb-32">
       {/* Header with Logo */}
-      <header className="flex justify-between items-start pt-4">
-        <div>
-          <button onClick={() => navigate('/profiles')} className="flex items-center gap-3 mb-4 group text-left">
+      <header className="pt-4 mb-2">
+        <div className="flex justify-between items-center relative mb-6">
+          <button onClick={() => navigate('/profiles')} className="shrink-0 group z-10">
             <div className="animate-sync-heartbeat origin-left">
               <Logo className="!w-16 !h-16" />
             </div>
-            <div>
-              <span className="font-black tracking-tight text-lg uppercase text-slate-800 block leading-none">Planet Animal</span>
-              <span className="text-planet-yellow font-bold tracking-[0.2em] text-[9px] uppercase">Hospital & Wellness</span>
+          </button>
+          
+          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-start pointer-events-none whitespace-nowrap z-0">
+            <span className="font-black tracking-tight text-lg uppercase text-slate-800 block leading-none">Planet Animal</span>
+            <span className="text-planet-yellow font-bold tracking-[0.2em] text-[9px] uppercase mt-1">Hospital & Wellness</span>
+          </div>
+
+          <button onClick={() => navigate('/settings')} className="shrink-0 z-10">
+            <div className="animate-sync-heartbeat origin-center">
+              <DualAvatar 
+                leftImage={harshalImage}
+                rightImage={johnnyImage}
+                className="w-16 h-16"
+              />
             </div>
           </button>
+        </div>
+
+        <div>
           <h1 className="text-2xl font-bold tracking-tight">Hi, Harshal 👋</h1>
           <p className="text-slate-500 text-sm">Let's keep Johnny healthy today.</p>
         </div>
-        <button onClick={() => navigate('/settings')} className="shrink-0">
-          <div className="animate-sync-heartbeat origin-center">
-            <DualAvatar 
-              leftImage={harshalImage}
-              rightImage={johnnyImage}
-              className="w-16 h-16"
-            />
-          </div>
-        </button>
       </header>
 
       {/* Points Wallet - Glass Card */}
