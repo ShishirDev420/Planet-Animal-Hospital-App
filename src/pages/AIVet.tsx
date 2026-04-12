@@ -83,6 +83,15 @@ export default function AIVet() {
   const silenceFramesRef = useRef(0);
   const activeAudioNodesRef = useRef<AudioBufferSourceNode[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Queueing and State Refs
+  const audioQueueRef = useRef<AudioBuffer[]>([]);
+  const isIgnoringAudioRef = useRef(false);
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,6 +111,9 @@ export default function AIVet() {
     setVolume(0);
     setIsUserSpeaking(false);
     setIsThinking(false);
+    
+    audioQueueRef.current = [];
+    isIgnoringAudioRef.current = false;
     
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     if (processorRef.current) {
@@ -140,6 +152,36 @@ export default function AIVet() {
       audioCtxRef.current = audioCtx;
       nextPlayTimeRef.current = audioCtx.currentTime;
 
+      const scheduleAudio = () => {
+        if (!audioCtxRef.current) return;
+        const currentTime = audioCtxRef.current.currentTime;
+        
+        if (nextPlayTimeRef.current < currentTime) {
+          nextPlayTimeRef.current = currentTime;
+        }
+
+        while (audioQueueRef.current.length > 0) {
+          // Lookahead of 0.5 seconds to ensure gapless playback without over-queueing
+          if (nextPlayTimeRef.current - currentTime > 0.5) {
+            break;
+          }
+
+          const buffer = audioQueueRef.current.shift()!;
+          const sourceNode = audioCtxRef.current.createBufferSource();
+          sourceNode.buffer = buffer;
+          sourceNode.connect(audioCtxRef.current.destination);
+
+          sourceNode.onended = () => {
+            activeAudioNodesRef.current = activeAudioNodesRef.current.filter(n => n !== sourceNode);
+            scheduleAudio();
+          };
+
+          activeAudioNodesRef.current.push(sourceNode);
+          sourceNode.start(nextPlayTimeRef.current);
+          nextPlayTimeRef.current += buffer.duration;
+        }
+      };
+
       // 2. Get Microphone
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -177,7 +219,7 @@ export default function AIVet() {
                   if (last && last.role === 'ai' && !last.isComplete) {
                     return [...prev.slice(0, -1), { ...last, text: last.text + part.text }];
                   } else {
-                    return [...prev, { id: Date.now().toString() + Math.random(), role: 'ai', text: part.text, isComplete: false }];
+                    return [...prev, { id: crypto.randomUUID(), role: 'ai', text: part.text, isComplete: false }];
                   }
                 });
                 setIsThinking(false);
@@ -185,6 +227,7 @@ export default function AIVet() {
             }
 
             if (message.serverContent?.turnComplete) {
+               isIgnoringAudioRef.current = false;
                setMessages(prev => {
                  const last = prev[prev.length - 1];
                  if (last && last.role === 'ai') {
@@ -194,9 +237,16 @@ export default function AIVet() {
                });
             }
 
+            // Handle Interruption
+            if (message.serverContent?.interrupted) {
+              isIgnoringAudioRef.current = false;
+              audioQueueRef.current = [];
+              nextPlayTimeRef.current = audioCtxRef.current?.currentTime || 0;
+            }
+
             // Handle Audio Playback
             const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio && audioCtxRef.current) {
+            if (base64Audio && audioCtxRef.current && !isIgnoringAudioRef.current) {
               const int16Data = base64ToInt16Array(base64Audio);
               const float32Data = int16ToFloat32(int16Data);
               
@@ -205,23 +255,8 @@ export default function AIVet() {
               const buffer = audioCtxRef.current.createBuffer(1, float32Data.length, 24000);
               buffer.getChannelData(0).set(float32Data);
               
-              const sourceNode = audioCtxRef.current.createBufferSource();
-              sourceNode.buffer = buffer;
-              sourceNode.connect(audioCtxRef.current.destination);
-              
-              sourceNode.onended = () => {
-                activeAudioNodesRef.current = activeAudioNodesRef.current.filter(n => n !== sourceNode);
-              };
-              activeAudioNodesRef.current.push(sourceNode);
-              
-              const startTime = Math.max(nextPlayTimeRef.current, audioCtxRef.current.currentTime);
-              sourceNode.start(startTime);
-              nextPlayTimeRef.current = startTime + buffer.duration;
-            }
-
-            // Handle Interruption
-            if (message.serverContent?.interrupted) {
-              nextPlayTimeRef.current = audioCtxRef.current?.currentTime || 0;
+              audioQueueRef.current.push(buffer);
+              scheduleAudio();
             }
           }
         },
@@ -278,12 +313,20 @@ export default function AIVet() {
             setIsUserSpeaking(true);
             setIsThinking(false);
             
-            // Execute Kill Switch if AI is currently speaking/queued
-            if (activeAudioNodesRef.current.length > 0) {
+            const lastMsg = messagesRef.current[messagesRef.current.length - 1];
+            const isAIResponding = lastMsg && lastMsg.role === 'ai' && !lastMsg.isComplete;
+            const hasAudio = activeAudioNodesRef.current.length > 0 || audioQueueRef.current.length > 0;
+
+            // Execute Kill Switch if AI is currently speaking/queued or responding
+            if (hasAudio || isAIResponding) {
+              isIgnoringAudioRef.current = true;
+              audioQueueRef.current = [];
+
               activeAudioNodesRef.current.forEach(node => {
                 try { node.stop(); } catch (e) {}
               });
               activeAudioNodesRef.current = [];
+              
               if (audioCtxRef.current) {
                 nextPlayTimeRef.current = audioCtxRef.current.currentTime;
               }
@@ -298,16 +341,8 @@ export default function AIVet() {
 
               // Contextual Interruption Awareness
               if (sessionRef.current) {
-                sessionRef.current.send({
-                  clientContent: {
-                    turns: [
-                      {
-                        role: "user",
-                        parts: [{ text: "[System Note: The user interrupted you mid-sentence here. Acknowledge the new input naturally.]" }]
-                      }
-                    ],
-                    turnComplete: true
-                  }
+                sessionRef.current.sendRealtimeInput({
+                  text: "[System Note: The user interrupted you mid-sentence here. Acknowledge the new input naturally.]"
                 });
               }
             }
@@ -320,7 +355,7 @@ export default function AIVet() {
               isSpeakingRef.current = false;
               setIsUserSpeaking(false);
               setIsThinking(true);
-              setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: '🎤 Voice message sent', isComplete: true }]);
+              setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'user', text: '🎤 Voice message sent', isComplete: true }]);
             }
           }
         }

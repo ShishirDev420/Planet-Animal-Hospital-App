@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate, animate, Reorder } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
@@ -241,6 +241,24 @@ export default function Dashboard() {
   const [verifiedPoints, setVerifiedPoints] = useState(4450);
   const [pendingPoints, setPendingPoints] = useState(0);
   const [pendingActions, setPendingActions] = useState<string[]>([]);
+  const [incentivesOrder, setIncentivesOrder] = useState(getPersonalizedIncentives(petProfile));
+
+  // Mouse tracking for Paw Points Card
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const glareBackground = useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(255,255,255,0.4), transparent 80%)`;
+
+  const handleCardMouseMove = ({ currentTarget, clientX, clientY }: React.MouseEvent) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  };
+
+  const handleCardMouseLeave = ({ currentTarget }: React.MouseEvent) => {
+    const { width, height } = currentTarget.getBoundingClientRect();
+    animate(mouseX, width / 2, { type: 'spring', stiffness: 150, damping: 15 });
+    animate(mouseY, height / 2, { type: 'spring', stiffness: 150, damping: 15 });
+  };
 
   const handleEmailSignIn = async () => {
     setIsEmailLoading(true);
@@ -523,15 +541,17 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center z-10">
-            <button onClick={() => navigate('/settings')} className="shrink-0">
-              <div className="animate-sync-heartbeat origin-center">
-                <DualAvatar 
-                  leftImage={harshalImage}
-                  rightImage={johnnyImage}
-                  className="w-16 h-16"
-                />
-              </div>
-            </button>
+            <MagneticWrapper className="rounded-full">
+              <button onClick={() => navigate('/settings')} className="shrink-0 block">
+                <div className="animate-sync-heartbeat origin-center">
+                  <DualAvatar 
+                    leftImage={harshalImage}
+                    rightImage={johnnyImage}
+                    className="w-16 h-16"
+                  />
+                </div>
+              </button>
+            </MagneticWrapper>
           </div>
         </div>
 
@@ -546,9 +566,15 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        onMouseMove={handleCardMouseMove}
+        onMouseLeave={handleCardMouseLeave}
         className="bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] rounded-[2rem] p-6 relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-planet-yellow/20 rounded-full blur-2xl -mr-10 -mt-10"></div>
+        <motion.div 
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{ background: glareBackground }}
+        />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-planet-yellow/20 rounded-full blur-2xl -mr-10 -mt-10 z-0"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full backdrop-blur-md border border-white/60 shadow-sm">
@@ -591,17 +617,21 @@ export default function Dashboard() {
           </div>
           
           <div className="flex gap-3 mt-6">
-            <button className="flex-1 bg-slate-900 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 active:scale-95 transition-transform text-sm">
-              <QrCode size={16} />
-              Scan to Earn
-            </button>
-            <button 
-              onClick={() => setActiveModal('redeem')}
-              className="flex-1 bg-white/80 backdrop-blur-md text-slate-900 border border-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform text-sm"
-            >
-              <Gift size={16} className="text-planet-yellow" />
-              Redeem
-            </button>
+            <MagneticWrapper className="flex-1 rounded-xl">
+              <button className="w-full h-full bg-slate-900 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 transition-transform text-sm">
+                <QrCode size={16} />
+                Scan to Earn
+              </button>
+            </MagneticWrapper>
+            <MagneticWrapper className="flex-1 rounded-xl">
+              <button 
+                onClick={() => setActiveModal('redeem')}
+                className="w-full h-full bg-white/80 backdrop-blur-md text-slate-900 border border-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm transition-transform text-sm"
+              >
+                <Gift size={16} className="text-planet-yellow" />
+                Redeem
+              </button>
+            </MagneticWrapper>
           </div>
         </div>
       </motion.div>
@@ -649,45 +679,44 @@ export default function Dashboard() {
         {/* The Shelf Effect */}
         <div className="absolute bottom-8 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none z-0" />
 
-        <div 
-          ref={carouselRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          className={`flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-6 pb-8 -mx-6 px-6 relative z-10 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        <Reorder.Group 
+          axis="x" 
+          values={incentivesOrder} 
+          onReorder={setIncentivesOrder} 
+          className="flex overflow-x-scroll hide-scrollbar gap-4 py-10 -my-10 relative z-10"
         >
-          {getPersonalizedIncentives(petProfile).map((incentive) => (
-            <EarnCard 
-              key={incentive.id}
-              id={incentive.id}
-              title={incentive.title}
-              subtext={incentive.subtext}
-              pointsText={incentive.pointsText}
-              pointsValue={incentive.pointsValue}
-              highValue={incentive.highValue}
-              theme={incentive.theme}
-              isPending={pendingActions.includes(incentive.id)}
-              onBook={async (id, val, title) => {
-                if (!userId) return;
-                try {
-                  await addDoc(collection(db, 'pointsQueue'), {
-                    userId: userId,
-                    parent: 'Harshal',
-                    pet: 'Johnny (American Bully, Age 8)',
-                    service: title,
-                    points: val,
-                    status: 'pending',
-                    actionId: id
-                  });
-                } catch (e) {
-                  handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
-                }
-                window.open(generateWhatsAppPayload(title), '_blank');
-              }} 
-            />
+          {incentivesOrder.map((incentive) => (
+            <Reorder.Item value={incentive} key={incentive.id} className="flex-none w-[320px] group">
+              <EarnCard 
+                id={incentive.id}
+                title={incentive.title}
+                subtext={incentive.subtext}
+                pointsText={incentive.pointsText}
+                pointsValue={incentive.pointsValue}
+                highValue={incentive.highValue}
+                theme={incentive.theme}
+                isPending={pendingActions.includes(incentive.id)}
+                onBook={async (id, val, title) => {
+                  if (!userId) return;
+                  try {
+                    await addDoc(collection(db, 'pointsQueue'), {
+                      userId: userId,
+                      parent: 'Harshal',
+                      pet: 'Johnny (American Bully, Age 8)',
+                      service: title,
+                      points: val,
+                      status: 'pending',
+                      actionId: id
+                    });
+                  } catch (e) {
+                    handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
+                  }
+                  window.open(generateWhatsAppPayload(title), '_blank');
+                }} 
+              />
+            </Reorder.Item>
           ))}
-        </div>
+        </Reorder.Group>
       </div>
 
       {/* Modals / Bottom Sheets */}
@@ -865,6 +894,45 @@ function RewardOption({ title, points }: { title: string, points: string }) {
   );
 }
 
+function MagneticWrapper({ children, className }: { children: React.ReactNode, className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return;
+    const { clientX, clientY } = e;
+    const { width, height, left, top } = ref.current.getBoundingClientRect();
+    const x = clientX - (left + width / 2);
+    const y = clientY - (top + height / 2);
+    
+    const cappedX = Math.max(-15, Math.min(15, x * 0.3));
+    const cappedY = Math.max(-15, Math.min(15, y * 0.3));
+
+    setPosition({ x: cappedX, y: cappedY });
+  };
+
+  const handleMouseLeave = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+      whileTap={{ scale: 0.92, transition: { type: "spring", stiffness: 400, damping: 17 } }}
+      className={`relative group ${className || ''}`}
+    >
+      <div className="absolute inset-0 rounded-[inherit] bg-white/0 group-hover:bg-white/20 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 pointer-events-none z-0" />
+      <div className="relative z-10 w-full h-full">
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
 function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPending, theme = 'yellow', onBook }: { id: string, title: string, subtext?: string, pointsText: string, pointsValue: number, highValue?: boolean, isPending: boolean, theme?: 'blue' | 'orange' | 'green' | 'purple' | 'yellow', onBook: (id: string, points: number, title: string) => void }) {
   const themeGradients = {
     blue: 'from-blue-400/20',
@@ -891,7 +959,10 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
   };
 
   return (
-    <div className={`snap-start relative min-w-[240px] shrink-0 flex flex-col p-6 bg-white/10 backdrop-blur-[60px] rounded-[2.5rem] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] ${glowShadows[theme]} overflow-hidden group border border-white/40`}>
+    <motion.div 
+      whileHover={{ scale: 1.05 }}
+      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col p-6 bg-white/10 backdrop-blur-[60px] rounded-[2.5rem] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out ${glowShadows[theme]} overflow-hidden group border border-white/40 cursor-grab active:cursor-grabbing w-full h-full`}
+    >
       {/* Dynamic Gradient Background */}
       <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${themeGradients[theme]} via-transparent to-transparent pointer-events-none`} />
       
@@ -910,18 +981,20 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
           {pointsText}
         </p>
         
-        <button 
-          onClick={() => onBook(id, pointsValue, title)}
-          disabled={isPending}
-          className={`mt-auto text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
-            isPending 
-              ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-              : 'bg-slate-900/80 backdrop-blur-xl border border-white/10 text-white hover:bg-slate-900 active:scale-95'
-          }`}
-        >
-          {isPending ? 'Pending Confirmation' : 'Book Now'}
-        </button>
+        <MagneticWrapper className="mt-auto w-full rounded-xl">
+          <button 
+            onClick={() => onBook(id, pointsValue, title)}
+            disabled={isPending}
+            className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
+              isPending 
+                ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
+                : 'bg-slate-900/80 backdrop-blur-xl border border-white/10 text-white hover:bg-slate-900'
+            }`}
+          >
+            {isPending ? 'Pending Confirmation' : 'Book Now'}
+          </button>
+        </MagneticWrapper>
       </div>
-    </div>
+    </motion.div>
   );
 }
