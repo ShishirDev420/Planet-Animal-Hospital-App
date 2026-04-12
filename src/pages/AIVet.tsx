@@ -214,7 +214,8 @@ export default function AIVet() {
           sum += dataArray[i];
         }
         const avg = sum / dataArray.length;
-        const normalized = Math.min(1, avg / 128); // Normalize 0-1
+        // Amplify the volume to make it more responsive
+        const normalized = Math.min(1, avg / 64); // Normalize 0-1 with higher sensitivity
         
         setVolume(normalized);
         animationFrameRef.current = requestAnimationFrame(updateVolume);
@@ -239,7 +240,7 @@ export default function AIVet() {
 
   const orbScale = isActive ? 1 + (volume * 0.4) : 1;
   const orbGlow = isActive 
-    ? `0 0 ${60 + volume * 40}px rgba(250,204,21,${0.3 + volume * 0.3}), inset 0 0 ${40 + volume * 20}px rgba(250,204,21,${0.2 + volume * 0.2})` 
+    ? `0 0 ${60 + volume * 100}px rgba(250,204,21,${0.4 + volume * 0.6}), inset 0 0 ${40 + volume * 60}px rgba(250,204,21,${0.3 + volume * 0.5})` 
     : '0 0 0px rgba(250,204,21,0)';
 
   return (
@@ -280,16 +281,16 @@ export default function AIVet() {
             scale: orbScale,
             boxShadow: orbGlow
           }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          transition={{ type: "spring", stiffness: 800, damping: 25, mass: 0.5 }}
           className="relative w-56 h-56 rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 flex items-center justify-center overflow-hidden cursor-pointer"
           onClick={!isActive ? startConversation : undefined}
         >
           {/* Inner Core */}
           <motion.div 
             animate={{
-              scale: isActive ? 0.8 + (volume * 0.5) : 0.8,
+              scale: isActive ? 0.8 + (volume * 0.6) : 0.8,
             }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            transition={{ type: "spring", stiffness: 800, damping: 25, mass: 0.5 }}
             className="w-28 h-28 rounded-full bg-gradient-to-br from-planet-yellow to-orange-400 blur-md opacity-80"
           ></motion.div>
           

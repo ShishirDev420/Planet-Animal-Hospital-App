@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -8,6 +8,7 @@ import {
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
+import { usePawPoints } from '../hooks/usePawPoints';
 
 const SERVICE_MENU = [
   {
@@ -52,21 +53,161 @@ const SERVICE_MENU = [
   }
 ];
 
+const petProfile = { name: 'Johnny', breed: 'American Bully', age: 8, isSenior: true };
+
+function getPersonalizedIncentives(pet: { name: string, breed: string, age: number, isSenior: boolean }) {
+  const incentives = [];
+
+  if (pet.isSenior) {
+    incentives.push({
+      id: "senior-health",
+      title: "Senior Health Screening",
+      subtext: "Specialized care for the golden years.",
+      pointsText: "+1,200 pts",
+      pointsValue: 1200,
+      highValue: true,
+      theme: "blue" as const
+    });
+  }
+
+  const breedLower = pet.breed.toLowerCase();
+  if (breedLower.includes('bully') || breedLower.includes('pug')) {
+    incentives.push({
+      id: "joint-mobility",
+      title: "Joint & Mobility Check",
+      subtext: "Keep those joints healthy.",
+      pointsText: "+800 pts",
+      pointsValue: 800,
+      highValue: true,
+      theme: "blue" as const
+    });
+    incentives.push({
+      id: "respiratory-wellness",
+      title: "Respiratory Wellness",
+      subtext: "Breathe easy and stay active.",
+      pointsText: "+700 pts",
+      pointsValue: 700,
+      theme: "green" as const
+    });
+  } else if (breedLower.includes('golden retriever')) {
+    incentives.push({
+      id: "advanced-grooming",
+      title: "Advanced Grooming Spa",
+      subtext: "Deep clean for that golden coat.",
+      pointsText: "+900 pts",
+      pointsValue: 900,
+      highValue: true,
+      theme: "yellow" as const
+    });
+  }
+
+  // Standard baseline options
+  incentives.push({
+    id: "general-checkup",
+    title: "General Checkup",
+    subtext: "Standard wellness check.",
+    pointsText: "+1,000 pts",
+    pointsValue: 1000,
+    highValue: true,
+    theme: "yellow" as const
+  });
+  
+  incentives.push({
+    id: "vaccinations",
+    title: "Vaccinations",
+    subtext: "Keep them protected.",
+    pointsText: "+750 pts",
+    pointsValue: 750,
+    theme: "yellow" as const
+  });
+
+  incentives.push({
+    id: "social-spotlight",
+    title: "Social Spotlight",
+    subtext: "Tag us in a pic of your pet!",
+    pointsText: "+300 pts",
+    pointsValue: 300,
+    theme: "purple" as const
+  });
+
+  return incentives;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { harshalImage, johnnyImage } = useProfileImages();
+  const { verifiedPoints, pendingPoints, pendingActions, addPoints } = usePawPoints();
   const [activeModal, setActiveModal] = useState<string | null>(null);
   
   // Booking State
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>("Grooming Spa");
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+
+  // Drag-to-Scroll State
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!carouselRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - carouselRef.current.offsetLeft);
+    setScrollLeft(carouselRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !carouselRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - carouselRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    carouselRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  // Wheel-to-Horizontal-Scroll Logic
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    let isThrottled = false;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Prevent vertical scrolling of the page
+      e.preventDefault();
+      
+      if (isThrottled) return;
+      isThrottled = true;
+      
+      // Translate vertical wheel movement to horizontal scrolling
+      carousel.scrollBy({ left: e.deltaY > 0 ? 400 : -400, behavior: 'smooth' });
+      
+      setTimeout(() => {
+        isThrottled = false;
+      }, 400);
+    };
+
+    // Attach non-passive event listener to allow preventDefault()
+    carousel.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      carousel.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   const closeModal = () => {
     setActiveModal(null);
     setTimeout(() => {
       setSelectedServices([]);
-      setExpandedCategory("Grooming Spa");
+      setExpandedCategory(null);
       setIsConnecting(false);
     }, 300); // reset after close animation
   };
@@ -146,8 +287,33 @@ export default function Dashboard() {
           </div>
           <h2 className="text-slate-600 text-sm font-medium mb-1">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-black tracking-tighter text-slate-800">2,450</span>
+            <span className="text-5xl font-black tracking-tighter text-slate-800">{verifiedPoints.toLocaleString()}</span>
             <span className="text-planet-yellow font-bold">pts</span>
+          </div>
+          
+          {pendingPoints > 0 && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="bg-yellow-400/20 backdrop-blur-md text-yellow-700 border border-yellow-300/50 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                + {pendingPoints.toLocaleString()} Pending
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium max-w-[150px] leading-tight">
+                Points are verified after clinic confirmation via WhatsApp.
+              </span>
+            </div>
+          )}
+
+          <div className="mt-5">
+            <div className="h-2.5 w-full bg-slate-900/10 rounded-full overflow-hidden shadow-inner">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                className="h-full bg-gradient-to-r from-planet-yellow to-yellow-400 rounded-full"
+              />
+            </div>
+            <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-wider">
+              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} points until your next <span className="text-slate-800">FREE Consultation!</span>
+            </p>
           </div>
           
           <div className="flex gap-3 mt-6">
@@ -188,7 +354,7 @@ export default function Dashboard() {
       {/* Upcoming */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold">Upcoming for Max</h3>
+          <h3 className="text-lg font-bold">Upcoming for Johnny</h3>
           <button className="text-planet-yellow text-sm font-bold flex items-center">View All <ChevronRight size={16}/></button>
         </div>
         <div className="glass rounded-2xl p-4 flex items-center gap-4">
@@ -197,8 +363,40 @@ export default function Dashboard() {
           </div>
           <div>
             <h4 className="font-bold text-slate-800">Annual Wellness Exam</h4>
-            <p className="text-sm text-slate-500">Dr. Sharma • 10:30 AM</p>
+            <p className="text-sm text-slate-500">Dr. Naveen • 10:30 AM</p>
           </div>
+        </div>
+      </div>
+
+      {/* Ways to Earn Points */}
+      <div className="pt-2">
+        <h3 className="text-lg font-bold mb-4">Ways to Earn Points</h3>
+        <div 
+          ref={carouselRef}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          className={`flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-6 pb-8 -mx-6 px-6 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        >
+          {getPersonalizedIncentives(petProfile).map((incentive) => (
+            <EarnCard 
+              key={incentive.id}
+              id={incentive.id}
+              title={incentive.title}
+              subtext={incentive.subtext}
+              pointsText={incentive.pointsText}
+              pointsValue={incentive.pointsValue}
+              highValue={incentive.highValue}
+              theme={incentive.theme}
+              isPending={pendingActions.includes(incentive.id)}
+              onBook={(id, val, title) => {
+                addPoints(val, id);
+                const message = `Hi Planet Animal Hospital! 🐾 I am reaching out from the app. I would like to book the following for my pet:\n- ${title}\nCould you let me know what times are available today or tomorrow?`;
+                window.open('https://wa.me/919004290923?text=' + encodeURIComponent(message), '_blank');
+              }} 
+            />
+          ))}
         </div>
       </div>
 
@@ -373,6 +571,59 @@ function RewardOption({ title, points }: { title: string, points: string }) {
       <button className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg active:scale-95 transition-transform">
         {points} pts
       </button>
+    </div>
+  );
+}
+
+function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPending, theme = 'yellow', onBook }: { id: string, title: string, subtext?: string, pointsText: string, pointsValue: number, highValue?: boolean, isPending: boolean, theme?: 'blue' | 'orange' | 'green' | 'purple' | 'yellow', onBook: (id: string, points: number, title: string) => void }) {
+  const themeGradients = {
+    blue: 'from-blue-400/20',
+    orange: 'from-orange-400/20',
+    green: 'from-emerald-400/20',
+    purple: 'from-purple-400/20',
+    yellow: 'from-yellow-400/20'
+  };
+
+  const textGradients = {
+    blue: 'from-blue-500 to-blue-700',
+    orange: 'from-orange-500 to-orange-700',
+    green: 'from-emerald-500 to-emerald-700',
+    purple: 'from-purple-500 to-purple-700',
+    yellow: 'from-yellow-500 to-yellow-700'
+  };
+
+  return (
+    <div className="snap-start relative min-w-[220px] shrink-0 flex flex-col p-6 bg-white/5 backdrop-blur-[40px] rounded-[2rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:bg-white/10 overflow-hidden group border border-white/20">
+      {/* Dynamic Gradient Background */}
+      <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${themeGradients[theme]} via-transparent to-transparent pointer-events-none`} />
+      
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex flex-col items-start gap-2 mb-2">
+          {highValue && (
+            <div className="bg-yellow-400/20 backdrop-blur-md border border-yellow-300/50 text-yellow-700 font-bold tracking-widest text-[10px] rounded-full px-3 py-1 shadow-[0_0_15px_rgba(250,204,21,0.4)] animate-pulse uppercase">
+              High Value
+            </div>
+          )}
+          <h4 className="font-bold text-slate-800 text-base leading-tight">{title}</h4>
+          {subtext && <p className="text-xs text-slate-500 font-medium">{subtext}</p>}
+        </div>
+        
+        <p className={`mt-2 mb-6 font-black text-2xl drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-r ${textGradients[theme]}`}>
+          {pointsText}
+        </p>
+        
+        <button 
+          onClick={() => onBook(id, pointsValue, title)}
+          disabled={isPending}
+          className={`mt-auto text-xs font-bold py-3 rounded-xl w-full transition-all shadow-sm ${
+            isPending 
+              ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
+              : 'bg-slate-900 text-white active:scale-95 group-hover:bg-slate-800 shadow-[0_5px_15px_rgba(0,0,0,0.2)]'
+          }`}
+        >
+          {isPending ? 'Pending Confirmation' : 'Book Now'}
+        </button>
+      </div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import AIVet from './pages/AIVet';
 import ProfileSelection from './pages/ProfileSelection';
 import CreateProfile from './pages/CreateProfile';
 import ProfileSettings from './pages/ProfileSettings';
+import Roadmap from './pages/Roadmap';
 
 // Placeholders for other routes
 const Placeholder = ({ title }: { title: string }) => (
@@ -33,7 +34,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="plans" element={<ProactivePlans />} />
           <Route path="ai" element={<AIVet />} />
-          <Route path="roadmap" element={<Placeholder title="Pet Roadmap" />} />
+          <Route path="roadmap" element={<Roadmap />} />
           <Route path="adoption" element={<Placeholder title="Adoption Community" />} />
         </Route>
       </Routes>

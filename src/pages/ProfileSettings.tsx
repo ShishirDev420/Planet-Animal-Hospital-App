@@ -1,17 +1,20 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog } from 'lucide-react';
+import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope } from 'lucide-react';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
+import { usePetProfile } from '../hooks/usePetProfile';
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
+  const { profile, updateProfile } = usePetProfile();
   const [name, setName] = useState('Harshal');
   const [email, setEmail] = useState('harshal@example.com');
-  const [weight, setWeight] = useState('65');
-  const [unit, setUnit] = useState('lbs');
-  const [diet, setDiet] = useState('High-Protein Kibble');
+  const [weight, setWeight] = useState(profile.weight.replace(/[^0-9.]/g, ''));
+  const [unit, setUnit] = useState(profile.weight.includes('kg') ? 'kg' : 'lbs');
+  const [diet, setDiet] = useState(profile.dietaryPreferences);
+  const [surgicalHistory, setSurgicalHistory] = useState(profile.surgicalHistory);
   const [reminders, setReminders] = useState(true);
   const [marketing, setMarketing] = useState(false);
 
@@ -196,11 +199,25 @@ export default function ProfileSettings() {
                 onChange={(e) => setDiet(e.target.value)}
                 className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium appearance-none"
               >
+                <option value="None">None</option>
                 <option value="High-Protein Kibble">High-Protein Kibble</option>
                 <option value="Raw Diet">Raw Diet</option>
                 <option value="Grain-Free">Grain-Free</option>
                 <option value="Prescription Diet">Prescription Diet</option>
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+                <Stethoscope size={16} className="text-red-500" /> Surgical & Medical History
+              </label>
+              <textarea 
+                value={surgicalHistory}
+                onChange={(e) => setSurgicalHistory(e.target.value)}
+                placeholder="e.g., ACL repair, allergies, etc."
+                rows={3}
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium resize-none placeholder:text-slate-400"
+              />
             </div>
           </div>
         </motion.section>
@@ -237,7 +254,10 @@ export default function ProfileSettings() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/')}
+          onClick={() => {
+            updateProfile({ weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory });
+            navigate('/');
+          }}
           className="w-full max-w-md mx-auto bg-slate-900 text-white py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-transform"
         >
           <Save size={20} className="text-planet-yellow" />
