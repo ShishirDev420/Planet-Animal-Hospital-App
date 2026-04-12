@@ -1,10 +1,12 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope } from 'lucide-react';
+import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut } from 'lucide-react';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
+import { signOut } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col pb-32">
+    <div className="min-h-screen bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col pb-48">
       {/* Header */}
       <header className="flex items-center justify-between mb-8 pt-4">
         <button 
@@ -263,6 +265,21 @@ export default function ProfileSettings() {
           <Save size={20} className="text-planet-yellow" />
           Save Changes
         </motion.button>
+
+        <button
+          onClick={async () => {
+            try {
+              await signOut(auth);
+              navigate('/');
+            } catch (e) {
+              console.error('Logout failed', e);
+            }
+          }}
+          className="w-full max-w-md mx-auto mt-6 py-3 rounded-xl border border-red-200 text-red-600 font-bold bg-red-50/50 hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          <LogOut size={18} />
+          Log Out
+        </button>
       </div>
     </div>
   );

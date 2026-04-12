@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "PointsQueueItem": {
+      "title": "PointsQueueItem",
+      "description": "An item in the points queue for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user."
+        },
+        "parent": {
+          "type": "string"
+        },
+        "pet": {
+          "type": "string"
+        },
+        "service": {
+          "type": "string"
+        },
+        "points": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "verified"]
+        },
+        "actionId": {
+          "type": "string"
+        }
+      },
+      "required": ["userId", "parent", "pet", "service", "points", "status", "actionId"]
+    }
+  },
+  "firestore": {
+    "/pointsQueue/{documentId}": {
+      "schema": {
+        "$ref": "#/entities/PointsQueueItem"
+      },
+      "description": "Queue of points to be verified."
+    }
+  }
+}

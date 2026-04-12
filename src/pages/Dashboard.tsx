@@ -3,12 +3,65 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2 
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
-import { usePawPoints } from '../hooks/usePawPoints';
+import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { db, auth } from '../lib/firebase';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string;
+    email?: string | null;
+    emailVerified?: boolean;
+    isAnonymous?: boolean;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 const SERVICE_MENU = [
   {
@@ -53,10 +106,22 @@ const SERVICE_MENU = [
   }
 ];
 
-const petProfile = { name: 'Johnny', breed: 'American Bully', age: 8, isSenior: true };
+const petProfile = { name: 'Johnny', breed: 'American Bully', age: 8, isSenior: true, isOverweight: true };
 
-function getPersonalizedIncentives(pet: { name: string, breed: string, age: number, isSenior: boolean }) {
+function getPersonalizedIncentives(pet: { name: string, breed: string, age: number, isSenior: boolean, isOverweight?: boolean }) {
   const incentives = [];
+
+  if (pet.isOverweight) {
+    incentives.push({
+      id: "weight-management",
+      title: "Weight Management Plan",
+      subtext: `Tailored cardio and nutrition for ${pet.name}’s frame.`,
+      pointsText: "+1,500 pts",
+      pointsValue: 1500,
+      highValue: true,
+      theme: "purple" as const
+    });
+  }
 
   if (pet.isSenior) {
     incentives.push({
@@ -133,10 +198,121 @@ function getPersonalizedIncentives(pet: { name: string, breed: string, age: numb
   return incentives;
 }
 
+function getDailyTip(pet: { name: string, breed: string, age: number, isSenior: boolean }) {
+  const currentSeason = 'Monsoon';
+  const breedLower = pet.breed.toLowerCase();
+
+  if ((breedLower.includes('bully') || breedLower.includes('retriever')) && currentSeason === 'Monsoon') {
+    return `Heads up! Monsoon season brings a spike in ticks. Ensure ${pet.name} is up to date on preventative meds.`;
+  }
+  if (pet.isSenior) {
+    return `${pet.name} is in their golden years! Regular checkups are key to catching issues early.`;
+  }
+  return `Keep ${pet.name} hydrated and active today!`;
+}
+
+function DailyTip({ pet }: { pet: typeof petProfile }) {
+  const tip = getDailyTip(pet);
+  return (
+    <div className="bg-white/40 backdrop-blur-md border border-white/50 text-slate-700 text-sm py-3 px-4 rounded-2xl flex gap-3 items-start shadow-sm mt-4">
+      <Info size={20} className="text-planet-yellow shrink-0 mt-0.5" />
+      <p className="font-medium leading-snug">{tip}</p>
+    </div>
+  );
+}
+
+function generateWhatsAppPayload(serviceName: string) {
+  const message = `Hi Planet Animal Hospital! 👋\nI would like to book a visit.\n👤 Parent: Harshal\n🐾 Pet: ${petProfile.name} (Dog - ${petProfile.breed}, Age ${petProfile.age})\n🏥 Requested Service: ${serviceName}`;
+  return 'https://wa.me/919004290923?text=' + encodeURIComponent(message);
+}
+
 export default function Dashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loginEmail, setLoginEmail] = useState('harshal@planetanimal.com');
+  const [loginPassword, setLoginPassword] = useState('Harshal@2026!');
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { harshalImage, johnnyImage } = useProfileImages();
-  const { verifiedPoints, pendingPoints, pendingActions, addPoints } = usePawPoints();
+  
+  // Firebase State
+  const [verifiedPoints, setVerifiedPoints] = useState(4450);
+  const [pendingPoints, setPendingPoints] = useState(0);
+  const [pendingActions, setPendingActions] = useState<string[]>([]);
+
+  const handleEmailSignIn = async () => {
+    setIsEmailLoading(true);
+    setLoginError(null);
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+    } catch (error: any) {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials') {
+        try {
+          await createUserWithEmailAndPassword(auth, loginEmail, loginPassword);
+        } catch (createError: any) {
+          console.error('Failed to create user', createError);
+          if (createError.code === 'auth/operation-not-allowed') {
+            setLoginError('Email/Password sign-in is not enabled. Please enable it in the Firebase Console under Authentication > Sign-in method.');
+          } else {
+            setLoginError(createError.message);
+          }
+        }
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setLoginError('Email/Password sign-in is not enabled. Please enable it in the Firebase Console under Authentication > Sign-in method.');
+      } else {
+        console.error('Login failed', error);
+        setLoginError(error.message);
+      }
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        setUserId(user.uid);
+      } else {
+        setIsAuthenticated(false);
+        setUserId(null);
+      }
+      setIsAuthReady(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthReady || !userId) return;
+
+    const q = query(collection(db, 'pointsQueue'), where('userId', '==', userId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let newPending = 0;
+      let newVerified = 0;
+      const newPendingActions: string[] = [];
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.status === 'pending') {
+          newPending += data.points || 0;
+          if (data.actionId) newPendingActions.push(data.actionId);
+        } else if (data.status === 'verified') {
+          newVerified += data.points || 0;
+        }
+      });
+
+      setPendingPoints(newPending);
+      setVerifiedPoints(4450 + newVerified);
+      setPendingActions(newPendingActions);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'pointsQueue');
+    });
+
+    return () => unsubscribe();
+  }, [isAuthReady, userId]);
+
   const [activeModal, setActiveModal] = useState<string | null>(null);
   
   // Booking State
@@ -220,51 +396,149 @@ export default function Dashboard() {
     );
   };
 
-  const handleConfirmBooking = () => {
-    if (selectedServices.length === 0) return;
+  const handleConfirmBooking = async () => {
+    if (selectedServices.length === 0 || !userId) return;
     setIsConnecting(true);
     
+    const serviceList = selectedServices.map(s => `- ${s}`).join('\n');
+    
+    try {
+      await addDoc(collection(db, 'pointsQueue'), {
+        userId: userId,
+        parent: 'Harshal',
+        pet: 'Johnny (American Bully, Age 8)',
+        service: serviceList,
+        points: 0,
+        status: 'pending',
+        actionId: 'quick-book'
+      });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
+    }
+
     setTimeout(() => {
-      const serviceList = selectedServices.map(s => `- ${s}`).join('\n');
-      const message = `Hi Planet Animal Hospital! 🐾 I am reaching out from the app. I would like to book the following for my pet:\n${serviceList}\nCould you let me know what times are available today or tomorrow?`;
-      
-      window.open('https://wa.me/919004290923?text=' + encodeURIComponent(message), '_blank');
+      window.open(generateWhatsAppPayload(serviceList), '_blank');
       
       setIsConnecting(false);
       closeModal();
     }, 500);
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Ambient Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-green-400/30 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-planet-yellow/30 rounded-full blur-[100px]" />
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md bg-white/10 backdrop-blur-[50px] border border-white/20 p-8 rounded-[2rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] relative z-10"
+        >
+          <div className="flex justify-center mb-8">
+             <Logo className="!w-20 !h-20" />
+          </div>
+          <h2 className="text-3xl font-black text-slate-800 text-center mb-2 tracking-tight">Welcome Back</h2>
+          <p className="text-slate-500 text-center mb-8 font-medium">Sign in to manage your pet's health.</p>
+          
+          <div className="space-y-4 mb-8">
+            {loginError && (
+              <div className="bg-red-500/10 border border-red-500/50 text-red-600 text-sm p-3 rounded-xl font-medium">
+                {loginError}
+              </div>
+            )}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1 ml-1 uppercase tracking-wider">Email</label>
+              <input 
+                type="email" 
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full bg-white/50 border border-white/40 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-planet-yellow/50 transition-all" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1 ml-1 uppercase tracking-wider">Password</label>
+              <input 
+                type="password" 
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full bg-white/50 border border-white/40 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-planet-yellow/50 transition-all" 
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <motion.button 
+              whileTap={{ scale: 0.95 }}
+              onClick={handleEmailSignIn}
+              disabled={isEmailLoading}
+              className="w-full bg-white/40 backdrop-blur-md border border-white/50 text-slate-800 font-bold py-4 rounded-xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:bg-white/50 transition-all flex items-center justify-center gap-2"
+            >
+              {isEmailLoading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In with Email'}
+            </motion.button>
+
+            <motion.button 
+              whileTap={{ scale: 0.95 }}
+              onClick={async () => {
+                try {
+                  const provider = new GoogleAuthProvider();
+                  await signInWithPopup(auth, provider);
+                } catch (e) {
+                  console.error('Login failed', e);
+                }
+              }}
+              className="w-full bg-white/40 backdrop-blur-md border border-white/50 text-slate-800 font-bold py-4 rounded-xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:bg-white/50 transition-all flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Sign In with Google
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-8 pb-32">
       {/* Header with Logo */}
       <header className="pt-4 mb-2">
         <div className="flex justify-between items-center relative mb-6">
-          <button onClick={() => navigate('/profiles')} className="shrink-0 group z-10">
-            <div className="animate-sync-heartbeat origin-left">
-              <Logo className="!w-16 !h-16" />
+          <div className="flex items-center gap-4 z-10">
+            <button onClick={() => navigate('/profiles')} className="shrink-0 group">
+              <div className="animate-sync-heartbeat origin-left">
+                <Logo className="!w-16 !h-16" />
+              </div>
+            </button>
+            
+            <div className="flex flex-col items-start pointer-events-none whitespace-nowrap">
+              <span className="font-black tracking-widest text-slate-900 text-lg uppercase block leading-none">Planet Animal</span>
+              <span className="text-sm font-bold tracking-widest text-emerald-600 mt-0.5 uppercase">Hospital & Wellness</span>
             </div>
-          </button>
-          
-          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-start pointer-events-none whitespace-nowrap z-0">
-            <span className="font-black tracking-tight text-lg uppercase text-slate-800 block leading-none">Planet Animal</span>
-            <span className="text-planet-yellow font-bold tracking-[0.2em] text-[9px] uppercase mt-1">Hospital & Wellness</span>
           </div>
 
-          <button onClick={() => navigate('/settings')} className="shrink-0 z-10">
-            <div className="animate-sync-heartbeat origin-center">
-              <DualAvatar 
-                leftImage={harshalImage}
-                rightImage={johnnyImage}
-                className="w-16 h-16"
-              />
-            </div>
-          </button>
+          <div className="flex items-center z-10">
+            <button onClick={() => navigate('/settings')} className="shrink-0">
+              <div className="animate-sync-heartbeat origin-center">
+                <DualAvatar 
+                  leftImage={harshalImage}
+                  rightImage={johnnyImage}
+                  className="w-16 h-16"
+                />
+              </div>
+            </button>
+          </div>
         </div>
 
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Hi, Harshal 👋</h1>
           <p className="text-slate-500 text-sm">Let's keep Johnny healthy today.</p>
+          <DailyTip pet={petProfile} />
         </div>
       </header>
 
@@ -272,11 +546,11 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card rounded-3xl p-6 relative overflow-hidden"
+        className="bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] rounded-[2rem] p-6 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-planet-yellow/20 rounded-full blur-2xl -mr-10 -mt-10"></div>
         <div className="relative z-10">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full backdrop-blur-md border border-white/60 shadow-sm">
               <Award className="text-planet-yellow" size={16} />
               <span className="text-xs font-bold text-slate-800">Proactive Member</span>
@@ -285,15 +559,15 @@ export default function Dashboard() {
               2x Multiplier
             </div>
           </div>
-          <h2 className="text-slate-600 text-sm font-medium mb-1">Paw Points Balance</h2>
-          <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-black tracking-tighter text-slate-800">{verifiedPoints.toLocaleString()}</span>
-            <span className="text-planet-yellow font-bold">pts</span>
+          <h2 className="text-slate-600 text-sm font-medium mb-2">Paw Points Balance</h2>
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900">{verifiedPoints.toLocaleString()}</span>
+            <span className="text-slate-400 font-bold uppercase tracking-widest text-sm ml-1 mb-2">pts</span>
           </div>
           
           {pendingPoints > 0 && (
-            <div className="mt-2 flex items-center gap-2">
-              <div className="bg-yellow-400/20 backdrop-blur-md text-yellow-700 border border-yellow-300/50 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+            <div className="mt-3 mb-2 flex items-center gap-2">
+              <div className="bg-yellow-100 text-yellow-700 font-bold tracking-tight px-2.5 py-1 rounded-full text-sm border border-yellow-200/50 shadow-sm">
                 + {pendingPoints.toLocaleString()} Pending
               </div>
               <span className="text-[10px] text-slate-400 font-medium max-w-[150px] leading-tight">
@@ -302,7 +576,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="mt-5">
+          <div className="mt-8">
             <div className="h-2.5 w-full bg-slate-900/10 rounded-full overflow-hidden shadow-inner">
               <motion.div 
                 initial={{ width: 0 }}
@@ -369,15 +643,19 @@ export default function Dashboard() {
       </div>
 
       {/* Ways to Earn Points */}
-      <div className="pt-2">
-        <h3 className="text-lg font-bold mb-4">Ways to Earn Points</h3>
+      <div className="pt-2 relative">
+        <h3 className="text-lg font-bold mb-4 relative z-10">Ways to Earn Points</h3>
+        
+        {/* The Shelf Effect */}
+        <div className="absolute bottom-8 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none z-0" />
+
         <div 
           ref={carouselRef}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
-          className={`flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-6 pb-8 -mx-6 px-6 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-6 pb-8 -mx-6 px-6 relative z-10 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         >
           {getPersonalizedIncentives(petProfile).map((incentive) => (
             <EarnCard 
@@ -390,10 +668,22 @@ export default function Dashboard() {
               highValue={incentive.highValue}
               theme={incentive.theme}
               isPending={pendingActions.includes(incentive.id)}
-              onBook={(id, val, title) => {
-                addPoints(val, id);
-                const message = `Hi Planet Animal Hospital! 🐾 I am reaching out from the app. I would like to book the following for my pet:\n- ${title}\nCould you let me know what times are available today or tomorrow?`;
-                window.open('https://wa.me/919004290923?text=' + encodeURIComponent(message), '_blank');
+              onBook={async (id, val, title) => {
+                if (!userId) return;
+                try {
+                  await addDoc(collection(db, 'pointsQueue'), {
+                    userId: userId,
+                    parent: 'Harshal',
+                    pet: 'Johnny (American Bully, Age 8)',
+                    service: title,
+                    points: val,
+                    status: 'pending',
+                    actionId: id
+                  });
+                } catch (e) {
+                  handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
+                }
+                window.open(generateWhatsAppPayload(title), '_blank');
               }} 
             />
           ))}
@@ -592,8 +882,16 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
     yellow: 'from-yellow-500 to-yellow-700'
   };
 
+  const glowShadows = {
+    blue: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(59,130,246,0.3)]',
+    orange: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(249,115,22,0.3)]',
+    green: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(16,185,129,0.3)]',
+    purple: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(168,85,247,0.3)]',
+    yellow: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(234,179,8,0.3)]'
+  };
+
   return (
-    <div className="snap-start relative min-w-[220px] shrink-0 flex flex-col p-6 bg-white/5 backdrop-blur-[40px] rounded-[2rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:bg-white/10 overflow-hidden group border border-white/20">
+    <div className={`snap-start relative min-w-[240px] shrink-0 flex flex-col p-6 bg-white/10 backdrop-blur-[60px] rounded-[2.5rem] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] ${glowShadows[theme]} overflow-hidden group border border-white/40`}>
       {/* Dynamic Gradient Background */}
       <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${themeGradients[theme]} via-transparent to-transparent pointer-events-none`} />
       
@@ -604,21 +902,21 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
               High Value
             </div>
           )}
-          <h4 className="font-bold text-slate-800 text-base leading-tight">{title}</h4>
+          <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide">{title}</h4>
           {subtext && <p className="text-xs text-slate-500 font-medium">{subtext}</p>}
         </div>
         
-        <p className={`mt-2 mb-6 font-black text-2xl drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-r ${textGradients[theme]}`}>
+        <p className={`mt-2 mb-6 font-black text-3xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-r ${textGradients[theme]}`}>
           {pointsText}
         </p>
         
         <button 
           onClick={() => onBook(id, pointsValue, title)}
           disabled={isPending}
-          className={`mt-auto text-xs font-bold py-3 rounded-xl w-full transition-all shadow-sm ${
+          className={`mt-auto text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
             isPending 
               ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-              : 'bg-slate-900 text-white active:scale-95 group-hover:bg-slate-800 shadow-[0_5px_15px_rgba(0,0,0,0.2)]'
+              : 'bg-slate-900/80 backdrop-blur-xl border border-white/10 text-white hover:bg-slate-900 active:scale-95'
           }`}
         >
           {isPending ? 'Pending Confirmation' : 'Book Now'}

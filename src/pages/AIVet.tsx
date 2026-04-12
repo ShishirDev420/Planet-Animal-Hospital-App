@@ -62,6 +62,7 @@ export default function AIVet() {
   const [isMuted, setIsMuted] = useState(false);
   const [emergency, setEmergency] = useState(false);
   const [volume, setVolume] = useState(0);
+  const [isUserSpeaking, setIsUserSpeaking] = useState(false);
 
   // Refs for Audio and WebSocket
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -72,6 +73,11 @@ export default function AIVet() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>(0);
   const isMutedRef = useRef(isMuted);
+  
+  // VAD and Interruption Refs
+  const isSpeakingRef = useRef(false);
+  const silenceFramesRef = useRef(0);
+  const activeAudioNodesRef = useRef<AudioBufferSourceNode[]>([]);
 
   // Keep ref in sync with state for the audio processor closure
   useEffect(() => {
@@ -81,6 +87,7 @@ export default function AIVet() {
   const stopConversation = useCallback(() => {
     setIsActive(false);
     setVolume(0);
+    setIsUserSpeaking(false);
     
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     if (processorRef.current) {
@@ -89,6 +96,12 @@ export default function AIVet() {
     }
     if (analyserRef.current) analyserRef.current.disconnect();
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    
+    activeAudioNodesRef.current.forEach(node => {
+      try { node.stop(); } catch (e) {}
+    });
+    activeAudioNodesRef.current = [];
+
     if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
       audioCtxRef.current.close().catch(console.error);
     }
@@ -162,6 +175,11 @@ export default function AIVet() {
               sourceNode.buffer = buffer;
               sourceNode.connect(audioCtxRef.current.destination);
               
+              sourceNode.onended = () => {
+                activeAudioNodesRef.current = activeAudioNodesRef.current.filter(n => n !== sourceNode);
+              };
+              activeAudioNodesRef.current.push(sourceNode);
+              
               const startTime = Math.max(nextPlayTimeRef.current, audioCtxRef.current.currentTime);
               sourceNode.start(startTime);
               nextPlayTimeRef.current = startTime + buffer.duration;
@@ -218,6 +236,50 @@ export default function AIVet() {
         const normalized = Math.min(1, avg / 64); // Normalize 0-1 with higher sensitivity
         
         setVolume(normalized);
+
+        // VAD Logic & Kill Switch
+        if (normalized > 0.15) {
+          if (!isSpeakingRef.current) {
+            isSpeakingRef.current = true;
+            setIsUserSpeaking(true);
+            
+            // Execute Kill Switch if AI is currently speaking/queued
+            if (activeAudioNodesRef.current.length > 0) {
+              activeAudioNodesRef.current.forEach(node => {
+                try { node.stop(); } catch (e) {}
+              });
+              activeAudioNodesRef.current = [];
+              if (audioCtxRef.current) {
+                nextPlayTimeRef.current = audioCtxRef.current.currentTime;
+              }
+              
+              // Contextual Interruption Awareness
+              if (sessionRef.current) {
+                sessionRef.current.send({
+                  clientContent: {
+                    turns: [
+                      {
+                        role: "user",
+                        parts: [{ text: "[System Note: The user interrupted you mid-sentence here. Acknowledge the new input naturally.]" }]
+                      }
+                    ],
+                    turnComplete: true
+                  }
+                });
+              }
+            }
+          }
+          silenceFramesRef.current = 0;
+        } else {
+          silenceFramesRef.current++;
+          if (silenceFramesRef.current > 30) { // ~0.5s of silence at 60fps
+            if (isSpeakingRef.current) {
+              isSpeakingRef.current = false;
+              setIsUserSpeaking(false);
+            }
+          }
+        }
+
         animationFrameRef.current = requestAnimationFrame(updateVolume);
       };
       updateVolume();
@@ -238,9 +300,10 @@ export default function AIVet() {
     setEmergency(true);
   };
 
+  const baseColor = isUserSpeaking ? 'rgba(16, 185, 129,' : 'rgba(250,204,21,'; // Emerald vs Yellow
   const orbScale = isActive ? 1 + (volume * 0.4) : 1;
   const orbGlow = isActive 
-    ? `0 0 ${60 + volume * 100}px rgba(250,204,21,${0.4 + volume * 0.6}), inset 0 0 ${40 + volume * 60}px rgba(250,204,21,${0.3 + volume * 0.5})` 
+    ? `0 0 ${60 + volume * 100}px ${baseColor}${0.4 + volume * 0.6}), inset 0 0 ${40 + volume * 60}px ${baseColor}${0.3 + volume * 0.5})` 
     : '0 0 0px rgba(250,204,21,0)';
 
   return (
@@ -268,9 +331,9 @@ export default function AIVet() {
       {/* Header */}
       <div className="px-6 py-8 z-20 flex flex-col items-center justify-center mt-10">
         <h1 onClick={triggerMockEmergency} className="font-black text-white text-2xl tracking-tight cursor-pointer">AI Vet Doctor</h1>
-        <p className="text-planet-yellow font-bold text-sm tracking-widest uppercase mt-1 flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full bg-planet-yellow ${isActive ? 'animate-pulse' : ''}`}></span>
-          {isActive ? 'Listening...' : 'Ready'}
+        <p className={`font-bold text-sm tracking-widest uppercase mt-1 flex items-center gap-2 ${isUserSpeaking ? 'text-emerald-500' : 'text-planet-yellow'}`}>
+          <span className={`w-2 h-2 rounded-full ${isUserSpeaking ? 'bg-emerald-500' : 'bg-planet-yellow'} ${isActive ? 'animate-pulse' : ''}`}></span>
+          {isActive ? (isUserSpeaking ? 'Listening...' : 'Connected') : 'Ready'}
         </p>
       </div>
 
@@ -291,7 +354,7 @@ export default function AIVet() {
               scale: isActive ? 0.8 + (volume * 0.6) : 0.8,
             }}
             transition={{ type: "spring", stiffness: 800, damping: 25, mass: 0.5 }}
-            className="w-28 h-28 rounded-full bg-gradient-to-br from-planet-yellow to-orange-400 blur-md opacity-80"
+            className={`w-28 h-28 rounded-full blur-md opacity-80 ${isUserSpeaking ? 'bg-gradient-to-br from-emerald-400 to-teal-500' : 'bg-gradient-to-br from-planet-yellow to-orange-400'}`}
           ></motion.div>
           
           {!isActive && (
