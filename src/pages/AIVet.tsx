@@ -63,6 +63,7 @@ const int16ToBase64 = (int16Array: Int16Array) => {
 export default function AIVet() {
   const navigate = useNavigate();
   const [isActive, setIsActive] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [emergency, setEmergency] = useState(false);
   const [volume, setVolume] = useState(0);
@@ -114,8 +115,19 @@ export default function AIVet() {
     isMutedRef.current = isMuted;
   }, [isMuted]);
 
+  const toggleMute = () => {
+    if (streamRef.current) {
+      const audioTrack = streamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
+    }
+  };
+
   const stopConversation = useCallback(() => {
     setIsActive(false);
+    setIsConnected(false);
     setVolume(0);
     setIsUserSpeaking(false);
     setIsThinking(false);
@@ -256,7 +268,10 @@ export default function AIVet() {
           }
         };
         
-        recognition.onerror = (e: any) => console.error("Speech recognition error", e);
+        recognition.onerror = (e: any) => {
+          if (e.error === 'no-speech' || e.error === 'network' || e.error === 'aborted') return;
+          console.error("Speech recognition error", e);
+        };
         
         recognition.onend = () => {
           if (sessionRef.current) {
@@ -276,6 +291,9 @@ export default function AIVet() {
       const sessionPromise = ai.live.connect({
         model: "models/gemini-3.1-flash-preview",
         callbacks: {
+          onopen: () => {
+            setIsConnected(true);
+          },
           onmessage: (message: LiveServerMessage) => {
             // Handle Emergency Keywords and Text Transcripts
             const parts = message.serverContent?.modelTurn?.parts || [];
@@ -320,7 +338,8 @@ export default function AIVet() {
             }
 
             // Handle Audio Playback
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            const audioPart = message.serverContent?.modelTurn?.parts?.find(p => p.inlineData);
+            const base64Audio = audioPart?.inlineData?.data;
             if (base64Audio && audioCtxRef.current && !isIgnoringAudioRef.current) {
               const int16Data = base64ToInt16Array(base64Audio);
               const float32Data = int16ToFloat32(int16Data);
@@ -336,6 +355,7 @@ export default function AIVet() {
           }
         },
         config: {
+          generationConfig: { responseModalities: ["AUDIO"] },
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } }
@@ -494,17 +514,17 @@ export default function AIVet() {
       <div className="px-6 py-8 z-20 flex flex-col items-center justify-center mt-10 shrink-0">
         <h1 onClick={triggerMockEmergency} className="font-black text-slate-900 text-2xl tracking-tight cursor-pointer">AI Vet Doctor</h1>
         <p className={`font-bold text-sm tracking-widest uppercase mt-1 flex items-center gap-2 ${isUserSpeaking ? 'text-emerald-500' : 'text-slate-500'}`}>
-          <span className={`w-2 h-2 rounded-full ${isUserSpeaking ? 'bg-emerald-500' : 'bg-slate-400'} ${isActive ? 'animate-pulse' : ''}`}></span>
-          {isActive ? (isUserSpeaking ? 'Listening...' : 'Connected') : 'Ready'}
+          <span className={`w-2 h-2 rounded-full ${isUserSpeaking ? 'bg-emerald-500' : 'bg-slate-400'} ${isConnected ? 'animate-pulse' : ''}`}></span>
+          {isConnected ? (isUserSpeaking ? 'Listening...' : 'Connected') : (isActive ? 'Connecting...' : 'Ready')}
         </p>
       </div>
 
       {/* Conversational UI */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-40 z-10 hide-scrollbar">
         <AnimatePresence>
-          {messages.map((msg) => (
+          {messages.map((msg, index) => (
             <motion.div
-              key={msg.id}
+              key={`msg-${index}-${msg.id || crypto.randomUUID()}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -521,6 +541,7 @@ export default function AIVet() {
           
           {isUserSpeaking && (
             <motion.div
+              key="user-speaking-indicator"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
@@ -535,6 +556,7 @@ export default function AIVet() {
 
           {isThinking && (
             <motion.div
+              key="ai-thinking-indicator"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
@@ -598,8 +620,8 @@ export default function AIVet() {
         ) : (
           <div className="bg-white/50 backdrop-blur-xl border border-white/40 rounded-full px-8 py-4 flex items-center gap-8 shadow-2xl">
             <button 
-              onClick={() => setIsMuted(!isMuted)}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-sm ${isMuted ? 'bg-slate-700 text-white' : 'bg-white/80 text-slate-800 hover:bg-white'}`}
+              onClick={toggleMute}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-sm ${isMuted ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-white/80 text-slate-800 hover:bg-white'}`}
             >
               {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
             </button>

@@ -8,7 +8,7 @@ import {
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
-import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, serverTimestamp } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 
@@ -243,8 +243,31 @@ export default function Dashboard() {
   // Firebase State
   const [verifiedPoints, setVerifiedPoints] = useState(4450);
   const [pendingPoints, setPendingPoints] = useState(0);
-  const [pendingActions, setPendingActions] = useState<string[]>([]);
+  const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
   const [incentivesOrder, setIncentivesOrder] = useState(getPersonalizedIncentives(petProfile));
+
+  const handleBookAppointment = async (incentive: any) => {
+    if (!userId) return;
+    
+    // Optimistic UI updates
+    setPendingIncentives(prev => [...prev, incentive.id]);
+    setPendingPoints(prev => prev + incentive.pointsValue);
+    
+    try {
+      await addDoc(collection(db, 'pointsQueue'), {
+        patient: 'Johnny',
+        reason: incentive.title,
+        points: incentive.pointsValue,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
+      // Revert optimistic update on failure
+      setPendingIncentives(prev => prev.filter(id => id !== incentive.id));
+      setPendingPoints(prev => prev - incentive.pointsValue);
+    }
+  };
 
   // Mouse tracking for Paw Points Card
   const mouseX = useMotionValue(0);
@@ -326,7 +349,7 @@ export default function Dashboard() {
 
       setPendingPoints(newPending);
       setVerifiedPoints(4450 + newVerified);
-      setPendingActions(newPendingActions);
+      setPendingIncentives(newPendingActions);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'pointsQueue');
     });
@@ -722,24 +745,8 @@ export default function Dashboard() {
                   pointsValue={incentive.pointsValue}
                   highValue={incentive.highValue}
                   theme={incentive.theme}
-                  isPending={pendingActions.includes(incentive.id)}
-                  onBook={async (id, val, title) => {
-                    if (!userId) return;
-                    try {
-                      await addDoc(collection(db, 'pointsQueue'), {
-                        userId: userId,
-                        parent: 'Harshal',
-                        pet: 'Johnny (American Bully, Age 8)',
-                        service: title,
-                        points: val,
-                        status: 'pending',
-                        actionId: id
-                      });
-                    } catch (e) {
-                      handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
-                    }
-                    window.open(generateWhatsAppPayload(title), '_blank');
-                  }} 
+                  isPending={pendingIncentives.includes(incentive.id)}
+                  onBook={() => handleBookAppointment(incentive)} 
                 />
               </Reorder.Item>
             ))}
@@ -1031,7 +1038,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
               className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
                 isPending 
                   ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-                  : 'bg-slate-900/80 backdrop-blur-xl border border-white/10 text-white hover:bg-slate-900'
+                  : 'bg-amber-500 backdrop-blur-xl border border-amber-400 text-white hover:bg-amber-600'
               }`}
             >
               {isPending ? 'Pending Confirmation' : 'Book Now'}
