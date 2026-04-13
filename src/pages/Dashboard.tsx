@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
@@ -692,7 +692,10 @@ export default function Dashboard() {
 
       {/* Ways to Earn Points */}
       <div className="pt-2 relative">
-        <h3 className="text-lg font-bold mb-4 relative z-10">Ways to Earn Points</h3>
+        <div className="flex items-center gap-2 mb-4 relative z-10">
+          <h3 className="text-lg font-bold">Ways to Earn Paw Points</h3>
+          <PawPrint className="w-5 h-5 text-amber-500 fill-amber-500/20" />
+        </div>
         
         {/* The Shelf Effect */}
         <div className="absolute bottom-8 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none z-0" />
@@ -982,40 +985,52 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
 
   return (
     <motion.div 
-      whileHover={{ scale: 1.05 }}
-      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col cursor-grab active:cursor-grabbing w-full h-full overflow-hidden group bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-2xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.06)] rounded-3xl p-6 transition-all duration-300 group-hover:bg-gradient-to-br group-hover:from-white/90 group-hover:to-white/50 group-hover:shadow-[0_8px_40px_rgba(0,0,0,0.12)] group-hover:border-white`}
+      whileHover={{ y: -5, scale: 1.02 }}
+      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col cursor-grab active:cursor-grabbing w-full h-[260px] bg-white/20 backdrop-blur-3xl border-t border-l border-white/70 border-b border-r border-white/20 shadow-[0_8px_32px_rgba(20,20,20,0.04)] rounded-3xl p-6 overflow-hidden transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)] group`}
     >
       {/* Dynamic Gradient Background */}
       <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${themeGradients[theme]} via-transparent to-transparent pointer-events-none`} />
       
+      {/* Shimmer Effect for High Value */}
+      {highValue && (
+        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-[shimmer_3s_infinite] pointer-events-none z-0" />
+      )}
+
+      {/* Absolute High Value Badge */}
+      {highValue && (
+        <div className="absolute -top-3 right-4 z-20 shadow-sm bg-yellow-400/20 backdrop-blur-md border border-yellow-300/50 text-yellow-700 font-bold tracking-widest text-[10px] rounded-full px-3 py-1 animate-pulse uppercase">
+          High Value
+        </div>
+      )}
+
       <div className="relative z-10 flex flex-col h-full">
-        <div className="flex flex-col items-start gap-2 mb-2">
-          {highValue && (
-            <div className="bg-yellow-400/20 backdrop-blur-md border border-yellow-300/50 text-yellow-700 font-bold tracking-widest text-[10px] rounded-full px-3 py-1 shadow-[0_0_15px_rgba(250,204,21,0.4)] animate-pulse uppercase">
-              High Value
-            </div>
-          )}
+        <div className="flex flex-col items-start gap-2 mb-2 pt-2">
           <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide">{title}</h4>
-          {subtext && <p className="text-xs text-slate-500 font-medium">{subtext}</p>}
+          {subtext && <p className="text-sm text-gray-600/90 leading-relaxed font-medium">{subtext}</p>}
         </div>
         
-        <p className={`mt-2 mb-6 font-black text-3xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-400`}>
-          {pointsText}
-        </p>
-        
-        <MagneticWrapper className="mt-auto w-full rounded-xl">
-          <button 
-            onClick={() => onBook(id, pointsValue, title)}
-            disabled={isPending}
-            className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
-              isPending 
-                ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-                : 'bg-slate-900/80 backdrop-blur-xl border border-white/10 text-white hover:bg-slate-900'
-            }`}
-          >
-            {isPending ? 'Pending Confirmation' : 'Book Now'}
-          </button>
-        </MagneticWrapper>
+        <div className="mt-auto flex flex-col">
+          <div className="mb-4 flex items-center gap-1.5">
+            <PawPrint className="w-6 h-6 text-amber-500 fill-amber-500/40 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse" />
+            <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600">
+              {pointsText}
+            </p>
+          </div>
+          
+          <MagneticWrapper className="w-full rounded-xl">
+            <button 
+              onClick={() => onBook(id, pointsValue, title)}
+              disabled={isPending}
+              className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
+                isPending 
+                  ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
+                  : 'bg-slate-900/80 backdrop-blur-xl border border-white/10 text-white hover:bg-slate-900'
+              }`}
+            >
+              {isPending ? 'Pending Confirmation' : 'Book Now'}
+            </button>
+          </MagneticWrapper>
+        </div>
       </div>
     </motion.div>
   );
