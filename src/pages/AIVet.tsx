@@ -20,6 +20,8 @@ Pet Name: Johnny.
 Breed: American Bully.
 Current Weight: 65 kg.
 You must use this weight for any toxicity or dosage calculations.
+
+You are highly contextually aware of the user's language. If the user speaks to you in Hinglish (a blend of Hindi and English) or pure Hindi, you MUST seamlessly adapt and respond in the exact same language and tone. Do not force English if the user prefers Hinglish.
 `;
 
 // --- Audio Utility Functions ---
@@ -66,6 +68,7 @@ export default function AIVet() {
   const [volume, setVolume] = useState(0);
   const [isUserSpeaking, setIsUserSpeaking] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState<{ speaker: 'user' | 'ai', text: string } | null>(null);
   const [messages, setMessages] = useState<{id: string, role: 'user' | 'ai', text: string, isComplete?: boolean}[]>([
     { id: 'init', role: 'ai', text: 'Hi Harshal, I am the Planet Animal AI Vet. How can I help Johnny today?', isComplete: true }
@@ -81,6 +84,7 @@ export default function AIVet() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>(0);
   const isMutedRef = useRef(isMuted);
+  const isAISpeakingRef = useRef(false);
   
   // VAD and Interruption Refs
   const isSpeakingRef = useRef(false);
@@ -184,17 +188,29 @@ export default function AIVet() {
 
           sourceNode.onended = () => {
             activeAudioNodesRef.current = activeAudioNodesRef.current.filter(n => n !== sourceNode);
+            if (activeAudioNodesRef.current.length === 0 && audioQueueRef.current.length === 0) {
+              setIsAISpeaking(false);
+              isAISpeakingRef.current = false;
+            }
             scheduleAudio();
           };
 
           activeAudioNodesRef.current.push(sourceNode);
+          setIsAISpeaking(true);
+          isAISpeakingRef.current = true;
           sourceNode.start(nextPlayTimeRef.current);
           nextPlayTimeRef.current += buffer.duration;
         }
       };
 
       // 2. Get Microphone
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          echoCancellation: true, 
+          noiseSuppression: true, 
+          autoGainControl: true 
+        } 
+      });
       streamRef.current = stream;
 
       // 3. Setup Analyser for Visualization
@@ -219,6 +235,8 @@ export default function AIVet() {
         recognition.interimResults = true;
         
         recognition.onresult = (event: any) => {
+          if (isAISpeakingRef.current) return; // Ignore if AI is speaking
+          
           let transcript = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             transcript += event.results[i][0].transcript;
@@ -230,6 +248,8 @@ export default function AIVet() {
               const last = prev[prev.length - 1];
               if (last && last.role === 'user' && !last.isComplete) {
                 return [...prev.slice(0, -1), { ...last, text: transcript }];
+              } else if (!last || last.role !== 'user' || last.isComplete) {
+                return [...prev, { id: crypto.randomUUID(), role: 'user', text: transcript, isComplete: false }];
               }
               return prev;
             });
@@ -254,7 +274,7 @@ export default function AIVet() {
 
       // 5. Connect to Gemini Live API
       const sessionPromise = ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "models/gemini-3.1-flash-preview",
         callbacks: {
           onmessage: (message: LiveServerMessage) => {
             // Handle Emergency Keywords and Text Transcripts
@@ -333,7 +353,7 @@ export default function AIVet() {
           // Zero out output to prevent feedback loop to speakers
           e.outputBuffer.getChannelData(0).fill(0);
           
-          if (isMutedRef.current) return; // Don't send if muted
+          if (isMutedRef.current || isAISpeakingRef.current) return; // Don't send if muted or AI is speaking
 
           const inputData = e.inputBuffer.getChannelData(0);
           const int16Data = float32ToInt16(inputData);
@@ -453,6 +473,7 @@ export default function AIVet() {
       <AnimatePresence>
         {emergency && (
           <motion.div
+            key="emergency-banner"
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             exit={{ y: -100 }}
@@ -534,6 +555,7 @@ export default function AIVet() {
       <AnimatePresence>
         {isActive && liveTranscript && (
           <motion.div
+            key="live-transcript-box"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
