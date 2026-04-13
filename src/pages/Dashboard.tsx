@@ -544,28 +544,31 @@ export default function Dashboard() {
     <div className="p-6 space-y-8 pb-32">
       {/* Header with Logo */}
       <header className="pt-4 mb-2">
-        <div className="flex justify-between items-center relative mb-6">
-          <div className="flex items-center gap-4 z-10">
+        <div className="relative flex items-center justify-between w-full py-4">
+          {/* Logo Container (Left) */}
+          <div className="relative z-10">
             <button onClick={() => navigate('/profiles')} className="shrink-0 group">
-              <div className="animate-sync-heartbeat origin-left">
+              <div className="animate-sync-heartbeat origin-left drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-transform active:scale-95">
                 <Logo className="!w-16 !h-16" />
               </div>
             </button>
+          </div>
             
-            <div className="flex flex-col items-start pointer-events-none whitespace-nowrap">
-              <span className="font-black tracking-widest text-slate-900 text-lg uppercase block leading-none">Planet Animal</span>
-              <span className="text-sm font-bold tracking-widest text-amber-500 mt-0.5 uppercase">Hospital & Wellness</span>
-            </div>
+          {/* Center Text Container */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0 w-max pointer-events-none whitespace-nowrap">
+            <span className="text-lg font-black text-slate-800 tracking-tight uppercase block leading-none">PLANET ANIMAL</span>
+            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-[0.25em] mt-0.5">HOSPITAL & WELLNESS</span>
           </div>
 
-          <div className="flex items-center z-10">
+          {/* Profile Container (Right) */}
+          <div className="relative z-10">
             <MagneticWrapper className="rounded-full">
               <button onClick={() => navigate('/settings')} className="shrink-0 block">
                 <div className="animate-sync-heartbeat origin-center">
                   <DualAvatar 
                     leftImage={harshalImage}
                     rightImage={johnnyImage}
-                    className="w-16 h-16"
+                    className="w-16 h-16 ring-2 ring-amber-500/30 ring-offset-2 ring-offset-white/50 hover:ring-amber-500/70 transition-all duration-300 shadow-sm active:scale-95 rounded-full"
                   />
                 </div>
               </button>
@@ -998,13 +1001,14 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
 
       {/* Absolute High Value Badge */}
       {highValue && (
-        <div className="absolute -top-3 right-4 z-20 shadow-sm bg-yellow-400/20 backdrop-blur-md border border-yellow-300/50 text-yellow-700 font-bold tracking-widest text-[10px] rounded-full px-3 py-1 animate-pulse uppercase">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-amber-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <Sparkles className="w-3 h-3" />
           High Value
         </div>
       )}
 
       <div className="relative z-10 flex flex-col h-full">
-        <div className="flex flex-col items-start gap-2 mb-2 pt-2">
+        <div className="mt-8 flex flex-col items-start gap-2">
           <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide">{title}</h4>
           {subtext && <p className="text-sm text-gray-600/90 leading-relaxed font-medium">{subtext}</p>}
         </div>

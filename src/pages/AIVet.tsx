@@ -4,10 +4,12 @@ import { Mic, MicOff, PhoneOff, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey });
 
 const SYSTEM_INSTRUCTION = `
-Role: You are the 'Planet Animal AI Vet', an authoritative, calm, and highly knowledgeable veterinary assistant.
+You are the official AI Veterinarian strictly employed by Planet Animal Hospital. You must warmly represent the clinic, maintain a highly professional and empathetic tone, and clearly state that you are part of the Planet Animal Hospital team if asked. You provide helpful, proactive pet care advice. CRITICAL: You cannot legally diagnose conditions or prescribe medication. If a situation seems urgent, you must firmly advise the pet parent to book an in-person appointment at Planet Animal Hospital immediately.
+
 Language Mirroring: You are a linguistic chameleon. You MUST dynamically match the user's exact language and fluency. If the user speaks in proper, fluent English, you MUST respond in proper, fluent, native-sounding English. If the user mixes Hindi and English (Hinglish), you should respond in natural Hinglish. Never force Hinglish if the user is speaking pure English.
 Tone: Your voice must sound lively, energetic, and deeply reassuring. Speak with the warmth and clarity of a top-tier veterinarian.
 Grounding: You MUST use the Google Search tool to verify symptoms and local outbreaks before advising.
@@ -64,6 +66,7 @@ export default function AIVet() {
   const [volume, setVolume] = useState(0);
   const [isUserSpeaking, setIsUserSpeaking] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState<{ speaker: 'user' | 'ai', text: string } | null>(null);
   const [messages, setMessages] = useState<{id: string, role: 'user' | 'ai', text: string, isComplete?: boolean}[]>([
     { id: 'init', role: 'ai', text: 'Hi Harshal, I am the Planet Animal AI Vet. How can I help Johnny today?', isComplete: true }
   ]);
@@ -71,6 +74,7 @@ export default function AIVet() {
   // Refs for Audio and WebSocket
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sessionRef = useRef<any>(null);
+  const recognitionRef = useRef<any>(null);
   const nextPlayTimeRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -123,6 +127,13 @@ export default function AIVet() {
     if (analyserRef.current) analyserRef.current.disconnect();
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null;
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setLiveTranscript(null);
+
     activeAudioNodesRef.current.forEach(node => {
       try { node.stop(); } catch (e) {}
     });
@@ -200,6 +211,47 @@ export default function AIVet() {
       source.connect(processor);
       processor.connect(audioCtx.destination); // Required for processor to run
 
+      // 4.5 Setup Speech Recognition for User Transcript
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+          }
+          if (transcript.trim()) {
+            setLiveTranscript({ speaker: 'user', text: transcript });
+            
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === 'user' && !last.isComplete) {
+                return [...prev.slice(0, -1), { ...last, text: transcript }];
+              }
+              return prev;
+            });
+          }
+        };
+        
+        recognition.onerror = (e: any) => console.error("Speech recognition error", e);
+        
+        recognition.onend = () => {
+          if (sessionRef.current) {
+            try { recognition.start(); } catch(e) {}
+          }
+        };
+
+        try {
+          recognition.start();
+          recognitionRef.current = recognition;
+        } catch (e) {
+          console.error("Failed to start speech recognition", e);
+        }
+      }
+
       // 5. Connect to Gemini Live API
       const sessionPromise = ai.live.connect({
         model: "gemini-3.1-flash-live-preview",
@@ -217,8 +269,11 @@ export default function AIVet() {
                 setMessages(prev => {
                   const last = prev[prev.length - 1];
                   if (last && last.role === 'ai' && !last.isComplete) {
-                    return [...prev.slice(0, -1), { ...last, text: last.text + part.text }];
+                    const newText = last.text + part.text;
+                    setLiveTranscript({ speaker: 'ai', text: newText });
+                    return [...prev.slice(0, -1), { ...last, text: newText }];
                   } else {
+                    setLiveTranscript({ speaker: 'ai', text: part.text });
                     return [...prev, { id: crypto.randomUUID(), role: 'ai', text: part.text, isComplete: false }];
                   }
                 });
@@ -288,6 +343,11 @@ export default function AIVet() {
             audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
           });
         };
+      }).catch((err) => {
+        console.error("Failed to connect to Gemini Live API:", err);
+        setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'ai', text: 'Error: Could not connect to the AI service. Please check your connection or API key.', isComplete: true }]);
+        setIsThinking(false);
+        stopConversation();
       });
 
       // Start Visualization Loop
@@ -312,6 +372,7 @@ export default function AIVet() {
             isSpeakingRef.current = true;
             setIsUserSpeaking(true);
             setIsThinking(false);
+            setLiveTranscript({ speaker: 'user', text: '...' });
             
             const lastMsg = messagesRef.current[messagesRef.current.length - 1];
             const isAIResponding = lastMsg && lastMsg.role === 'ai' && !lastMsg.isComplete;
@@ -355,7 +416,13 @@ export default function AIVet() {
               isSpeakingRef.current = false;
               setIsUserSpeaking(false);
               setIsThinking(true);
-              setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'user', text: '🎤 Voice message sent', isComplete: true }]);
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last && last.role === 'user') {
+                  return [...prev.slice(0, -1), { ...last, isComplete: true }];
+                }
+                return [...prev, { id: crypto.randomUUID(), role: 'user', text: '🎤 Voice message sent', isComplete: true }];
+              });
             }
           }
         }
@@ -462,6 +529,39 @@ export default function AIVet() {
           <div ref={messagesEndRef} />
         </AnimatePresence>
       </div>
+
+      {/* Live Transcription Box */}
+      <AnimatePresence>
+        {isActive && liveTranscript && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute bottom-32 left-6 right-6 z-20"
+          >
+            <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-lg">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                Live Transcript
+              </p>
+              <div className="flex items-start gap-3">
+                {liveTranscript.speaker === 'user' ? (
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                    <Mic size={14} className="text-emerald-600" />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <Sparkles size={14} className="text-amber-600" />
+                  </div>
+                )}
+                <p className="text-sm font-medium text-slate-800 leading-relaxed max-h-24 overflow-y-auto hide-scrollbar">
+                  {liveTranscript.text}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Dock */}
       <div className="absolute bottom-12 left-0 right-0 flex justify-center z-20 pb-safe">
