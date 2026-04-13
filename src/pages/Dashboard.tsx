@@ -195,15 +195,18 @@ function getPersonalizedIncentives(pet: { name: string, breed: string, age: numb
     theme: "purple" as const
   });
 
-  return incentives;
+  return incentives.map((incentive, index) => ({
+    ...incentive,
+    id: `${incentive.id}-${crypto.randomUUID()}`
+  }));
 }
 
 function getDailyTip(pet: { name: string, breed: string, age: number, isSenior: boolean }) {
-  const currentSeason = 'Monsoon';
+  const currentSeason = 'Summer';
   const breedLower = pet.breed.toLowerCase();
 
-  if ((breedLower.includes('bully') || breedLower.includes('retriever')) && currentSeason === 'Monsoon') {
-    return `Heads up! Monsoon season brings a spike in ticks. Ensure ${pet.name} is up to date on preventative meds.`;
+  if ((breedLower.includes('bully') || breedLower.includes('retriever')) && currentSeason === 'Summer') {
+    return `Summer is here! ☀️ Keep ${pet.name} hydrated and avoid walking on hot pavements during peak afternoon heat.`;
   }
   if (pet.isSenior) {
     return `${pet.name} is in their golden years! Regular checkups are key to catching issues early.`;
@@ -343,6 +346,21 @@ export default function Dashboard() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!carouselRef.current) return;
@@ -536,7 +554,7 @@ export default function Dashboard() {
             
             <div className="flex flex-col items-start pointer-events-none whitespace-nowrap">
               <span className="font-black tracking-widest text-slate-900 text-lg uppercase block leading-none">Planet Animal</span>
-              <span className="text-sm font-bold tracking-widest text-emerald-600 mt-0.5 uppercase">Hospital & Wellness</span>
+              <span className="text-sm font-bold tracking-widest text-amber-500 mt-0.5 uppercase">Hospital & Wellness</span>
             </div>
           </div>
 
@@ -679,44 +697,48 @@ export default function Dashboard() {
         {/* The Shelf Effect */}
         <div className="absolute bottom-8 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none z-0" />
 
-        <Reorder.Group 
-          axis="x" 
-          values={incentivesOrder} 
-          onReorder={setIncentivesOrder} 
-          className="flex overflow-x-scroll hide-scrollbar gap-4 py-10 -my-10 relative z-10"
-        >
-          {incentivesOrder.map((incentive) => (
-            <Reorder.Item value={incentive} key={incentive.id} className="flex-none w-[320px] group">
-              <EarnCard 
-                id={incentive.id}
-                title={incentive.title}
-                subtext={incentive.subtext}
-                pointsText={incentive.pointsText}
-                pointsValue={incentive.pointsValue}
-                highValue={incentive.highValue}
-                theme={incentive.theme}
-                isPending={pendingActions.includes(incentive.id)}
-                onBook={async (id, val, title) => {
-                  if (!userId) return;
-                  try {
-                    await addDoc(collection(db, 'pointsQueue'), {
-                      userId: userId,
-                      parent: 'Harshal',
-                      pet: 'Johnny (American Bully, Age 8)',
-                      service: title,
-                      points: val,
-                      status: 'pending',
-                      actionId: id
-                    });
-                  } catch (e) {
-                    handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
-                  }
-                  window.open(generateWhatsAppPayload(title), '_blank');
-                }} 
-              />
-            </Reorder.Item>
-          ))}
-        </Reorder.Group>
+        <div className="relative w-full [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
+          <Reorder.Group 
+            ref={carouselRef}
+            axis="x" 
+            values={incentivesOrder} 
+            onReorder={setIncentivesOrder} 
+            className="flex overflow-x-scroll hide-scrollbar gap-4 py-10 -my-10 relative z-10 [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {incentivesOrder.map((incentive) => (
+              <Reorder.Item value={incentive} key={incentive.id} className="flex-none w-[320px] group">
+                <EarnCard 
+                  id={incentive.id}
+                  title={incentive.title}
+                  subtext={incentive.subtext}
+                  pointsText={incentive.pointsText}
+                  pointsValue={incentive.pointsValue}
+                  highValue={incentive.highValue}
+                  theme={incentive.theme}
+                  isPending={pendingActions.includes(incentive.id)}
+                  onBook={async (id, val, title) => {
+                    if (!userId) return;
+                    try {
+                      await addDoc(collection(db, 'pointsQueue'), {
+                        userId: userId,
+                        parent: 'Harshal',
+                        pet: 'Johnny (American Bully, Age 8)',
+                        service: title,
+                        points: val,
+                        status: 'pending',
+                        actionId: id
+                      });
+                    } catch (e) {
+                      handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
+                    }
+                    window.open(generateWhatsAppPayload(title), '_blank');
+                  }} 
+                />
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
+        </div>
       </div>
 
       {/* Modals / Bottom Sheets */}
@@ -961,7 +983,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
   return (
     <motion.div 
       whileHover={{ scale: 1.05 }}
-      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col p-6 bg-white/10 backdrop-blur-[60px] rounded-[2.5rem] shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out ${glowShadows[theme]} overflow-hidden group border border-white/40 cursor-grab active:cursor-grabbing w-full h-full`}
+      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col cursor-grab active:cursor-grabbing w-full h-full overflow-hidden group bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-2xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.06)] rounded-3xl p-6 transition-all duration-300 group-hover:bg-gradient-to-br group-hover:from-white/90 group-hover:to-white/50 group-hover:shadow-[0_8px_40px_rgba(0,0,0,0.12)] group-hover:border-white`}
     >
       {/* Dynamic Gradient Background */}
       <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${themeGradients[theme]} via-transparent to-transparent pointer-events-none`} />
@@ -977,7 +999,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
           {subtext && <p className="text-xs text-slate-500 font-medium">{subtext}</p>}
         </div>
         
-        <p className={`mt-2 mb-6 font-black text-3xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-r ${textGradients[theme]}`}>
+        <p className={`mt-2 mb-6 font-black text-3xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-400`}>
           {pointsText}
         </p>
         
