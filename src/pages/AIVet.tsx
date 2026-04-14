@@ -4,13 +4,14 @@ import { Mic, MicOff, PhoneOff, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 
-const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey });
-
 const SYSTEM_INSTRUCTION = `
 You are the official AI Veterinarian strictly employed by Planet Animal Hospital. You must warmly represent the clinic, maintain a highly professional and empathetic tone, and clearly state that you are part of the Planet Animal Hospital team if asked. You provide helpful, proactive pet care advice. CRITICAL: You cannot legally diagnose conditions or prescribe medication. If a situation seems urgent, you must firmly advise the pet parent to book an in-person appointment at Planet Animal Hospital immediately.
 
-Language Mirroring: You are a linguistic chameleon. You MUST dynamically match the user's exact language and fluency. If the user speaks in proper, fluent English, you MUST respond in proper, fluent, native-sounding English. If the user mixes Hindi and English (Hinglish), you should respond in natural Hinglish. Never force Hinglish if the user is speaking pure English.
+Language Mirroring & Detection: You are a linguistic chameleon. You MUST dynamically analyze the user's input for language patterns. 
+- DEFAULT TO ENGLISH: If the user speaks in pure English, or if you detect no Hindi/Hinglish words, you MUST respond in proper, fluent, native-sounding English.
+- HINGLISH/HINDI DETECTION: If the user uses ANY Hindi words, phrases, or mixes Hindi and English (Hinglish), you MUST seamlessly adapt and respond in natural Hinglish or Hindi, matching their exact blend and fluency. 
+- Never force Hinglish if the user is speaking pure English.
+
 Tone: Your voice must sound lively, energetic, and deeply reassuring. Speak with the warmth and clarity of a top-tier veterinarian.
 Grounding: You MUST use the Google Search tool to verify symptoms and local outbreaks before advising.
 
@@ -20,8 +21,6 @@ Pet Name: Johnny.
 Breed: American Bully.
 Current Weight: 65 kg.
 You must use this weight for any toxicity or dosage calculations.
-
-You are highly contextually aware of the user's language. If the user speaks to you in Hinglish (a blend of Hindi and English) or pure Hindi, you MUST seamlessly adapt and respond in the exact same language and tone. Do not force English if the user prefers Hinglish.
 `;
 
 // --- Audio Utility Functions ---
@@ -64,6 +63,7 @@ export default function AIVet() {
   const navigate = useNavigate();
   const [isActive, setIsActive] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [callState, setCallState] = useState<'IDLE' | 'CALLING' | 'LIVE'>('IDLE');
   const [isMuted, setIsMuted] = useState(false);
   const [emergency, setEmergency] = useState(false);
   const [volume, setVolume] = useState(0);
@@ -78,6 +78,12 @@ export default function AIVet() {
   // Refs for Audio and WebSocket
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sessionRef = useRef<any>(null);
+  const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    ringtoneRef.current = new Audio('https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg');
+    ringtoneRef.current.loop = true;
+  }, []);
   const recognitionRef = useRef<any>(null);
   const nextPlayTimeRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
@@ -128,9 +134,15 @@ export default function AIVet() {
   const stopConversation = useCallback(() => {
     setIsActive(false);
     setIsConnected(false);
+    setCallState('IDLE');
     setVolume(0);
     setIsUserSpeaking(false);
     setIsThinking(false);
+    
+    if (ringtoneRef.current) {
+      ringtoneRef.current.pause();
+      ringtoneRef.current.currentTime = 0;
+    }
     
     audioQueueRef.current = [];
     isIgnoringAudioRef.current = false;
@@ -169,6 +181,11 @@ export default function AIVet() {
   const startConversation = async () => {
     if (isActive) return;
     setIsActive(true);
+    setCallState('CALLING');
+    // Temporarily disable ringtone to prevent CORS/load errors crashing the UI
+    // if (ringtoneRef.current) {
+    //   ringtoneRef.current.play().catch(e => console.warn("Ringtone play suppressed:", e));
+    // }
 
     try {
       // 1. Setup Audio Context
@@ -284,87 +301,120 @@ export default function AIVet() {
           recognitionRef.current = recognition;
         } catch (e) {
           console.error("Failed to start speech recognition", e);
+          setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'ai', text: 'Warning: Could not start live transcription. Your microphone might still work for the call.', isComplete: true }]);
         }
       }
 
       // 5. Connect to Gemini Live API
-      const sessionPromise = ai.live.connect({
-        model: "models/gemini-3.1-flash-preview",
-        callbacks: {
-          onopen: () => {
-            setIsConnected(true);
-          },
-          onmessage: (message: LiveServerMessage) => {
-            // Handle Emergency Keywords and Text Transcripts
-            const parts = message.serverContent?.modelTurn?.parts || [];
-            for (const part of parts) {
-              if (part.text) {
-                const lowerText = part.text.toLowerCase();
-                if (lowerText.includes('emergency') || lowerText.includes('toxic') || lowerText.includes('chocolate') || lowerText.includes('immediate')) {
-                  setEmergency(true);
-                }
-                
-                setMessages(prev => {
-                  const last = prev[prev.length - 1];
-                  if (last && last.role === 'ai' && !last.isComplete) {
-                    const newText = last.text + part.text;
-                    setLiveTranscript({ speaker: 'ai', text: newText });
-                    return [...prev.slice(0, -1), { ...last, text: newText }];
-                  } else {
-                    setLiveTranscript({ speaker: 'ai', text: part.text });
-                    return [...prev, { id: crypto.randomUUID(), role: 'ai', text: part.text, isComplete: false }];
+      const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        console.warn("API_KEY is missing. Please ensure GEMINI_API_KEY is set in your environment.");
+      }
+      const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+
+      let sessionPromise;
+      try {
+        sessionPromise = ai.live.connect({
+          model: "gemini-3.1-flash-live-preview",
+          callbacks: {
+            onopen: () => {
+              setIsConnected(true);
+              setCallState('LIVE');
+              if (ringtoneRef.current) {
+                ringtoneRef.current.pause();
+                ringtoneRef.current.currentTime = 0;
+              }
+            },
+            onclose: (event) => {
+              console.error("WebSocket connection closed:", event);
+              stopConversation();
+            },
+            onerror: (error) => {
+              console.error("WebSocket connection error:", error);
+              setCallState('IDLE');
+              setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'ai', text: 'Error: WebSocket connection failed.', isComplete: true }]);
+            },
+            onmessage: (message: LiveServerMessage) => {
+              // Handle Emergency Keywords and Text Transcripts
+              const parts = message.serverContent?.modelTurn?.parts || [];
+              for (const part of parts) {
+                if (part.text) {
+                  const lowerText = part.text.toLowerCase();
+                  if (lowerText.includes('emergency') || lowerText.includes('toxic') || lowerText.includes('chocolate') || lowerText.includes('immediate')) {
+                    setEmergency(true);
                   }
-                });
-                setIsThinking(false);
+                  
+                  setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.role === 'ai' && !last.isComplete) {
+                      const newText = last.text + part.text;
+                      setLiveTranscript({ speaker: 'ai', text: newText });
+                      return [...prev.slice(0, -1), { ...last, text: newText }];
+                    } else {
+                      setLiveTranscript({ speaker: 'ai', text: part.text });
+                      return [...prev, { id: crypto.randomUUID(), role: 'ai', text: part.text, isComplete: false }];
+                    }
+                  });
+                  setIsThinking(false);
+                }
+              }
+  
+              if (message.serverContent?.turnComplete) {
+                 isIgnoringAudioRef.current = false;
+                 setMessages(prev => {
+                   const last = prev[prev.length - 1];
+                   if (last && last.role === 'ai') {
+                     return [...prev.slice(0, -1), { ...last, isComplete: true }];
+                   }
+                   return prev;
+                 });
+              }
+  
+              // Handle Interruption
+              if (message.serverContent?.interrupted) {
+                isIgnoringAudioRef.current = false;
+                audioQueueRef.current = [];
+                nextPlayTimeRef.current = audioCtxRef.current?.currentTime || 0;
+              }
+  
+              // Handle Audio Playback
+              const audioPart = message.serverContent?.modelTurn?.parts?.find(p => p.inlineData);
+              const base64Audio = audioPart?.inlineData?.data;
+              if (base64Audio && audioCtxRef.current && !isIgnoringAudioRef.current) {
+                const int16Data = base64ToInt16Array(base64Audio);
+                const float32Data = int16ToFloat32(int16Data);
+                
+                // Gemini Live API outputs audio at 24kHz. Setting the buffer to 24000 ensures 
+                // the AudioContext resamples it correctly without dropping the pitch.
+                const buffer = audioCtxRef.current.createBuffer(1, float32Data.length, 24000);
+                buffer.getChannelData(0).set(float32Data);
+                
+                audioQueueRef.current.push(buffer);
+                scheduleAudio();
               }
             }
-
-            if (message.serverContent?.turnComplete) {
-               isIgnoringAudioRef.current = false;
-               setMessages(prev => {
-                 const last = prev[prev.length - 1];
-                 if (last && last.role === 'ai') {
-                   return [...prev.slice(0, -1), { ...last, isComplete: true }];
-                 }
-                 return prev;
-               });
-            }
-
-            // Handle Interruption
-            if (message.serverContent?.interrupted) {
-              isIgnoringAudioRef.current = false;
-              audioQueueRef.current = [];
-              nextPlayTimeRef.current = audioCtxRef.current?.currentTime || 0;
-            }
-
-            // Handle Audio Playback
-            const audioPart = message.serverContent?.modelTurn?.parts?.find(p => p.inlineData);
-            const base64Audio = audioPart?.inlineData?.data;
-            if (base64Audio && audioCtxRef.current && !isIgnoringAudioRef.current) {
-              const int16Data = base64ToInt16Array(base64Audio);
-              const float32Data = int16ToFloat32(int16Data);
-              
-              // Gemini Live API outputs audio at 24kHz. Setting the buffer to 24000 ensures 
-              // the AudioContext resamples it correctly without dropping the pitch.
-              const buffer = audioCtxRef.current.createBuffer(1, float32Data.length, 24000);
-              buffer.getChannelData(0).set(float32Data);
-              
-              audioQueueRef.current.push(buffer);
-              scheduleAudio();
-            }
-          }
-        },
-        config: {
-          generationConfig: { responseModalities: ["AUDIO"] },
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } }
           },
-          systemInstruction: SYSTEM_INSTRUCTION,
-          tools: [{ googleSearch: {} }],
-          outputAudioTranscription: {}
-        }
-      });
+          config: {
+            generationConfig: { responseModalities: ["AUDIO"] },
+            responseModalities: [Modality.AUDIO],
+            speechConfig: {
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } }
+            },
+            systemInstruction: {
+              parts: [{ text: SYSTEM_INSTRUCTION }]
+            },
+            tools: [{ googleSearch: {} }],
+            outputAudioTranscription: {}
+          }
+        });
+      } catch (err) {
+        console.error("Failed to initialize Gemini Live API connection:", err);
+        setCallState('IDLE');
+        setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'ai', text: 'Error: Could not initialize the AI connection. Please check your API key.', isComplete: true }]);
+        setIsThinking(false);
+        stopConversation();
+        return;
+      }
 
       sessionPromise.then((session) => {
         sessionRef.current = session;
@@ -385,6 +435,7 @@ export default function AIVet() {
         };
       }).catch((err) => {
         console.error("Failed to connect to Gemini Live API:", err);
+        setCallState('IDLE');
         setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'ai', text: 'Error: Could not connect to the AI service. Please check your connection or API key.', isComplete: true }]);
         setIsThinking(false);
         stopConversation();
@@ -513,9 +564,9 @@ export default function AIVet() {
       {/* Header */}
       <div className="px-6 py-8 z-20 flex flex-col items-center justify-center mt-10 shrink-0">
         <h1 onClick={triggerMockEmergency} className="font-black text-slate-900 text-2xl tracking-tight cursor-pointer">AI Vet Doctor</h1>
-        <p className={`font-bold text-sm tracking-widest uppercase mt-1 flex items-center gap-2 ${isUserSpeaking ? 'text-emerald-500' : 'text-slate-500'}`}>
-          <span className={`w-2 h-2 rounded-full ${isUserSpeaking ? 'bg-emerald-500' : 'bg-slate-400'} ${isConnected ? 'animate-pulse' : ''}`}></span>
-          {isConnected ? (isUserSpeaking ? 'Listening...' : 'Connected') : (isActive ? 'Connecting...' : 'Ready')}
+        <p className={`font-bold text-sm tracking-widest uppercase mt-1 flex items-center gap-2 ${callState === 'LIVE' ? 'text-emerald-500' : 'text-slate-500'}`}>
+          <span className={`w-2 h-2 rounded-full ${callState === 'LIVE' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-400'} ${callState === 'CALLING' ? 'animate-pulse' : ''}`}></span>
+          {callState === 'LIVE' ? '● LIVE CONNECTION' : callState === 'CALLING' ? 'Calling Planet Animal AI...' : 'READY'}
         </p>
       </div>
 
