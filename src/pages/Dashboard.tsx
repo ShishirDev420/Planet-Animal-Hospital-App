@@ -721,7 +721,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white/30 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-3xl p-6 w-full max-w-md h-full max-h-[85vh] flex flex-col relative overflow-hidden"
+              className="bg-white/30 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-3xl p-6 w-full max-w-md h-full max-h-[85vh] flex flex-col relative"
             >
               <div className="sticky top-0 bg-transparent z-10 pb-4 mb-4 border-b border-white/20 flex justify-between items-center shrink-0">
                 <h2 className="text-2xl font-bold text-yellow-500">Book an Appointment</h2>
@@ -736,7 +736,7 @@ export default function Dashboard() {
               <div className="space-y-6 flex-1 overflow-y-auto pb-6 pr-2">
                 {/* Step 1: Services */}
                 <div>
-                  <h3 className="text-red-500 font-bold tracking-wider text-sm uppercase mb-3">Step 1: Select Service</h3>
+                  <h3 className="text-gray-400 font-semibold tracking-widest text-xs uppercase mb-3">Step 1: Select Service</h3>
                   <div className="space-y-3">
                     {BOOKING_SERVICES.map((service) => {
                       const isSelected = selectedService?.id === service.id;
@@ -768,7 +768,7 @@ export default function Dashboard() {
 
                 {/* Step 2: Date & Time */}
                 <div>
-                  <h3 className="text-red-500 font-bold tracking-wider text-sm uppercase mb-3">Step 2: Date & Time</h3>
+                  <h3 className="text-gray-400 font-semibold tracking-widest text-xs uppercase mb-3">Step 2: Date & Time</h3>
                   <div className="space-y-4">
                     {/* Custom Inline Calendar Grid */}
                     <div className="bg-white/40 border border-white/30 rounded-2xl shadow-sm backdrop-blur-xl p-4">
@@ -821,7 +821,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Apple-Grade 'Time Pill' Grid */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-3 p-2">
                       {['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'].map((time) => {
                         const isSelected = bookingTime === time;
                         return (

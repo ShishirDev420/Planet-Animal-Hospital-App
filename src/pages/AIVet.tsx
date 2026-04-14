@@ -182,10 +182,9 @@ export default function AIVet() {
     if (isActive) return;
     setIsActive(true);
     setCallState('CALLING');
-    // Temporarily disable ringtone to prevent CORS/load errors crashing the UI
-    // if (ringtoneRef.current) {
-    //   ringtoneRef.current.play().catch(e => console.warn("Ringtone play suppressed:", e));
-    // }
+    if (ringtoneRef.current) {
+      ringtoneRef.current.play().catch(e => console.warn("Ringtone play suppressed:", e));
+    }
 
     try {
       // 1. Setup Audio Context
