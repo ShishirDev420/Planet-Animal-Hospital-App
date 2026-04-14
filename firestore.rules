@@ -21,5 +21,16 @@ service cloud.firestore {
                     request.resource.data.points == resource.data.points;
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
+
+    match /requests/{documentId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                    request.resource.data.userId == request.auth.uid &&
+                    request.resource.data.status == 'pending';
+      allow update: if isAuthenticated() && 
+                    resource.data.userId == request.auth.uid &&
+                    request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
   }
 }

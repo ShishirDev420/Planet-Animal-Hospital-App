@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
@@ -230,13 +230,8 @@ function generateWhatsAppPayload(serviceName: string) {
 }
 
 export default function Dashboard() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [loginEmail, setLoginEmail] = useState('harshal@planetanimal.com');
-  const [loginPassword, setLoginPassword] = useState('Harshal@2026!');
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { harshalImage, johnnyImage } = useProfileImages();
   
@@ -286,41 +281,11 @@ export default function Dashboard() {
     animate(mouseY, height / 2, { type: 'spring', stiffness: 150, damping: 15 });
   };
 
-  const handleEmailSignIn = async () => {
-    setIsEmailLoading(true);
-    setLoginError(null);
-    try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials') {
-        try {
-          await createUserWithEmailAndPassword(auth, loginEmail, loginPassword);
-        } catch (createError: any) {
-          console.error('Failed to create user', createError);
-          if (createError.code === 'auth/operation-not-allowed') {
-            setLoginError('Email/Password sign-in is not enabled. Please enable it in the Firebase Console under Authentication > Sign-in method.');
-          } else {
-            setLoginError(createError.message);
-          }
-        }
-      } else if (error.code === 'auth/operation-not-allowed') {
-        setLoginError('Email/Password sign-in is not enabled. Please enable it in the Firebase Console under Authentication > Sign-in method.');
-      } else {
-        console.error('Login failed', error);
-        setLoginError(error.message);
-      }
-    } finally {
-      setIsEmailLoading(false);
-    }
-  };
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setIsAuthenticated(true);
         setUserId(user.uid);
       } else {
-        setIsAuthenticated(false);
         setUserId(null);
       }
       setIsAuthReady(true);
@@ -360,10 +325,18 @@ export default function Dashboard() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   
   // Booking State
+  const [isBookVisitOpen, setIsBookVisitOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<{id: number, name: string, points: number} | null>(null);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [upcomingAppts, setUpcomingAppts] = useState([{ date: '12', title: 'Annual Wellness Exam', time: '10:30 AM' }]);
   const [isConnecting, setIsConnecting] = useState(false);
+
+  const BOOKING_SERVICES = [
+    { id: 1, name: 'General Checkup', points: 1000 },
+    { id: 2, name: 'Full Grooming', points: 800 },
+    { id: 3, name: 'Vaccinations', points: 750 }
+  ];
 
   // Drag-to-Scroll State
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -439,6 +412,33 @@ export default function Dashboard() {
     };
   }, []);
 
+  const submitBooking = async () => {
+    if (!selectedService || !bookingDate || !bookingTime || !userId) return;
+
+    try {
+      await addDoc(collection(db, 'requests'), {
+        userId: userId,
+        patient: 'Johnny',
+        reason: selectedService.name,
+        points: selectedService.points,
+        status: 'pending',
+        date: bookingDate,
+        time: bookingTime,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'requests');
+    }
+
+    const text = encodeURIComponent('Hi Planet Animal Hospital! I would like to book a ' + selectedService.name + ' on ' + bookingDate + ' at ' + bookingTime + '.');
+    window.open('https://wa.me/919999999999?text=' + text, '_blank');
+
+    setIsBookVisitOpen(false);
+    setSelectedService(null);
+    setBookingDate('');
+    setBookingTime('');
+  };
+
   const closeModal = () => {
     setActiveModal(null);
     setTimeout(() => {
@@ -489,86 +489,6 @@ export default function Dashboard() {
       closeModal();
     }, 1500);
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Ambient Orbs */}
-        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-green-400/30 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-planet-yellow/30 rounded-full blur-[100px]" />
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white/10 backdrop-blur-[50px] border border-white/20 p-8 rounded-[2rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] relative z-10"
-        >
-          <div className="flex justify-center mb-8">
-             <Logo className="!w-20 !h-20" />
-          </div>
-          <h2 className="text-3xl font-black text-slate-800 text-center mb-2 tracking-tight">Welcome Back</h2>
-          <p className="text-slate-500 text-center mb-8 font-medium">Sign in to manage your pet's health.</p>
-          
-          <div className="space-y-4 mb-8">
-            {loginError && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-600 text-sm p-3 rounded-xl font-medium">
-                {loginError}
-              </div>
-            )}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1 ml-1 uppercase tracking-wider">Email</label>
-              <input 
-                type="email" 
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full bg-white/50 border border-white/40 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-planet-yellow/50 transition-all" 
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1 ml-1 uppercase tracking-wider">Password</label>
-              <input 
-                type="password" 
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full bg-white/50 border border-white/40 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-planet-yellow/50 transition-all" 
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <motion.button 
-              whileTap={{ scale: 0.95 }}
-              onClick={handleEmailSignIn}
-              disabled={isEmailLoading}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/50 text-slate-800 font-bold py-4 rounded-xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:bg-white/50 transition-all flex items-center justify-center gap-2"
-            >
-              {isEmailLoading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In with Email'}
-            </motion.button>
-
-            <motion.button 
-              whileTap={{ scale: 0.95 }}
-              onClick={async () => {
-                try {
-                  const provider = new GoogleAuthProvider();
-                  await signInWithPopup(auth, provider);
-                } catch (e) {
-                  console.error('Login failed', e);
-                }
-              }}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/50 text-slate-800 font-bold py-4 rounded-xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:bg-white/50 transition-all flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Sign In with Google
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 space-y-8 pb-32">
@@ -694,7 +614,7 @@ export default function Dashboard() {
             icon={<Calendar className="text-teal-500" />} 
             title="Book Visit" 
             subtitle="Checkups & Grooming" 
-            onClick={() => setActiveModal('book')}
+            onClick={() => setIsBookVisitOpen(true)}
           />
           <ActionCard 
             icon={<FileText className="text-indigo-500" />} 
@@ -913,6 +833,164 @@ export default function Dashboard() {
                 </div>
               )}
             </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Book Visit Master Modal (Liquid Glass) */}
+      <AnimatePresence>
+        {isBookVisitOpen && (
+          <motion.div
+            key="book-visit-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-3xl z-[100] flex items-center justify-center p-4"
+          >
+            <motion.div
+              key="book-visit-modal"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white/30 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-3xl p-6 w-full max-w-md h-full max-h-[85vh] flex flex-col relative overflow-hidden"
+            >
+              <div className="sticky top-0 bg-transparent z-10 pb-4 mb-4 border-b border-white/20 flex justify-between items-center shrink-0">
+                <h2 className="text-2xl font-bold text-slate-800">Book an Appointment</h2>
+                <button 
+                  onClick={() => setIsBookVisitOpen(false)} 
+                  className="p-2 bg-white/40 hover:bg-white/60 rounded-full text-slate-600 transition-colors"
+                >
+                  <X size={20}/>
+                </button>
+              </div>
+
+              <div className="space-y-6 flex-1 overflow-y-auto pb-6 pr-2">
+                {/* Step 1: Services */}
+                <div>
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Step 1: Select Service</h3>
+                  <div className="space-y-3">
+                    {BOOKING_SERVICES.map((service) => {
+                      const isSelected = selectedService?.id === service.id;
+                      return (
+                        <motion.button 
+                          key={service.id}
+                          whileTap={{ scale: 0.92 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          onClick={() => setSelectedService(service)}
+                          className={`w-full text-left cursor-pointer transition-all ${
+                            isSelected 
+                              ? 'bg-yellow-50/60 border border-yellow-400 shadow-[0_4px_20px_rgba(234,179,8,0.15)] backdrop-blur-md rounded-2xl p-4' 
+                              : 'bg-white/40 border border-white/30 backdrop-blur-md rounded-2xl p-4 hover:bg-white/60'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className={`font-bold ${isSelected ? 'text-yellow-800' : 'text-slate-700'}`}>
+                              {service.name}
+                            </span>
+                            <span className={`text-sm font-bold flex items-center gap-1 ${isSelected ? 'text-yellow-600' : 'text-slate-500'}`}>
+                              <PawPrint size={14} /> {service.points} pts
+                            </span>
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Step 2: Date & Time */}
+                <div>
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Step 2: Date & Time</h3>
+                  <div className="space-y-4">
+                    {/* Custom Inline Calendar Grid */}
+                    <div className="bg-white/40 border border-white/30 rounded-2xl shadow-sm backdrop-blur-xl p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-gray-900 font-bold text-lg">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                        <Calendar className="text-slate-500 w-5 h-5" />
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 mb-2">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                          <div key={i} className="text-center text-xs font-semibold text-gray-400">{day}</div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 place-items-center">
+                        {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
+                          <div key={`blank-${i}`} className="h-10 w-10"></div>
+                        ))}
+                        {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
+                          const day = i + 1;
+                          const dateObj = new Date(new Date().getFullYear(), new Date().getMonth(), day);
+                          const year = dateObj.getFullYear();
+                          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                          const dayStr = String(dateObj.getDate()).padStart(2, '0');
+                          const dateString = `${year}-${month}-${dayStr}`;
+                          
+                          const todayObj = new Date();
+                          todayObj.setHours(0, 0, 0, 0);
+                          const isPast = dateObj < todayObj;
+                          const isSelected = bookingDate === dateString;
+
+                          return (
+                            <motion.button
+                              key={day}
+                              whileTap={isPast ? undefined : { scale: 0.85 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                              onClick={() => !isPast && setBookingDate(dateString)}
+                              disabled={isPast}
+                              className={`h-10 w-10 flex items-center justify-center rounded-full text-[15px] transition-colors ${
+                                isPast 
+                                  ? 'text-gray-300 pointer-events-none' 
+                                  : isSelected 
+                                    ? 'bg-yellow-500 text-white font-bold shadow-md' 
+                                    : 'text-gray-900 font-bold hover:bg-white/50'
+                              }`}
+                            >
+                              {day}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Apple-Grade 'Time Pill' Grid */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'].map((time) => {
+                        const isSelected = bookingTime === time;
+                        return (
+                          <motion.button
+                            key={time}
+                            whileTap={{ scale: 0.92 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                            onClick={() => setBookingTime(time)}
+                            className={`py-3 rounded-2xl text-[15px] transition-all ${
+                              isSelected
+                                ? 'font-bold bg-gradient-to-b from-yellow-400 to-yellow-500 border border-yellow-300 text-white shadow-[0_8px_16px_rgba(234,179,8,0.3)]'
+                                : 'font-medium bg-white/30 border border-white/20 text-gray-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md hover:bg-white/50'
+                            }`}
+                          >
+                            {time}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="mt-4 pt-4 border-t border-white/20 shrink-0">
+                <button
+                  onClick={submitBooking}
+                  disabled={!selectedService || !bookingDate || !bookingTime}
+                  className={`transition-all w-full py-4 rounded-[20px] font-bold text-[17px] flex justify-center items-center gap-2 ${
+                    !selectedService || !bookingDate || !bookingTime
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                      : 'bg-black text-white shadow-xl'
+                  }`}
+                >
+                  Confirm Booking
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
