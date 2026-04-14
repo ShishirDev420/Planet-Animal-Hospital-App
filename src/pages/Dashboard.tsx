@@ -724,7 +724,7 @@ export default function Dashboard() {
               className="bg-white/30 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-3xl p-6 w-full max-w-md h-full max-h-[85vh] flex flex-col relative overflow-hidden"
             >
               <div className="sticky top-0 bg-transparent z-10 pb-4 mb-4 border-b border-white/20 flex justify-between items-center shrink-0">
-                <h2 className="text-2xl font-bold text-slate-800">Book an Appointment</h2>
+                <h2 className="text-2xl font-bold text-yellow-500">Book an Appointment</h2>
                 <button 
                   onClick={() => setIsBookVisitOpen(false)} 
                   className="p-2 bg-white/40 hover:bg-white/60 rounded-full text-slate-600 transition-colors"
@@ -736,7 +736,7 @@ export default function Dashboard() {
               <div className="space-y-6 flex-1 overflow-y-auto pb-6 pr-2">
                 {/* Step 1: Services */}
                 <div>
-                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Step 1: Select Service</h3>
+                  <h3 className="text-red-500 font-bold tracking-wider text-sm uppercase mb-3">Step 1: Select Service</h3>
                   <div className="space-y-3">
                     {BOOKING_SERVICES.map((service) => {
                       const isSelected = selectedService?.id === service.id;
@@ -748,15 +748,15 @@ export default function Dashboard() {
                           onClick={() => setSelectedService(service)}
                           className={`w-full text-left cursor-pointer transition-all ${
                             isSelected 
-                              ? 'bg-yellow-50/60 border border-yellow-400 shadow-[0_4px_20px_rgba(234,179,8,0.15)] backdrop-blur-md rounded-2xl p-4' 
+                              ? 'bg-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400 rounded-2xl p-4' 
                               : 'bg-white/40 border border-white/30 backdrop-blur-md rounded-2xl p-4 hover:bg-white/60'
                           }`}
                         >
                           <div className="flex justify-between items-center">
-                            <span className={`font-bold ${isSelected ? 'text-yellow-800' : 'text-slate-700'}`}>
+                            <span className={`font-bold ${isSelected ? 'text-white' : 'text-slate-700'}`}>
                               {service.name}
                             </span>
-                            <span className={`text-sm font-bold flex items-center gap-1 ${isSelected ? 'text-yellow-600' : 'text-slate-500'}`}>
+                            <span className={`text-sm font-bold flex items-center gap-1 ${isSelected ? 'text-white/90' : 'text-slate-500'}`}>
                               <PawPrint size={14} /> {service.points} pts
                             </span>
                           </div>
@@ -768,7 +768,7 @@ export default function Dashboard() {
 
                 {/* Step 2: Date & Time */}
                 <div>
-                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Step 2: Date & Time</h3>
+                  <h3 className="text-red-500 font-bold tracking-wider text-sm uppercase mb-3">Step 2: Date & Time</h3>
                   <div className="space-y-4">
                     {/* Custom Inline Calendar Grid */}
                     <div className="bg-white/40 border border-white/30 rounded-2xl shadow-sm backdrop-blur-xl p-4">
@@ -809,7 +809,7 @@ export default function Dashboard() {
                                 isPast 
                                   ? 'text-gray-300 pointer-events-none' 
                                   : isSelected 
-                                    ? 'bg-yellow-500 text-white font-bold shadow-md' 
+                                    ? 'bg-yellow-500 text-white font-bold shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400' 
                                     : 'text-gray-900 font-bold hover:bg-white/50'
                               }`}
                             >
@@ -832,7 +832,7 @@ export default function Dashboard() {
                             onClick={() => setBookingTime(time)}
                             className={`py-3 rounded-2xl text-[15px] transition-all ${
                               isSelected
-                                ? 'font-bold bg-gradient-to-b from-yellow-400 to-yellow-500 border border-yellow-300 text-white shadow-[0_8px_16px_rgba(234,179,8,0.3)]'
+                                ? 'font-bold bg-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400'
                                 : 'font-medium bg-white/30 border border-white/20 text-gray-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md hover:bg-white/50'
                             }`}
                           >

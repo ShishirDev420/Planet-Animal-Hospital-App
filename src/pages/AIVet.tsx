@@ -212,17 +212,35 @@ export default function AIVet() {
       outputCompressor.release.setValueAtTime(0.25, audioCtx.currentTime);
       outputCompressor.connect(audioCtx.destination);
 
+      const stopAllAudio = () => {
+        audioQueueRef.current = [];
+        activeAudioNodesRef.current.forEach(node => {
+          try {
+            node.stop();
+            node.disconnect();
+          } catch (e) {}
+        });
+        activeAudioNodesRef.current = [];
+        if (audioCtxRef.current) {
+          nextPlayTimeRef.current = audioCtxRef.current.currentTime;
+        }
+        setIsAISpeaking(false);
+        isAISpeakingRef.current = false;
+      };
+
       const scheduleAudio = () => {
         if (!audioCtxRef.current) return;
         const currentTime = audioCtxRef.current.currentTime;
         
-        if (nextPlayTimeRef.current < currentTime) {
-          nextPlayTimeRef.current = currentTime;
+        // Ensure nextPlayTime is at least currentTime + small buffer to avoid scheduling in the past
+        const minNextPlayTime = currentTime + 0.05; 
+        if (nextPlayTimeRef.current < minNextPlayTime) {
+          nextPlayTimeRef.current = minNextPlayTime;
         }
 
         while (audioQueueRef.current.length > 0) {
-          // Lookahead of 0.5 seconds to ensure gapless playback without over-queueing
-          if (nextPlayTimeRef.current - currentTime > 0.5) {
+          // Lookahead of 1.0 seconds to ensure gapless playback without over-queueing
+          if (nextPlayTimeRef.current - currentTime > 1.0) {
             break;
           }
 
@@ -239,6 +257,7 @@ export default function AIVet() {
               setIsAISpeaking(false);
               isAISpeakingRef.current = false;
             }
+            // Try to schedule more if available
             scheduleAudio();
           };
 
@@ -419,8 +438,7 @@ export default function AIVet() {
               // Handle Interruption
               if (message.serverContent?.interrupted) {
                 isIgnoringAudioRef.current = false;
-                audioQueueRef.current = [];
-                nextPlayTimeRef.current = audioCtxRef.current?.currentTime || 0;
+                stopAllAudio();
               }
   
               // Handle Audio Playback
@@ -518,19 +536,7 @@ export default function AIVet() {
             // Execute Kill Switch if AI is currently speaking/queued or responding
             if (hasAudio || isAIResponding) {
               isIgnoringAudioRef.current = true;
-              audioQueueRef.current = [];
-
-              activeAudioNodesRef.current.forEach(node => {
-                try { 
-                  node.stop(); 
-                  node.disconnect();
-                } catch (e) {}
-              });
-              activeAudioNodesRef.current = [];
-              
-              if (audioCtxRef.current) {
-                nextPlayTimeRef.current = audioCtxRef.current.currentTime;
-              }
+              stopAllAudio();
               
               setMessages(prev => {
                  const last = prev[prev.length - 1];
