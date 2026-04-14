@@ -360,8 +360,9 @@ export default function Dashboard() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   
   // Booking State
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
+  const [upcomingAppts, setUpcomingAppts] = useState([{ date: '12', title: 'Annual Wellness Exam', time: '10:30 AM' }]);
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Drag-to-Scroll State
@@ -441,46 +442,52 @@ export default function Dashboard() {
   const closeModal = () => {
     setActiveModal(null);
     setTimeout(() => {
-      setSelectedServices([]);
-      setExpandedCategory(null);
+      setBookingDate('');
+      setBookingTime('');
       setIsConnecting(false);
     }, 300); // reset after close animation
   };
 
-  const toggleService = (serviceName: string) => {
-    setSelectedServices(prev => 
-      prev.includes(serviceName) 
-        ? prev.filter(s => s !== serviceName)
-        : [...prev, serviceName]
-    );
-  };
-
   const handleConfirmBooking = async () => {
-    if (selectedServices.length === 0 || !userId) return;
+    if (!bookingDate || !bookingTime || !userId) return;
     setIsConnecting(true);
-    
-    const serviceList = selectedServices.map(s => `- ${s}`).join('\n');
     
     try {
       await addDoc(collection(db, 'pointsQueue'), {
-        userId: userId,
-        parent: 'Harshal',
-        pet: 'Johnny (American Bully, Age 8)',
-        service: serviceList,
-        points: 0,
+        patient: 'Johnny',
+        reason: 'General Grooming & Checkup',
+        points: 500,
         status: 'pending',
-        actionId: 'quick-book'
+        createdAt: serverTimestamp()
       });
     } catch (e) {
       handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
     }
 
+    // Add to upcoming appointments
+    const dateObj = new Date(bookingDate);
+    const day = dateObj.getDate().toString();
+    
+    // Format time (e.g., 14:30 -> 2:30 PM)
+    const [hours, minutes] = bookingTime.split(':');
+    const hourInt = parseInt(hours, 10);
+    const ampm = hourInt >= 12 ? 'PM' : 'AM';
+    const formattedHour = hourInt % 12 || 12;
+    const formattedTime = `${formattedHour}:${minutes} ${ampm}`;
+
+    setUpcomingAppts(prev => [...prev, {
+      date: day,
+      title: 'General Grooming & Checkup',
+      time: formattedTime
+    }]);
+
     setTimeout(() => {
-      window.open(generateWhatsAppPayload(serviceList), '_blank');
+      const waUrl = `https://wa.me/919876543210?text=Hi! I would like to confirm my Grooming & Checkup appointment booked via the app for ${bookingDate} at ${formattedTime}.`;
+      window.open(waUrl, '_blank');
       
       setIsConnecting(false);
       closeModal();
-    }, 500);
+    }, 1500);
   };
 
   if (!isAuthenticated) {
@@ -580,7 +587,7 @@ export default function Dashboard() {
           {/* Center Text Container */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0 w-max pointer-events-none whitespace-nowrap">
             <span className="text-lg font-black text-slate-800 tracking-tight uppercase block leading-none">PLANET ANIMAL</span>
-            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-[0.25em] mt-0.5">HOSPITAL & WELLNESS</span>
+            <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-[0.25em] mt-0.5">HOSPITAL & WELLNESS</span>
           </div>
 
           {/* Profile Container (Right) */}
@@ -591,7 +598,7 @@ export default function Dashboard() {
                   <DualAvatar 
                     leftImage={harshalImage}
                     rightImage={johnnyImage}
-                    className="w-16 h-16 ring-2 ring-amber-500/30 ring-offset-2 ring-offset-white/50 hover:ring-amber-500/70 transition-all duration-300 shadow-sm active:scale-95 rounded-full"
+                    className="w-16 h-16 ring-2 ring-yellow-500/30 ring-offset-2 ring-offset-white/50 hover:ring-yellow-500/70 transition-all duration-300 shadow-sm active:scale-95 rounded-full"
                   />
                 </div>
               </button>
@@ -705,14 +712,18 @@ export default function Dashboard() {
           <h3 className="text-lg font-bold">Upcoming for Johnny</h3>
           <button className="text-planet-yellow text-sm font-bold flex items-center">View All <ChevronRight size={16}/></button>
         </div>
-        <div className="glass rounded-2xl p-4 flex items-center gap-4">
-          <div className="bg-teal-100 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 font-bold text-xl shrink-0">
-            12
-          </div>
-          <div>
-            <h4 className="font-bold text-slate-800">Annual Wellness Exam</h4>
-            <p className="text-sm text-slate-500">Dr. Naveen • 10:30 AM</p>
-          </div>
+        <div className="space-y-3">
+          {upcomingAppts.map((appt, idx) => (
+            <div key={idx} className="glass rounded-2xl p-4 flex items-center gap-4">
+              <div className="bg-teal-100 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 font-bold text-xl shrink-0">
+                {appt.date}
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800">{appt.title}</h4>
+                <p className="text-sm text-slate-500">Dr. Naveen • {appt.time}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -720,7 +731,7 @@ export default function Dashboard() {
       <div className="pt-2 relative">
         <div className="flex items-center gap-2 mb-4 relative z-10">
           <h3 className="text-lg font-bold">Ways to Earn Paw Points</h3>
-          <PawPrint className="w-5 h-5 text-amber-500 fill-amber-500/20" />
+          <PawPrint className="w-5 h-5 text-yellow-500 fill-yellow-500/20" />
         </div>
         
         {/* The Shelf Effect */}
@@ -1011,7 +1022,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
 
       {/* Absolute High Value Badge */}
       {highValue && (
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-amber-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-yellow-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <Sparkles className="w-3 h-3" />
           High Value
         </div>
@@ -1025,8 +1036,8 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
         
         <div className="mt-auto flex flex-col">
           <div className="mb-4 flex items-center gap-1.5">
-            <PawPrint className="w-6 h-6 text-amber-500 fill-amber-500/40 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse" />
-            <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600">
+            <PawPrint className="w-6 h-6 text-yellow-500 fill-yellow-500/40 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)] animate-pulse" />
+            <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600">
               {pointsText}
             </p>
           </div>
@@ -1038,7 +1049,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
               className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
                 isPending 
                   ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-                  : 'bg-amber-500 backdrop-blur-xl border border-amber-400 text-white hover:bg-amber-600'
+                  : 'bg-yellow-500 backdrop-blur-xl border border-yellow-400 text-white hover:bg-yellow-600'
               }`}
             >
               {isPending ? 'Pending Confirmation' : 'Book Now'}
