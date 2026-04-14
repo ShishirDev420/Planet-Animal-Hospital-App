@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, PhoneOff, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, AlertTriangle, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 
@@ -190,11 +190,27 @@ export default function AIVet() {
     try {
       // 1. Setup Audio Context
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const audioCtx = new AudioContext({ sampleRate: 16000 });
+      const audioCtx = new AudioContext({ 
+        sampleRate: 16000,
+        latencyHint: 'interactive'
+      });
       if (audioCtx.state === 'suspended') await audioCtx.resume();
       
       audioCtxRef.current = audioCtx;
       nextPlayTimeRef.current = audioCtx.currentTime;
+
+      // Ensure mono output for better echo cancellation performance
+      audioCtx.destination.channelCount = 1;
+      audioCtx.destination.channelInterpretation = 'speakers';
+
+      // Output Compressor to prevent clipping and normalize AI voice
+      const outputCompressor = audioCtx.createDynamicsCompressor();
+      outputCompressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
+      outputCompressor.knee.setValueAtTime(30, audioCtx.currentTime);
+      outputCompressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+      outputCompressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+      outputCompressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+      outputCompressor.connect(audioCtx.destination);
 
       const scheduleAudio = () => {
         if (!audioCtxRef.current) return;
@@ -213,7 +229,9 @@ export default function AIVet() {
           const buffer = audioQueueRef.current.shift()!;
           const sourceNode = audioCtxRef.current.createBufferSource();
           sourceNode.buffer = buffer;
-          sourceNode.connect(audioCtxRef.current.destination);
+          
+          // Connect to the shared output compressor
+          sourceNode.connect(outputCompressor);
 
           sourceNode.onended = () => {
             activeAudioNodesRef.current = activeAudioNodesRef.current.filter(n => n !== sourceNode);
@@ -232,28 +250,58 @@ export default function AIVet() {
         }
       };
 
-      // 2. Get Microphone
+      // 2. Get Microphone with enhanced constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
-          echoCancellation: true, 
-          noiseSuppression: true, 
-          autoGainControl: true 
-        } 
+          echoCancellation: { ideal: true }, 
+          noiseSuppression: { ideal: true }, 
+          autoGainControl: { ideal: true },
+          // @ts-ignore - Non-standard Chromium constraints
+          googEchoCancellation: { ideal: true },
+          googAutoGainControl: { ideal: true },
+          googNoiseSuppression: { ideal: true },
+          googHighpassFilter: { ideal: true },
+          sampleRate: { ideal: 16000 },
+          channelCount: { ideal: 1 },
+          sampleSize: { ideal: 16 }
+        } as any
       });
       streamRef.current = stream;
 
-      // 3. Setup Analyser for Visualization
+      // 3. Setup Analyser and Audio Processing Chain
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.4; 
       analyserRef.current = analyser;
 
       const source = audioCtx.createMediaStreamSource(stream);
-      source.connect(analyser);
+      
+      // Microphone Gain Node
+      const micGain = audioCtx.createGain();
+      micGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+      
+      // High Pass Filter to remove low-frequency rumble (Noise Suppression)
+      const hpf = audioCtx.createBiquadFilter();
+      hpf.type = 'highpass';
+      hpf.frequency.setValueAtTime(100, audioCtx.currentTime);
+      
+      // Input Compressor for Gain Control
+      const inputCompressor = audioCtx.createDynamicsCompressor();
+      inputCompressor.threshold.setValueAtTime(-50, audioCtx.currentTime);
+      inputCompressor.knee.setValueAtTime(40, audioCtx.currentTime);
+      inputCompressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+      inputCompressor.attack.setValueAtTime(0, audioCtx.currentTime);
+      inputCompressor.release.setValueAtTime(0.25, audioCtx.currentTime);
 
-      // 4. Setup Processor for sending audio
-      const processor = audioCtx.createScriptProcessor(2048, 1, 1);
+      source.connect(micGain);
+      micGain.connect(hpf);
+      hpf.connect(inputCompressor);
+      inputCompressor.connect(analyser);
+
+      // 4. Setup Processor for sending audio (1024 for lower latency)
+      const processor = audioCtx.createScriptProcessor(1024, 1, 1);
       processorRef.current = processor;
-      source.connect(processor);
+      inputCompressor.connect(processor);
       processor.connect(audioCtx.destination); // Required for processor to run
 
       // 4.5 Setup Speech Recognition for User Transcript
@@ -264,8 +312,6 @@ export default function AIVet() {
         recognition.interimResults = true;
         
         recognition.onresult = (event: any) => {
-          if (isAISpeakingRef.current) return; // Ignore if AI is speaking
-          
           let transcript = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             transcript += event.results[i][0].transcript;
@@ -306,7 +352,7 @@ export default function AIVet() {
       }
 
       // 5. Connect to Gemini Live API
-      const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         console.warn("API_KEY is missing. Please ensure GEMINI_API_KEY is set in your environment.");
       }
@@ -395,7 +441,7 @@ export default function AIVet() {
             }
           },
           config: {
-            generationConfig: { responseModalities: ["AUDIO"] },
+            generationConfig: { responseModalities: [Modality.AUDIO] },
             responseModalities: [Modality.AUDIO],
             speechConfig: {
               voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } }
@@ -423,7 +469,7 @@ export default function AIVet() {
           // Zero out output to prevent feedback loop to speakers
           e.outputBuffer.getChannelData(0).fill(0);
           
-          if (isMutedRef.current || isAISpeakingRef.current) return; // Don't send if muted or AI is speaking
+          if (isMutedRef.current) return; // Don't send if muted
 
           const inputData = e.inputBuffer.getChannelData(0);
           const int16Data = float32ToInt16(inputData);
@@ -475,7 +521,10 @@ export default function AIVet() {
               audioQueueRef.current = [];
 
               activeAudioNodesRef.current.forEach(node => {
-                try { node.stop(); } catch (e) {}
+                try { 
+                  node.stop(); 
+                  node.disconnect();
+                } catch (e) {}
               });
               activeAudioNodesRef.current = [];
               

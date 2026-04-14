@@ -339,7 +339,7 @@ export default function Dashboard() {
   ];
 
   // Drag-to-Scroll State
-  const carouselRef = useRef<HTMLDivElement>(null);
+  const carouselRef = useRef<any>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -446,48 +446,6 @@ export default function Dashboard() {
       setBookingTime('');
       setIsConnecting(false);
     }, 300); // reset after close animation
-  };
-
-  const handleConfirmBooking = async () => {
-    if (!bookingDate || !bookingTime || !userId) return;
-    setIsConnecting(true);
-    
-    try {
-      await addDoc(collection(db, 'pointsQueue'), {
-        patient: 'Johnny',
-        reason: 'General Grooming & Checkup',
-        points: 500,
-        status: 'pending',
-        createdAt: serverTimestamp()
-      });
-    } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
-    }
-
-    // Add to upcoming appointments
-    const dateObj = new Date(bookingDate);
-    const day = dateObj.getDate().toString();
-    
-    // Format time (e.g., 14:30 -> 2:30 PM)
-    const [hours, minutes] = bookingTime.split(':');
-    const hourInt = parseInt(hours, 10);
-    const ampm = hourInt >= 12 ? 'PM' : 'AM';
-    const formattedHour = hourInt % 12 || 12;
-    const formattedTime = `${formattedHour}:${minutes} ${ampm}`;
-
-    setUpcomingAppts(prev => [...prev, {
-      date: day,
-      title: 'General Grooming & Checkup',
-      time: formattedTime
-    }]);
-
-    setTimeout(() => {
-      const waUrl = `https://wa.me/919876543210?text=Hi! I would like to confirm my Grooming & Checkup appointment booked via the app for ${bookingDate} at ${formattedTime}.`;
-      window.open(waUrl, '_blank');
-      
-      setIsConnecting(false);
-      closeModal();
-    }, 1500);
   };
 
   return (
@@ -707,94 +665,6 @@ export default function Dashboard() {
           >
               <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-6 shrink-0" />
               
-              {activeModal === 'book' && (
-                <div className="flex flex-col h-full">
-                  <div className="flex justify-between items-center mb-6 shrink-0">
-                    <h2 className="text-2xl font-bold">Book a Visit</h2>
-                    <button onClick={closeModal} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={20}/></button>
-                  </div>
-                  
-                  <div className="space-y-4 overflow-y-auto hide-scrollbar pb-4 flex-1">
-                    {SERVICE_MENU.map((category) => (
-                      <div key={category.category} className="bg-white/60 rounded-2xl border border-white overflow-hidden shadow-sm">
-                        <button 
-                          onClick={() => setExpandedCategory(expandedCategory === category.category ? null : category.category)}
-                          className="w-full flex items-center justify-between p-4 bg-white/40 active:bg-white/60 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="text-slate-500">{category.icon}</div>
-                            <span className="font-bold text-slate-800">{category.category}</span>
-                          </div>
-                          {expandedCategory === category.category ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
-                        </button>
-                        
-                        <AnimatePresence>
-                          {expandedCategory === category.category && (
-                            <motion.div
-                              key={`expanded-${category.category}`}
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="p-2 space-y-2 bg-slate-50/50">
-                                {category.items.map((item) => {
-                                  const isSelected = selectedServices.includes(item.name);
-                                  return (
-                                    <div 
-                                      key={item.name}
-                                      onClick={() => toggleService(item.name)}
-                                      className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border ${
-                                        isSelected 
-                                          ? 'bg-planet-yellow/10 border-planet-yellow shadow-sm' 
-                                          : 'bg-white border-transparent hover:border-slate-200'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                                          isSelected ? 'border-planet-yellow bg-planet-yellow text-black' : 'border-slate-300'
-                                        }`}>
-                                          {isSelected && <CheckCircle2 size={14} />}
-                                        </div>
-                                        <span className={`text-sm ${isSelected ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
-                                          {item.name}
-                                        </span>
-                                      </div>
-                                      <span className="text-xs font-bold text-slate-500">{item.price}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-4 mt-auto shrink-0 bg-white/90 backdrop-blur-md border-t border-slate-100">
-                    <button 
-                      onClick={handleConfirmBooking}
-                      disabled={selectedServices.length === 0 || isConnecting}
-                      className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${
-                        selectedServices.length === 0
-                          ? 'bg-slate-200 text-slate-400 shadow-none'
-                          : 'bg-planet-yellow text-black shadow-planet-yellow/20 active:scale-95'
-                      }`}
-                    >
-                      {isConnecting ? (
-                        <>
-                          <Loader2 size={20} className="animate-spin" />
-                          Connecting to WhatsApp...
-                        </>
-                      ) : (
-                        `Confirm Booking (${selectedServices.length})`
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {activeModal === 'records' && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
