@@ -663,24 +663,23 @@ export default function Dashboard() {
               />
             </div>
             <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-wider">
-              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} points until your next <span className="text-slate-800">FREE Consultation!</span>
+              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} POINTS UNTIL YOUR NEXT FREE CONSULTATION!
             </p>
           </div>
           
           <div className="flex gap-3 mt-6">
             <MagneticWrapper className="flex-1 rounded-xl">
-              <button className="w-full h-full bg-slate-900 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 transition-transform text-sm">
-                <QrCode size={16} />
-                Scan to Earn
-              </button>
-            </MagneticWrapper>
-            <MagneticWrapper className="flex-1 rounded-xl">
               <button 
-                onClick={() => setActiveModal('redeem')}
-                className="w-full h-full bg-white/80 backdrop-blur-md text-slate-900 border border-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm transition-transform text-sm"
+                onClick={() => verifiedPoints >= 5000 && setActiveModal('redeem')}
+                disabled={verifiedPoints < 5000}
+                className={`w-full h-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
+                  verifiedPoints < 5000
+                    ? 'bg-white/40 text-gray-400 border border-gray-200 cursor-not-allowed backdrop-blur-sm'
+                    : 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-[0_4px_20px_rgba(234,179,8,0.4)] hover:shadow-[0_4px_25px_rgba(234,179,8,0.6)] font-bold animate-pulse'
+                }`}
               >
-                <Gift size={16} className="text-planet-yellow" />
-                Redeem
+                <Gift size={16} className={verifiedPoints < 5000 ? "text-gray-400" : "text-white"} />
+                Claim Free Consult
               </button>
             </MagneticWrapper>
           </div>
@@ -897,14 +896,19 @@ export default function Dashboard() {
               {activeModal === 'redeem' && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Redeem Points</h2>
+                    <h2 className="text-2xl font-bold">Claim Free Consult</h2>
                     <button onClick={closeModal} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={20}/></button>
                   </div>
-                  <div className="space-y-4">
-                    <RewardOption title="Free Gourmet Treat" points="500" />
-                    <RewardOption title="10% Off Grooming" points="1,200" />
-                    <RewardOption title="Free Toy of Choice" points="2,000" />
-                    <RewardOption title="Free General Consult" points="5,000" />
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
+                    <Gift className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">You've Unlocked a Free Consultation!</h3>
+                    <p className="text-slate-600 mb-6">
+                      Show this screen to our staff at checkout to claim your free consultation for Johnny.
+                    </p>
+                    <div className="bg-white rounded-xl p-4 shadow-sm inline-block">
+                      <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>
+                      <p className="text-3xl font-black text-slate-900">{verifiedPoints.toLocaleString()} <span className="text-base text-slate-400">pts</span></p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -928,17 +932,6 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
         <h4 className="font-bold text-slate-800 text-sm">{title}</h4>
         <p className="text-xs text-slate-500">{subtitle}</p>
       </div>
-    </div>
-  );
-}
-
-function RewardOption({ title, points }: { title: string, points: string }) {
-  return (
-    <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-white/50">
-      <span className="font-bold text-slate-700">{title}</span>
-      <button className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg active:scale-95 transition-transform">
-        {points} pts
-      </button>
     </div>
   );
 }
