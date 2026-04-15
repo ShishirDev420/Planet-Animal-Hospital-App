@@ -25,7 +25,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
-      root.classList.remove('dark');
+      root.classList.remove('dark'); // This removes the class allowing light mode to render
     }
     localStorage.setItem('appTheme', theme);
   }, [theme]);

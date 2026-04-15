@@ -41,8 +41,8 @@ export default function ProfileSettings() {
 
   const handleSave = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    updateProfile({ weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory });
     setTheme(draftTheme);
+    updateProfile({ weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory });
     navigate('/');
   };
 
