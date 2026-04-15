@@ -516,7 +516,7 @@ export default function Dashboard() {
           </div>
           <h2 className="text-slate-600 text-sm font-medium mb-2">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900">{verifiedPoints.toLocaleString()}</span>
+            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900 dark:text-yellow-400">{verifiedPoints.toLocaleString()}</span>
             <span className="text-slate-400 font-bold uppercase tracking-widest text-sm ml-1 mb-2">pts</span>
           </div>
           

@@ -22,7 +22,8 @@ export default function ProfileSettings() {
   const [marketing, setMarketing] = useState(false);
 
   const { harshalImage, johnnyImage, updateHarshalImage, updateJohnnyImage } = useProfileImages();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [draftTheme, setDraftTheme] = useState(theme);
 
   const harshalFileInputRef = useRef<HTMLInputElement>(null);
   const johnnyFileInputRef = useRef<HTMLInputElement>(null);
@@ -36,6 +37,13 @@ export default function ProfileSettings() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSave = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    updateProfile({ weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory });
+    setTheme(draftTheme);
+    navigate('/');
   };
 
   const containerVariants: Variants = {
@@ -52,16 +60,16 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col pb-48">
+    <div className="min-h-screen bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col pb-48 dark:bg-[#071912]">
       {/* Header */}
       <header className="flex items-center justify-between mb-8 pt-4">
         <button 
           onClick={() => navigate('/')}
-          className="p-3 bg-white/80 rounded-2xl shadow-sm active:scale-90 transition-transform flex items-center gap-2"
+          className="p-3 bg-white/80 rounded-2xl shadow-sm active:scale-90 transition-transform flex items-center gap-2 dark:bg-neutral-900 dark:border dark:border-white/10"
         >
-          <ArrowLeft size={20} className="text-slate-600" />
+          <ArrowLeft size={20} className="text-slate-600 dark:text-white/90" />
         </button>
-        <h1 className="text-xl font-black tracking-tight text-slate-800">Profile Settings</h1>
+        <h1 className="text-xl font-black tracking-tight text-slate-800 dark:text-white/95">Profile Settings</h1>
         <div className="w-11" /> {/* Spacer */}
       </header>
 
@@ -97,20 +105,20 @@ export default function ProfileSettings() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 backdrop-blur-md border border-white shadow-sm py-3 rounded-2xl flex flex-col items-center gap-2"
+            className="flex-1 bg-white/80 backdrop-blur-md border border-white shadow-sm py-3 rounded-2xl flex flex-col items-center gap-2 dark:bg-neutral-900 dark:border-white/10"
           >
-            <div className="bg-slate-100 p-2 rounded-full text-slate-600"><Camera size={16} /></div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Edit Harshal's Photo</span>
+            <div className="bg-slate-100 p-2 rounded-full text-slate-600 dark:bg-neutral-800 dark:text-white/60"><Camera size={16} /></div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Edit Harshal's Photo</span>
           </motion.button>
           <motion.button 
             onClick={() => johnnyFileInputRef.current?.click()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 backdrop-blur-md border border-white shadow-sm py-3 rounded-2xl flex flex-col items-center gap-2"
+            className="flex-1 bg-white/80 backdrop-blur-md border border-white shadow-sm py-3 rounded-2xl flex flex-col items-center gap-2 dark:bg-neutral-900 dark:border-white/10"
           >
             <div className="bg-planet-yellow/20 p-2 rounded-full text-planet-yellow"><Camera size={16} /></div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Edit Johnny's Photo</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Edit Johnny's Photo</span>
           </motion.button>
         </div>
       </motion.div>
@@ -123,28 +131,28 @@ export default function ProfileSettings() {
       >
         {/* Account Details */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2">Account Details</h2>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-4">
+          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">Account Details</h2>
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-4 dark:bg-neutral-900 dark:border-white/10">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <User size={16} /> Full Name
               </label>
               <input 
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               />
             </div>
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <Mail size={16} /> Email Address
               </label>
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               />
             </div>
           </div>
@@ -152,22 +160,22 @@ export default function ProfileSettings() {
 
         {/* Johnny's Profile */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2">Johnny's Profile</h2>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-5">
+          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">Johnny's Profile</h2>
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-5 dark:bg-neutral-900 dark:border-white/10">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <Dog size={16} /> Breed
               </label>
               <input 
                 type="text" 
                 value="American Bully"
                 disabled
-                className="w-full bg-slate-100/50 border-2 border-transparent rounded-2xl py-3 px-4 outline-none text-slate-500 font-medium cursor-not-allowed shadow-inner"
+                className="w-full bg-slate-100/50 border-2 border-transparent rounded-2xl py-3 px-4 outline-none text-slate-500 font-medium cursor-not-allowed shadow-inner dark:bg-neutral-800 dark:text-white/40 dark:border-white/5"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <Activity size={16} className="text-teal-500" /> Current Weight
               </label>
               <div className="flex gap-4">
@@ -175,18 +183,18 @@ export default function ProfileSettings() {
                   type="number" 
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  className="flex-1 bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-black text-slate-800"
+                  className="flex-1 bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-black text-slate-800 dark:bg-neutral-800 dark:text-white/95 dark:border-white/5"
                 />
-                <div className="flex bg-white/60 rounded-2xl p-1 shadow-sm">
+                <div className="flex bg-white/60 rounded-2xl p-1 shadow-sm dark:bg-neutral-800">
                   <button 
                     onClick={() => setUnit('lbs')}
-                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'lbs' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
+                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'lbs' ? 'bg-white shadow-sm text-slate-800 dark:bg-neutral-700 dark:text-white' : 'text-slate-400'}`}
                   >
                     lbs
                   </button>
                   <button 
                     onClick={() => setUnit('kg')}
-                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'kg' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
+                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'kg' ? 'bg-white shadow-sm text-slate-800 dark:bg-neutral-700 dark:text-white' : 'text-slate-400'}`}
                   >
                     kg
                   </button>
@@ -195,13 +203,13 @@ export default function ProfileSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <Utensils size={16} className="text-orange-500" /> Dietary Preferences
               </label>
               <select 
                 value={diet}
                 onChange={(e) => setDiet(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium appearance-none"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium appearance-none dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               >
                 <option value="None">None</option>
                 <option value="High-Protein Kibble">High-Protein Kibble</option>
@@ -212,7 +220,7 @@ export default function ProfileSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <Stethoscope size={16} className="text-red-500" /> Surgical & Medical History
               </label>
               <textarea 
@@ -220,7 +228,7 @@ export default function ProfileSettings() {
                 onChange={(e) => setSurgicalHistory(e.target.value)}
                 placeholder="e.g., ACL repair, allergies, etc."
                 rows={3}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium resize-none placeholder:text-slate-400"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium resize-none placeholder:text-slate-400 dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               />
             </div>
           </div>
@@ -229,15 +237,15 @@ export default function ProfileSettings() {
         {/* App Preferences */}
         <motion.section variants={itemVariants} className="space-y-4">
           <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">App Preferences</h2>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-6 dark:bg-neutral-900">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-6 dark:bg-neutral-900 dark:border-white/10">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-bold text-slate-700 flex items-center gap-2 dark:text-white/95">
-                  {theme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-yellow-500" />} Dark Mode
+                  {draftTheme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-yellow-500" />} Dark Mode
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Switch between light and dark themes.</p>
               </div>
-              <Toggle isOn={theme === 'dark'} onToggle={toggleTheme} />
+              <Toggle isOn={draftTheme === 'dark'} onToggle={() => setDraftTheme(prev => prev === 'light' ? 'dark' : 'light')} />
             </div>
             
             <div className="h-px bg-slate-200/50 w-full dark:bg-white/10" />
@@ -252,12 +260,12 @@ export default function ProfileSettings() {
               <Toggle isOn={reminders} onToggle={() => setReminders(!reminders)} />
             </div>
             
-            <div className="h-px bg-slate-200/50 w-full" />
+            <div className="h-px bg-slate-200/50 w-full dark:bg-white/10" />
             
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-slate-700">Marketing & Promotions</h4>
-                <p className="text-xs text-slate-500 mt-1">Promos and new proactive plans.</p>
+                <h4 className="font-bold text-slate-700 dark:text-white/95">Marketing & Promotions</h4>
+                <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Promos and new proactive plans.</p>
               </div>
               <Toggle isOn={marketing} onToggle={() => setMarketing(!marketing)} />
             </div>
@@ -266,15 +274,12 @@ export default function ProfileSettings() {
       </motion.div>
 
       {/* Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent pb-safe dark:from-[#071912] dark:via-[#071912]/80">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            updateProfile({ weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory });
-            navigate('/');
-          }}
-          className="w-full max-w-md mx-auto bg-slate-900 text-white py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-transform"
+          onClick={handleSave}
+          className="w-full max-w-md mx-auto bg-slate-900 text-white py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-transform dark:bg-white dark:text-black"
         >
           <Save size={20} className="text-planet-yellow" />
           Save Changes
