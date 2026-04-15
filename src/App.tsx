@@ -28,6 +28,7 @@ const Placeholder = ({ title }: { title: string }) => (
 );
 
 import { ThemeProvider } from './context/ThemeContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -44,29 +45,31 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          {!isAuthenticated ? (
-            <Route path="*" element={<Welcome />} />
-          ) : (
-            <>
-              <Route path="/profiles" element={<ProfileSelection />} />
-              <Route path="/create-profile" element={<CreateProfile />} />
-              <Route path="/settings" element={<ProfileSettings />} />
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="plans" element={<ProactivePlans />} />
-                <Route path="ai" element={<AIVet />} />
-                <Route path="roadmap" element={<Roadmap />} />
-                <Route path="adoption" element={<Placeholder title="Adoption Community" />} />
-              </Route>
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </>
-          )}
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            {!isAuthenticated ? (
+              <Route path="*" element={<Welcome />} />
+            ) : (
+              <>
+                <Route path="/profiles" element={<ProfileSelection />} />
+                <Route path="/create-profile" element={<CreateProfile />} />
+                <Route path="/settings" element={<ProfileSettings />} />
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="plans" element={<ProactivePlans />} />
+                  <Route path="ai" element={<AIVet />} />
+                  <Route path="roadmap" element={<Roadmap />} />
+                  <Route path="adoption" element={<Placeholder title="Adoption Community" />} />
+                </Route>
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </>
+            )}
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

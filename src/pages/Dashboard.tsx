@@ -250,6 +250,7 @@ export default function Dashboard() {
     
     try {
       await addDoc(collection(db, 'pointsQueue'), {
+        userId: userId,
         patient: 'Johnny',
         reason: incentive.title,
         points: incentive.pointsValue,
@@ -263,64 +264,6 @@ export default function Dashboard() {
       setPendingPoints(prev => prev - incentive.pointsValue);
     }
   };
-
-  // Mouse tracking for Paw Points Card
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const glareBackground = useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(255,255,255,0.4), transparent 80%)`;
-
-  const handleCardMouseMove = ({ currentTarget, clientX, clientY }: React.MouseEvent) => {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-  };
-
-  const handleCardMouseLeave = ({ currentTarget }: React.MouseEvent) => {
-    const { width, height } = currentTarget.getBoundingClientRect();
-    animate(mouseX, width / 2, { type: 'spring', stiffness: 150, damping: 15 });
-    animate(mouseY, height / 2, { type: 'spring', stiffness: 150, damping: 15 });
-  };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-      } else {
-        setUserId(null);
-      }
-      setIsAuthReady(true);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthReady || !userId) return;
-
-    const q = query(collection(db, 'pointsQueue'), where('userId', '==', userId));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      let newPending = 0;
-      let newVerified = 0;
-      const newPendingActions: string[] = [];
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.status === 'pending') {
-          newPending += data.points || 0;
-          if (data.actionId) newPendingActions.push(data.actionId);
-        } else if (data.status === 'verified') {
-          newVerified += data.points || 0;
-        }
-      });
-
-      setPendingPoints(newPending);
-      setVerifiedPoints(4450 + newVerified);
-      setPendingIncentives(newPendingActions);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'pointsQueue');
-    });
-
-    return () => unsubscribe();
-  }, [isAuthReady, userId]);
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
   
@@ -430,8 +373,11 @@ export default function Dashboard() {
       handleFirestoreError(error, OperationType.CREATE, 'requests');
     }
 
-    const text = encodeURIComponent('Hi Planet Animal Hospital! I would like to book a ' + selectedService.name + ' on ' + bookingDate + ' at ' + bookingTime + '.');
-    window.open('https://wa.me/919999999999?text=' + text, '_blank');
+    const parentName = "Harshal";
+    const petName = petProfile.name;
+    const message = `Hi Planet Animal Hospital team! 👋 I am *${parentName}*, *${petName}'s* pet parent. I'm interested in *${selectedService.name}* at *${bookingTime}* on *${bookingDate}*. Please give me a call regarding the possibility of this appointment ASAP.`;
+    const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
 
     setIsBookVisitOpen(false);
     setSelectedService(null);
@@ -495,44 +441,38 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        onMouseMove={handleCardMouseMove}
-        onMouseLeave={handleCardMouseLeave}
-        className="bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] rounded-[2rem] p-6 relative overflow-hidden dark:bg-neutral-900 dark:border-white/10"
+        className="bg-white/[0.05] backdrop-blur-[30px] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)] rounded-[2rem] p-6 relative overflow-hidden dark:bg-neutral-900/40 dark:border-white/10"
       >
-        <motion.div 
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{ background: glareBackground }}
-        />
-        <div className="absolute top-0 right-0 w-32 h-32 bg-planet-yellow/20 rounded-full blur-2xl -mr-10 -mt-10 z-0"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-planet-yellow/20 rounded-full blur-3xl -mr-10 -mt-10 z-0"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full backdrop-blur-md border border-white/60 shadow-sm">
+            <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-md border border-white/20 shadow-sm">
               <Award className="text-planet-yellow" size={16} />
-              <span className="text-xs font-bold text-slate-800">Proactive Member</span>
+              <span className="text-xs font-bold text-white">Proactive Member</span>
             </div>
             <div className="bg-planet-yellow text-black text-[10px] uppercase tracking-wider font-black px-2 py-1 rounded-lg shadow-sm">
               2x Multiplier
             </div>
           </div>
-          <h2 className="text-slate-600 text-sm font-medium mb-2">Paw Points Balance</h2>
+          <h2 className="text-white text-sm font-medium mb-2">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900 dark:text-yellow-400">{verifiedPoints.toLocaleString()}</span>
-            <span className="text-slate-400 font-bold uppercase tracking-widest text-sm ml-1 mb-2">pts</span>
+            <span className="text-6xl tracking-tighter tabular-nums font-black text-white dark:text-yellow-400">{verifiedPoints.toLocaleString()}</span>
+            <span className="text-white font-bold uppercase tracking-widest text-sm ml-1 mb-2">pts</span>
           </div>
           
           {pendingPoints > 0 && (
             <div className="mt-3 mb-2 flex items-center gap-2">
-              <div className="bg-yellow-100 text-yellow-700 font-bold tracking-tight px-2.5 py-1 rounded-full text-sm border border-yellow-200/50 shadow-sm">
+              <div className="bg-white/10 text-white font-bold tracking-tight px-2.5 py-1 rounded-full text-sm border border-white/20 shadow-sm">
                 + {pendingPoints.toLocaleString()} Pending
               </div>
-              <span className="text-[10px] text-slate-400 font-medium max-w-[150px] leading-tight">
+              <span className="text-[10px] text-white font-medium max-w-[150px] leading-tight">
                 Points are verified after clinic confirmation via WhatsApp.
               </span>
             </div>
           )}
 
           <div className="mt-8">
-            <div className="h-2.5 w-full bg-slate-900/10 rounded-full overflow-hidden shadow-inner">
+            <div className="h-2.5 w-full bg-white/10 rounded-full overflow-hidden shadow-inner">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
@@ -540,26 +480,24 @@ export default function Dashboard() {
                 className="h-full bg-gradient-to-r from-planet-yellow to-yellow-400 rounded-full"
               />
             </div>
-            <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-wider">
+            <p className="text-[10px] text-white font-bold mt-2 uppercase tracking-wider">
               {Math.max(0, 5000 - verifiedPoints).toLocaleString()} POINTS UNTIL YOUR NEXT FREE CONSULTATION!
             </p>
           </div>
           
           <div className="flex gap-3 mt-6">
-            <MagneticWrapper className="flex-1 rounded-xl">
-              <button 
-                onClick={() => verifiedPoints >= 5000 && setActiveModal('redeem')}
-                disabled={verifiedPoints < 5000}
-                className={`w-full h-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
-                  verifiedPoints < 5000
-                    ? 'bg-white/40 text-gray-400 border border-gray-200 cursor-not-allowed backdrop-blur-sm'
-                    : 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-[0_4px_20px_rgba(234,179,8,0.4)] hover:shadow-[0_4px_25px_rgba(234,179,8,0.6)] font-bold animate-pulse'
-                }`}
-              >
-                <Gift size={16} className={verifiedPoints < 5000 ? "text-gray-400" : "text-white"} />
-                Claim Free Consult
-              </button>
-            </MagneticWrapper>
+            <button 
+              onClick={() => verifiedPoints >= 5000 && setActiveModal('redeem')}
+              disabled={verifiedPoints < 5000}
+              className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
+                verifiedPoints < 5000
+                  ? 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed backdrop-blur-sm'
+                  : 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-[0_4px_20px_rgba(234,179,8,0.4)] hover:shadow-[0_4px_25px_rgba(234,179,8,0.6)] font-bold animate-pulse'
+              }`}
+            >
+              <Gift size={16} className={verifiedPoints < 5000 ? "text-white/20" : "text-white"} />
+              Claim Free Consult
+            </button>
           </div>
         </div>
       </motion.div>
