@@ -217,7 +217,7 @@ function getDailyTip(pet: { name: string, breed: string, age: number, isSenior: 
 function DailyTip({ pet }: { pet: typeof petProfile }) {
   const tip = getDailyTip(pet);
   return (
-    <div className="bg-white/40 backdrop-blur-md border border-white/50 text-slate-700 text-sm py-3 px-4 rounded-2xl flex gap-3 items-start shadow-sm mt-4">
+    <div className="bg-white/40 backdrop-blur-md border border-white/50 text-slate-700 text-sm py-3 px-4 rounded-2xl flex gap-3 items-start shadow-sm mt-4 dark:bg-neutral-900 dark:border-white/10 dark:text-white/80">
       <Info size={20} className="text-planet-yellow shrink-0 mt-0.5" />
       <p className="font-medium leading-snug">{tip}</p>
     </div>
@@ -449,7 +449,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 space-y-8 pb-32">
+    <div className="p-6 space-y-8 pb-32 dark:text-white/95">
       {/* Header with Logo */}
       <header className="pt-4 mb-2">
         <div className="relative flex items-center justify-between w-full py-4">
@@ -464,8 +464,8 @@ export default function Dashboard() {
             
           {/* Center Text Container */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0 w-max pointer-events-none whitespace-nowrap">
-            <span className="text-lg font-black text-slate-800 tracking-tight uppercase block leading-none">PLANET ANIMAL</span>
-            <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-[0.25em] mt-0.5">HOSPITAL & WELLNESS</span>
+            <span className="text-lg font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95">PLANET ANIMAL</span>
+            <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-[0.25em] mt-0.5 dark:text-yellow-400">HOSPITAL & WELLNESS</span>
           </div>
 
           {/* Profile Container (Right) */}
@@ -485,8 +485,8 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Hi, Harshal 👋</h1>
-          <p className="text-slate-500 text-sm">Let's keep Johnny healthy today.</p>
+          <h1 className="text-2xl font-bold tracking-tight dark:text-white/95">Hi, Harshal 👋</h1>
+          <p className="text-slate-500 text-sm dark:text-white/60">Let's keep Johnny healthy today.</p>
           <DailyTip pet={petProfile} />
         </div>
       </header>
@@ -497,7 +497,7 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         onMouseMove={handleCardMouseMove}
         onMouseLeave={handleCardMouseLeave}
-        className="bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] rounded-[2rem] p-6 relative overflow-hidden"
+        className="bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] rounded-[2rem] p-6 relative overflow-hidden dark:bg-neutral-900 dark:border-white/10"
       >
         <motion.div 
           className="absolute inset-0 z-0 pointer-events-none"
@@ -807,10 +807,10 @@ export default function Dashboard() {
                               disabled={isPast}
                               className={`h-10 w-10 flex items-center justify-center rounded-full text-[15px] transition-colors ${
                                 isPast 
-                                  ? 'text-gray-300 pointer-events-none' 
+                                  ? 'text-gray-300 pointer-events-none dark:text-white/20' 
                                   : isSelected 
                                     ? 'bg-yellow-500 text-white font-bold shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400' 
-                                    : 'text-gray-900 font-bold hover:bg-white/50'
+                                    : 'text-gray-900 font-bold hover:bg-white/50 dark:text-white/90 dark:hover:bg-white/10'
                               }`}
                             >
                               {day}
@@ -833,7 +833,7 @@ export default function Dashboard() {
                             className={`py-3 rounded-2xl text-[15px] transition-all ${
                               isSelected
                                 ? 'font-bold bg-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400'
-                                : 'font-medium bg-white/30 border border-white/20 text-gray-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md hover:bg-white/50'
+                                : 'font-medium bg-white/30 border border-white/20 text-gray-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md hover:bg-white/50 dark:bg-neutral-800 dark:border-white/10 dark:text-white/90 dark:hover:bg-neutral-700'
                             }`}
                           >
                             {time}
@@ -852,8 +852,8 @@ export default function Dashboard() {
                   disabled={!selectedService || !bookingDate || !bookingTime}
                   className={`transition-all w-full py-4 rounded-[20px] font-bold text-[17px] flex justify-center items-center gap-2 ${
                     !selectedService || !bookingDate || !bookingTime
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
-                      : 'bg-black text-white shadow-xl'
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50 dark:bg-neutral-800 dark:text-white/20'
+                      : 'bg-black text-white shadow-xl dark:bg-white dark:text-black'
                   }`}
                 >
                   Confirm Booking
@@ -871,14 +871,14 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
   return (
     <div 
       onClick={onClick}
-      className="glass rounded-2xl p-4 flex flex-col items-start gap-3 active:scale-95 transition-transform cursor-pointer hover:bg-white/50"
+      className="glass rounded-2xl p-4 flex flex-col items-start gap-3 active:scale-95 transition-transform cursor-pointer hover:bg-white/50 dark:bg-neutral-900 dark:border-white/10 dark:hover:bg-neutral-800"
     >
-      <div className="bg-white/80 p-2 rounded-xl shadow-sm">
+      <div className="bg-white/80 p-2 rounded-xl shadow-sm dark:bg-neutral-800">
         {icon}
       </div>
       <div>
-        <h4 className="font-bold text-slate-800 text-sm">{title}</h4>
-        <p className="text-xs text-slate-500">{subtitle}</p>
+        <h4 className="font-bold text-slate-800 text-sm dark:text-white/95">{title}</h4>
+        <p className="text-xs text-slate-500 dark:text-white/60">{subtitle}</p>
       </div>
     </div>
   );
@@ -951,19 +951,19 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
   return (
     <motion.div 
       whileHover={{ y: -5, scale: 1.02 }}
-      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col cursor-grab active:cursor-grabbing w-full h-[260px] bg-white/20 backdrop-blur-3xl border-t border-l border-white/70 border-b border-r border-white/20 shadow-[0_8px_32px_rgba(20,20,20,0.04)] rounded-3xl p-6 overflow-hidden transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)] group`}
+      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col cursor-grab active:cursor-grabbing w-full h-[260px] bg-white/20 backdrop-blur-3xl border-t border-l border-white/70 border-b border-r border-white/20 shadow-[0_8px_32px_rgba(20,20,20,0.04)] rounded-3xl p-6 overflow-hidden transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)] group dark:bg-neutral-900 dark:border-white/10`}
     >
       {/* Dynamic Gradient Background */}
       <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${themeGradients[theme]} via-transparent to-transparent pointer-events-none`} />
       
       {/* Shimmer Effect for High Value */}
       {highValue && (
-        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-[shimmer_3s_infinite] pointer-events-none z-0" />
+        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-[shimmer_3s_infinite] pointer-events-none z-0 dark:via-white/10" />
       )}
 
       {/* Absolute High Value Badge */}
       {highValue && (
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-yellow-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-yellow-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:bg-neutral-800 dark:border-white/10 dark:text-yellow-400">
           <Sparkles className="w-3 h-3" />
           High Value
         </div>
@@ -971,8 +971,8 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
 
       <div className="relative z-10 flex flex-col h-full">
         <div className="mt-8 flex flex-col items-start gap-2">
-          <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide">{title}</h4>
-          {subtext && <p className="text-sm text-gray-600/90 leading-relaxed font-medium">{subtext}</p>}
+          <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide dark:text-white/95">{title}</h4>
+          {subtext && <p className="text-sm text-gray-600/90 leading-relaxed font-medium dark:text-white/60">{subtext}</p>}
         </div>
         
         <div className="mt-auto flex flex-col">

@@ -44,7 +44,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-screen bg-black/80 backdrop-blur-3xl flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-black/80 backdrop-blur-3xl flex items-center justify-center p-6 relative overflow-hidden dark:bg-[#071912]">
       {/* Ambient Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-green-400/20 rounded-full blur-[100px]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-planet-yellow/20 rounded-full blur-[100px]" />
@@ -52,7 +52,7 @@ export default function Welcome() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-10 shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative z-10"
+        className="w-full max-w-md bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-10 shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative z-10 dark:bg-neutral-900/80 dark:border-white/10"
       >
         <div className="flex justify-center mb-8">
            <Logo className="!w-24 !h-24" />

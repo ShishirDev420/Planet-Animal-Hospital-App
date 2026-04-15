@@ -5,7 +5,7 @@ import SplashScreen from './SplashScreen';
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans relative overflow-hidden flex justify-center">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans relative overflow-hidden flex justify-center dark:bg-[#071912] dark:text-white/95">
       <SplashScreen />
       {/* Background Blobs for Glassmorphism - Fixed to prevent scroll flickering */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
@@ -17,13 +17,13 @@ export default function Layout() {
       </div>
 
       {/* Mobile Container */}
-      <div className="w-full max-w-md bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20">
+      <div className="w-full max-w-md bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
         <main className="flex-1 overflow-y-auto pb-24 hide-scrollbar">
           <Outlet />
         </main>
 
         {/* Bottom Navigation */}
-        <nav className="absolute bottom-0 w-full glass-nav px-6 py-4 pb-safe flex justify-between items-center z-50 rounded-t-3xl">
+        <nav className="absolute bottom-0 w-full glass-nav px-6 py-4 pb-safe flex justify-between items-center z-50 rounded-t-3xl dark:bg-neutral-900/80 dark:border-white/10">
           <NavItem to="/" icon={<Home size={24} />} label="Home" />
           <NavItem to="/plans" icon={<ShieldPlus size={24} />} label="Plans" />
           <NavItem to="/ai" icon={<Bot size={24} />} label="AI Vet" />

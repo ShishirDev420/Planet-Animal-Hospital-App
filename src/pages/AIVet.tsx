@@ -593,7 +593,7 @@ export default function AIVet() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-amber-50/70 via-slate-50 to-emerald-50/30 overflow-hidden relative">
+    <div className="flex flex-col h-screen bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-amber-50/70 via-slate-50 to-emerald-50/30 overflow-hidden relative dark:bg-none dark:bg-[#071912] dark:text-white/95">
       {/* Emergency Banner */}
       <AnimatePresence>
         {emergency && (
@@ -617,9 +617,9 @@ export default function AIVet() {
 
       {/* Header */}
       <div className="px-6 py-8 z-20 flex flex-col items-center justify-center mt-10 shrink-0">
-        <h1 onClick={triggerMockEmergency} className="font-black text-slate-900 text-2xl tracking-tight cursor-pointer">AI Vet Doctor</h1>
-        <p className={`font-bold text-sm tracking-widest uppercase mt-1 flex items-center gap-2 ${callState === 'LIVE' ? 'text-emerald-500' : 'text-slate-500'}`}>
-          <span className={`w-2 h-2 rounded-full ${callState === 'LIVE' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-400'} ${callState === 'CALLING' ? 'animate-pulse' : ''}`}></span>
+        <h1 onClick={triggerMockEmergency} className="font-black text-slate-900 text-2xl tracking-tight cursor-pointer dark:text-white/95">AI Vet Doctor</h1>
+        <p className={`font-bold text-sm tracking-widest uppercase mt-1 flex items-center gap-2 ${callState === 'LIVE' ? 'text-emerald-500' : 'text-slate-500 dark:text-white/60'}`}>
+          <span className={`w-2 h-2 rounded-full ${callState === 'LIVE' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-400 dark:bg-white/40'} ${callState === 'CALLING' ? 'animate-pulse' : ''}`}></span>
           {callState === 'LIVE' ? '● LIVE CONNECTION' : callState === 'CALLING' ? 'Calling Planet Animal AI...' : 'READY'}
         </p>
       </div>
@@ -636,8 +636,8 @@ export default function AIVet() {
             >
               <div className={`max-w-[80%] p-5 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.04)] backdrop-blur-2xl ${
                 msg.role === 'user' 
-                  ? 'bg-amber-50/40 border-amber-100/60 rounded-tr-sm text-slate-800' 
-                  : 'bg-white/40 border-white/60 rounded-tl-sm text-slate-800'
+                  ? 'bg-amber-50/40 border-amber-100/60 rounded-tr-sm text-slate-800 dark:bg-yellow-500/10 dark:border-yellow-500/20 dark:text-white/90' 
+                  : 'bg-white/40 border-white/60 rounded-tl-sm text-slate-800 dark:bg-neutral-900 dark:border-white/10 dark:text-white/95'
               }`}>
                 <p className="text-sm font-medium leading-relaxed">{msg.text}</p>
               </div>
@@ -688,22 +688,22 @@ export default function AIVet() {
             exit={{ opacity: 0, y: 20 }}
             className="absolute bottom-32 left-6 right-6 z-20"
           >
-            <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-lg">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-lg dark:bg-neutral-900 dark:border-white/10">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2 dark:text-white/60">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                 Live Transcript
               </p>
               <div className="flex items-start gap-3">
                 {liveTranscript.speaker === 'user' ? (
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <Mic size={14} className="text-emerald-600" />
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 dark:bg-emerald-900/30">
+                    <Mic size={14} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                    <Sparkles size={14} className="text-amber-600" />
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0 dark:bg-amber-900/30">
+                    <Sparkles size={14} className="text-amber-600 dark:text-amber-400" />
                   </div>
                 )}
-                <p className="text-sm font-medium text-slate-800 leading-relaxed max-h-24 overflow-y-auto hide-scrollbar">
+                <p className="text-sm font-medium text-slate-800 leading-relaxed max-h-24 overflow-y-auto hide-scrollbar dark:text-white/90">
                   {liveTranscript.text}
                 </p>
               </div>
@@ -717,16 +717,16 @@ export default function AIVet() {
         {!isActive ? (
           <button 
             onClick={startConversation}
-            className="px-8 py-4 rounded-full bg-white/50 backdrop-blur-xl border border-white/40 text-slate-800 font-bold tracking-wider uppercase text-sm shadow-lg hover:scale-105 transition-transform flex items-center gap-3"
+            className="px-8 py-4 rounded-full bg-white/50 backdrop-blur-xl border border-white/40 text-slate-800 font-bold tracking-wider uppercase text-sm shadow-lg hover:scale-105 transition-transform flex items-center gap-3 dark:bg-neutral-900 dark:border-white/10 dark:text-white/95"
           >
             <Mic size={20} />
             Tap to Speak
           </button>
         ) : (
-          <div className="bg-white/50 backdrop-blur-xl border border-white/40 rounded-full px-8 py-4 flex items-center gap-8 shadow-2xl">
+          <div className="bg-white/50 backdrop-blur-xl border border-white/40 rounded-full px-8 py-4 flex items-center gap-8 shadow-2xl dark:bg-neutral-900 dark:border-white/10">
             <button 
               onClick={toggleMute}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-sm ${isMuted ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-white/80 text-slate-800 hover:bg-white'}`}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-sm ${isMuted ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-white/80 text-slate-800 hover:bg-white dark:bg-neutral-800 dark:text-white/90 dark:hover:bg-neutral-700'}`}
             >
               {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
             </button>

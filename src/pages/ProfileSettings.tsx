@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut } from 'lucide-react';
+import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut, Moon, Sun } from 'lucide-react';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function ProfileSettings() {
   const [marketing, setMarketing] = useState(false);
 
   const { harshalImage, johnnyImage, updateHarshalImage, updateJohnnyImage } = useProfileImages();
+  const { theme, toggleTheme } = useTheme();
 
   const harshalFileInputRef = useRef<HTMLInputElement>(null);
   const johnnyFileInputRef = useRef<HTMLInputElement>(null);
@@ -226,14 +228,26 @@ export default function ProfileSettings() {
 
         {/* App Preferences */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2">App Preferences</h2>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-6">
+          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">App Preferences</h2>
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-6 dark:bg-neutral-900">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-slate-700 flex items-center gap-2">
+                <h4 className="font-bold text-slate-700 flex items-center gap-2 dark:text-white/95">
+                  {theme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-yellow-500" />} Dark Mode
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Switch between light and dark themes.</p>
+              </div>
+              <Toggle isOn={theme === 'dark'} onToggle={toggleTheme} />
+            </div>
+            
+            <div className="h-px bg-slate-200/50 w-full dark:bg-white/10" />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-slate-700 flex items-center gap-2 dark:text-white/95">
                   <Bell size={16} className="text-indigo-500" /> Appointment & Health Reminders
                 </h4>
-                <p className="text-xs text-slate-500 mt-1">Get notified 24h before visits.</p>
+                <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Get notified 24h before visits.</p>
               </div>
               <Toggle isOn={reminders} onToggle={() => setReminders(!reminders)} />
             </div>

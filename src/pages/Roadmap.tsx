@@ -96,7 +96,7 @@ export default function Roadmap() {
 
   if (isProfileIncomplete) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 mb-32 min-h-[600px]">
+      <div className="h-full flex flex-col items-center justify-center p-6 mb-32 min-h-[600px] dark:text-white/95">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -121,7 +121,7 @@ export default function Roadmap() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white/10 backdrop-blur-3xl border border-white/30 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.1)] min-h-[600px] max-w-2xl mx-auto rounded-[2rem] m-6 mb-32">
+    <div className="h-full flex flex-col bg-white/10 backdrop-blur-3xl border border-white/30 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.1)] min-h-[600px] max-w-2xl mx-auto rounded-[2rem] m-6 mb-32 dark:bg-neutral-900 dark:border-white/10 dark:text-white/95">
       <AnimatePresence mode="wait">
         {!roadmap ? (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 sm:p-10 flex-1 flex flex-col">
@@ -130,8 +130,8 @@ export default function Roadmap() {
                 <Sparkles className="w-6 h-6 text-black" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900">Longevity Roadmap</h3>
-                <p className="text-slate-500 text-sm font-medium">Personalized health timeline</p>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white/95">Longevity Roadmap</h3>
+                <p className="text-slate-500 text-sm font-medium dark:text-white/60">Personalized health timeline</p>
               </div>
             </div>
             
@@ -144,8 +144,8 @@ export default function Roadmap() {
             <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pet Name</label>
-                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Max" className="w-full px-4 py-3 rounded-xl border border-white/40 focus:ring-2 focus:ring-yellow-400 focus:bg-white/60 outline-none bg-white/40 backdrop-blur-md text-slate-900 placeholder:text-slate-400 transition-all shadow-sm" />
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 dark:text-white/60">Pet Name</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Max" className="w-full px-4 py-3 rounded-xl border border-white/40 focus:ring-2 focus:ring-yellow-400 focus:bg-white/60 outline-none bg-white/40 backdrop-blur-md text-slate-900 placeholder:text-slate-400 transition-all shadow-sm dark:bg-neutral-800 dark:border-white/10 dark:text-white/90" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Species</label>

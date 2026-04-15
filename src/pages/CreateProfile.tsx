@@ -21,14 +21,14 @@ export default function CreateProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-white/40 backdrop-blur-3xl p-6 flex flex-col">
+    <div className="min-h-screen bg-white/40 backdrop-blur-3xl p-6 flex flex-col dark:bg-[#071912] dark:text-white/95">
       {/* Header */}
       <header className="flex items-center justify-between mb-12 pt-4">
         <button 
           onClick={() => navigate(-1)}
-          className="p-3 bg-white/80 rounded-2xl shadow-sm active:scale-90 transition-transform"
+          className="p-3 bg-white/80 rounded-2xl shadow-sm active:scale-90 transition-transform dark:bg-neutral-900 dark:border dark:border-white/10"
         >
-          <ArrowLeft size={20} className="text-slate-600" />
+          <ArrowLeft size={20} className="text-slate-600 dark:text-white/90" />
         </button>
         <Logo size="sm" />
         <div className="w-10" /> {/* Spacer */}
@@ -40,11 +40,11 @@ export default function CreateProfile() {
         className="flex-1"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2 dark:text-white/95">
             Welcome to the <br/>
             <span className="text-planet-yellow">Planet Family</span>
           </h1>
-          <p className="text-slate-500 text-sm leading-relaxed">
+          <p className="text-slate-500 text-sm leading-relaxed dark:text-white/60">
             Let's create a personalized health roadmap for your furry companion.
           </p>
         </div>
@@ -52,16 +52,16 @@ export default function CreateProfile() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Your Name */}
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Your Name</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1 dark:text-white/40">Your Name</label>
             <div className="relative group">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors dark:text-white/40">
                 <User size={18} />
               </div>
               <input
                 required
                 type="text"
                 placeholder="e.g. Sarah Jenkins"
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10 dark:bg-neutral-900 dark:border-white/10 dark:text-white/90"
                 value={formData.userName}
                 onChange={(e) => setFormData({...formData, userName: e.target.value})}
               />
@@ -70,16 +70,16 @@ export default function CreateProfile() {
 
           {/* Pet's Name */}
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Pet's Name</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1 dark:text-white/40">Pet's Name</label>
             <div className="relative group">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors dark:text-white/40">
                 <Heart size={18} />
               </div>
               <input
                 required
                 type="text"
                 placeholder="e.g. Max"
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10 dark:bg-neutral-900 dark:border-white/10 dark:text-white/90"
                 value={formData.petName}
                 onChange={(e) => setFormData({...formData, petName: e.target.value})}
               />
@@ -88,16 +88,16 @@ export default function CreateProfile() {
 
           {/* Pet's Weight */}
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Pet's Weight</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1 dark:text-white/40">Pet's Weight</label>
             <div className="relative group">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors dark:text-white/40">
                 <Weight size={18} />
               </div>
               <input
                 required
                 type="text"
                 placeholder="Approximate is perfectly fine!"
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10 dark:bg-neutral-900 dark:border-white/10 dark:text-white/90"
                 value={formData.petWeight}
                 onChange={(e) => setFormData({...formData, petWeight: e.target.value})}
               />
@@ -106,15 +106,15 @@ export default function CreateProfile() {
 
           {/* Medical History */}
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Medical History / Notes</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1 dark:text-white/40">Medical History / Notes</label>
             <div className="relative group">
-              <div className="absolute top-4 left-4 pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors">
+              <div className="absolute top-4 left-4 pointer-events-none text-slate-400 group-focus-within:text-planet-yellow transition-colors dark:text-white/40">
                 <ClipboardList size={18} />
               </div>
               <textarea
                 placeholder="Any allergies, past surgeries, or special mentions..."
                 rows={4}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10 resize-none"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/30 focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all shadow-sm focus:shadow-planet-yellow/10 resize-none dark:bg-neutral-900 dark:border-white/10 dark:text-white/90"
                 value={formData.medicalHistory}
                 onChange={(e) => setFormData({...formData, medicalHistory: e.target.value})}
               />

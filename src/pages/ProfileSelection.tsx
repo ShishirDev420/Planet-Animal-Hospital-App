@@ -14,7 +14,7 @@ export default function ProfileSelection() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden dark:bg-[#071912] dark:text-white/95">
       {/* Background Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/20 rounded-full blur-3xl animate-blob"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-teal-300/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
@@ -26,10 +26,10 @@ export default function ProfileSelection() {
       >
         <div className="flex flex-col items-center mb-12">
           <Logo size="lg" className="mb-6" />
-          <h1 className="text-3xl font-black tracking-tighter text-slate-900 uppercase">
+          <h1 className="text-3xl font-black tracking-tighter text-slate-900 uppercase dark:text-white/95">
             Who's visiting today?
           </h1>
-          <p className="text-slate-500 text-sm mt-2">Select a profile to continue</p>
+          <p className="text-slate-500 text-sm mt-2 dark:text-white/60">Select a profile to continue</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6 w-full">
@@ -42,14 +42,14 @@ export default function ProfileSelection() {
               onClick={() => navigate('/')}
               className="flex flex-col items-center gap-4 group"
             >
-              <div className="relative p-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl group-hover:shadow-[0_0_40px_rgba(250,204,21,0.4)] transition-all duration-300">
+              <div className="relative p-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl group-hover:shadow-[0_0_40px_rgba(250,204,21,0.4)] transition-all duration-300 dark:bg-neutral-900 dark:border-white/10">
                 <DualAvatar 
                   leftImage={harshalImage}
                   rightImage={johnnyImage}
                   className="w-32 h-32"
                 />
               </div>
-              <span className="font-bold text-slate-800 tracking-tight group-hover:text-planet-yellow transition-colors">{profile.name}</span>
+              <span className="font-bold text-slate-800 tracking-tight group-hover:text-planet-yellow transition-colors dark:text-white/90">{profile.name}</span>
             </motion.button>
           ))}
 
@@ -61,17 +61,17 @@ export default function ProfileSelection() {
             onClick={() => navigate('/create-profile')}
             className="flex flex-col items-center gap-4 group"
           >
-            <div className="relative p-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl group-hover:shadow-[0_0_40px_rgba(250,204,21,0.4)] transition-all duration-300">
-              <div className="w-32 h-32 rounded-full bg-white/40 border-4 border-dashed border-white/60 flex items-center justify-center shadow-inner group-hover:border-planet-yellow group-hover:bg-planet-yellow/20 transition-all duration-300 relative overflow-hidden">
+            <div className="relative p-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl group-hover:shadow-[0_0_40px_rgba(250,204,21,0.4)] transition-all duration-300 dark:bg-neutral-900 dark:border-white/10">
+              <div className="w-32 h-32 rounded-full bg-white/40 border-4 border-dashed border-white/60 flex items-center justify-center shadow-inner group-hover:border-planet-yellow group-hover:bg-planet-yellow/20 transition-all duration-300 relative overflow-hidden dark:bg-neutral-800 dark:border-white/20">
                 {/* Glowing Effect */}
                 <div className="absolute inset-0 bg-planet-yellow/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <Plus size={40} className="text-slate-500 group-hover:text-planet-yellow transition-colors relative z-10" />
+                <Plus size={40} className="text-slate-500 group-hover:text-planet-yellow transition-colors relative z-10 dark:text-white/40" />
               </div>
               <div className="absolute -bottom-2 -right-2 bg-planet-yellow p-2 rounded-full shadow-lg text-black animate-pulse">
                 <Sparkles size={20} />
               </div>
             </div>
-            <span className="font-bold text-slate-500 group-hover:text-planet-yellow transition-colors tracking-tight">Add New Member</span>
+            <span className="font-bold text-slate-500 group-hover:text-planet-yellow transition-colors tracking-tight dark:text-white/40">Add New Member</span>
           </motion.button>
         </div>
 
