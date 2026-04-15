@@ -96,22 +96,22 @@ export default function Roadmap() {
 
   if (isProfileIncomplete) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 mb-32 min-h-[600px] dark:text-white/95">
+      <div className="h-full flex flex-col items-center justify-center p-6 mb-32 min-h-screen bg-gradient-to-b from-[#062d24] via-[#020d0b] to-black fixed inset-0 z-0 overflow-y-auto">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/20 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-[2rem] p-10 max-w-md w-full text-center flex flex-col items-center"
+          className="relative z-10 bg-white/[0.03] backdrop-blur-[24px] border border-white/[0.08] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-10 max-w-md w-full text-center flex flex-col items-center"
         >
-          <div className="w-24 h-24 bg-yellow-400/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(250,204,21,0.3)] border border-yellow-300/50">
-            <Lock className="w-10 h-10 text-yellow-600" />
+          <div className="w-24 h-24 bg-[#e8bc4b]/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(232,188,75,0.3)] border border-[#e8bc4b]/50">
+            <Lock className="w-10 h-10 text-[#e8bc4b]" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-3">Profile Incomplete</h2>
-          <p className="text-slate-700 font-medium mb-8 leading-relaxed">
+          <h2 className="text-2xl font-black text-white mb-3">Profile Incomplete</h2>
+          <p className="text-white/80 font-medium mb-8 leading-relaxed">
             A complete profile is required to unlock the personalized Longevity Roadmap for your pet.
           </p>
           <button 
             onClick={() => navigate('/settings')}
-            className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(250,204,21,0.4)] hover:scale-[1.02] active:scale-95 transition-all"
+            className="w-full bg-gradient-to-r from-[#e8bc4b] to-yellow-500 text-black py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(232,188,75,0.4)] hover:scale-[1.02] active:scale-95 transition-all"
           >
             Update Profile
           </button>
@@ -121,145 +121,155 @@ export default function Roadmap() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white/10 backdrop-blur-3xl border border-white/30 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.1)] min-h-[600px] max-w-2xl mx-auto rounded-[2rem] m-6 mb-32 dark:bg-neutral-900 dark:border-white/10 dark:text-white/95">
-      <AnimatePresence mode="wait">
-        {!roadmap ? (
-          <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 sm:p-10 flex-1 flex flex-col">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="bg-planet-yellow p-3 rounded-xl shadow-sm">
-                <Sparkles className="w-6 h-6 text-black" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white/95">Longevity Roadmap</h3>
-                <p className="text-slate-500 text-sm font-medium dark:text-white/60">Personalized health timeline</p>
-              </div>
-            </div>
-            
-            {error && (
-              <div className="mb-6 p-3 bg-red-500/20 text-red-700 backdrop-blur-md border border-red-500/30 rounded-lg text-sm font-medium">
-                {error}
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 dark:text-white/60">Pet Name</label>
-                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Max" className="w-full px-4 py-3 rounded-xl border border-white/40 focus:ring-2 focus:ring-yellow-400 focus:bg-white/60 outline-none bg-white/40 backdrop-blur-md text-slate-900 placeholder:text-slate-400 transition-all shadow-sm dark:bg-neutral-800 dark:border-white/10 dark:text-white/90" />
+    <div className="h-full flex flex-col min-h-screen bg-gradient-to-b from-[#062d24] via-[#020d0b] to-black fixed inset-0 z-0 overflow-y-auto pb-32">
+      <div className="relative z-10 max-w-2xl mx-auto w-full p-6">
+        <div className="bg-white/[0.03] backdrop-blur-[24px] border border-white/[0.08] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] overflow-hidden">
+          <AnimatePresence mode="wait">
+            {!roadmap ? (
+              <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 sm:p-10 flex-1 flex flex-col">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="bg-[#e8bc4b] p-3 rounded-xl shadow-[0_0_20px_rgba(232,188,75,0.3)]">
+                    <Sparkles className="w-6 h-6 text-black" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-white">Longevity Roadmap</h3>
+                    <p className="text-white/60 text-sm font-medium">Personalized health timeline</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Species</label>
-                  <select name="species" value={formData.species} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-white/40 focus:ring-2 focus:ring-yellow-400 focus:bg-white/60 outline-none bg-white/40 backdrop-blur-md text-slate-900 transition-all shadow-sm">
-                    <option>Dog</option>
-                    <option>Cat</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Breed</label>
-                <input type="text" name="breed" value={formData.breed} onChange={handleInputChange} placeholder="e.g. American Bully" className="w-full px-4 py-3 rounded-xl border border-white/40 focus:ring-2 focus:ring-yellow-400 focus:bg-white/60 outline-none bg-white/40 backdrop-blur-md text-slate-900 placeholder:text-slate-400 transition-all shadow-sm" />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Age (Years)</label>
-                  <input type="number" name="age" value={formData.age} onChange={handleInputChange} placeholder="e.g. 5" min="0" step="0.1" className="w-full px-4 py-3 rounded-xl border border-white/40 focus:ring-2 focus:ring-yellow-400 focus:bg-white/60 outline-none bg-white/40 backdrop-blur-md text-slate-900 placeholder:text-slate-400 transition-all shadow-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Known Issues</label>
-                  <input type="text" name="issues" value={formData.issues} onChange={handleInputChange} placeholder="e.g. Joint pain" className="w-full px-4 py-3 rounded-xl border border-white/40 focus:ring-2 focus:ring-yellow-400 focus:bg-white/60 outline-none bg-white/40 backdrop-blur-md text-slate-900 placeholder:text-slate-400 transition-all shadow-sm" />
-                </div>
-              </div>
-              
-              <button type="submit" disabled={loading} className="mt-auto w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 py-4 rounded-xl font-bold flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.4)] hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all">
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin w-5 h-5" /> Analyzing...
-                  </>
-                ) : (
-                  <>
-                    Generate Profile <ArrowRight className="w-5 h-5" />
-                  </>
+                
+                {error && (
+                  <div className="mb-6 p-3 bg-red-500/20 text-white backdrop-blur-md border border-red-500/30 rounded-lg text-sm font-medium">
+                    {error}
+                  </div>
                 )}
-              </button>
-            </form>
-          </motion.div>
-        ) : (
-          <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 flex-1 overflow-y-auto flex flex-col gap-6 hide-scrollbar">
-            {/* Header */}
-            <div className="flex justify-between items-start border-b border-white/30 pb-4">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-800 text-xs font-bold mb-2 border border-yellow-300/50 shadow-sm">
-                  <Sparkles className="w-3 h-3" /> Roadmap Generated
+                
+                <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-white/60 uppercase tracking-wider mb-2">Pet Name</label>
+                      <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Max" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] focus:ring-2 focus:ring-[#e8bc4b] focus:bg-white/[0.08] outline-none bg-white/[0.03] backdrop-blur-md text-white placeholder:text-white/40 transition-all shadow-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-white/60 uppercase tracking-wider mb-2">Species</label>
+                      <select name="species" value={formData.species} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-white/[0.08] focus:ring-2 focus:ring-[#e8bc4b] focus:bg-white/[0.08] outline-none bg-white/[0.03] backdrop-blur-md text-white transition-all shadow-sm [&>option]:bg-neutral-900">
+                        <option>Dog</option>
+                        <option>Cat</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-white/60 uppercase tracking-wider mb-2">Breed</label>
+                    <input type="text" name="breed" value={formData.breed} onChange={handleInputChange} placeholder="e.g. American Bully" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] focus:ring-2 focus:ring-[#e8bc4b] focus:bg-white/[0.08] outline-none bg-white/[0.03] backdrop-blur-md text-white placeholder:text-white/40 transition-all shadow-sm" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-white/60 uppercase tracking-wider mb-2">Age (Years)</label>
+                      <input type="number" name="age" value={formData.age} onChange={handleInputChange} placeholder="e.g. 5" min="0" step="0.1" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] focus:ring-2 focus:ring-[#e8bc4b] focus:bg-white/[0.08] outline-none bg-white/[0.03] backdrop-blur-md text-white placeholder:text-white/40 transition-all shadow-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-white/60 uppercase tracking-wider mb-2">Known Issues</label>
+                      <input type="text" name="issues" value={formData.issues} onChange={handleInputChange} placeholder="e.g. Joint pain" className="w-full px-4 py-3 rounded-xl border border-white/[0.08] focus:ring-2 focus:ring-[#e8bc4b] focus:bg-white/[0.08] outline-none bg-white/[0.03] backdrop-blur-md text-white placeholder:text-white/40 transition-all shadow-sm" />
+                    </div>
+                  </div>
+                  
+                  <button type="submit" disabled={loading} className="mt-auto w-full bg-gradient-to-r from-[#e8bc4b] to-yellow-500 text-black py-4 rounded-xl font-bold flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(232,188,75,0.4)] hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all">
+                    {loading ? (
+                      <>
+                        <Loader2 className="animate-spin w-5 h-5" /> Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        Generate Profile <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 flex-1 flex flex-col gap-6">
+                {/* Header */}
+                <div className="flex justify-between items-start border-b border-white/[0.08] pb-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8bc4b]/20 text-[#e8bc4b] text-xs font-bold mb-2 border border-[#e8bc4b]/50 shadow-sm">
+                      <Sparkles className="w-3 h-3" /> Roadmap Generated
+                    </div>
+                    <h2 className="text-2xl font-black text-white">{formData.name}'s Plan</h2>
+                  </div>
+                  <button onClick={resetForm} className="p-2 text-white/60 hover:text-white bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-full hover:bg-white/[0.08] transition-all shadow-sm" title="Start Over">
+                    <RefreshCw size={18} />
+                  </button>
                 </div>
-                <h2 className="text-2xl font-black text-slate-900">{formData.name}'s Plan</h2>
-              </div>
-              <button onClick={resetForm} className="p-2 text-slate-500 hover:text-slate-900 bg-white/40 backdrop-blur-md border border-white/40 rounded-full hover:bg-white/60 transition-all shadow-sm" title="Start Over">
-                <RefreshCw size={18} />
-              </button>
-            </div>
-            
-            <p className="text-sm text-slate-700 bg-white/40 backdrop-blur-lg border border-white/50 p-4 rounded-xl leading-relaxed shadow-sm">
-              {roadmap.introduction}
-            </p>
-            
-            {/* Timeline */}
-            <div>
-              <h4 className="font-bold flex items-center gap-2 mb-4 text-slate-900">
-                <Clock size={18} className="text-blue-500" /> Health Timeline
-              </h4>
-              <div className="space-y-4">
-                {roadmap.timeline.map((item: any, i: number) => (
-                  <div key={i} className="bg-white/40 backdrop-blur-lg border border-white/50 p-5 rounded-xl shadow-sm">
-                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wide">{item.ageRange}</span>
-                    <h5 className="font-bold text-base mt-1 mb-3 text-slate-900">{item.focusArea}</h5>
-                    <ul className="text-sm text-slate-700 space-y-2">
-                      {item.actionItems.map((act: string, j: number) => (
-                        <li key={j} className="flex items-start gap-2 leading-relaxed">
-                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-1.5 shrink-0" />
-                          {act}
+                
+                <p className="text-sm text-white bg-white/[0.03] backdrop-blur-[24px] border border-white/[0.08] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-4 rounded-xl leading-relaxed">
+                  {roadmap.introduction}
+                </p>
+                
+                {/* Timeline */}
+                <div>
+                  <h4 className="font-bold flex items-center gap-2 mb-4 text-white">
+                    <Clock size={18} className="text-[#e8bc4b]" /> Health Timeline
+                  </h4>
+                  <div className="relative space-y-4 pl-4">
+                    {/* Vertical Luminous Line */}
+                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
+                    
+                    {roadmap.timeline.map((item: any, i: number) => (
+                      <div key={i} className="relative bg-white/[0.03] backdrop-blur-[24px] border border-white/[0.08] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-5 rounded-xl ml-4">
+                        {/* Timeline Node */}
+                        <div className="absolute -left-[21px] top-6 w-2 h-2 rounded-full bg-[#e8bc4b] shadow-[0_0_10px_rgba(232,188,75,0.8)]" />
+                        
+                        <span className="text-xs font-bold text-[#e8bc4b] uppercase tracking-wide">{item.ageRange}</span>
+                        <h5 className="font-bold text-base mt-1 mb-3 text-white">{item.focusArea}</h5>
+                        <ul className="text-sm text-white space-y-2">
+                          {item.actionItems.map((act: string, j: number) => (
+                            <li key={j} className="flex items-start gap-2 leading-relaxed">
+                              <div className="w-1.5 h-1.5 bg-white/50 rounded-full mt-1.5 shrink-0" />
+                              {act}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Diet & Care grids */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-white/[0.03] backdrop-blur-[24px] border border-white/[0.08] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-5 rounded-xl">
+                    <h4 className="font-bold flex items-center gap-2 mb-3 text-white">
+                      <Utensils size={18} className="text-[#e8bc4b]" /> Diet & Nutrition
+                    </h4>
+                    <ul className="text-sm text-white space-y-2">
+                      {roadmap.dietaryAdvice.map((adv: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-[#e8bc4b]" />
+                          <span className="leading-relaxed">{adv}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Diet & Care grids */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white/40 backdrop-blur-lg border border-white/50 p-5 rounded-xl shadow-sm">
-                <h4 className="font-bold flex items-center gap-2 mb-3 text-green-700">
-                  <Utensils size={18} /> Diet & Nutrition
-                </h4>
-                <ul className="text-sm text-slate-700 space-y-2">
-                  {roadmap.dietaryAdvice.map((adv: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 opacity-70 text-green-600" />
-                      <span className="leading-relaxed">{adv}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-white/40 backdrop-blur-lg border border-white/50 p-5 rounded-xl shadow-sm">
-                <h4 className="font-bold flex items-center gap-2 mb-3 text-purple-700">
-                  <HeartPulse size={18} /> Preventative Care
-                </h4>
-                <ul className="text-sm text-slate-700 space-y-2">
-                  {roadmap.preventativeCare.map((care: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <HeartPulse className="w-4 h-4 mt-0.5 shrink-0 opacity-70 text-purple-600" />
-                      <span className="leading-relaxed">{care}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <div className="bg-white/[0.03] backdrop-blur-[24px] border border-white/[0.08] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-5 rounded-xl">
+                    <h4 className="font-bold flex items-center gap-2 mb-3 text-white">
+                      <HeartPulse size={18} className="text-[#e8bc4b]" /> Preventative Care
+                    </h4>
+                    <ul className="text-sm text-white space-y-2">
+                      {roadmap.preventativeCare.map((care: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <HeartPulse className="w-4 h-4 mt-0.5 shrink-0 text-[#e8bc4b]" />
+                          <span className="leading-relaxed">{care}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }

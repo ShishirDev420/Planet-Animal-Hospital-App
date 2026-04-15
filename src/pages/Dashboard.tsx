@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate, animate, Reorder } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate, animate, useScroll, useSpring } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
@@ -358,6 +358,14 @@ export default function Dashboard() {
   const submitBooking = async () => {
     if (!selectedService || !bookingDate || !bookingTime || !userId) return;
 
+    const parentName = "Harshal";
+    const petName = petProfile.name;
+    const message = `Hi Planet Animal Hospital team! 👋 I am *${parentName}*, *${petName}'s* pet parent. I'm interested in *${selectedService.name}* at *${bookingTime}* on *${bookingDate}*. Please give me a call regarding the possibility of this appointment ASAP.`;
+    const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
+    
+    // Trigger redirect immediately to satisfy browser user-gesture requirements and bypass popup blockers
+    window.open(whatsappUrl, '_blank');
+
     try {
       await addDoc(collection(db, 'requests'), {
         userId: userId,
@@ -372,12 +380,6 @@ export default function Dashboard() {
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'requests');
     }
-
-    const parentName = "Harshal";
-    const petName = petProfile.name;
-    const message = `Hi Planet Animal Hospital team! 👋 I am *${parentName}*, *${petName}'s* pet parent. I'm interested in *${selectedService.name}* at *${bookingTime}* on *${bookingDate}*. Please give me a call regarding the possibility of this appointment ASAP.`;
-    const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
 
     setIsBookVisitOpen(false);
     setSelectedService(null);
@@ -395,7 +397,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 space-y-8 pb-32 dark:text-white/95">
+    <div className="p-6 space-y-8 pb-4 dark:text-white/95">
       {/* Header with Logo */}
       <header className="pt-4 mb-2">
         <div className="relative flex items-center justify-between w-full py-4">
@@ -552,17 +554,17 @@ export default function Dashboard() {
         {/* The Shelf Effect */}
         <div className="absolute bottom-8 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none z-0" />
 
-        <div className="relative w-full [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
-          <Reorder.Group 
+        <div className="relative w-full mt-12">
+          <div 
             ref={carouselRef}
-            axis="x" 
-            values={incentivesOrder} 
-            onReorder={setIncentivesOrder} 
-            className="flex overflow-x-scroll hide-scrollbar gap-4 py-10 -my-10 relative z-10 [&::-webkit-scrollbar]:hidden"
+            className="flex overflow-x-auto hide-scrollbar gap-4 py-40 -my-40 px-[calc(50%-160px)] relative z-10 [&::-webkit-scrollbar]:hidden snap-x snap-mandatory transform-gpu will-change-transform"
             style={{ scrollbarWidth: 'none' }}
           >
             {incentivesOrder.map((incentive) => (
-              <Reorder.Item value={incentive} key={incentive.id} className="flex-none w-[320px] group">
+              <div 
+                key={incentive.id} 
+                className="flex-none w-[320px] group snap-center"
+              >
                 <EarnCard 
                   id={incentive.id}
                   title={incentive.title}
@@ -573,10 +575,11 @@ export default function Dashboard() {
                   theme={incentive.theme}
                   isPending={pendingIncentives.includes(incentive.id)}
                   onBook={() => handleBookAppointment(incentive)} 
+                  carouselRef={carouselRef}
                 />
-              </Reorder.Item>
+              </div>
             ))}
-          </Reorder.Group>
+          </div>
         </div>
       </div>
 
@@ -861,7 +864,23 @@ function MagneticWrapper({ children, className }: { children: React.ReactNode, c
   );
 }
 
-function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPending, theme = 'yellow', onBook }: { id: string, title: string, subtext?: string, pointsText: string, pointsValue: number, highValue?: boolean, isPending: boolean, theme?: 'blue' | 'orange' | 'green' | 'purple' | 'yellow', onBook: (id: string, points: number, title: string) => void }) {
+function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPending, theme = 'yellow', onBook, carouselRef }: { id: string, title: string, subtext?: string, pointsText: string, pointsValue: number, highValue?: boolean, isPending: boolean, theme?: 'blue' | 'orange' | 'green' | 'purple' | 'yellow', onBook: (id: string, points: number, title: string) => void, carouselRef?: React.RefObject<HTMLElement> }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollXProgress } = useScroll({
+    container: carouselRef,
+    target: cardRef,
+    axis: "x",
+    offset: ["center end", "center start"]
+  });
+
+  const rawScale = useTransform(scrollXProgress, [0, 0.5, 1], [0.9, 1.15, 0.9]);
+  const rawOpacity = useTransform(scrollXProgress, [0, 0.5, 1], [0.5, 1, 0.5]);
+
+  const springConfig = { stiffness: 400, damping: 40, mass: 1 };
+  const scale = useSpring(rawScale, springConfig);
+  const opacity = useSpring(rawOpacity, springConfig);
+
   const themeGradients = {
     blue: 'from-blue-400/20',
     orange: 'from-orange-400/20',
@@ -870,72 +889,60 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
     yellow: 'from-yellow-400/20'
   };
 
-  const textGradients = {
-    blue: 'from-blue-500 to-blue-700',
-    orange: 'from-orange-500 to-orange-700',
-    green: 'from-emerald-500 to-emerald-700',
-    purple: 'from-purple-500 to-purple-700',
-    yellow: 'from-yellow-500 to-yellow-700'
-  };
-
-  const glowShadows = {
-    blue: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(59,130,246,0.3)]',
-    orange: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(249,115,22,0.3)]',
-    green: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(16,185,129,0.3)]',
-    purple: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(168,85,247,0.3)]',
-    yellow: 'hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6),0_12px_40px_rgba(0,0,0,0.1),0_0_30px_rgba(234,179,8,0.3)]'
-  };
-
   return (
-    <motion.div 
-      whileHover={{ y: -5, scale: 1.02 }}
-      className={`snap-start relative min-w-[240px] shrink-0 flex flex-col cursor-grab active:cursor-grabbing w-full h-[260px] bg-white/20 backdrop-blur-3xl border-t border-l border-white/70 border-b border-r border-white/20 shadow-[0_8px_32px_rgba(20,20,20,0.04)] rounded-3xl p-6 overflow-hidden transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)] group dark:bg-neutral-900 dark:border-white/10`}
-    >
-      {/* Dynamic Gradient Background */}
-      <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${themeGradients[theme]} via-transparent to-transparent pointer-events-none`} />
+    <motion.div ref={cardRef} style={{ scale, opacity }} className="relative min-w-[240px] shrink-0 w-full h-[260px] group origin-center transform-gpu will-change-transform">
+      {/* Background Glow - Broad and Soft Dissipation */}
+      <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] ${themeGradients[theme]} to-transparent blur-[90px] scale-[1.5] opacity-40 pointer-events-none z-0 transition-all duration-700 group-hover:opacity-70 group-hover:scale-[1.8]`} />
       
-      {/* Shimmer Effect for High Value */}
-      {highValue && (
-        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-[shimmer_3s_infinite] pointer-events-none z-0 dark:via-white/10" />
-      )}
-
-      {/* Absolute High Value Badge */}
-      {highValue && (
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-yellow-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:bg-neutral-800 dark:border-white/10 dark:text-yellow-400">
-          <Sparkles className="w-3 h-3" />
-          High Value
+      <motion.div 
+        whileHover={{ y: -5, scale: 1.02 }}
+        className="relative flex flex-col cursor-grab active:cursor-grabbing w-full h-full bg-white/20 backdrop-blur-3xl border border-white/[0.03] shadow-[0_8px_32px_rgba(20,20,20,0.04)] rounded-3xl transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)] dark:bg-neutral-900 dark:border-white/10"
+      >
+        {/* Shimmer Effect Wrapper - Clipped to card shape */}
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          {highValue && (
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-amber-200/5 to-transparent skew-x-12 animate-[shimmer_15s_linear_infinite] pointer-events-none z-0 mix-blend-overlay" />
+          )}
         </div>
-      )}
 
-      <div className="relative z-10 flex flex-col h-full">
-        <div className="mt-8 flex flex-col items-start gap-2">
-          <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide dark:text-white/95">{title}</h4>
-          {subtext && <p className="text-sm text-gray-600/90 leading-relaxed font-medium dark:text-white/60">{subtext}</p>}
-        </div>
-        
-        <div className="mt-auto flex flex-col">
-          <div className="mb-4 flex items-center gap-1.5">
-            <PawPrint className="w-6 h-6 text-yellow-500 fill-yellow-500/40 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)] animate-pulse" />
-            <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600">
-              {pointsText}
-            </p>
+        <div className="relative z-10 flex flex-col h-full p-6">
+          {/* Absolute High Value Badge */}
+          {highValue && (
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-yellow-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:bg-neutral-800 dark:border-white/10 dark:text-yellow-400">
+              <Sparkles className="w-3 h-3" />
+              High Value
+            </div>
+          )}
+
+          <div className="mt-8 flex flex-col items-start gap-2">
+            <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide dark:text-white/95">{title}</h4>
+            {subtext && <p className="text-sm text-gray-600/90 leading-relaxed font-medium dark:text-white/60">{subtext}</p>}
           </div>
           
-          <MagneticWrapper className="w-full rounded-xl">
-            <button 
-              onClick={() => onBook(id, pointsValue, title)}
-              disabled={isPending}
-              className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
-                isPending 
-                  ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-                  : 'bg-yellow-500 backdrop-blur-xl border border-yellow-400 text-white hover:bg-yellow-600'
-              }`}
-            >
-              {isPending ? 'Pending Confirmation' : 'Book Now'}
-            </button>
-          </MagneticWrapper>
+          <div className="mt-auto flex flex-col">
+            <div className="mb-4 flex items-center gap-1.5">
+              <PawPrint className="w-6 h-6 text-yellow-500 fill-yellow-500/40 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)] animate-pulse" />
+              <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600">
+                {pointsText}
+              </p>
+            </div>
+            
+            <MagneticWrapper className="w-full rounded-xl">
+              <button 
+                onClick={() => onBook(id, pointsValue, title)}
+                disabled={isPending}
+                className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
+                  isPending 
+                    ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
+                    : 'bg-yellow-500 backdrop-blur-xl border border-yellow-400 text-white hover:bg-yellow-600'
+                }`}
+              >
+                {isPending ? 'Pending Confirmation' : 'Book Now'}
+              </button>
+            </MagneticWrapper>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
