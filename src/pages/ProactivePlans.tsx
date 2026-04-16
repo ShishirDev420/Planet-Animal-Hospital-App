@@ -106,42 +106,53 @@ export default function ProactivePlans() {
 
 function PlanCard({ title, price, period, description, features, isPopular, isElite, delay }: any) {
   const baseClasses = isElite 
-    ? 'glass-card dark:bg-neutral-900 dark:border-white/10 ring-2 ring-[#fec708] shadow-[0_0_40px_rgba(254,199,8,0.15)] dark:shadow-[0_0_50px_rgba(254,199,8,0.25)] relative overflow-visible scale-105 z-10'
+    ? 'glass-card dark:bg-neutral-900 dark:border-white/10 ring-2 ring-[#fec708] relative overflow-hidden scale-105 z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#e8bc4b]/15 to-transparent'
     : isPopular 
-      ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 dark:bg-black dark:border dark:border-white/20' 
+      ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 dark:bg-black dark:border dark:border-white/20 mt-8' 
       : 'glass-card dark:bg-neutral-900 dark:border-white/10';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-      className={`relative rounded-3xl p-6 ${baseClasses}`}
+      animate={
+        isElite 
+          ? { opacity: 1, y: 0, boxShadow: ['0px 0px 30px rgba(232,188,75,0.1)', '0px 0px 60px rgba(232,188,75,0.3)', '0px 0px 30px rgba(232,188,75,0.1)'] } 
+          : { opacity: 1, y: 0 }
+      }
+      transition={
+        isElite
+          ? { default: { delay }, boxShadow: { duration: 8, repeat: Infinity, ease: "easeInOut" } }
+          : { delay }
+      }
+      className={`relative rounded-3xl p-6 ${isPopular ? 'pt-8' : ''} ${baseClasses}`}
     >
-      {isPopular && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#fec708] text-black text-xs font-black px-4 py-1 rounded-full shadow-lg">
-          MOST POPULAR
+      {/* Wrapping content in relative z-10 to stay above background */}
+      <div className="relative z-10">
+        {isPopular && (
+          <div className="whitespace-nowrap flex-shrink-0 absolute -top-4 left-1/2 -translate-x-1/2 bg-[#fec708] text-black text-xs font-black px-4 py-1 rounded-full shadow-lg">
+            MOST POPULAR
+          </div>
+        )}
+        <h3 className={`text-xl font-bold mb-1 ${isPopular ? 'text-white' : 'text-slate-800 dark:text-white/95'}`}>{title}</h3>
+        <p className={`text-sm mb-4 ${isPopular ? 'text-slate-300' : 'text-slate-500 dark:text-white/60'}`}>{description}</p>
+        <div className="flex items-end gap-1 mb-6">
+          <span className="text-4xl font-black tracking-tighter">{price}</span>
+          <span className={`font-medium pb-1 ${isPopular ? 'text-slate-400' : 'text-slate-500 dark:text-white/50'}`}>{period}</span>
         </div>
-      )}
-      <h3 className={`text-xl font-bold mb-1 ${isPopular ? 'text-white' : 'text-slate-800 dark:text-white/95'}`}>{title}</h3>
-      <p className={`text-sm mb-4 ${isPopular ? 'text-slate-300' : 'text-slate-500 dark:text-white/60'}`}>{description}</p>
-      <div className="flex items-end gap-1 mb-6">
-        <span className="text-4xl font-black tracking-tighter">{price}</span>
-        <span className={`font-medium pb-1 ${isPopular ? 'text-slate-400' : 'text-slate-500 dark:text-white/50'}`}>{period}</span>
+
+        <ul className="space-y-3 mb-8">
+          {features.map((f: string, i: number) => (
+            <li key={i} className="flex items-start gap-3 text-sm">
+              <CheckCircle2 className="shrink-0 text-[#fec708]" size={18} />
+              <span className={`${isPopular ? 'text-white/90' : 'text-slate-700'} dark:text-white/90`}>{f}</span>
+            </li>
+          ))}
+        </ul>
+
+        <button className="w-full py-4 bg-[#fec708] text-black font-bold rounded-xl shadow-lg hover:scale-105 transition-transform duration-300 flex items-center justify-center gap-2 active:scale-95">
+          Choose Plan <ArrowRight size={18} />
+        </button>
       </div>
-
-      <ul className="space-y-3 mb-8">
-        {features.map((f: string, i: number) => (
-          <li key={i} className="flex items-start gap-3 text-sm">
-            <CheckCircle2 className="shrink-0 text-[#fec708]" size={18} />
-            <span className={`${isPopular ? 'text-white/90' : 'text-slate-700'} dark:text-white/90`}>{f}</span>
-          </li>
-        ))}
-      </ul>
-
-      <button className="w-full py-4 bg-[#fec708] text-black font-bold rounded-xl shadow-lg hover:scale-105 transition-transform duration-300 flex items-center justify-center gap-2 active:scale-95">
-        Choose Plan <ArrowRight size={18} />
-      </button>
     </motion.div>
   );
 }
