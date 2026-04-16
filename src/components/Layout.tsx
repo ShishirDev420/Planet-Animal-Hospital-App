@@ -5,7 +5,7 @@ import SplashScreen from './SplashScreen';
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans relative overflow-hidden flex justify-center dark:bg-[#071912] dark:text-white/95">
+    <div className="h-screen w-screen bg-slate-50 text-slate-900 font-sans relative overflow-hidden flex justify-center dark:bg-[#071912] dark:text-white/95">
       <SplashScreen />
       {/* Background Blobs for Glassmorphism - Fixed to prevent scroll flickering */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
@@ -42,7 +42,7 @@ function NavItem({ to, icon, label }: { to: string; icon: React.ReactNode; label
       className={({ isActive }) =>
         cn(
           "flex flex-col items-center gap-1 transition-all duration-300",
-          isActive ? "text-planet-yellow scale-110" : "text-slate-400 hover:text-slate-600"
+          isActive ? "text-black dark:text-white scale-110" : "text-neutral-400 dark:text-neutral-500 hover:text-black dark:hover:text-white"
         )
       }
     >

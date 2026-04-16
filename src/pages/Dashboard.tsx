@@ -413,7 +413,7 @@ export default function Dashboard() {
           {/* Center Text Container */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0 w-max pointer-events-none whitespace-nowrap">
             <span className="text-lg font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95">PLANET ANIMAL</span>
-            <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-[0.25em] mt-0.5 dark:text-yellow-400">HOSPITAL & WELLNESS</span>
+            <span className="text-[10px] font-bold text-[#fec708] uppercase tracking-[0.25em] mt-0.5 dark:text-[#fec708]">HOSPITAL & WELLNESS</span>
           </div>
 
           {/* Profile Container (Right) */}
@@ -424,7 +424,7 @@ export default function Dashboard() {
                   <DualAvatar 
                     leftImage={harshalImage}
                     rightImage={johnnyImage}
-                    className="w-16 h-16 ring-2 ring-yellow-500/30 ring-offset-2 ring-offset-white/50 hover:ring-yellow-500/70 transition-all duration-300 shadow-sm active:scale-95 rounded-full"
+                    className="w-16 h-16 ring-2 ring-[#fec708]/30 ring-offset-2 ring-offset-white/50 hover:ring-[#fec708]/70 transition-all duration-300 shadow-sm active:scale-95 rounded-full"
                   />
                 </div>
               </button>
@@ -443,46 +443,46 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/[0.05] backdrop-blur-[30px] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)] rounded-[2rem] p-6 relative overflow-hidden dark:bg-neutral-900/40 dark:border-white/10"
+        className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-planet-yellow/20 rounded-full blur-3xl -mr-10 -mt-10 z-0"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-md border border-white/20 shadow-sm">
+            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/10 px-3 py-1 rounded-full backdrop-blur-md border border-black/10 dark:border-white/20 shadow-sm">
               <Award className="text-planet-yellow" size={16} />
-              <span className="text-xs font-bold text-white">Proactive Member</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-white">Proactive Member</span>
             </div>
             <div className="bg-planet-yellow text-black text-[10px] uppercase tracking-wider font-black px-2 py-1 rounded-lg shadow-sm">
               2x Multiplier
             </div>
           </div>
-          <h2 className="text-white text-sm font-medium mb-2">Paw Points Balance</h2>
+          <h2 className="text-slate-800 dark:text-white text-sm font-medium mb-2">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-6xl tracking-tighter tabular-nums font-black text-white dark:text-yellow-400">{verifiedPoints.toLocaleString()}</span>
-            <span className="text-white font-bold uppercase tracking-widest text-sm ml-1 mb-2">pts</span>
+            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900 dark:text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
+            <span className="text-slate-800 dark:text-white font-bold uppercase tracking-widest text-sm ml-1 mb-2">pts</span>
           </div>
           
           {pendingPoints > 0 && (
             <div className="mt-3 mb-2 flex items-center gap-2">
-              <div className="bg-white/10 text-white font-bold tracking-tight px-2.5 py-1 rounded-full text-sm border border-white/20 shadow-sm">
+              <div className="bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white font-bold tracking-tight px-2.5 py-1 rounded-full text-sm border border-black/10 dark:border-white/20 shadow-sm">
                 + {pendingPoints.toLocaleString()} Pending
               </div>
-              <span className="text-[10px] text-white font-medium max-w-[150px] leading-tight">
+              <span className="text-[10px] text-slate-600 dark:text-white font-medium max-w-[150px] leading-tight">
                 Points are verified after clinic confirmation via WhatsApp.
               </span>
             </div>
           )}
 
           <div className="mt-8">
-            <div className="h-2.5 w-full bg-white/10 rounded-full overflow-hidden shadow-inner">
+            <div className="h-2.5 w-full bg-black/10 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
                 transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                className="h-full bg-gradient-to-r from-planet-yellow to-yellow-400 rounded-full"
+                className="h-full bg-gradient-to-r from-planet-yellow to-[#fec708] rounded-full"
               />
             </div>
-            <p className="text-[10px] text-white font-bold mt-2 uppercase tracking-wider">
+            <p className="text-[10px] text-slate-800 dark:text-white font-bold mt-2 uppercase tracking-wider">
               {Math.max(0, 5000 - verifiedPoints).toLocaleString()} POINTS UNTIL YOUR NEXT FREE CONSULTATION!
             </p>
           </div>
@@ -493,11 +493,11 @@ export default function Dashboard() {
               disabled={verifiedPoints < 5000}
               className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
                 verifiedPoints < 5000
-                  ? 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed backdrop-blur-sm'
-                  : 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-[0_4px_20px_rgba(234,179,8,0.4)] hover:shadow-[0_4px_25px_rgba(234,179,8,0.6)] font-bold animate-pulse'
+                  ? 'bg-black/5 text-slate-400 border border-black/10 dark:bg-white/5 dark:text-white/20 dark:border-white/10 cursor-not-allowed backdrop-blur-sm'
+                  : 'bg-gradient-to-r from-[#fec708] to-[#fec708] text-white shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] font-bold animate-pulse'
               }`}
             >
-              <Gift size={16} className={verifiedPoints < 5000 ? "text-white/20" : "text-white"} />
+              <Gift size={16} className={verifiedPoints < 5000 ? "text-slate-400 dark:text-white/20" : "text-white"} />
               Claim Free Consult
             </button>
           </div>
@@ -506,7 +506,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h3 className="text-lg font-bold mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-4">
           <ActionCard 
             icon={<Calendar className="text-teal-500" />} 
@@ -526,18 +526,18 @@ export default function Dashboard() {
       {/* Upcoming */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold">Upcoming for Johnny</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming for Johnny</h3>
           <button className="text-planet-yellow text-sm font-bold flex items-center">View All <ChevronRight size={16}/></button>
         </div>
         <div className="space-y-3">
           {upcomingAppts.map((appt, idx) => (
-            <div key={idx} className="glass rounded-2xl p-4 flex items-center gap-4">
-              <div className="bg-teal-100 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 font-bold text-xl shrink-0">
+            <div key={idx} className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-4 flex items-center gap-4">
+              <div className="bg-teal-100 dark:bg-teal-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-xl shrink-0">
                 {appt.date}
               </div>
               <div>
-                <h4 className="font-bold text-slate-800">{appt.title}</h4>
-                <p className="text-sm text-slate-500">Dr. Naveen • {appt.time}</p>
+                <h4 className="font-bold text-slate-800 dark:text-white">{appt.title}</h4>
+                <p className="text-sm text-slate-500 dark:text-white/60">Dr. Naveen • {appt.time}</p>
               </div>
             </div>
           ))}
@@ -545,10 +545,10 @@ export default function Dashboard() {
       </div>
 
       {/* Ways to Earn Points */}
-      <div className="pt-2 relative">
-        <div className="flex items-center gap-2 mb-4 relative z-10">
-          <h3 className="text-lg font-bold">Ways to Earn Paw Points</h3>
-          <PawPrint className="w-5 h-5 text-yellow-500 fill-yellow-500/20" />
+      <div className="pt-2 relative -mx-6">
+        <div className="flex items-center gap-2 mb-4 px-6 relative z-10">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ways to Earn Paw Points</h3>
+          <PawPrint className="w-5 h-5 text-[#fec708] fill-[#fec708]/20" />
         </div>
         
         {/* The Shelf Effect */}
@@ -630,8 +630,8 @@ export default function Dashboard() {
                     <h2 className="text-2xl font-bold">Claim Free Consult</h2>
                     <button onClick={closeModal} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={20}/></button>
                   </div>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
-                    <Gift className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                  <div className="bg-[#fec708]/10 border border-[#fec708]/30 rounded-2xl p-6 text-center">
+                    <Gift className="w-12 h-12 text-[#fec708] mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-slate-800 mb-2">You've Unlocked a Free Consultation!</h3>
                     <p className="text-slate-600 mb-6">
                       Show this screen to our staff at checkout to claim your free consultation for Johnny.
@@ -665,7 +665,7 @@ export default function Dashboard() {
               className="bg-white/30 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-3xl p-6 w-full max-w-md h-full max-h-[85vh] flex flex-col relative"
             >
               <div className="sticky top-0 bg-transparent z-10 pb-4 mb-4 border-b border-white/20 flex justify-between items-center shrink-0">
-                <h2 className="text-2xl font-bold text-yellow-500">Book an Appointment</h2>
+                <h2 className="text-2xl font-bold text-[#fec708]">Book an Appointment</h2>
                 <button 
                   onClick={() => setIsBookVisitOpen(false)} 
                   className="p-2 bg-white/40 hover:bg-white/60 rounded-full text-slate-600 transition-colors"
@@ -689,7 +689,7 @@ export default function Dashboard() {
                           onClick={() => setSelectedService(service)}
                           className={`w-full text-left cursor-pointer transition-all ${
                             isSelected 
-                              ? 'bg-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400 rounded-2xl p-4' 
+                              ? 'bg-[#fec708] text-white shadow-[0_0_15px_rgba(254,199,8,0.6)] border border-[#fec708] rounded-2xl p-4' 
                               : 'bg-white/40 border border-white/30 backdrop-blur-md rounded-2xl p-4 hover:bg-white/60'
                           }`}
                         >
@@ -750,7 +750,7 @@ export default function Dashboard() {
                                 isPast 
                                   ? 'text-gray-300 pointer-events-none dark:text-white/20' 
                                   : isSelected 
-                                    ? 'bg-yellow-500 text-white font-bold shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400' 
+                                    ? 'bg-[#fec708] text-white font-bold shadow-[0_0_15px_rgba(254,199,8,0.6)] border border-[#fec708]' 
                                     : 'text-gray-900 font-bold hover:bg-white/50 dark:text-white/90 dark:hover:bg-white/10'
                               }`}
                             >
@@ -773,7 +773,7 @@ export default function Dashboard() {
                             onClick={() => setBookingTime(time)}
                             className={`py-3 rounded-2xl text-[15px] transition-all ${
                               isSelected
-                                ? 'font-bold bg-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.6)] border border-yellow-400'
+                                ? 'font-bold bg-[#fec708] text-white shadow-[0_0_15px_rgba(254,199,8,0.6)] border border-[#fec708]'
                                 : 'font-medium bg-white/30 border border-white/20 text-gray-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md hover:bg-white/50 dark:bg-neutral-800 dark:border-white/10 dark:text-white/90 dark:hover:bg-neutral-700'
                             }`}
                           >
@@ -812,9 +812,9 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
   return (
     <div 
       onClick={onClick}
-      className="glass rounded-2xl p-4 flex flex-col items-start gap-3 active:scale-95 transition-transform cursor-pointer hover:bg-white/50 dark:bg-neutral-900 dark:border-white/10 dark:hover:bg-neutral-800"
+      className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-4 flex flex-col items-start gap-3 active:scale-95 transition-all cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08]"
     >
-      <div className="bg-white/80 p-2 rounded-xl shadow-sm dark:bg-neutral-800">
+      <div className="bg-white p-2 rounded-xl shadow-sm dark:bg-white/10 dark:border dark:border-white/10">
         {icon}
       </div>
       <div>
@@ -886,7 +886,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
     orange: 'from-orange-400/20',
     green: 'from-emerald-400/20',
     purple: 'from-purple-400/20',
-    yellow: 'from-yellow-400/20'
+    yellow: 'from-[#fec708]/20'
   };
 
   return (
@@ -896,10 +896,10 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
       
       <motion.div 
         whileHover={{ y: -5, scale: 1.02 }}
-        className="relative flex flex-col cursor-grab active:cursor-grabbing w-full h-full bg-white/20 backdrop-blur-3xl border border-white/[0.03] shadow-[0_8px_32px_rgba(20,20,20,0.04)] rounded-3xl transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)] dark:bg-neutral-900 dark:border-white/10"
+        className="relative flex flex-col cursor-grab active:cursor-grabbing w-full h-full bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)]"
       >
         {/* Shimmer Effect Wrapper - Clipped to card shape */}
-        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
           {highValue && (
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-amber-200/5 to-transparent skew-x-12 animate-[shimmer_15s_linear_infinite] pointer-events-none z-0 mix-blend-overlay" />
           )}
@@ -908,7 +908,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
         <div className="relative z-10 flex flex-col h-full p-6">
           {/* Absolute High Value Badge */}
           {highValue && (
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-yellow-700 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:bg-neutral-800 dark:border-white/10 dark:text-yellow-400">
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-[#fec708] text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:bg-white/10 dark:border-white/20 dark:text-[#fec708]">
               <Sparkles className="w-3 h-3" />
               High Value
             </div>
@@ -916,13 +916,13 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
 
           <div className="mt-8 flex flex-col items-start gap-2">
             <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide dark:text-white/95">{title}</h4>
-            {subtext && <p className="text-sm text-gray-600/90 leading-relaxed font-medium dark:text-white/60">{subtext}</p>}
+            {subtext && <p className="text-sm text-slate-600 leading-relaxed font-medium dark:text-white/60">{subtext}</p>}
           </div>
           
           <div className="mt-auto flex flex-col">
             <div className="mb-4 flex items-center gap-1.5">
-              <PawPrint className="w-6 h-6 text-yellow-500 fill-yellow-500/40 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)] animate-pulse" />
-              <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600">
+              <PawPrint className="w-6 h-6 text-[#fec708] fill-[#fec708]/40 drop-shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
+              <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-[#fec708] via-[#fec708] to-[#fec708]">
                 {pointsText}
               </p>
             </div>
@@ -934,7 +934,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
                 className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
                   isPending 
                     ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-                    : 'bg-yellow-500 backdrop-blur-xl border border-yellow-400 text-white hover:bg-yellow-600'
+                    : 'bg-[#fec708] backdrop-blur-xl border border-[#fec708] text-white hover:bg-[#fec708]/90'
                 }`}
               >
                 {isPending ? 'Pending Confirmation' : 'Book Now'}

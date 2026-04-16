@@ -141,7 +141,7 @@ export default function ProfileSettings() {
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               />
             </div>
             <div className="space-y-2">
@@ -152,7 +152,7 @@ export default function ProfileSettings() {
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               />
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function ProfileSettings() {
                   type="number" 
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  className="flex-1 bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-black text-slate-800 dark:bg-neutral-800 dark:text-white/95 dark:border-white/5"
+                  className="flex-1 bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-black text-slate-800 dark:bg-neutral-800 dark:text-white/95 dark:border-white/5"
                 />
                 <div className="flex bg-white/60 rounded-2xl p-1 shadow-sm dark:bg-neutral-800">
                   <button 
@@ -209,7 +209,7 @@ export default function ProfileSettings() {
               <select 
                 value={diet}
                 onChange={(e) => setDiet(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium appearance-none dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium appearance-none dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               >
                 <option value="None">None</option>
                 <option value="High-Protein Kibble">High-Protein Kibble</option>
@@ -228,7 +228,7 @@ export default function ProfileSettings() {
                 onChange={(e) => setSurgicalHistory(e.target.value)}
                 placeholder="e.g., ACL repair, allergies, etc."
                 rows={3}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-yellow-400 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium resize-none placeholder:text-slate-400 dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium resize-none placeholder:text-slate-400 dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
               />
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function ProfileSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-bold text-slate-700 flex items-center gap-2 dark:text-white/95">
-                  {draftTheme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-yellow-500" />} Dark Mode
+                  {draftTheme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-planet-yellow" />} Dark Mode
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Switch between light and dark themes.</p>
               </div>

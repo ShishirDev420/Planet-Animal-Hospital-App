@@ -2,8 +2,15 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@layer base {
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
 @theme {
-  --color-planet-yellow: #FFC800;
+  --color-planet-yellow: #fec708;
   --color-planet-dark: #1A1A1A;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
