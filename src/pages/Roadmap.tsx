@@ -246,9 +246,9 @@ export default function Roadmap() {
                     </form>
                   </motion.div>
                 ) : (
-                  <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 flex-1 flex flex-col gap-6">
+                  <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 flex-1 flex flex-col space-y-6">
                     {/* Header */}
-                    <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/[0.08] pb-4">
+                    <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/[0.08] pb-6">
                       <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fec708]/20 text-[#fec708] text-xs font-bold mb-2 border border-[#fec708]/50 shadow-sm">
                           <Sparkles className="w-3 h-3" /> Roadmap Generated
@@ -265,24 +265,21 @@ export default function Roadmap() {
                     </p>
                     
                     {/* Timeline */}
-                    <div>
-                      <h4 className="font-bold flex items-center justify-center gap-2 mb-4 text-slate-900 dark:text-white text-center">
+                    <div className="space-y-4">
+                      <h4 className="font-bold flex items-center justify-center gap-2 text-slate-900 dark:text-white text-center">
                         <Clock size={18} className="text-[#fec708]" /> Health Timeline
                       </h4>
-                      <div className="relative space-y-4 pl-4">
+                      <div className="space-y-6">
                         {roadmap.timeline.map((item: any, i: number) => (
-                          <div key={i} className="relative bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-6 rounded-xl ml-4">
-                            {/* Timeline Node */}
-                            <div className="absolute -left-[21px] top-6 w-2 h-2 rounded-full bg-[#fec708] shadow-[0_0_10px_rgba(254,199,8,0.8)]" />
-                            
-                            <div className="text-center mb-4">
+                          <div key={i} className="relative bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-6 rounded-xl">
+                            <div className="text-center mb-6">
                               <span className="text-xs font-bold text-[#fec708] uppercase tracking-wide">{item.ageRange}</span>
                               <h5 className="font-bold text-base mt-1 text-slate-900 dark:text-white">{item.focusArea}</h5>
                             </div>
-                            <ul className="text-sm text-left text-slate-700 dark:text-white space-y-3">
+                            <ul className="text-sm text-left text-slate-700 dark:text-white space-y-4">
                               {item.actionItems.map((act: string, j: number) => (
                                 <li key={j} className="flex items-start gap-4">
-                                  <div className="w-1.5 h-1.5 bg-slate-300 dark:bg-white/50 rounded-full mt-2 shrink-0" />
+                                  <HeartPulse className="w-5 h-5 mt-0.5 shrink-0 text-[#fec708]" />
                                   <span className="text-left flex-1 leading-relaxed">{act}</span>
                                 </li>
                               ))}
@@ -293,25 +290,25 @@ export default function Roadmap() {
                     </div>
                     
                     {/* Diet & Care grids */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-6">
                       <div className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-6 rounded-xl">
-                        <h4 className="font-bold flex items-center justify-center gap-2 mb-4 text-slate-900 dark:text-white text-center">
+                        <h4 className="font-bold flex items-center justify-center gap-2 mb-6 text-slate-900 dark:text-white text-center">
                           <Utensils size={18} className="text-[#fec708]" /> Diet & Nutrition
                         </h4>
-                        <ul className="text-sm text-left text-slate-700 dark:text-white space-y-3">
+                        <ul className="text-sm text-left text-slate-700 dark:text-white space-y-4">
                           {roadmap.dietaryAdvice.map((adv: string, i: number) => (
                             <li key={i} className="flex items-start gap-4">
-                              <ShieldCheck className="w-5 h-5 mt-0.5 shrink-0 text-[#fec708]" />
+                              <HeartPulse className="w-5 h-5 mt-0.5 shrink-0 text-[#fec708]" />
                               <span className="text-left flex-1 leading-relaxed">{adv}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
                       <div className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-6 rounded-xl">
-                        <h4 className="font-bold flex items-center justify-center gap-2 mb-4 text-slate-900 dark:text-white text-center">
+                        <h4 className="font-bold flex items-center justify-center gap-2 mb-6 text-slate-900 dark:text-white text-center">
                           <HeartPulse size={18} className="text-[#fec708]" /> Preventative Care
                         </h4>
-                        <ul className="text-sm text-left text-slate-700 dark:text-white space-y-3">
+                        <ul className="text-sm text-left text-slate-700 dark:text-white space-y-4">
                           {roadmap.preventativeCare.map((care: string, i: number) => (
                             <li key={i} className="flex items-start gap-4">
                               <HeartPulse className="w-5 h-5 mt-0.5 shrink-0 text-[#fec708]" />
