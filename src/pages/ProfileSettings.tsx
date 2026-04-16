@@ -60,7 +60,7 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col pb-48 dark:bg-[#071912]">
+    <div className="h-full w-full overflow-y-auto pb-32 hide-scrollbar bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col dark:bg-[#071912]">
       {/* Header */}
       <header className="flex items-center justify-between mb-8 pt-4">
         <button 

@@ -270,9 +270,6 @@ export default function Roadmap() {
                         <Clock size={18} className="text-[#fec708]" /> Health Timeline
                       </h4>
                       <div className="relative space-y-4 pl-4">
-                        {/* Vertical Luminous Line */}
-                        <div className="absolute left-0 top-2 bottom-2 w-px bg-slate-200 dark:bg-gradient-to-b dark:from-white/30 dark:via-white/10 dark:to-transparent" />
-                        
                         {roadmap.timeline.map((item: any, i: number) => (
                           <div key={i} className="relative bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-6 rounded-xl ml-4">
                             {/* Timeline Node */}
