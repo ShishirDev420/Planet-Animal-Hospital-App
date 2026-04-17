@@ -60,8 +60,18 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="h-full w-full overflow-visible overflow-y-auto pb-32 px-5 pt-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-slate-50/50 backdrop-blur-3xl flex flex-col dark:bg-[#071912]">
-      {/* Header */}
+    <div className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden relative pb-32 px-5 pt-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-slate-50 flex flex-col dark:bg-[#071912] dark:text-white/95">
+      {/* Background Ambient Orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
+        <div className="relative w-full max-w-md h-full">
+          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        </div>
+      </div>
+
+      <div className="relative z-10 flex flex-col h-full w-full">
+        {/* Header */}
       <header className="flex items-center justify-between mb-8 pt-4">
         <button 
           onClick={() => navigate('/')}
@@ -74,15 +84,17 @@ export default function ProfileSettings() {
       </header>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center mb-10"
       >
-        <DualAvatar 
-          leftImage={harshalImage}
-          rightImage={johnnyImage}
-          className="w-40 h-40 mb-6"
-        />
+        <div className="animate-[pulse_4s_ease-in-out_infinite]">
+          <DualAvatar 
+            leftImage={harshalImage}
+            rightImage={johnnyImage}
+            className="w-40 h-40 mb-6"
+          />
+        </div>
 
         <input 
           type="file" 
@@ -299,6 +311,7 @@ export default function ProfileSettings() {
           <LogOut size={18} />
           Log Out
         </button>
+      </div>
       </div>
     </div>
   );
