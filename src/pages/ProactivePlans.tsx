@@ -108,7 +108,7 @@ function PlanCard({ title, price, period, description, features, isPopular, isEl
   const baseClasses = isElite 
     ? 'glass-card dark:bg-neutral-900 dark:border-white/10 ring-2 ring-[#fec708] relative overflow-hidden scale-105 z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#e8bc4b]/15 to-transparent'
     : isPopular 
-      ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 dark:bg-black dark:border dark:border-white/20 mt-8' 
+      ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 dark:bg-black dark:border dark:border-white/20 mt-10' 
       : 'glass-card dark:bg-neutral-900 dark:border-white/10';
 
   return (
@@ -124,16 +124,16 @@ function PlanCard({ title, price, period, description, features, isPopular, isEl
           ? { default: { delay }, boxShadow: { duration: 8, repeat: Infinity, ease: "easeInOut" } }
           : { delay }
       }
-      className={`relative rounded-3xl p-6 ${isPopular ? 'pt-8' : ''} ${baseClasses}`}
+      className={`relative rounded-3xl p-6 ${isPopular ? 'pt-12' : ''} ${baseClasses}`}
     >
+      {isPopular && (
+        <div className="whitespace-nowrap flex-shrink-0 absolute -top-4 left-1/2 -translate-x-1/2 bg-[#fec708] text-black text-xs font-black px-4 py-1 rounded-full shadow-lg z-20">
+          MOST POPULAR
+        </div>
+      )}
       {/* Wrapping content in relative z-10 to stay above background */}
       <div className="relative z-10">
-        {isPopular && (
-          <div className="whitespace-nowrap flex-shrink-0 absolute -top-4 left-1/2 -translate-x-1/2 bg-[#fec708] text-black text-xs font-black px-4 py-1 rounded-full shadow-lg">
-            MOST POPULAR
-          </div>
-        )}
-        <h3 className={`text-xl font-bold mb-1 ${isPopular ? 'text-white' : 'text-slate-800 dark:text-white/95'}`}>{title}</h3>
+        <h3 className={`text-xl font-bold mb-1 ${isPopular ? 'text-white pt-2' : 'text-slate-800 dark:text-white/95'}`}>{title}</h3>
         <p className={`text-sm mb-4 ${isPopular ? 'text-slate-300' : 'text-slate-500 dark:text-white/60'}`}>{description}</p>
         <div className="flex items-end gap-1 mb-6">
           <span className="text-4xl font-black tracking-tighter">{price}</span>

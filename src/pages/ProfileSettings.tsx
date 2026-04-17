@@ -60,7 +60,7 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="h-full w-full overflow-y-auto pb-32 hide-scrollbar bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col dark:bg-[#071912]">
+    <div className="h-full w-full overflow-y-auto pb-32 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-slate-50/50 backdrop-blur-3xl p-6 flex flex-col dark:bg-[#071912]">
       {/* Header */}
       <header className="flex items-center justify-between mb-8 pt-4">
         <button 
@@ -274,7 +274,7 @@ export default function ProfileSettings() {
       </motion.div>
 
       {/* Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent pb-safe dark:from-[#071912] dark:via-[#071912]/80">
+      <div className="flex flex-col gap-4 mt-12 pb-10 px-5">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
@@ -294,7 +294,7 @@ export default function ProfileSettings() {
               console.error('Logout failed', e);
             }
           }}
-          className="w-full max-w-md mx-auto mt-6 py-3 rounded-xl border border-red-200 text-red-600 font-bold bg-red-50/50 hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
+          className="w-full max-w-md mx-auto py-3 rounded-xl border border-red-200 text-red-600 font-bold bg-red-50/50 hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
         >
           <LogOut size={18} />
           Log Out

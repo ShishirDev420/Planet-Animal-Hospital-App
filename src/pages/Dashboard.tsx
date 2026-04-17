@@ -360,11 +360,9 @@ export default function Dashboard() {
 
     const parentName = "Harshal";
     const petName = petProfile.name;
-    const message = `Hi Planet Animal Hospital team! 👋 I am *${parentName}*, *${petName}'s* pet parent. I'm interested in *${selectedService.name}* at *${bookingTime}* on *${bookingDate}*. Please give me a call regarding the possibility of this appointment ASAP.`;
-    const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
     
     // Trigger redirect immediately to satisfy browser user-gesture requirements and bypass popup blockers
-    window.open(whatsappUrl, '_blank');
+    window.open(`https://wa.me/919004290923?text=${encodeURIComponent(`Hi Planet Animal Hospital team! 👋 I am *${parentName}*, *${petName}'s* pet parent. I'm interested in *${selectedService.name}* at *${bookingTime}* on *${bookingDate}*. Please give me a call regarding the possibility of this appointment ASAP.`)}`, "_blank");
 
     try {
       await addDoc(collection(db, 'requests'), {
