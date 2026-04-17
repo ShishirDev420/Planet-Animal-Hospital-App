@@ -358,13 +358,6 @@ export default function Dashboard() {
   const submitBooking = async () => {
     if (!selectedService || !bookingDate || !bookingTime || !userId) return;
 
-    const parentName = "Harshal";
-    const petName = petProfile.name;
-    
-    // Trigger redirect immediately to satisfy browser user-gesture requirements and bypass popup blockers
-    const message = `Hey, Planet Animal Hospital team, I am ${parentName} and then the ${petName}, pet's parent, and I'm here to inquire about ${selectedService.name} at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
-    window.open(`https://wa.me/919004290923?text=${encodeURIComponent(message)}`, '_blank');
-
     try {
       await addDoc(collection(db, 'requests'), {
         userId: userId,
@@ -394,6 +387,11 @@ export default function Dashboard() {
       setIsConnecting(false);
     }, 300); // reset after close animation
   };
+
+  const parentName = "Harshal";
+  const petName = petProfile?.name || 'Johnny';
+  const whatsappMessage = `Hey, Planet Animal Hospital team, I am ${parentName} and then the ${petName}, pet's parent, and I'm here to inquire about ${selectedService?.name || selectedService} at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
+  const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="p-6 space-y-8 pb-4 dark:text-white/95">
@@ -787,17 +785,25 @@ export default function Dashboard() {
 
               {/* Submit Button */}
               <div className="mt-4 pt-4 border-t border-white/20 shrink-0">
-                <button
-                  onClick={submitBooking}
-                  disabled={!selectedService || !bookingDate || !bookingTime}
+                <a
+                  href={(!selectedService || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    if (!selectedService || !bookingDate || !bookingTime) {
+                      e.preventDefault();
+                    } else {
+                      submitBooking();
+                    }
+                  }}
                   className={`transition-all w-full py-4 rounded-[20px] font-bold text-[17px] flex justify-center items-center gap-2 ${
                     !selectedService || !bookingDate || !bookingTime
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50 dark:bg-neutral-800 dark:text-white/20'
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50 dark:bg-neutral-800 dark:text-white/20 pointer-events-none'
                       : 'bg-black text-white shadow-xl dark:bg-white dark:text-black'
                   }`}
                 >
                   Confirm Booking
-                </button>
+                </a>
               </div>
             </motion.div>
           </motion.div>
