@@ -390,7 +390,7 @@ export default function Dashboard() {
 
   const parentName = "Harshal";
   const petName = petProfile?.name || 'Johnny';
-  const whatsappMessage = `Hey, Planet Animal Hospital team, I am ${parentName} and then the ${petName}, pet's parent, and I'm here to inquire about ${selectedService?.name || selectedService} at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
+  const whatsappMessage = `Hey, Planet Animal Hospital team, I am ${parentName}; ${petName}, pet's parent, and I'm here to inquire about the possibility of a ${selectedService?.name || selectedService} Appointment at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
