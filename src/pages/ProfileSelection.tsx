@@ -4,6 +4,8 @@ import { Plus, User, Sparkles, ChevronRight } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
+import { signOut } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export default function ProfileSelection() {
   const navigate = useNavigate();
@@ -75,13 +77,23 @@ export default function ProfileSelection() {
           </motion.button>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="mt-16 px-8 py-3 rounded-full border border-slate-200 text-slate-500 font-bold text-sm tracking-wide hover:bg-slate-100 transition-colors"
-        >
-          Sign Out
-        </motion.button>
+        <div className="flex justify-center mt-12 mb-8">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={async () => {
+              try {
+                await signOut(auth);
+                navigate('/');
+              } catch (e) {
+                console.error('Logout failed', e);
+              }
+            }}
+            className="px-8 py-3 rounded-full border border-slate-200 text-slate-500 font-bold text-sm tracking-wide hover:bg-slate-100 transition-colors"
+          >
+            Sign Out
+          </motion.button>
+        </div>
 
         <motion.div 
           initial={{ opacity: 0 }}

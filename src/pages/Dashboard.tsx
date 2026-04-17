@@ -362,7 +362,8 @@ export default function Dashboard() {
     const petName = petProfile.name;
     
     // Trigger redirect immediately to satisfy browser user-gesture requirements and bypass popup blockers
-    window.open(`https://wa.me/919004290923?text=${encodeURIComponent(`Hi Planet Animal Hospital team! 👋 I am *${parentName}*, *${petName}'s* pet parent. I'm interested in *${selectedService.name}* at *${bookingTime}* on *${bookingDate}*. Please give me a call regarding the possibility of this appointment ASAP.`)}`, "_blank");
+    const message = `Hey, Planet Animal Hospital team, I am ${parentName} and then the ${petName}, pet's parent, and I'm here to inquire about ${selectedService.name} at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
+    window.open(`https://wa.me/919004290923?text=${encodeURIComponent(message)}`, '_blank');
 
     try {
       await addDoc(collection(db, 'requests'), {
@@ -761,7 +762,7 @@ export default function Dashboard() {
 
                     {/* Apple-Grade 'Time Pill' Grid */}
                     <div className="grid grid-cols-3 gap-3 p-2">
-                      {['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'].map((time) => {
+                      {['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM'].map((time) => {
                         const isSelected = bookingTime === time;
                         return (
                           <motion.button
