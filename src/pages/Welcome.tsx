@@ -44,7 +44,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#071912] backdrop-blur-3xl flex items-center justify-center p-6 relative overflow-hidden dark:bg-[#071912]">
+    <div className="min-h-screen w-full bg-[#071912] flex items-center justify-center p-6 relative overflow-hidden dark:bg-[#071912]">
       {/* Ambient Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-green-400/20 rounded-full blur-[100px]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-planet-yellow/20 rounded-full blur-[100px]" />
