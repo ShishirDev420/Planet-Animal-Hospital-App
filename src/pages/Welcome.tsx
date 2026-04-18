@@ -44,7 +44,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-screen bg-black/80 backdrop-blur-3xl flex items-center justify-center p-6 relative overflow-hidden dark:bg-[#071912]">
+    <div className="min-h-screen w-full bg-[#071912] backdrop-blur-3xl flex items-center justify-center p-6 relative overflow-hidden dark:bg-[#071912]">
       {/* Ambient Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-green-400/20 rounded-full blur-[100px]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-planet-yellow/20 rounded-full blur-[100px]" />
@@ -57,7 +57,7 @@ export default function Welcome() {
         <div className="flex justify-center mb-8">
            <Logo className="!w-24 !h-24" />
         </div>
-        <h2 className="text-3xl font-black text-white text-center mb-2 tracking-tight">Welcome Back</h2>
+        <h2 className="text-3xl font-black text-white text-center mb-2 tracking-tight">Sign In</h2>
         <p className="text-white/70 text-center mb-8 font-medium">Sign in to manage your pet's health.</p>
         
         <div className="space-y-4 mb-8">

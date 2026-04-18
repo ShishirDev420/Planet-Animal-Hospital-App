@@ -394,8 +394,18 @@ export default function Dashboard() {
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-    <div className="p-6 space-y-8 pb-4 dark:text-white/95">
-      {/* Header with Logo */}
+    <div className="relative w-full h-full">
+      {/* Background Ambient Orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
+        <div className="relative w-full max-w-md h-full">
+          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        </div>
+      </div>
+
+      <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95">
+        {/* Header with Logo */}
       <header className="pt-4 mb-2">
         <div className="relative flex items-center justify-between w-full py-4">
           {/* Logo Container (Left) */}
@@ -809,6 +819,7 @@ export default function Dashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
     </div>
   );
 }
