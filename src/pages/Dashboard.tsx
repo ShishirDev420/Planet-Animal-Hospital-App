@@ -465,8 +465,8 @@ export default function Dashboard() {
           </div>
           <h2 className="text-slate-800 dark:text-white text-sm font-medium mb-2">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900 dark:text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
-            <span className="text-slate-800 dark:text-white font-bold uppercase tracking-widest text-sm ml-1 mb-2">pts</span>
+            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900 dark:text-[#fec708] [text-shadow:0px_4px_10px_rgba(0,0,0,0.6)]">{verifiedPoints.toLocaleString()}</span>
+            <span className="text-slate-800 dark:text-white font-bold uppercase tracking-widest text-sm ml-1 mb-2 drop-shadow-sm">pts</span>
           </div>
           
           {pendingPoints > 0 && (
