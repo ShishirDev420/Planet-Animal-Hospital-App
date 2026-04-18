@@ -117,9 +117,9 @@ export default function ProfileSettings() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 backdrop-blur-md border border-white shadow-sm py-3 rounded-2xl flex flex-col items-center gap-2 dark:bg-neutral-900 dark:border-white/10"
+            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2"
           >
-            <div className="bg-slate-100 p-2 rounded-full text-slate-600 dark:bg-neutral-800 dark:text-white/60"><Camera size={16} /></div>
+            <div className="bg-slate-100 dark:bg-white/10 p-2 rounded-full text-slate-600 dark:text-white/90 border border-transparent dark:border-white/5"><Camera size={16} /></div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Edit Harshal's Photo</span>
           </motion.button>
           <motion.button 
@@ -127,7 +127,7 @@ export default function ProfileSettings() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 backdrop-blur-md border border-white shadow-sm py-3 rounded-2xl flex flex-col items-center gap-2 dark:bg-neutral-900 dark:border-white/10"
+            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2"
           >
             <div className="bg-planet-yellow/20 p-2 rounded-full text-planet-yellow"><Camera size={16} /></div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Edit Johnny's Photo</span>
@@ -144,7 +144,7 @@ export default function ProfileSettings() {
         {/* Account Details */}
         <motion.section variants={itemVariants} className="space-y-4">
           <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">Account Details</h2>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-4 dark:bg-neutral-900 dark:border-white/10">
+          <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <User size={16} /> Full Name
@@ -153,7 +153,7 @@ export default function ProfileSettings() {
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium placeholder-gray-400"
               />
             </div>
             <div className="space-y-2">
@@ -164,7 +164,7 @@ export default function ProfileSettings() {
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium placeholder-gray-400"
               />
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function ProfileSettings() {
         {/* Johnny's Profile */}
         <motion.section variants={itemVariants} className="space-y-4">
           <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">Johnny's Profile</h2>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-5 dark:bg-neutral-900 dark:border-white/10">
+          <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-5">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <Dog size={16} /> Breed
@@ -182,7 +182,7 @@ export default function ProfileSettings() {
                 type="text" 
                 value="American Bully"
                 disabled
-                className="w-full bg-slate-100/50 border-2 border-transparent rounded-2xl py-3 px-4 outline-none text-slate-500 font-medium cursor-not-allowed shadow-inner dark:bg-neutral-800 dark:text-white/40 dark:border-white/5"
+                className="w-full bg-slate-100/50 dark:bg-white/5 border border-transparent dark:border-white/5 rounded-2xl py-3 px-4 outline-none text-slate-500 dark:text-white/40 font-medium cursor-not-allowed shadow-inner"
               />
             </div>
 
@@ -190,23 +190,23 @@ export default function ProfileSettings() {
               <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
                 <Activity size={16} className="text-teal-500" /> Current Weight
               </label>
-              <div className="flex gap-4">
+              <div className="flex w-full items-center gap-3">
                 <input 
                   type="number" 
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  className="flex-1 bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-black text-slate-800 dark:bg-neutral-800 dark:text-white/95 dark:border-white/5"
+                  className="flex-1 min-w-0 bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-black text-slate-800 dark:text-white placeholder-gray-400"
                 />
-                <div className="flex bg-white/60 rounded-2xl p-1 shadow-sm dark:bg-neutral-800">
+                <div className="flex shrink-0 bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 rounded-2xl p-1 shadow-sm">
                   <button 
                     onClick={() => setUnit('lbs')}
-                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'lbs' ? 'bg-white shadow-sm text-slate-800 dark:bg-neutral-700 dark:text-white' : 'text-slate-400'}`}
+                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'lbs' ? 'bg-white shadow-sm text-slate-800 dark:bg-white/20 dark:text-white' : 'text-slate-400 dark:text-white/40'}`}
                   >
                     lbs
                   </button>
                   <button 
                     onClick={() => setUnit('kg')}
-                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'kg' ? 'bg-white shadow-sm text-slate-800 dark:bg-neutral-700 dark:text-white' : 'text-slate-400'}`}
+                    className={`px-4 rounded-xl font-bold transition-colors ${unit === 'kg' ? 'bg-white shadow-sm text-slate-800 dark:bg-white/20 dark:text-white' : 'text-slate-400 dark:text-white/40'}`}
                   >
                     kg
                   </button>
@@ -221,7 +221,7 @@ export default function ProfileSettings() {
               <select 
                 value={diet}
                 onChange={(e) => setDiet(e.target.value)}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium appearance-none dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium appearance-none placeholder-gray-400"
               >
                 <option value="None">None</option>
                 <option value="High-Protein Kibble">High-Protein Kibble</option>
@@ -240,7 +240,7 @@ export default function ProfileSettings() {
                 onChange={(e) => setSurgicalHistory(e.target.value)}
                 placeholder="e.g., ACL repair, allergies, etc."
                 rows={3}
-                className="w-full bg-white/60 border-2 border-transparent focus:border-planet-yellow/50 focus:ring-2 focus:ring-planet-yellow rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 font-medium resize-none placeholder:text-slate-400 dark:bg-neutral-800 dark:text-white/90 dark:border-white/5"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium resize-none placeholder-gray-400"
               />
             </div>
           </div>
@@ -249,7 +249,7 @@ export default function ProfileSettings() {
         {/* App Preferences */}
         <motion.section variants={itemVariants} className="space-y-4">
           <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">App Preferences</h2>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-xl space-y-6 dark:bg-neutral-900 dark:border-white/10">
+          <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-bold text-slate-700 flex items-center gap-2 dark:text-white/95">
