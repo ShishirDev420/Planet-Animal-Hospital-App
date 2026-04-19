@@ -54,10 +54,10 @@ export default function Welcome() {
 
         {/* Cinematic Tagline */}
         <div className="text-center mb-4 sm:mb-6">
-          <h1 className="text-white font-black text-3xl sm:text-4xl lg:text-5xl mb-1 tracking-tight">
+          <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-4xl sm:text-5xl tracking-tighter mb-1 drop-shadow-sm">
             20 Years of Love.
           </h1>
-          <h2 className="text-lg sm:text-2xl font-semibold text-white/90">
+          <h2 className="text-xs sm:text-sm font-bold text-white/50 tracking-[0.15em] uppercase mt-2">
             Now Powered by{' '}
             <span className="font-bold tracking-wide">
               <span className="text-[#4285F4]">G</span>
@@ -72,10 +72,10 @@ export default function Welcome() {
         </div>
 
         {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-sm my-2 sm:my-4 min-h-[100px] sm:min-h-[140px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-white/20 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl p-4 sm:p-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
-          <div key={activeBenefit} className="animate-[pulse_1s_ease-in-out]">
-            <h3 className="font-extrabold text-xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#fec708] to-yellow-200 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
-            <p className="text-gray-300 text-sm leading-relaxed">{benefits[activeBenefit].desc}</p>
+        <div className="w-full max-w-sm my-2 sm:my-4 min-h-[100px] sm:min-h-[140px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-t-white/20 border-l-white/20 border-b-white/5 border-r-white/5 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl p-4 sm:p-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
+          <div key={activeBenefit} className="animate-fade-in">
+            <h3 className="text-white font-bold text-xl sm:text-2xl tracking-tight mb-2 drop-shadow-md">{benefits[activeBenefit].title}</h3>
+            <p className="text-white/70 font-medium text-sm sm:text-base leading-relaxed max-w-[280px] mx-auto">{benefits[activeBenefit].desc}</p>
           </div>
         </div>
       </div>
