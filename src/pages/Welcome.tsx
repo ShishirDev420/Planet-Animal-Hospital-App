@@ -36,7 +36,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col justify-between bg-[#071912] relative overflow-x-hidden overflow-y-auto">
+    <div className="min-h-[100dvh] w-full flex flex-col bg-[#071912] relative overflow-x-hidden overflow-y-auto">
       
       {/* 🔮 THE LOCKED ORB MOAT */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -46,21 +46,18 @@ export default function Welcome() {
       </div>
 
       {/* ✨ MAIN UI CONTENT */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 pt-16 flex-1">
+      <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 py-2 sm:py-6 my-auto">
         
-        <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in-up">
-          <div className="p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/20">
-            <Heart className="w-5 h-5 text-[#fec708] fill-[#fec708]/50" />
-          </div>
-          <span className="text-white uppercase tracking-[0.2em] text-sm font-bold opacity-90">Planet Animal Hospital</span>
+        <div className="flex items-center justify-center mb-2 sm:mb-6 animate-fade-in-up">
+          <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-20 h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse-slow z-50" referrerPolicy="no-referrer" />
         </div>
 
         {/* Cinematic Tagline */}
-        <div className="text-center mb-6">
-          <h1 className="text-white font-black text-4xl lg:text-5xl mb-2 tracking-tight">
+        <div className="text-center mb-4 sm:mb-6">
+          <h1 className="text-white font-black text-3xl sm:text-4xl lg:text-5xl mb-1 tracking-tight">
             20 Years of Love.
           </h1>
-          <h2 className="text-2xl font-semibold text-white/90">
+          <h2 className="text-lg sm:text-2xl font-semibold text-white/90">
             Now Powered by{' '}
             <span className="font-bold tracking-wide">
               <span className="text-[#4285F4]">G</span>
@@ -75,7 +72,7 @@ export default function Welcome() {
         </div>
 
         {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-sm my-4 min-h-[140px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-white/20 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl p-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
+        <div className="w-full max-w-sm my-2 sm:my-4 min-h-[100px] sm:min-h-[140px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-white/20 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl p-4 sm:p-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
           <div key={activeBenefit} className="animate-[pulse_1s_ease-in-out]">
             <h3 className="font-extrabold text-xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#fec708] to-yellow-200 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
             <p className="text-gray-300 text-sm leading-relaxed">{benefits[activeBenefit].desc}</p>
@@ -84,9 +81,9 @@ export default function Welcome() {
       </div>
 
       {/* 🔐 BOTTOM AUTH FORM */}
-      <div className="relative z-10 w-full max-w-sm mx-auto px-4 pb-8">
+      <div className="relative z-10 w-full max-w-sm mx-auto px-4 pb-4 shrink-0">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
               <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Email</label>
               <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
@@ -97,7 +94,7 @@ export default function Welcome() {
             </div>
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2 pt-1">
             <motion.button whileTap={{ scale: 0.95 }} onClick={handleEmailSignIn} disabled={isEmailLoading} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-bold py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center gap-2">
               {isEmailLoading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In'}
             </motion.button>
@@ -111,6 +108,7 @@ export default function Welcome() {
               </svg>
               Continue with Google
             </motion.button>
+            <div className="text-center mt-3"><button className="text-xs font-medium text-white/50 hover:text-white transition-colors uppercase tracking-wider">Forgot Password?</button></div>
           </div>
         </motion.div>
       </div>
