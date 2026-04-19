@@ -681,7 +681,7 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              <div className="space-y-6 flex-1 overflow-y-auto pb-6 pr-2">
+              <div className="space-y-6 flex-1 overflow-y-auto pb-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                 {/* Step 1: Services */}
                 <div>
                   <h3 className="text-gray-400 font-semibold tracking-widest text-xs uppercase mb-3">Step 1: Select Service</h3>
