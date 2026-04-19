@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Heart } from 'lucide-react';
 
 export default function Welcome() {
   const [loginEmail, setLoginEmail] = useState('harshal@planetanimal.com');
@@ -48,6 +48,13 @@ export default function Welcome() {
       {/* ✨ MAIN UI CONTENT */}
       <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 pt-16 flex-1">
         
+        <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in-up">
+          <div className="p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/20">
+            <Heart className="w-5 h-5 text-[#fec708] fill-[#fec708]/50" />
+          </div>
+          <span className="text-white uppercase tracking-[0.2em] text-sm font-bold opacity-90">Planet Animal Hospital</span>
+        </div>
+
         {/* Cinematic Tagline */}
         <div className="text-center mb-6">
           <h1 className="text-white font-black text-4xl lg:text-5xl mb-2 tracking-tight">
@@ -68,9 +75,9 @@ export default function Welcome() {
         </div>
 
         {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-sm my-4 min-h-[140px] flex flex-col justify-center items-center text-center bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] rounded-3xl p-6 overflow-hidden">
+        <div className="w-full max-w-sm my-4 min-h-[140px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-white/20 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl p-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
           <div key={activeBenefit} className="animate-[pulse_1s_ease-in-out]">
-            <h3 className="text-white font-bold text-xl mb-2">{benefits[activeBenefit].title}</h3>
+            <h3 className="font-extrabold text-xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#fec708] to-yellow-200 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
             <p className="text-gray-300 text-sm leading-relaxed">{benefits[activeBenefit].desc}</p>
           </div>
         </div>
