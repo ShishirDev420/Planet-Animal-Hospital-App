@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { Loader2, Heart } from 'lucide-react';
 
 export default function Welcome() {
-  const [loginEmail, setLoginEmail] = useState('harshal@planetanimal.com');
-  const [loginPassword, setLoginPassword] = useState('Harshal@2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [authError, setAuthError] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [headerWord, setHeaderWord] = useState('Love');
@@ -39,14 +41,47 @@ export default function Welcome() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleEmailSignIn = async () => {
+  const handleEmailAuth = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
     setIsEmailLoading(true);
+    setAuthError('');
     try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-    } catch (e) {
-      console.error('Login failed', e);
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    } catch (e: any) {
+      console.error('Auth failed', e);
+      setAuthError(e.message || 'Authentication failed');
     } finally {
       setIsEmailLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      setAuthError('');
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (e: any) {
+      console.error('Google Login failed', e);
+      setAuthError(e.message || 'Google Auth failed');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setAuthError('Please enter your email to reset password.');
+      return;
+    }
+    try {
+      setAuthError('');
+      await sendPasswordResetEmail(auth, email);
+      alert('Password reset email sent! Please check your inbox.');
+    } catch (e: any) {
+      console.error('Password reset failed', e);
+      setAuthError(e.message || 'Failed to send password reset email');
     }
   };
 
@@ -109,22 +144,23 @@ export default function Welcome() {
       <div className="relative z-20 w-full max-w-sm mx-auto px-4 mt-auto pb-12 shrink-0">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           <div className="space-y-2">
+            {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
             <div>
               <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Email</label>
-              <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
             </div>
             <div>
               <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Password</label>
-              <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
             </div>
           </div>
 
           <div className="space-y-2 pt-1">
-            <motion.button whileTap={{ scale: 0.95 }} onClick={handleEmailSignIn} disabled={isEmailLoading} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-bold py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center gap-2">
-              {isEmailLoading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In'}
+            <motion.button whileTap={{ scale: 0.95 }} onClick={handleEmailAuth} disabled={isEmailLoading} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-bold py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center gap-2">
+              {isEmailLoading ? <Loader2 className="animate-spin" size={20} /> : (isSignUp ? 'Create Account' : 'Sign In')}
             </motion.button>
             
-            <motion.button whileTap={{ scale: 0.95 }} onClick={async () => { try { const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider); } catch (e) { console.error('Login failed', e); } }} className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold py-4 rounded-2xl hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+            <motion.button whileTap={{ scale: 0.95 }} onClick={handleGoogleAuth} className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold py-4 rounded-2xl hover:bg-white/20 transition-all flex items-center justify-center gap-2">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -133,7 +169,14 @@ export default function Welcome() {
               </svg>
               Continue with Google
             </motion.button>
-            <div className="text-center mt-4"><button className="text-xs font-medium text-white/50 hover:text-white transition-colors uppercase tracking-wider">Forgot Password?</button></div>
+            <div className="text-center mt-4">
+              <button type="button" onClick={handleForgotPassword} className="text-xs font-medium text-white/50 hover:text-white transition-colors uppercase tracking-wider">Forgot Password?</button>
+            </div>
+            <div className="text-center">
+              <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-xs text-white/60 hover:text-white mt-4 underline decoration-white/30 underline-offset-4 transition-colors">
+                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
