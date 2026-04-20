@@ -36,13 +36,14 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col bg-[#071912] relative overflow-x-hidden overflow-y-auto">
+    <div className="min-h-screen min-h-[750px] flex flex-col overflow-y-auto overflow-x-hidden w-full relative z-10 bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
       
       {/* 🔮 THE LOCKED ORB MOAT */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-emerald-500/30 rounded-full mix-blend-screen filter blur-[100px] opacity-60 animate-blob"></div>
-        <div className="absolute top-[10%] right-[-5%] w-96 h-96 bg-[#fec708]/20 rounded-full mix-blend-screen filter blur-[100px] opacity-60 animate-blob" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute bottom-[-20%] left-[20%] w-[40rem] h-[40rem] bg-teal-600/20 rounded-full mix-blend-screen filter blur-[120px] opacity-50 animate-blob" style={{ animationDelay: '4s' }}></div>
+        <motion.div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] rounded-full opacity-60" style={{ backgroundImage: 'radial-gradient(circle, rgba(66,133,244,0.4) 0%, transparent 70%)' }} animate={{ x: [0, 100, -50, 0], y: [0, -50, 100, 0], scale: [1, 1.1, 0.9, 1] }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute top-[20%] right-[-10%] w-[35rem] h-[35rem] rounded-full opacity-50" style={{ backgroundImage: 'radial-gradient(circle, rgba(254,199,8,0.35) 0%, transparent 70%)' }} animate={{ x: [0, -120, 80, 0], y: [0, 100, -80, 0], scale: [1, 1.2, 0.8, 1] }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute bottom-[-20%] left-[10%] w-[45rem] h-[45rem] rounded-full opacity-40" style={{ backgroundImage: 'radial-gradient(circle, rgba(52,168,83,0.3) 0%, transparent 70%)' }} animate={{ x: [0, 150, -100, 0], y: [0, -100, 50, 0], scale: [1, 1.05, 0.95, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute top-[40%] left-[40%] w-[25rem] h-[25rem] rounded-full opacity-40" style={{ backgroundImage: 'radial-gradient(circle, rgba(234,67,53,0.3) 0%, transparent 70%)' }} animate={{ x: [0, -80, 100, 0], y: [0, 80, -120, 0], scale: [1, 1.3, 0.7, 1] }} transition={{ duration: 22, repeat: Infinity, ease: "linear" }} />
       </div>
 
       {/* ✨ MAIN UI CONTENT */}
@@ -53,26 +54,25 @@ export default function Welcome() {
         </div>
 
         {/* Cinematic Tagline */}
-        <div className="text-center mb-4 sm:mb-6">
+        <div className="text-center mb-2 sm:mb-4">
           <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-4xl sm:text-5xl tracking-tighter mb-1 drop-shadow-sm">
-            20 Years of Love.
+            20 Years of <span className="text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse">Love.</span>
           </h1>
-          <h2 className="text-xs sm:text-sm font-bold text-white/50 tracking-[0.15em] uppercase mt-2">
-            Now Powered by{' '}
-            <span className="font-bold tracking-wide">
-              <span className="text-[#4285F4]">G</span>
-              <span className="text-[#EA4335]">o</span>
-              <span className="text-[#FBBC05]">o</span>
-              <span className="text-[#4285F4]">g</span>
-              <span className="text-[#34A853]">l</span>
-              <span className="text-[#EA4335]">e</span>
-            </span>
-            .
+          <h2 className="text-xs sm:text-sm font-bold text-white/50 tracking-[0.15em] uppercase mt-1">
+            Now Powered by
           </h2>
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest mt-1">
+            <span className="text-[#4285F4]">G</span>
+            <span className="text-[#EA4335]">o</span>
+            <span className="text-[#FBBC05]">o</span>
+            <span className="text-[#4285F4]">g</span>
+            <span className="text-[#34A853]">l</span>
+            <span className="text-[#EA4335]">e</span>
+          </div>
         </div>
 
         {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-sm my-2 sm:my-4 min-h-[100px] sm:min-h-[140px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-t-white/20 border-l-white/20 border-b-white/5 border-r-white/5 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl p-4 sm:p-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
+        <div className="w-full max-w-sm my-2 sm:my-4 h-[110px] sm:h-[130px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-t-white/20 border-l-white/20 border-b-white/5 border-r-white/5 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl py-4 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
           <div key={activeBenefit} className="animate-fade-in">
             <h3 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-2xl sm:text-3xl tracking-tighter mb-2 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
             <p className="text-white/60 font-medium text-sm sm:text-base tracking-tight leading-relaxed max-w-[260px] mx-auto">{benefits[activeBenefit].desc}</p>
@@ -81,7 +81,7 @@ export default function Welcome() {
       </div>
 
       {/* 🔐 BOTTOM AUTH FORM */}
-      <div className="relative z-10 w-full max-w-sm mx-auto px-4 pb-4 shrink-0">
+      <div className="relative z-20 w-full max-w-sm mx-auto px-4 mt-auto pb-12 shrink-0">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           <div className="space-y-2">
             <div>
@@ -108,7 +108,7 @@ export default function Welcome() {
               </svg>
               Continue with Google
             </motion.button>
-            <div className="text-center mt-3"><button className="text-xs font-medium text-white/50 hover:text-white transition-colors uppercase tracking-wider">Forgot Password?</button></div>
+            <div className="text-center mt-4"><button className="text-xs font-medium text-white/50 hover:text-white transition-colors uppercase tracking-wider">Forgot Password?</button></div>
           </div>
         </motion.div>
       </div>
