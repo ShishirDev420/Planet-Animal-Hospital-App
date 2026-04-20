@@ -74,8 +74,8 @@ export default function Welcome() {
         {/* Premium Liquid Glass Flashcard */}
         <div className="w-full max-w-sm my-2 sm:my-4 min-h-[100px] sm:min-h-[140px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-t-white/20 border-l-white/20 border-b-white/5 border-r-white/5 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl p-4 sm:p-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
           <div key={activeBenefit} className="animate-fade-in">
-            <h3 className="text-white font-bold text-xl sm:text-2xl tracking-tight mb-2 drop-shadow-md">{benefits[activeBenefit].title}</h3>
-            <p className="text-white/70 font-medium text-sm sm:text-base leading-relaxed max-w-[280px] mx-auto">{benefits[activeBenefit].desc}</p>
+            <h3 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-2xl sm:text-3xl tracking-tighter mb-2 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
+            <p className="text-white/60 font-medium text-sm sm:text-base tracking-tight leading-relaxed max-w-[260px] mx-auto">{benefits[activeBenefit].desc}</p>
           </div>
         </div>
       </div>
