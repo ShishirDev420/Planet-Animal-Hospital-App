@@ -9,6 +9,9 @@ export default function Welcome() {
   const [loginPassword, setLoginPassword] = useState('Harshal@2026!');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
+  const [headerWord, setHeaderWord] = useState('Love');
+
+  const headerWords = ['Love', 'Care', 'Trust', 'Healing'];
 
   const benefits = [
     { title: "✨ Proactive Healthcare", desc: "Automated updates to keep your pet thriving." },
@@ -23,6 +26,18 @@ export default function Welcome() {
     }, 4000);
     return () => clearInterval(timer);
   }, [benefits.length]);
+
+  // The Heartbeat Header timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeaderWord((prev) => {
+        const nextIndex = (headerWords.indexOf(prev) + 1) % headerWords.length;
+        return headerWords[nextIndex];
+      });
+    }, 2000);
+    return () => clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleEmailSignIn = async () => {
     setIsEmailLoading(true);
@@ -47,21 +62,21 @@ export default function Welcome() {
       </div>
 
       {/* ✨ MAIN UI CONTENT */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 py-2 sm:py-6 my-auto">
+      <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 py-1 sm:py-2 my-auto">
         
-        <div className="flex items-center justify-center mb-2 sm:mb-6 animate-fade-in-up">
-          <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-20 h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse-slow z-50" referrerPolicy="no-referrer" />
+        <div className="flex items-center justify-center mb-1 sm:mb-2 animate-fade-in-up">
+          <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-28 sm:w-36 h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse-slow z-50" referrerPolicy="no-referrer" />
         </div>
 
         {/* Cinematic Tagline */}
-        <div className="text-center mb-2 sm:mb-4">
-          <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-4xl sm:text-5xl tracking-tighter mb-1 drop-shadow-sm">
-            20 Years of <span className="text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse">Love.</span>
+        <div className="text-center mb-1 sm:mb-2">
+          <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-4xl sm:text-5xl tracking-tighter mb-0 drop-shadow-sm">
+            20 Years of <span className="text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse" key={headerWord}>{headerWord}.</span>
           </h1>
           <h2 className="text-xs sm:text-sm font-bold text-white/50 tracking-[0.15em] uppercase mt-1">
             Now Powered by
           </h2>
-          <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest mt-1">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest mt-0">
             <span className="text-[#4285F4]">G</span>
             <span className="text-[#EA4335]">o</span>
             <span className="text-[#FBBC05]">o</span>
@@ -72,10 +87,10 @@ export default function Welcome() {
         </div>
 
         {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-sm my-2 sm:my-4 h-[110px] sm:h-[130px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-t-white/20 border-l-white/20 border-b-white/5 border-r-white/5 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl py-4 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
+        <div className="w-full max-w-sm my-1 sm:my-2 h-[90px] sm:h-[110px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-t-white/20 border-l-white/20 border-b-white/5 border-r-white/5 shadow-[0_0_40px_rgba(254,199,8,0.15)] rounded-3xl py-2 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
           <div key={activeBenefit} className="animate-fade-in">
-            <h3 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-2xl sm:text-3xl tracking-tighter mb-2 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
-            <p className="text-white/60 font-medium text-sm sm:text-base tracking-tight leading-relaxed max-w-[260px] mx-auto">{benefits[activeBenefit].desc}</p>
+            <h3 className="text-white font-extrabold text-2xl sm:text-3xl tracking-tight mb-2 drop-shadow-md animate-fade-in">{benefits[activeBenefit].title}</h3>
+            <p className="text-white/80 font-medium text-sm sm:text-base leading-relaxed max-w-[280px] mx-auto animate-fade-in">{benefits[activeBenefit].desc}</p>
           </div>
         </div>
       </div>
