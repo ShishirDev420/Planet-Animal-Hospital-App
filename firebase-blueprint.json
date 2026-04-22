@@ -1,5 +1,20 @@
 {
   "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile Vault.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "pawPoints": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "petName": { "type": "string" },
+        "petType": { "type": "string" }
+      },
+      "required": ["uid", "email", "displayName", "pawPoints", "createdAt"]
+    },
     "PointsQueueItem": {
       "title": "PointsQueueItem",
       "description": "An item in the points queue for a user.",
@@ -30,14 +45,36 @@
         }
       },
       "required": ["userId", "parent", "pet", "service", "points", "status", "actionId"]
+    },
+    "RequestItem": {
+       "title": "RequestItem",
+       "description": "User requests",
+       "type": "object",
+       "properties": {
+          "userId": { "type": "string" },
+          "status": { "type": "string" }
+       },
+       "required": ["userId", "status"]
     }
   },
   "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "User profile vault storing pet data and paw points."
+    },
     "/pointsQueue/{documentId}": {
       "schema": {
         "$ref": "#/entities/PointsQueueItem"
       },
       "description": "Queue of points to be verified."
+    },
+    "/requests/{documentId}": {
+      "schema": {
+        "$ref": "#/entities/RequestItem"
+      },
+      "description": "Requests queue"
     }
   }
 }

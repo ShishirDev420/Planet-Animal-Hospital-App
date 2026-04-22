@@ -6,7 +6,8 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './lib/firebase';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ProactivePlans from './pages/ProactivePlans';
@@ -30,17 +31,33 @@ const Placeholder = ({ title }: { title: string }) => (
 import { ThemeProvider } from './context/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
+type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated';
+
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (!userDoc.exists() || !userDoc.data()?.petName) {
+            setAuthStatus('onboarding');
+          } else {
+            setAuthStatus('authenticated');
+          }
+        } catch (e) {
+          console.error("Error fetching user doc during auth state change:", e);
+          setAuthStatus('onboarding'); // Fallback to onboarding if missing
+        }
+      } else {
+        setAuthStatus('unauthenticated');
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  if (isAuthenticated === null) {
+  if (authStatus === 'loading') {
     return null; // or a loading spinner
   }
 
@@ -49,8 +66,8 @@ export default function App() {
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
-            {!isAuthenticated ? (
-              <Route path="*" element={<Welcome />} />
+            {authStatus === 'unauthenticated' || authStatus === 'onboarding' ? (
+              <Route path="*" element={<Welcome initialOnboarding={authStatus === 'onboarding'} onComplete={() => setAuthStatus('authenticated')} />} />
             ) : (
               <>
                 <Route path="/profiles" element={<ProfileSelection />} />

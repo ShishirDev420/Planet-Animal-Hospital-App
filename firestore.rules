@@ -1,36 +1,85 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAuthenticated() {
-      return request.auth != null;
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    // Primitive Definition
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
+    function isValidUser(data) {
+      return (
+        (!('uid' in data) || (data.uid is string && data.uid.size() <= 128)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 256)) &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
+        (!('pawPoints' in data) || data.pawPoints is number) &&
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('petName' in data) || (data.petName is string && data.petName.size() <= 128)) &&
+        (!('petType' in data) || (data.petType is string && data.petType.size() <= 64)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 64))
+      );
+    }
+    
+    function isValidPointsQueueItem(data) {
+       return data.userId is string && data.userId.size() <= 128 &&
+              data.status is string && data.status.size() <= 32 &&
+              (!('points' in data) || data.points is number);
+    }
+    
+    function isValidRequestItem(data) {
+       return data.userId is string && data.userId.size() <= 128 &&
+              data.status is string && data.status.size() <= 32;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) &&
+                       isValidUser(incoming()) &&
+                       incoming().uid == userId &&
+                       (incoming().pawPoints == 0 || incoming().pawPoints == 500) &&
+                       incoming().createdAt == request.time &&
+                       incoming().keys().hasAll(['uid', 'email', 'pawPoints', 'createdAt']);
+      allow update: if isOwner(userId) && isValidId(userId) &&
+                       isValidUser(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['petName', 'petType', 'phone', 'pawPoints', 'displayName']);
     }
 
     match /pointsQueue/{documentId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && 
-                    request.resource.data.userId == request.auth.uid &&
-                    request.resource.data.status == 'pending';
-      allow update: if isAuthenticated() && 
-                    resource.data.userId == request.auth.uid &&
-                    request.resource.data.userId == request.auth.uid &&
-                    request.resource.data.status == resource.data.status &&
-                    request.resource.data.points == resource.data.points;
-      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && existing().userId == request.auth.uid && isValidId(documentId);
+      allow create: if isSignedIn() && isValidId(documentId) &&
+                    isValidPointsQueueItem(incoming()) &&
+                    incoming().userId == request.auth.uid &&
+                    incoming().status == 'pending';
+      allow update: if isSignedIn() && isValidId(documentId) &&
+                    isValidPointsQueueItem(incoming()) &&
+                    existing().userId == request.auth.uid &&
+                    incoming().userId == request.auth.uid &&
+                    incoming().status == existing().status &&
+                    incoming().points == existing().points;
+      allow delete: if isSignedIn() && isValidId(documentId) && existing().userId == request.auth.uid;
     }
 
     match /requests/{documentId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && 
-                    request.resource.data.userId == request.auth.uid &&
-                    request.resource.data.status == 'pending';
-      allow update: if isAuthenticated() && 
-                    resource.data.userId == request.auth.uid &&
-                    request.resource.data.userId == request.auth.uid;
-      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && existing().userId == request.auth.uid && isValidId(documentId);
+      allow create: if isSignedIn() && isValidId(documentId) &&
+                    isValidRequestItem(incoming()) &&
+                    incoming().userId == request.auth.uid &&
+                    incoming().status == 'pending';
+      allow update: if isSignedIn() && isValidId(documentId) &&
+                    isValidRequestItem(incoming()) &&
+                    existing().userId == request.auth.uid &&
+                    incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(documentId) && existing().userId == request.auth.uid;
     }
   }
 }

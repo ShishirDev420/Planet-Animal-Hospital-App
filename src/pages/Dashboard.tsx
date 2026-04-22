@@ -241,27 +241,39 @@ export default function Dashboard() {
   const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
   const [incentivesOrder, setIncentivesOrder] = useState(getPersonalizedIncentives(petProfile));
 
-  const handleBookAppointment = async (incentive: any) => {
+  const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
     if (!userId) return;
     
     // Optimistic UI updates
-    setPendingIncentives(prev => [...prev, incentive.id]);
-    setPendingPoints(prev => prev + incentive.pointsValue);
+    setPendingIncentives(prev => [...prev, incentiveId]);
+    setPendingPoints(prev => prev + pointsValue);
     
     try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const petNameStr = petProfile?.name || 'Johnny';
+
       await addDoc(collection(db, 'pointsQueue'), {
-        userId: userId,
-        patient: 'Johnny',
-        reason: incentive.title,
-        points: incentive.pointsValue,
+        userId: user.uid,
+        userName: user.displayName || 'Pet Parent',
+        petName: petNameStr,
+        service: serviceName,
+        points: pointsValue,
         status: 'pending',
+        actionId: incentiveId,
         createdAt: serverTimestamp()
       });
+
+      const message = `Hi Planet Animal Hospital! I'd like to book a ${serviceName} for ${petNameStr}.`;
+      const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+
     } catch (e) {
       handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
       // Revert optimistic update on failure
-      setPendingIncentives(prev => prev.filter(id => id !== incentive.id));
-      setPendingPoints(prev => prev - incentive.pointsValue);
+      setPendingIncentives(prev => prev.filter(id => id !== incentiveId));
+      setPendingPoints(prev => prev - pointsValue);
     }
   };
 
@@ -581,7 +593,7 @@ export default function Dashboard() {
                   highValue={incentive.highValue}
                   theme={incentive.theme}
                   isPending={pendingIncentives.includes(incentive.id)}
-                  onBook={() => handleBookAppointment(incentive)} 
+                  onBook={() => handleBookingRequest(incentive.title, incentive.pointsValue, incentive.id)} 
                   carouselRef={carouselRef}
                 />
               </div>
