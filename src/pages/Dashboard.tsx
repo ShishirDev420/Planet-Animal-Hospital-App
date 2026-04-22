@@ -8,7 +8,7 @@ import {
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
-import { collection, addDoc, onSnapshot, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 
@@ -235,11 +235,30 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { harshalImage, johnnyImage } = useProfileImages();
   
-  // Firebase State
-  const [verifiedPoints, setVerifiedPoints] = useState(4450);
+  const [verifiedPoints, setVerifiedPoints] = useState(0);
   const [pendingPoints, setPendingPoints] = useState(0);
   const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
   const [incentivesOrder, setIncentivesOrder] = useState(getPersonalizedIncentives(petProfile));
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserId(user.uid);
+        const userDocRef = doc(db, 'users', user.uid);
+        const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setVerifiedPoints(docSnap.data().pawPoints || 0);
+          }
+        });
+        setIsAuthReady(true);
+        return () => unsubscribeDoc();
+      } else {
+        setUserId(null);
+        setIsAuthReady(true);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
     if (!userId) return;
@@ -254,12 +273,12 @@ export default function Dashboard() {
 
       const petNameStr = petProfile?.name || 'Johnny';
 
-      await addDoc(collection(db, 'pointsQueue'), {
+      await addDoc(collection(db, 'requests'), {
         userId: user.uid,
         userName: user.displayName || 'Pet Parent',
         petName: petNameStr,
         service: serviceName,
-        points: pointsValue,
+        pointsValue: pointsValue,
         status: 'pending',
         actionId: incentiveId,
         createdAt: serverTimestamp()
@@ -270,7 +289,7 @@ export default function Dashboard() {
       window.open(whatsappUrl, '_blank');
 
     } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, 'pointsQueue');
+      handleFirestoreError(e, OperationType.CREATE, 'requests');
       // Revert optimistic update on failure
       setPendingIncentives(prev => prev.filter(id => id !== incentiveId));
       setPendingPoints(prev => prev - pointsValue);
@@ -374,8 +393,8 @@ export default function Dashboard() {
       await addDoc(collection(db, 'requests'), {
         userId: userId,
         patient: 'Johnny',
-        reason: selectedService.name,
-        points: selectedService.points,
+        service: selectedService.name,
+        pointsValue: selectedService.points,
         status: 'pending',
         date: bookingDate,
         time: bookingTime,

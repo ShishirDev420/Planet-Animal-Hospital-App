@@ -14,7 +14,9 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [headerWord, setHeaderWord] = useState('Love');
   const [needsOnboarding, setNeedsOnboarding] = useState(initialOnboarding);
   const [petName, setPetName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [petType, setPetType] = useState('Dog');
+  const [breed, setBreed] = useState('');
+  const [weight, setWeight] = useState('');
 
   useEffect(() => {
     setNeedsOnboarding(initialOnboarding);
@@ -100,7 +102,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
   const handleCompleteProfile = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    if (!petName.trim() || !phone.trim()) {
+    if (!petName.trim() || !breed.trim() || !weight.trim()) {
       setAuthError('Please fill in all fields!');
       return;
     }
@@ -112,7 +114,9 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           email: auth.currentUser.email,
           displayName: auth.currentUser.displayName || 'Pet Parent',
           petName: petName.trim(),
-          phone: phone.trim(),
+          petType,
+          breed: breed.trim(),
+          weight: weight.trim(),
           pawPoints: 500,
           createdAt: serverTimestamp()
         });
@@ -213,8 +217,19 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                   <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Pet Parent's Phone</label>
-                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 9876543210" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Pet Type</label>
+                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+                    <option value="Dog" className="text-black">Dog</option>
+                    <option value="Cat" className="text-black">Cat</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Breed</label>
+                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Weight (lbs/kg)</label>
+                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
               </div>
 
