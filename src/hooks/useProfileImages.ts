@@ -1,45 +1,45 @@
 import { useState, useEffect } from 'react';
 
-const DEFAULT_HARSHAL = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80';
-const DEFAULT_JOHNNY = 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80';
+const DEFAULT_USER = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80';
+const DEFAULT_PET = 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80';
 
 export function useProfileImages() {
-  const [harshalImage, setHarshalImage] = useState(() => localStorage.getItem('harshalImage') || DEFAULT_HARSHAL);
-  const [johnnyImage, setJohnnyImage] = useState(() => localStorage.getItem('johnnyImage') || DEFAULT_JOHNNY);
+  const [userImage, setUserImage] = useState(() => localStorage.getItem('userImage') || DEFAULT_USER);
+  const [petImage, setPetImage] = useState(() => localStorage.getItem('petImage') || DEFAULT_PET);
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setHarshalImage(localStorage.getItem('harshalImage') || DEFAULT_HARSHAL);
-      setJohnnyImage(localStorage.getItem('johnnyImage') || DEFAULT_JOHNNY);
+      setUserImage(localStorage.getItem('userImage') || DEFAULT_USER);
+      setPetImage(localStorage.getItem('petImage') || DEFAULT_PET);
     };
 
     window.addEventListener('profileImagesUpdated', handleStorageChange);
     return () => window.removeEventListener('profileImagesUpdated', handleStorageChange);
   }, []);
 
-  const updateHarshalImage = (url: string) => {
+  const updateUserImage = (url: string) => {
     try {
-      localStorage.setItem('harshalImage', url);
-      setHarshalImage(url);
+      localStorage.setItem('userImage', url);
+      setUserImage(url);
       window.dispatchEvent(new Event('profileImagesUpdated'));
     } catch (e) {
       console.warn("Storage quota exceeded, couldn't save image to localStorage");
-      setHarshalImage(url);
+      setUserImage(url);
       window.dispatchEvent(new Event('profileImagesUpdated'));
     }
   };
 
-  const updateJohnnyImage = (url: string) => {
+  const updatePetImage = (url: string) => {
     try {
-      localStorage.setItem('johnnyImage', url);
-      setJohnnyImage(url);
+      localStorage.setItem('petImage', url);
+      setPetImage(url);
       window.dispatchEvent(new Event('profileImagesUpdated'));
     } catch (e) {
       console.warn("Storage quota exceeded, couldn't save image to localStorage");
-      setJohnnyImage(url);
+      setPetImage(url);
       window.dispatchEvent(new Event('profileImagesUpdated'));
     }
   };
 
-  return { harshalImage, johnnyImage, updateHarshalImage, updateJohnnyImage };
+  return { userImage, petImage, updateUserImage, updatePetImage };
 }

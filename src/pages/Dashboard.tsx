@@ -106,9 +106,10 @@ const SERVICE_MENU = [
   }
 ];
 
-const petProfile = { name: 'Johnny', breed: 'American Bully', age: 8, isSenior: true, isOverweight: true };
+import { usePetProfile } from '../hooks/usePetProfile';
 
-function getPersonalizedIncentives(pet: { name: string, breed: string, age: number, isSenior: boolean, isOverweight?: boolean }) {
+function getPersonalizedIncentives(pet?: { name?: string, breed?: string, age?: string | number, isSenior?: boolean, isOverweight?: boolean }) {
+  if (!pet || !pet.breed) return [];
   const incentives = [];
 
   if (pet.isOverweight) {
@@ -201,9 +202,10 @@ function getPersonalizedIncentives(pet: { name: string, breed: string, age: numb
   }));
 }
 
-function getDailyTip(pet: { name: string, breed: string, age: number, isSenior: boolean }) {
+function getDailyTip(pet?: { name?: string, breed?: string, age?: string | number, isSenior?: boolean }) {
+  if (!pet || !pet.name) return "Welcome to Planet Animal Hospital! Keep your pet healthy and active today.";
   const currentSeason = 'Summer';
-  const breedLower = pet.breed.toLowerCase();
+  const breedLower = (pet.breed || '').toLowerCase();
 
   if ((breedLower.includes('bully') || breedLower.includes('retriever')) && currentSeason === 'Summer') {
     return `Summer is here! ☀️ Keep ${pet.name} hydrated and avoid walking on hot pavements during peak afternoon heat.`;
@@ -214,7 +216,7 @@ function getDailyTip(pet: { name: string, breed: string, age: number, isSenior: 
   return `Keep ${pet.name} hydrated and active today!`;
 }
 
-function DailyTip({ pet }: { pet: typeof petProfile }) {
+function DailyTip({ pet }: { pet: any }) {
   const tip = getDailyTip(pet);
   return (
     <div className="bg-white/40 backdrop-blur-md border border-white/50 text-slate-700 text-sm py-3 px-4 rounded-2xl flex gap-3 items-start shadow-sm mt-4 dark:bg-neutral-900 dark:border-white/10 dark:text-white/80">
@@ -224,12 +226,13 @@ function DailyTip({ pet }: { pet: typeof petProfile }) {
   );
 }
 
-function generateWhatsAppPayload(serviceName: string) {
-  const message = `Hi Planet Animal Hospital! 👋\nI would like to book a visit.\n👤 Parent: Harshal\n🐾 Pet: ${petProfile.name} (Dog - ${petProfile.breed}, Age ${petProfile.age})\n🏥 Requested Service: ${serviceName}`;
+function generateWhatsAppPayload(serviceName: string, petProfile: any) {
+  const message = `Hi Planet Animal Hospital! 👋\nI would like to book a visit.\n👤 Parent: ${petProfile?.parentName || 'Pet Parent'}\n🐾 Pet: ${petProfile?.name || 'Pet'} (Dog - ${petProfile?.breed || 'Unknown'}, Age ${petProfile?.age || 'Unknown'})\n🏥 Requested Service: ${serviceName}`;
   return 'https://wa.me/919004290923?text=' + encodeURIComponent(message);
 }
 
 export default function Dashboard() {
+  const { profile: petProfile, loading: profileLoading } = usePetProfile();
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -238,7 +241,13 @@ export default function Dashboard() {
   const [verifiedPoints, setVerifiedPoints] = useState(0);
   const [pendingPoints, setPendingPoints] = useState(0);
   const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
-  const [incentivesOrder, setIncentivesOrder] = useState(getPersonalizedIncentives(petProfile));
+  const [incentivesOrder, setIncentivesOrder] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (petProfile) {
+      setIncentivesOrder(getPersonalizedIncentives(petProfile as any));
+    }
+  }, [petProfile]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -271,7 +280,7 @@ export default function Dashboard() {
       const user = auth.currentUser;
       if (!user) return;
 
-      const petNameStr = petProfile?.name || 'Johnny';
+      const petNameStr = petProfile?.name || 'Pet';
 
       await addDoc(collection(db, 'requests'), {
         userId: user.uid,
@@ -392,7 +401,7 @@ export default function Dashboard() {
     try {
       await addDoc(collection(db, 'requests'), {
         userId: userId,
-        patient: 'Johnny',
+        patient: petProfile?.name || 'Pet',
         service: selectedService.name,
         pointsValue: selectedService.points,
         status: 'pending',
@@ -419,8 +428,8 @@ export default function Dashboard() {
     }, 300); // reset after close animation
   };
 
-  const parentName = "Harshal";
-  const petName = petProfile?.name || 'Johnny';
+  const parentName = petProfile?.parentName || "Pet Parent";
+  const petName = petProfile?.name || 'Pet';
   const whatsappMessage = `Hey, Planet Animal Hospital team, I am ${parentName}; ${petName}, pet's parent, and I'm here to inquire about the possibility of a ${selectedService?.name || selectedService} Appointment at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
@@ -471,8 +480,8 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight dark:text-white/95">Hi, Harshal 👋</h1>
-          <p className="text-slate-500 text-sm dark:text-white/60">Let's keep Johnny healthy today.</p>
+          <h1 className="text-2xl font-bold tracking-tight dark:text-white/95">Hi, {petProfile?.parentName || "Pet Parent"} 👋</h1>
+          <p className="text-slate-500 text-sm dark:text-white/60">Let's keep {petProfile?.name || 'your pet'} healthy today.</p>
           <DailyTip pet={petProfile} />
         </div>
       </header>
@@ -496,7 +505,7 @@ export default function Dashboard() {
           </div>
           <h2 className="text-slate-800 dark:text-white text-sm font-medium mb-2">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-6xl tracking-tighter tabular-nums font-black text-slate-900 dark:text-[#fec708] [text-shadow:0px_4px_10px_rgba(0,0,0,0.6)]">{verifiedPoints.toLocaleString()}</span>
+            <span className="text-6xl tracking-tighter tabular-nums font-black text-[#fec708] [text-shadow:0px_4px_10px_rgba(254,199,8,0.4)] dark:[text-shadow:0px_4px_10px_rgba(0,0,0,0.6)]">{verifiedPoints.toLocaleString()}</span>
             <span className="text-slate-800 dark:text-white font-bold uppercase tracking-widest text-sm ml-1 mb-2 drop-shadow-sm">pts</span>
           </div>
           
@@ -564,7 +573,7 @@ export default function Dashboard() {
       {/* Upcoming */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming for Johnny</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming for {petProfile?.name || 'your pet'}</h3>
           <button className="text-planet-yellow text-sm font-bold flex items-center">View All <ChevronRight size={16}/></button>
         </div>
         <div className="space-y-3">
@@ -672,7 +681,7 @@ export default function Dashboard() {
                     <Gift className="w-12 h-12 text-[#fec708] mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-slate-800 mb-2">You've Unlocked a Free Consultation!</h3>
                     <p className="text-slate-600 mb-6">
-                      Show this screen to our staff at checkout to claim your free consultation for Johnny.
+                      Show this screen to our staff at checkout to claim your free consultation for {petProfile?.name || 'your pet'}.
                     </p>
                     <div className="bg-white rounded-xl p-4 shadow-sm inline-block">
                       <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>

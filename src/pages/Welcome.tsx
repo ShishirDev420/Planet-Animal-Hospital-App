@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { Loader2, Heart } from 'lucide-react';
 
 export default function Welcome({ initialOnboarding = false, onComplete }: { initialOnboarding?: boolean, onComplete?: () => void }) {
-  const [email, setEmail] = useState('harshal@planetanimal.com');
-  const [password, setPassword] = useState('Harshal@2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
@@ -16,7 +16,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [petName, setPetName] = useState('');
   const [petType, setPetType] = useState('Dog');
   const [breed, setBreed] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('Male');
   const [weight, setWeight] = useState('');
+  const [additionalDetails, setAdditionalDetails] = useState('');
 
   useEffect(() => {
     setNeedsOnboarding(initialOnboarding);
@@ -102,7 +105,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
   const handleCompleteProfile = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    if (!petName.trim() || !breed.trim() || !weight.trim()) {
+    if (!petName.trim() || !breed.trim() || !age.trim() || !weight.trim()) {
       setAuthError('Please fill in all fields!');
       return;
     }
@@ -116,7 +119,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           petName: petName.trim(),
           petType,
           breed: breed.trim(),
+          age: age.trim(),
+          gender,
           weight: weight.trim(),
+          additionalDetails: additionalDetails.trim(),
           pawPoints: 500,
           createdAt: serverTimestamp()
         });
@@ -148,19 +154,61 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   };
 
   return (
-    <div className="min-h-screen min-h-[750px] flex flex-col overflow-y-auto overflow-x-hidden w-full relative z-10 bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+    <div className="fixed inset-0 w-full h-full overflow-y-auto overflow-x-hidden z-10 bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
       
       {/* 🔮 THE LOCKED ORB MOAT */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <motion.div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] rounded-full opacity-60" style={{ backgroundImage: 'radial-gradient(circle, rgba(66,133,244,0.4) 0%, transparent 70%)' }} animate={{ x: [0, 100, -50, 0], y: [0, -50, 100, 0], scale: [1, 1.1, 0.9, 1] }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} />
-        <motion.div className="absolute top-[20%] right-[-10%] w-[35rem] h-[35rem] rounded-full opacity-50" style={{ backgroundImage: 'radial-gradient(circle, rgba(254,199,8,0.35) 0%, transparent 70%)' }} animate={{ x: [0, -120, 80, 0], y: [0, 100, -80, 0], scale: [1, 1.2, 0.8, 1] }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }} />
-        <motion.div className="absolute bottom-[-20%] left-[10%] w-[45rem] h-[45rem] rounded-full opacity-40" style={{ backgroundImage: 'radial-gradient(circle, rgba(52,168,83,0.3) 0%, transparent 70%)' }} animate={{ x: [0, 150, -100, 0], y: [0, -100, 50, 0], scale: [1, 1.05, 0.95, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} />
-        <motion.div className="absolute top-[40%] left-[40%] w-[25rem] h-[25rem] rounded-full opacity-40" style={{ backgroundImage: 'radial-gradient(circle, rgba(234,67,53,0.3) 0%, transparent 70%)' }} animate={{ x: [0, -80, 100, 0], y: [0, 80, -120, 0], scale: [1, 1.3, 0.7, 1] }} transition={{ duration: 22, repeat: Infinity, ease: "linear" }} />
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="noise-overlay" />
+        <motion.div 
+          className="absolute top-[-10%] left-[-10%] w-[35rem] h-[35rem] rounded-full opacity-50 gpu-layer" 
+          style={{ 
+            background: 'radial-gradient(circle at center, #4285F4 0%, rgba(66, 133, 244, 0.7) 15%, rgba(66, 133, 244, 0.3) 40%, transparent 80%)',
+            filter: 'blur(110px)',
+            mixBlendMode: 'plus-lighter',
+            willChange: 'transform'
+          }} 
+          animate={{ x: [0, 120, -60, 0], y: [0, -60, 120, 0], scale: [1, 1.15, 0.9, 1] }} 
+          transition={{ duration: 25, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
+        />
+        <motion.div 
+          className="absolute top-[15%] right-[-10%] w-[30rem] h-[30rem] rounded-full opacity-40 gpu-layer" 
+          style={{ 
+            background: 'radial-gradient(circle at center, #fec708 0%, rgba(254, 199, 8, 0.6) 20%, rgba(254, 199, 8, 0.3) 45%, transparent 85%)',
+            filter: 'blur(100px)',
+            mixBlendMode: 'plus-lighter',
+            willChange: 'transform'
+          }} 
+          animate={{ x: [0, -140, 100, 0], y: [0, 110, -90, 0], scale: [1, 1.25, 0.85, 1] }} 
+          transition={{ duration: 28, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
+        />
+        <motion.div 
+          className="absolute bottom-[-15%] left-[5%] w-[40rem] h-[40rem] rounded-full opacity-30 gpu-layer" 
+          style={{ 
+            background: 'radial-gradient(circle at center, #34A853 0%, rgba(52, 168, 83, 0.5) 25%, rgba(52, 168, 83, 0.2) 50%, transparent 90%)',
+            filter: 'blur(130px)',
+            mixBlendMode: 'plus-lighter',
+            willChange: 'transform'
+          }} 
+          animate={{ x: [0, 180, -120, 0], y: [0, -110, 60, 0], scale: [1, 1.1, 0.95, 1] }} 
+          transition={{ duration: 32, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
+        />
+        <motion.div 
+          className="absolute top-[35%] left-[35%] w-[25rem] h-[25rem] rounded-full opacity-30 gpu-layer" 
+          style={{ 
+            background: 'radial-gradient(circle at center, #EA4335 0%, rgba(234, 67, 53, 0.5) 15%, rgba(234, 67, 53, 0.2) 40%, transparent 80%)',
+            filter: 'blur(110px)',
+            mixBlendMode: 'plus-lighter',
+            willChange: 'transform'
+          }} 
+          animate={{ x: [0, -100, 130, 0], y: [0, 90, -140, 0], scale: [1, 1.4, 0.75, 1] }} 
+          transition={{ duration: 35, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
+        />
       </div>
 
-      {/* ✨ MAIN UI CONTENT */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 py-1 sm:py-2 my-auto">
-        
+      <div className="flex flex-col min-h-full w-full pb-8">
+        {/* ✨ MAIN UI CONTENT */}
+        <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 pt-12 pb-4 shrink-0">
+          
         <div className="flex items-center justify-center mb-1 sm:mb-2 animate-fade-in-up">
           <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-28 sm:w-36 h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse-slow z-50" referrerPolicy="no-referrer" />
         </div>
@@ -194,17 +242,27 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         </div>
 
         {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-sm my-1 sm:my-2 h-[90px] sm:h-[110px] flex flex-col justify-center items-center text-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-3xl border border-white/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] rounded-3xl py-2 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10">
-          <motion.div key={activeBenefit} initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }} transition={{ duration: 0.8, ease: "easeOut" }} className="flex flex-col items-center justify-center text-center w-full">
-            <h3 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 font-extrabold text-xl sm:text-2xl tracking-tighter mb-1 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
-            <p className="text-white/70 font-medium text-xs sm:text-sm tracking-tight leading-relaxed max-w-[280px] mx-auto">{benefits[activeBenefit].desc}</p>
-          </motion.div>
+        <div className="w-full max-w-sm my-1 sm:my-2 h-[90px] sm:h-[110px] flex flex-col justify-center items-center text-center bg-white/[0.08] backdrop-blur-3xl border border-white/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] rounded-3xl py-2 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10" style={{ willChange: 'auto' }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeBenefit}
+              initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+              transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+              style={{ willChange: 'transform, opacity, filter' }}
+              className="flex flex-col items-center justify-center text-center w-full"
+            >
+              <h3 className="text-white font-extrabold text-xl sm:text-2xl tracking-tighter mb-1 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
+              <p className="text-white/70 font-medium text-xs sm:text-sm tracking-tight leading-relaxed max-w-[280px] mx-auto">{benefits[activeBenefit].desc}</p>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* 🔐 BOTTOM AUTH FORM / ONBOARDING SWAP */}
-      <div className="relative z-20 w-full max-w-sm mx-auto px-4 mt-auto pb-12 shrink-0">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+        {/* 🔐 BOTTOM AUTH FORM / ONBOARDING SWAP */}
+        <div className="relative z-20 w-full max-w-sm mx-auto px-4 pb-12 shrink-0">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           
           {needsOnboarding ? (
             <div className="space-y-4">
@@ -227,9 +285,26 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                   <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Breed</label>
                   <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Age</label>
+                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Gender</label>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+                      <option value="Male" className="text-black">Male</option>
+                      <option value="Female" className="text-black">Female</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Weight (lbs/kg)</label>
                   <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Additional Details (Unlock Roadmap)</label>
+                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all min-h-[80px]" />
                 </div>
               </div>
 
@@ -245,11 +320,11 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                 {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
                 <div>
                   <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" data-lpignore="true" data-form-type="other" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" data-lpignore="true" data-form-type="other" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
               </div>
 
@@ -287,8 +362,8 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
             </>
           )}
         </motion.div>
+        </div>
       </div>
-
     </div>
   );
 }

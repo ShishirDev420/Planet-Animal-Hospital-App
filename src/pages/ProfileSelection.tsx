@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Plus, User, Sparkles, ChevronRight } from 'lucide-react';
@@ -5,14 +6,39 @@ import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function ProfileSelection() {
   const navigate = useNavigate();
-  const { harshalImage, johnnyImage } = useProfileImages();
+  const { userImage, petImage } = useProfileImages();
+  const [profileName, setProfileName] = useState('Loading...');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (auth.currentUser) {
+        try {
+          const docRef = doc(db, 'users', auth.currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const userName = data.displayName && data.displayName !== 'null' ? data.displayName : 'Pet Parent';
+            const petName = data.petName || 'Pet';
+            setProfileName(`${userName} & ${petName}`);
+          } else {
+            setProfileName('Pet Parent & Pet');
+          }
+        } catch (e) {
+          console.error("Error fetching profile", e);
+          setProfileName('Pet Parent & Pet');
+        }
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const profiles = [
-    { id: 'harshal', name: 'Harshal & Johnny' },
+    { id: 'current_user', name: profileName },
   ];
 
   return (
@@ -46,8 +72,8 @@ export default function ProfileSelection() {
             >
               <div className="relative p-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl group-hover:shadow-[0_0_40px_rgba(250,204,21,0.4)] transition-all duration-300 dark:bg-neutral-900 dark:border-white/10">
                 <DualAvatar 
-                  leftImage={harshalImage}
-                  rightImage={johnnyImage}
+                  leftImage={userImage}
+                  rightImage={petImage}
                   className="w-32 h-32"
                 />
               </div>
