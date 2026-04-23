@@ -325,37 +325,38 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
             </div>
           ) : (
             <>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
-                <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" data-lpignore="true" data-form-type="other" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                <div className="relative group">
+                  <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-white placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
+                  <label htmlFor="email" className="absolute left-4 top-1 text-[10px] font-bold text-white/50 uppercase tracking-wider transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text user-select-none">Email</label>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" data-lpignore="true" data-form-type="other" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                <div className="relative group">
+                  <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-white placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Password" />
+                  <label htmlFor="password" className="absolute left-4 top-1 text-[10px] font-bold text-white/50 uppercase tracking-wider transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text user-select-none">Password</label>
                 </div>
               </div>
 
-              <div className="space-y-2 pt-1">
-                <div className="flex flex-row gap-3 w-full">
-                  <button 
-                    onClick={handleSignIn} 
-                    disabled={isEmailLoading}
-                    className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3.5 px-4 rounded-xl border border-white/10 transition-all shadow-sm flex items-center justify-center disabled:opacity-50"
-                  >
-                    Sign In
-                  </button>
-                  <button 
-                    onClick={handleSignUp} 
-                    disabled={isEmailLoading}
-                    className="flex-1 bg-[#fec708] hover:bg-[#e0b006] text-black font-extrabold py-3.5 px-4 rounded-xl transition-all shadow-[0_0_15px_rgba(254,199,8,0.3)] flex items-center justify-center disabled:opacity-50"
-                  >
-                    Sign Up
-                  </button>
+              <div className="space-y-4 pt-3">
+                <button 
+                  onClick={handleSignIn} 
+                  disabled={isEmailLoading}
+                  className="w-full bg-[#fec708] hover:bg-[#e0b006] text-black font-extrabold py-3.5 px-4 rounded-xl transition-all duration-300 ease-out shadow-[0_0_15px_rgba(254,199,8,0.2)] hover:shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center cursor-pointer"
+                >
+                  Enter the Clinic
+                </button>
+                <div className="flex justify-between w-full px-1">
+                  <button type="button" onClick={handleForgotPassword} className="text-xs font-medium text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer">Forgot Password?</button>
+                  <button type="button" onClick={handleSignUp} className="text-xs font-medium text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer">Create an Account</button>
                 </div>
                 
-                <motion.button whileTap={{ scale: 0.95 }} onClick={handleGoogleAuth} className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold py-4 rounded-2xl hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-white/10"></div>
+                  <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-bold uppercase tracking-wider">OR</span>
+                  <div className="flex-grow border-t border-white/10"></div>
+                </div>
+
+                <motion.button whileTap={{ scale: 0.95 }} onClick={handleGoogleAuth} className="w-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-bold py-3.5 rounded-xl hover:bg-white/10 transition-all duration-300 ease-out flex items-center justify-center gap-2 cursor-pointer">
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -364,9 +365,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                   </svg>
                   Continue with Google
                 </motion.button>
-                <div className="text-center mt-4">
-                  <button type="button" onClick={handleForgotPassword} className="text-xs font-medium text-white/50 hover:text-white transition-colors uppercase tracking-wider">Forgot Password?</button>
-                </div>
               </div>
             </>
           )}

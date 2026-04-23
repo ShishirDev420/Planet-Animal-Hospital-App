@@ -236,7 +236,7 @@ export default function Dashboard() {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { harshalImage, johnnyImage } = useProfileImages();
+  const { userImage: harshalImage, petImage: johnnyImage } = useProfileImages();
   
   const [verifiedPoints, setVerifiedPoints] = useState(0);
   const [pendingPoints, setPendingPoints] = useState(0);
