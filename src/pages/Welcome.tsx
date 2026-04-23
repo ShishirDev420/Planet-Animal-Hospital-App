@@ -13,6 +13,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [headerWord, setHeaderWord] = useState('Love');
   const [needsOnboarding, setNeedsOnboarding] = useState(initialOnboarding);
+  const [parentName, setParentName] = useState('');
   const [petName, setPetName] = useState('');
   const [petType, setPetType] = useState('Dog');
   const [breed, setBreed] = useState('');
@@ -23,6 +24,9 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
   useEffect(() => {
     setNeedsOnboarding(initialOnboarding);
+    if (initialOnboarding && auth.currentUser?.displayName && !parentName) {
+      setParentName(auth.currentUser.displayName.split(' ')[0]);
+    }
   }, [initialOnboarding]);
 
   const headerWords = ['Love', 'Care', 'Trust', 'Healing'];
@@ -105,7 +109,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
   const handleCompleteProfile = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    if (!petName.trim() || !breed.trim() || !age.trim() || !weight.trim()) {
+    if (!parentName.trim() || !petName.trim() || !breed.trim() || !age.trim() || !weight.trim()) {
       setAuthError('Please fill in all fields!');
       return;
     }
@@ -116,6 +120,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           uid: auth.currentUser.uid,
           email: auth.currentUser.email,
           displayName: auth.currentUser.displayName || 'Pet Parent',
+          parentName: parentName.trim(),
           petName: petName.trim(),
           petType,
           breed: breed.trim(),
@@ -270,6 +275,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
               {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
               
               <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Your Name (Pet Parent)</label>
+                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                </div>
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Pet's Name</label>
                   <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />

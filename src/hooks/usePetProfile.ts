@@ -60,7 +60,7 @@ export function usePetProfile() {
               dietaryPreferences: data.dietaryPreferences || DEFAULT_PROFILE.dietaryPreferences,
               surgicalHistory: data.surgicalHistory || DEFAULT_PROFILE.surgicalHistory,
               isSenior: data.age && parseInt(data.age) >= 7 ? true : false,
-              parentName: user.displayName || "Pet Parent",
+              parentName: data.parentName || user.displayName || "Pet Parent",
             }));
           }
           setLoading(false);
@@ -90,6 +90,7 @@ export function usePetProfile() {
         if (updates.additionalDetails) dbUpdates.additionalDetails = updates.additionalDetails;
         if (updates.dietaryPreferences) dbUpdates.dietaryPreferences = updates.dietaryPreferences;
         if (updates.surgicalHistory) dbUpdates.surgicalHistory = updates.surgicalHistory;
+        if (updates.parentName) dbUpdates.parentName = updates.parentName;
 
         await updateDoc(docRef, dbUpdates);
       } catch (e) {

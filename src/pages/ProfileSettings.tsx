@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut, Moon, Sun } from 'lucide-react';
@@ -22,6 +22,20 @@ export default function ProfileSettings() {
   const [gender, setGender] = useState(profile?.gender || '');
   const [reminders, setReminders] = useState(true);
   const [marketing, setMarketing] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      if (profile.parentName) setName(profile.parentName);
+      if (profile.weight) {
+        setWeight(profile.weight.replace(/[^0-9.]/g, ''));
+        setUnit(profile.weight.includes('kg') ? 'kg' : 'lbs');
+      }
+      if (profile.dietaryPreferences) setDiet(profile.dietaryPreferences);
+      if (profile.surgicalHistory) setSurgicalHistory(profile.surgicalHistory);
+      if (profile.age) setAge(profile.age);
+      if (profile.gender) setGender(profile.gender);
+    }
+  }, [profile]);
 
   const { userImage, petImage, updateUserImage, updatePetImage } = useProfileImages();
   const { theme, setTheme } = useTheme();
