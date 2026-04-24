@@ -493,23 +493,11 @@ export default function Dashboard() {
         transition={{ ease: "easeOut", duration: 0.5 }}
         className="mt-8 mb-4 relative"
       >
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-widest text-white/70">Proactive Member</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#fec708]" />
-            <span className="bg-gradient-to-r from-[#fec708] to-yellow-200 bg-clip-text text-transparent text-xs font-bold uppercase tracking-widest">
-              2x Multiplier
-            </span>
-          </div>
-        </div>
-        
         {/* Asymmetric Floating Layout */}
-        <div className="flex flex-col items-start gap-1">
+        <div className="flex flex-col items-start gap-1 pt-4">
           <h2 className="text-white/60 text-xs uppercase tracking-widest font-medium">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2">
-            <span className="text-6xl tracking-tighter tabular-nums font-black text-[#fec708] drop-shadow-sm">{verifiedPoints.toLocaleString()}</span>
+            <span className="font-display tracking-tighter text-6xl tabular-nums font-black text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse">{verifiedPoints.toLocaleString()}</span>
             <span className="text-white/70 font-bold uppercase tracking-widest text-sm mb-2">pts</span>
           </div>
           
@@ -557,7 +545,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Quick Actions</h3>
+        <h3 className="font-display tracking-tight text-white/90 text-xl font-bold mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-4">
           <ActionCard 
             icon={<Calendar className="text-teal-500" />} 
@@ -577,7 +565,7 @@ export default function Dashboard() {
       {/* Upcoming */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming for {petProfile?.name || 'your pet'}</h3>
+          <h3 className="font-display tracking-tight text-white/90 text-xl font-bold">Upcoming for {petProfile?.name || 'your pet'}</h3>
           <button className="text-planet-yellow text-sm font-bold flex items-center">View All <ChevronRight size={16}/></button>
         </div>
         <div className="space-y-3">
@@ -587,7 +575,7 @@ export default function Dashboard() {
                 {appt.date}
               </div>
               <div>
-                <h4 className="font-bold text-slate-800 dark:text-white">{appt.title}</h4>
+                <h4 className="font-display tracking-tight font-bold text-slate-800 dark:text-white/90">{appt.title}</h4>
                 <p className="text-sm text-slate-500 dark:text-white/60">Dr. Naveen • {appt.time}</p>
               </div>
             </div>
@@ -598,7 +586,7 @@ export default function Dashboard() {
       {/* Ways to Earn Points */}
       <div className="pt-2 relative -mx-6">
         <div className="flex items-center gap-2 mb-4 px-6 relative z-10">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ways to Earn Paw Points</h3>
+          <h3 className="font-display tracking-tight text-white/90 text-xl font-bold">Ways to Earn Paw Points</h3>
           <PawPrint className="w-5 h-5 text-[#fec708] fill-[#fec708]/20" />
         </div>
         
@@ -878,7 +866,7 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
         {icon}
       </div>
       <div>
-        <h4 className="font-bold text-slate-800 text-sm dark:text-white/95">{title}</h4>
+        <h4 className="font-display tracking-tight font-bold text-slate-800 text-sm dark:text-white/90">{title}</h4>
         <p className="text-xs text-slate-500 dark:text-white/60">{subtitle}</p>
       </div>
     </div>
@@ -975,14 +963,14 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
           )}
 
           <div className="mt-8 flex flex-col items-start gap-2">
-            <h4 className="font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide dark:text-white/95">{title}</h4>
+            <h4 className="font-display tracking-tight font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide dark:text-white/90">{title}</h4>
             {subtext && <p className="text-sm text-slate-600 leading-relaxed font-medium dark:text-white/60">{subtext}</p>}
           </div>
           
           <div className="mt-auto flex flex-col">
             <div className="mb-4 flex items-center gap-1.5">
               <PawPrint className="w-6 h-6 text-[#fec708] fill-[#fec708]/40 drop-shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
-              <p className="font-black text-2xl tracking-tight drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-[#fec708] via-[#fec708] to-[#fec708]">
+              <p className="font-display font-black text-2xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-[#fec708] via-[#fec708] to-[#fec708]">
                 {pointsText}
               </p>
             </div>
