@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
@@ -219,9 +219,9 @@ function getDailyTip(pet?: { name?: string, breed?: string, age?: string | numbe
 function DailyTip({ pet }: { pet: any }) {
   const tip = getDailyTip(pet);
   return (
-    <div className="bg-white/40 backdrop-blur-md border border-white/50 text-slate-700 text-sm py-3 px-4 rounded-2xl flex gap-3 items-start shadow-sm mt-4 dark:bg-neutral-900 dark:border-white/10 dark:text-white/80">
-      <Info size={20} className="text-planet-yellow shrink-0 mt-0.5" />
-      <p className="font-medium leading-snug">{tip}</p>
+    <div className="flex gap-3 items-center mt-3 pl-1">
+      <div className="w-2 h-2 rounded-full bg-[#fec708] animate-pulse shrink-0" />
+      <p className="text-white/90 font-medium text-sm leading-snug">{tip}</p>
     </div>
   );
 }
@@ -459,7 +459,7 @@ export default function Dashboard() {
             
           {/* Center Text Container */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0 w-max pointer-events-none whitespace-nowrap">
-            <span className="text-lg font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95">PLANET ANIMAL</span>
+            <span className="text-lg font-display font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95">PLANET ANIMAL</span>
             <span className="text-[10px] font-bold text-[#fec708] uppercase tracking-[0.25em] mt-0.5 dark:text-[#fec708]">HOSPITAL & WELLNESS</span>
           </div>
 
@@ -480,72 +480,76 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight dark:text-white/95">Hi, {petProfile?.parentName || "Pet Parent"} 👋</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight dark:text-white/90">Hi, {petProfile?.parentName || "Pet Parent"} 👋</h1>
           <p className="text-slate-500 text-sm dark:text-white/60">Let's keep {petProfile?.name || 'your pet'} healthy today.</p>
           <DailyTip pet={petProfile} />
         </div>
       </header>
 
-      {/* Points Wallet - Glass Card */}
+      {/* Points Wallet - Typographic Layout */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 relative overflow-hidden"
+        transition={{ ease: "easeOut", duration: 0.5 }}
+        className="mt-8 mb-4 relative"
       >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-planet-yellow/20 rounded-full blur-3xl -mr-10 -mt-10 z-0"></div>
-        <div className="relative z-10">
-          <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/10 px-3 py-1 rounded-full backdrop-blur-md border border-black/10 dark:border-white/20 shadow-sm">
-              <Award className="text-planet-yellow" size={16} />
-              <span className="text-xs font-bold text-slate-800 dark:text-white">Proactive Member</span>
-            </div>
-            <div className="bg-planet-yellow text-black text-[10px] uppercase tracking-wider font-black px-2 py-1 rounded-lg shadow-sm">
-              2x Multiplier
-            </div>
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-widest text-white/70">Proactive Member</span>
           </div>
-          <h2 className="text-slate-800 dark:text-white text-sm font-medium mb-2">Paw Points Balance</h2>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-6xl tracking-tighter tabular-nums font-black text-[#fec708] [text-shadow:0px_4px_10px_rgba(254,199,8,0.4)] dark:[text-shadow:0px_4px_10px_rgba(0,0,0,0.6)]">{verifiedPoints.toLocaleString()}</span>
-            <span className="text-slate-800 dark:text-white font-bold uppercase tracking-widest text-sm ml-1 mb-2 drop-shadow-sm">pts</span>
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#fec708]" />
+            <span className="bg-gradient-to-r from-[#fec708] to-yellow-200 bg-clip-text text-transparent text-xs font-bold uppercase tracking-widest">
+              2x Multiplier
+            </span>
+          </div>
+        </div>
+        
+        {/* Asymmetric Floating Layout */}
+        <div className="flex flex-col items-start gap-1">
+          <h2 className="text-white/60 text-xs uppercase tracking-widest font-medium">Paw Points Balance</h2>
+          <div className="flex items-baseline gap-2">
+            <span className="text-6xl tracking-tighter tabular-nums font-black text-[#fec708] drop-shadow-sm">{verifiedPoints.toLocaleString()}</span>
+            <span className="text-white/70 font-bold uppercase tracking-widest text-sm mb-2">pts</span>
           </div>
           
           {pendingPoints > 0 && (
-            <div className="mt-3 mb-2 flex items-center gap-2">
-              <div className="bg-black/5 dark:bg-white/10 text-slate-800 dark:text-white font-bold tracking-tight px-2.5 py-1 rounded-full text-sm border border-black/10 dark:border-white/20 shadow-sm">
+            <div className="mt-1 mb-2 flex items-center gap-2">
+              <span className="text-white/70 font-bold tracking-wide text-xs">
                 + {pendingPoints.toLocaleString()} Pending
-              </div>
-              <span className="text-[10px] text-slate-600 dark:text-white font-medium max-w-[150px] leading-tight">
-                Points are verified after clinic confirmation via WhatsApp.
+              </span>
+              <span className="text-[10px] text-white/60 font-medium max-w-[150px] leading-tight">
+                Verified after clinic confirmation.
               </span>
             </div>
           )}
 
-          <div className="mt-8">
-            <div className="h-2.5 w-full bg-black/10 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+          <div className="mt-6 w-full">
+            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
               <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                className="h-full bg-gradient-to-r from-planet-yellow to-[#fec708] rounded-full"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: Math.min(1, verifiedPoints / 5000) }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                className="h-full bg-gradient-to-r from-[#fec708] to-yellow-200 rounded-full origin-left"
               />
             </div>
-            <p className="text-[10px] text-slate-800 dark:text-white font-bold mt-2 uppercase tracking-wider">
-              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} POINTS UNTIL YOUR NEXT FREE CONSULTATION!
+            <p className="text-[10px] text-white/60 font-medium mt-3 uppercase tracking-widest">
+              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} POINTS UNTIL YOUR NEXT FREE CONSULTATION
             </p>
           </div>
           
-          <div className="flex gap-3 mt-6">
+          <div className="flex gap-3 mt-8 w-full">
             <button 
               onClick={() => verifiedPoints >= 5000 && setActiveModal('redeem')}
               disabled={verifiedPoints < 5000}
-              className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
+              className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
                 verifiedPoints < 5000
-                  ? 'bg-black/5 text-slate-400 border border-black/10 dark:bg-white/5 dark:text-white/20 dark:border-white/10 cursor-not-allowed backdrop-blur-sm'
-                  : 'bg-gradient-to-r from-[#fec708] to-[#fec708] text-white shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] font-bold animate-pulse'
+                  ? 'bg-white/10 text-white/50 border border-white/10 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-[#fec708] to-[#fec708] text-zinc-900 border border-transparent shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] font-bold'
               }`}
             >
-              <Gift size={16} className={verifiedPoints < 5000 ? "text-slate-400 dark:text-white/20" : "text-white"} />
-              Claim Free Consult
+              {verifiedPoints < 5000 ? <Lock size={16} className="text-white/50" /> : <Gift size={16} className="text-zinc-900" />}
+              {verifiedPoints < 5000 ? 'Claim Free Consult' : 'Claim Free Consult'}
             </button>
           </div>
         </div>

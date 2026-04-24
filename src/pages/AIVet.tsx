@@ -37,7 +37,7 @@ export default function AIVet() {
 
         <div className="mt-12 flex flex-col gap-4">
           <div className="h-1 w-24 bg-amber-500 mx-auto rounded-full opacity-50" />
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          <p className="font-display text-xs font-bold text-slate-400 uppercase tracking-widest">
             Planet Animal Hospital
           </p>
         </div>

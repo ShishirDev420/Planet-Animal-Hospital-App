@@ -54,7 +54,7 @@ export default function ProfileSelection() {
       >
         <div className="flex flex-col items-center mb-12">
           <Logo size="lg" className="mb-6" />
-          <h1 className="text-3xl font-black tracking-tighter text-slate-900 uppercase dark:text-white/95">
+          <h1 className="text-3xl font-display font-black tracking-tighter text-slate-900 uppercase dark:text-white/95">
             Who's visiting today?
           </h1>
           <p className="text-slate-500 text-sm mt-2 dark:text-white/60">Select a profile to continue</p>
@@ -127,7 +127,7 @@ export default function ProfileSelection() {
           transition={{ delay: 0.5 }}
           className="mt-8 text-center"
         >
-          <p className="text-slate-400 text-xs font-medium uppercase tracking-[0.2em]">
+          <p className="font-display text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">
             Planet Animal Hospital & Wellness
           </p>
         </motion.div>

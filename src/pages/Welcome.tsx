@@ -86,7 +86,11 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     } catch (e: any) {
       console.error('Sign up failed', e);
       if (e.code === 'auth/email-already-in-use') {
-        setAuthError('This email is already registered. Please click "Sign In".');
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (signInErr: any) {
+          setAuthError('An account with this email already exists. Please verify your password and sign in.');
+        }
       } else {
         setAuthError(e.message || 'Authentication failed');
       }
@@ -220,8 +224,8 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
         {/* Cinematic Tagline */}
         <div className="text-center mb-1 sm:mb-2">
-          <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-extrabold text-4xl sm:text-5xl tracking-tighter mb-0 drop-shadow-sm">
-            20 Years of <span className="text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse" key={headerWord}>{headerWord}.</span>
+          <h1 className="font-display text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-medium text-4xl sm:text-5xl tracking-tighter mb-0 drop-shadow-sm">
+            20 Years of <span className="text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse font-bold" key={headerWord}>{headerWord}.</span>
           </h1>
           <div className="flex flex-row items-center justify-center gap-2 mt-4 mb-4 w-full">
             <span className="text-xs sm:text-sm font-bold text-white/50 tracking-[0.15em] uppercase whitespace-nowrap">
