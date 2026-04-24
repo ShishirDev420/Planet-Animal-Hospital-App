@@ -227,7 +227,7 @@ function DailyTip({ pet }: { pet: any }) {
 }
 
 function generateWhatsAppPayload(serviceName: string, petProfile: any) {
-  const message = `Hi Planet Animal Hospital! 👋\nI would like to book a visit.\n👤 Parent: ${petProfile?.parentName || 'Pet Parent'}\n🐾 Pet: ${petProfile?.name || 'Pet'} (Dog - ${petProfile?.breed || 'Unknown'}, Age ${petProfile?.age || 'Unknown'})\n🏥 Requested Service: ${serviceName}`;
+  const message = `Hi Planet Animal Hospital!\nI would like to book a visit.\n👤 Parent: ${petProfile?.parentName || 'Pet Parent'}\n🐾 Pet: ${petProfile?.name || 'Pet'} (Dog - ${petProfile?.breed || 'Unknown'}, Age ${petProfile?.age || 'Unknown'})\n🏥 Requested Service: ${serviceName}`;
   return 'https://wa.me/919004290923?text=' + encodeURIComponent(message);
 }
 
@@ -480,7 +480,7 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <h1 className="text-2xl font-display font-bold tracking-tight dark:text-white/90">Hi, {petProfile?.parentName || "Pet Parent"} 👋</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight dark:text-white/90">Hi, {petProfile?.parentName || "Pet Parent"}</h1>
           <p className="text-slate-500 text-sm dark:text-white/60">Let's keep {petProfile?.name || 'your pet'} healthy today.</p>
           <DailyTip pet={petProfile} />
         </div>

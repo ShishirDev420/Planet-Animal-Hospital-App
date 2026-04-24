@@ -148,13 +148,17 @@ export default function AIVet() {
         },
         body: JSON.stringify({
           inputs: [text],
-          target_language_code: "hi-IN",
-          speaker: "arohi", 
+          target_language_code: "en-IN",
+          speaker: "priya", 
           model: "bulbul:v3"
         })
       });
 
-      if (!ttsResponse.ok) throw new Error("Sarvam TTS API Failed");
+      if (!ttsResponse.ok) {
+        const errorText = await ttsResponse.text();
+        console.error("Sarvam Error:", errorText);
+        throw new Error("Sarvam TTS API Failed: " + errorText);
+      }
 
       const data = await ttsResponse.json();
       if (!data.audios || data.audios.length === 0) throw new Error("No audio returned");
