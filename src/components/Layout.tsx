@@ -6,6 +6,9 @@ import SplashScreen from './SplashScreen';
 export default function Layout() {
   return (
     <div className="h-screen w-screen bg-slate-50 text-black/90 font-sans relative overflow-hidden flex justify-center dark:bg-[#071912] dark:text-white/90">
+      {/* Noise Overlay for Anti-Banding */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iMC4xIi8+Cjwvc3ZnPg==')] opacity-20 mix-blend-overlay pointer-events-none z-0"></div>
+      
       <SplashScreen />
       {/* Background Blobs for Glassmorphism - Fixed to prevent scroll flickering */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
