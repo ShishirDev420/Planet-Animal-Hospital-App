@@ -22,15 +22,15 @@ export default function ProfileSelection() {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            const userName = data.displayName && data.displayName !== 'null' ? data.displayName : 'Pet Parent';
-            const petName = data.petName || 'Pet';
+            const userName = auth.currentUser.displayName || data.parentName || data.displayName || 'User';
+            const petName = data.petName || 'Onyx';
             setProfileName(`${userName} & ${petName}`);
           } else {
-            setProfileName('Pet Parent & Pet');
+            setProfileName(`${auth.currentUser.displayName || 'User'} & Onyx`);
           }
         } catch (e) {
           console.error("Error fetching profile", e);
-          setProfileName('Pet Parent & Pet');
+          setProfileName(`${auth.currentUser?.displayName || 'User'} & Onyx`);
         }
       }
     };

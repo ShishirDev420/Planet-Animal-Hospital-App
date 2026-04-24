@@ -4,13 +4,14 @@ import { ArrowLeft, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleGenAI } from '@google/genai';
 
-const SYSTEM_PROMPT = `You are an empathetic, knowledgeable, and incredibly friendly AI veterinarian assistant exclusively for Planet Animal Hospital. Respond in a warm, highly realistic, conversational tone.
-CRITICAL RULES: 
-1. Language: Your absolute default language is English. You may greet with a polite 'Namaste', but you MUST NOT assume the user speaks Hindi. Only switch to Hindi or Hinglish IF AND ONLY IF the user explicitly speaks to you in that language first. Always mirror the user's language.
-2. Operating Hours: 10 AM to 10 PM. 
-3. Emergencies: Offer emergency services during our hours. For extreme emergencies outside these hours, route the pet parent to the nearest 24/7 clinic in Thane, Maharashtra. 
-4. Contextual Awareness: Utilize any scanned prescription data or medical records provided. Refuse non-emergency assistance for clinics other than Planet Animal Hospital.
-5. Extreme Conciseness: NEVER ramble. Keep responses punchy, short, and highly conversational, exactly like a real phone call. Ask ONE clarifying question at a time. Prioritize triage.`;
+const SYSTEM_PROMPT = `You are an expert, highly realistic veterinarian for Planet Animal Hospital (Thane).
+CRITICAL RULES:
+1. Tone & Behavior: You are a real doctor. Cut the BS. Be direct, authoritative, and straight to the point.
+2. Humor vs. Seriousness: Use a subtle slice of humor ONLY if the pet is healthy and the context is light. If there is ANY medical issue, be 100% serious and focused on rapid triage.
+3. No Disclaimers: DO NOT constantly remind the user you are an AI or 'not a real vet'. Act the part with absolute confidence.
+4. Web Search: Use your Google Search tool to verify medical facts, toxins, or local 24/7 emergency clinics in Thane if needed.
+5. Latency Reduction (Extreme Conciseness): Speak in 1 to 2 short sentences maximum. Long paragraphs cause voice generation delays. Ask ONE critical diagnostic question at a time.
+6. Language: Default to English. Mirror Hinglish only if the user initiates.`;
 
 declare global {
   interface Window {
@@ -148,9 +149,8 @@ export default function AIVet() {
         body: JSON.stringify({
           inputs: [text],
           target_language_code: "hi-IN",
-          speaker: "priya", 
-          model: "bulbul:v3",
-          pace: 1.15
+          speaker: "arohi", 
+          model: "bulbul:v3"
         })
       });
 
@@ -249,6 +249,7 @@ export default function AIVet() {
         contents,
         config: {
           systemInstruction: SYSTEM_PROMPT,
+          tools: [{ googleSearch: {} }]
         }
       });
       
@@ -372,21 +373,12 @@ export default function AIVet() {
           onClick={handleCallToggle}
           className={`pointer-events-auto group relative flex items-center justify-center gap-3 transition-all duration-300 rounded-full px-6 py-4 font-display tracking-tight ${
             isCallActive
-              ? 'bg-red-500/20 backdrop-blur-xl border border-red-500/50 text-red-500 shadow-[0_0_30px_rgba(239,68,68,0.2)]'
+              ? 'bg-red-500/10 backdrop-blur-xl border border-red-500/30 text-red-500'
               : 'bg-white/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_0_30px_rgba(254,199,8,0.2)] hover:bg-white/15'
           }`}
         >
-          {/* Call Active Ripple */}
-          {isCallActive && (
-            <motion.div 
-              animate={{ scale: [1, 1.5, 2], opacity: [0.5, 0, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
-              className="absolute inset-0 rounded-full bg-red-500/20"
-            />
-          )}
-          
-          <Mic className={`w-6 h-6 z-10 ${isCallActive ? 'animate-pulse text-red-400' : ''}`} />
-          <span className={`font-bold text-lg z-10 ${isCallActive ? 'text-red-400' : ''}`}>
+          <Mic className={`w-6 h-6 z-10 ${isCallActive ? 'text-red-500' : ''}`} />
+          <span className={`font-bold text-lg z-10 ${isCallActive ? 'text-red-500' : ''}`}>
             {isCallActive ? 'End Call' : 'Start Call'}
           </span>
         </motion.button>
