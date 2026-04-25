@@ -10,6 +10,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [headerWord, setHeaderWord] = useState('Love');
   const [needsOnboarding, setNeedsOnboarding] = useState(initialOnboarding);
@@ -57,40 +58,22 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSignIn = async (e?: React.MouseEvent) => {
+  const onSubmit = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     setIsEmailLoading(true);
     setAuthError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // App.tsx uses onAuthStateChanged to handle routing and intercept
-    } catch (e: any) {
-      console.error('Sign in failed', e);
-      if (e.code === 'auth/invalid-credential') {
-        setAuthError('Invalid credentials. If this is a new test account, please click "Sign Up" instead.');
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
       } else {
-        setAuthError(e.message || 'Authentication failed');
+        await signInWithEmailAndPassword(auth, email, password);
       }
-    } finally {
-      setIsEmailLoading(false);
-    }
-  };
-
-  const handleSignUp = async (e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    setIsEmailLoading(true);
-    setAuthError('');
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // App.tsx uses onAuthStateChanged to intercept into onboarding
     } catch (e: any) {
-      console.error('Sign up failed', e);
-      if (e.code === 'auth/email-already-in-use') {
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-        } catch (signInErr: any) {
-          setAuthError('An account with this email already exists. Please verify your password and sign in.');
-        }
+      console.error('Auth failed', e);
+      if (e.code === 'auth/invalid-credential') {
+        setAuthError("Incorrect email/password, or account doesn't exist. Please check your details or Sign Up.");
+      } else if (e.code === 'auth/email-already-in-use') {
+        setAuthError("An account with this email already exists. Please verify your password and sign in.");
       } else {
         setAuthError(e.message || 'Authentication failed');
       }
@@ -164,54 +147,21 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
   return (
     <div className="fixed inset-0 w-full h-full overflow-y-auto overflow-x-hidden z-10 bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+      <style>{`
+        @keyframes fluid-drift {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+      `}</style>
       
       {/* 🔮 THE LOCKED ORB MOAT */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="noise-overlay" />
-        <motion.div 
-          className="absolute top-[-10%] left-[-10%] w-[35rem] h-[35rem] rounded-full opacity-20 gpu-layer animate-[pulse_8s_cubic-bezier(0.4,0,0.6,1)_infinite]" 
-          style={{ 
-            background: 'radial-gradient(circle at center, rgba(66, 133, 244, 0.4) 0%, rgba(66, 133, 244, 0.1) 40%, transparent 80%)',
-            filter: 'blur(120px)',
-            mixBlendMode: 'plus-lighter',
-            willChange: 'transform'
-          }} 
-          animate={{ x: [0, 120, -60, 0], y: [0, -60, 120, 0], scale: [1, 1.15, 0.9, 1] }} 
-          transition={{ duration: 25, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
-        />
-        <motion.div 
-          className="absolute top-[15%] right-[-10%] w-[30rem] h-[30rem] rounded-full opacity-20 gpu-layer animate-[pulse_8s_cubic-bezier(0.4,0,0.6,1)_infinite]" 
-          style={{ 
-            background: 'radial-gradient(circle at center, rgba(254, 199, 8, 0.4) 0%, rgba(254, 199, 8, 0.1) 45%, transparent 85%)',
-            filter: 'blur(120px)',
-            mixBlendMode: 'plus-lighter',
-            willChange: 'transform'
-          }} 
-          animate={{ x: [0, -140, 100, 0], y: [0, 110, -90, 0], scale: [1, 1.25, 0.85, 1] }} 
-          transition={{ duration: 28, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
-        />
-        <motion.div 
-          className="absolute bottom-[-15%] left-[5%] w-[40rem] h-[40rem] rounded-full opacity-15 gpu-layer animate-[pulse_8s_cubic-bezier(0.4,0,0.6,1)_infinite]" 
-          style={{ 
-            background: 'radial-gradient(circle at center, rgba(52, 168, 83, 0.4) 0%, rgba(52, 168, 83, 0.1) 50%, transparent 90%)',
-            filter: 'blur(120px)',
-            mixBlendMode: 'plus-lighter',
-            willChange: 'transform'
-          }} 
-          animate={{ x: [0, 180, -120, 0], y: [0, -110, 60, 0], scale: [1, 1.1, 0.95, 1] }} 
-          transition={{ duration: 32, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
-        />
-        <motion.div 
-          className="absolute top-[35%] left-[35%] w-[25rem] h-[25rem] rounded-full opacity-15 gpu-layer animate-[pulse_8s_cubic-bezier(0.4,0,0.6,1)_infinite]" 
-          style={{ 
-            background: 'radial-gradient(circle at center, rgba(234, 67, 53, 0.4) 0%, rgba(234, 67, 53, 0.1) 40%, transparent 80%)',
-            filter: 'blur(120px)',
-            mixBlendMode: 'plus-lighter',
-            willChange: 'transform'
-          }} 
-          animate={{ x: [0, -100, 130, 0], y: [0, 90, -140, 0], scale: [1, 1.4, 0.75, 1] }} 
-          transition={{ duration: 35, repeat: Infinity, ease: "linear", repeatType: "loop" }} 
-        />
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#34A853]/30 rounded-full blur-[120px] mix-blend-screen" style={{ animation: 'fluid-drift 11s infinite alternate ease-in-out' }}></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#4285F4]/30 rounded-full blur-[120px] mix-blend-screen" style={{ animation: 'fluid-drift 13s infinite alternate-reverse ease-in-out' }}></div>
+        <div className="absolute top-[20%] left-[20%] w-[50%] h-[50%] bg-[#fec708]/20 rounded-full blur-[120px] mix-blend-screen" style={{ animation: 'fluid-drift 17s infinite alternate ease-in-out' }}></div>
       </div>
 
       <div className="flex flex-col min-h-full w-full pb-8">
@@ -342,7 +292,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           ) : (
             <>
               <div className="space-y-3">
-                {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
+                {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md">{authError}</p>}
                 <div className="relative group">
                   <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
                   <label htmlFor="email" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Email</label>
@@ -355,15 +305,21 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
               <div className="space-y-4 pt-3">
                 <button 
-                  onClick={handleSignIn} 
+                  onClick={onSubmit} 
                   disabled={isEmailLoading}
                   className="w-full bg-[#fec708] hover:bg-[#e0b006] text-black font-heading font-bold uppercase tracking-widest py-3.5 px-4 rounded-xl transition-all duration-300 ease-out shadow-[0_0_15px_rgba(254,199,8,0.2)] hover:shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center cursor-pointer"
                 >
-                  Enter the Clinic
+                  {isSignUp ? 'Create Account' : 'Enter the Clinic'}
                 </button>
                 <div className="flex justify-between w-full px-1">
-                  <button type="button" onClick={handleForgotPassword} className="text-xs font-body font-bold text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer tracking-wide">Forgot Password?</button>
-                  <button type="button" onClick={handleSignUp} className="text-xs font-body font-bold text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer tracking-wide">Create an Account</button>
+                  {isSignUp ? (
+                    <div></div>
+                  ) : (
+                    <button type="button" onClick={handleForgotPassword} className="text-xs font-body font-bold text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer tracking-wide">Forgot Password?</button>
+                  )}
+                  <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-xs font-body font-bold text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer tracking-wide">
+                    {isSignUp ? 'Sign In Instead' : 'Create an Account'}
+                  </button>
                 </div>
                 
                 <div className="relative flex items-center py-2">
