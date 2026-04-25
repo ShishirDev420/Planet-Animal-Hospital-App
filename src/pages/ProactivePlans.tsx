@@ -42,17 +42,17 @@ export default function ProactivePlans() {
             <Shield size={14} />
             Preventative Care
           </div>
-          <h1 className="text-3xl font-black tracking-tight leading-tight mb-4 dark:text-white/95">
+          <h1 className="text-3xl font-heading font-extrabold tracking-tight leading-tight mb-4 text-white drop-shadow-md">
             Stop emergencies <br/>
             <span className="text-[#fec708]">before they start.</span>
           </h1>
-          <p className="text-slate-600 text-sm leading-relaxed mb-6 dark:text-white/60">
+          <p className="font-body font-medium text-slate-200 text-sm leading-relaxed mb-6">
             The 'Domino Effect' in pet health is real. A skipped proactive checkup or biannual blood test can lead to hidden infections, which can lead to organ stress. Our proactive plans are designed to catch the small things before they become heartbreaking—and expensive—emergencies.
           </p>
-          <div className="glass p-4 rounded-2xl border-l-4 border-l-planet-yellow dark:bg-neutral-900 dark:border-white/10">
-            <p className="text-sm font-medium text-slate-800 dark:text-white/90">
+          <div className="glass p-5 rounded-2xl border-l-4 border-l-planet-yellow dark:bg-neutral-900 dark:border-white/10">
+            <p className="text-sm font-medium font-body text-slate-200">
               <Zap className="inline text-planet-yellow mr-1" size={16}/>
-              All plans instantly unlock the <strong className="text-black dark:text-white">2x Points Multiplier</strong> for every visit.
+              All plans instantly unlock the <strong className="text-white">2x Points Multiplier</strong> for every visit.
             </p>
           </div>
         </motion.div>
@@ -133,18 +133,18 @@ function PlanCard({ title, price, period, description, features, isPopular, isEl
       )}
       {/* Wrapping content in relative z-10 to stay above background */}
       <div className="relative z-10">
-        <h3 className={`text-xl font-bold mb-1 ${isPopular ? 'text-white pt-2' : 'text-slate-800 dark:text-white/95'}`}>{title}</h3>
-        <p className={`text-sm mb-4 ${isPopular ? 'text-slate-300' : 'text-slate-500 dark:text-white/60'}`}>{description}</p>
+        <h3 className={`font-heading font-bold text-xl mb-1 ${isPopular ? 'text-white pt-2' : 'text-slate-800 dark:text-white'}`}>{title}</h3>
+        <p className={`font-body font-medium text-sm mb-4 ${isPopular ? 'text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{description}</p>
         <div className="flex items-end gap-1 mb-6">
-          <span className="text-4xl font-black tracking-tighter">{price}</span>
-          <span className={`font-medium pb-1 ${isPopular ? 'text-slate-400' : 'text-slate-500 dark:text-white/50'}`}>{period}</span>
+          <span className="font-heading text-4xl font-black tracking-tighter">{price}</span>
+          <span className={`font-medium pb-1 font-body ${isPopular ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400'}`}>{period}</span>
         </div>
 
         <ul className="space-y-3 mb-8">
           {features.map((f: string, i: number) => (
-            <li key={i} className="flex items-start gap-3 text-sm">
+            <li key={i} className="flex items-start gap-3 text-sm font-body font-medium">
               <CheckCircle2 className="shrink-0 text-[#fec708]" size={18} />
-              <span className={`${isPopular ? 'text-white/90' : 'text-slate-700'} dark:text-white/90`}>{f}</span>
+              <span className={`${isPopular ? 'text-slate-200' : 'text-slate-700 dark:text-slate-200'}`}>{f}</span>
             </li>
           ))}
         </ul>

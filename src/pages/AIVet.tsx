@@ -313,8 +313,8 @@ export default function AIVet() {
           <ArrowLeft size={20} />
         </button>
         <div className="flex flex-col items-center pointer-events-none">
-          <h1 className="font-display tracking-tight text-white/90 font-bold text-lg">AI Veterinarian</h1>
-          <span className="text-[10px] font-bold text-[#fec708] uppercase tracking-[0.2em] mt-0.5">Planet Animal Hospital</span>
+          <h1 className="font-heading font-extrabold tracking-tight text-white drop-shadow-md text-lg">AI Veterinarian</h1>
+          <span className="text-[10px] font-bold font-body text-[#fec708] uppercase tracking-[0.2em] mt-0.5">Planet Animal Hospital</span>
         </div>
         <div className="w-10 h-10" /> {/* Spacer */}
       </header>
@@ -356,11 +356,11 @@ export default function AIVet() {
                     msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm'
                   }`}>
                     {msg.role === 'ai' && (
-                      <h4 className="font-display tracking-tight text-[#fec708] text-xs font-bold uppercase mb-2">
+                      <h4 className="font-heading tracking-tight text-[#fec708] text-xs font-bold uppercase mb-2">
                         Planet Animal AI
                       </h4>
                     )}
-                    <p className="text-white/95 text-sm leading-relaxed font-sans">{msg.content}</p>
+                    <p className="font-body font-medium text-slate-200 text-sm leading-relaxed">{msg.content}</p>
                   </div>
                 </motion.div>
               ))}
@@ -375,14 +375,14 @@ export default function AIVet() {
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={handleCallToggle}
-          className={`pointer-events-auto group relative flex items-center justify-center gap-3 transition-all duration-300 rounded-full px-6 py-4 font-display tracking-tight ${
+          className={`pointer-events-auto group relative flex items-center justify-center gap-3 transition-all duration-300 rounded-full px-6 py-4 tracking-tight ${
             isCallActive
               ? 'bg-red-500/10 backdrop-blur-xl border border-red-500/30 text-red-500'
               : 'bg-white/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_0_30px_rgba(254,199,8,0.2)] hover:bg-white/15'
           }`}
         >
           <Mic className={`w-6 h-6 z-10 ${isCallActive ? 'text-red-500' : ''}`} />
-          <span className={`font-bold text-lg z-10 ${isCallActive ? 'text-red-500' : ''}`}>
+          <span className={`font-heading font-bold text-lg z-10 ${isCallActive ? 'text-red-500' : ''}`}>
             {isCallActive ? 'End Call' : 'Start Call'}
           </span>
         </motion.button>

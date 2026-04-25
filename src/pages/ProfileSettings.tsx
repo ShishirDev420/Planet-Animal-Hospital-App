@@ -111,7 +111,7 @@ export default function ProfileSettings() {
         >
           <ArrowLeft size={20} className="text-slate-600 dark:text-white/90" />
         </button>
-        <h1 className="text-xl font-black tracking-tight text-slate-800 dark:text-white/95">Profile Settings</h1>
+        <h1 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Profile Settings</h1>
         <div className="w-11" /> {/* Spacer */}
       </header>
 
@@ -152,7 +152,7 @@ export default function ProfileSettings() {
             className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2"
           >
             <div className="bg-slate-100 dark:bg-white/10 p-2 rounded-full text-slate-600 dark:text-white/90 border border-transparent dark:border-white/5"><Camera size={16} /></div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Edit {profile?.parentName || "Parent"}'s Photo</span>
+            <span className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-300">Edit {profile?.parentName || "Parent"}'s Photo</span>
           </motion.button>
           <motion.button 
             onClick={() => petFileInputRef.current?.click()}
@@ -162,7 +162,7 @@ export default function ProfileSettings() {
             className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2"
           >
             <div className="bg-planet-yellow/20 p-2 rounded-full text-planet-yellow"><Camera size={16} /></div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Edit {profile?.name || "Pet"}'s Photo</span>
+            <span className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-300">Edit {profile?.name || "Pet"}'s Photo</span>
           </motion.button>
         </div>
       </motion.div>
@@ -175,28 +175,28 @@ export default function ProfileSettings() {
       >
         {/* Account Details */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">Account Details</h2>
+          <h2 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm border-b border-white/10 pb-2 px-2">Account Details</h2>
           <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                 <User size={16} /> Full Name
               </label>
               <input 
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium placeholder-gray-400"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                 <Mail size={16} /> Email Address
               </label>
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium placeholder-gray-400"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
               />
             </div>
           </div>
@@ -204,39 +204,39 @@ export default function ProfileSettings() {
 
         {/* Pet's Profile */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">{profile?.name || "Pet"}'s Profile</h2>
+          <h2 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm border-b border-white/10 pb-2 px-2">{profile?.name || "Pet"}'s Profile</h2>
           <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-5">
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                 <Dog size={16} /> Breed
               </label>
               <input 
                 type="text" 
                 value={profile?.breed || "Unknown"}
                 disabled
-                className="w-full bg-slate-100/50 dark:bg-white/5 border border-transparent dark:border-white/5 rounded-2xl py-3 px-4 outline-none text-slate-500 dark:text-white/40 font-medium cursor-not-allowed shadow-inner"
+                className="w-full bg-slate-100/50 dark:bg-white/5 border border-transparent dark:border-white/5 rounded-2xl py-3 px-4 outline-none text-slate-500 dark:text-slate-300 font-body font-medium cursor-not-allowed shadow-inner"
               />
             </div>
             <div className="flex gap-4">
               <div className="space-y-2 flex-1">
-                <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+                <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                   Age
                 </label>
                 <input 
                   type="text" 
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
-                  className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium placeholder-gray-400"
+                  className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
                 />
               </div>
               <div className="space-y-2 flex-1">
-                <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+                <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                   Gender
                 </label>
                 <select 
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium appearance-none placeholder-gray-400"
+                  className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium appearance-none placeholder-gray-400"
                 >
                   <option value="">Select</option>
                   <option value="Male">Male</option>
@@ -246,7 +246,7 @@ export default function ProfileSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                 <Activity size={16} className="text-teal-500" /> Current Weight
               </label>
               <div className="flex w-full items-center gap-3">
@@ -254,7 +254,7 @@ export default function ProfileSettings() {
                   type="number" 
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  className="flex-1 min-w-0 bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-black text-slate-800 dark:text-white placeholder-gray-400"
+                  className="flex-1 min-w-0 bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-heading font-bold text-slate-800 dark:text-slate-100 placeholder-gray-400"
                 />
                 <div className="flex shrink-0 bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 rounded-2xl p-1 shadow-sm">
                   <button 
@@ -274,13 +274,13 @@ export default function ProfileSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                 <Utensils size={16} className="text-orange-500" /> Dietary Preferences
               </label>
               <select 
                 value={diet}
                 onChange={(e) => setDiet(e.target.value)}
-                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium appearance-none placeholder-gray-400"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium appearance-none placeholder-gray-400"
               >
                 <option value="None">None</option>
                 <option value="High-Protein Kibble">High-Protein Kibble</option>
@@ -291,7 +291,7 @@ export default function ProfileSettings() {
             </div>
             
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                 <Stethoscope size={16} className="text-red-500" /> Medical History
               </label>
               <textarea 
@@ -299,12 +299,12 @@ export default function ProfileSettings() {
                 onChange={(e) => setMedicalHistory(e.target.value)}
                 placeholder="e.g., allergies, chronic conditions..."
                 rows={3}
-                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium resize-none placeholder-gray-400"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium resize-none placeholder-gray-400"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
                 <Stethoscope size={16} className="text-blue-500" /> Surgical History
               </label>
               <textarea 
@@ -312,7 +312,7 @@ export default function ProfileSettings() {
                 onChange={(e) => setSurgicalHistory(e.target.value)}
                 placeholder="e.g., ACL repair, spay/neuter..."
                 rows={3}
-                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium resize-none placeholder-gray-400"
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium resize-none placeholder-gray-400"
               />
             </div>
           </div>
@@ -320,14 +320,14 @@ export default function ProfileSettings() {
 
         {/* App Preferences */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-lg font-black tracking-tight text-slate-800 px-2 dark:text-white/95">App Preferences</h2>
+          <h2 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm border-b border-white/10 pb-2 px-2">App Preferences</h2>
           <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-slate-700 flex items-center gap-2 dark:text-white/95">
+                <h4 className="font-heading font-bold text-slate-800 flex items-center gap-2 dark:text-white">
                   {draftTheme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-planet-yellow" />} Dark Mode
                 </h4>
-                <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Switch between light and dark themes.</p>
+                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1">Switch between light and dark themes.</p>
               </div>
               <Toggle isOn={draftTheme === 'dark'} onToggle={() => setDraftTheme(prev => prev === 'light' ? 'dark' : 'light')} />
             </div>
@@ -336,10 +336,10 @@ export default function ProfileSettings() {
 
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-slate-700 flex items-center gap-2 dark:text-white/95">
+                <h4 className="font-heading font-bold text-slate-800 flex items-center gap-2 dark:text-white">
                   <Bell size={16} className="text-indigo-500" /> Appointment & Health Reminders
                 </h4>
-                <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Get notified 24h before visits.</p>
+                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1">Get notified 24h before visits.</p>
               </div>
               <Toggle isOn={reminders} onToggle={() => setReminders(!reminders)} />
             </div>
@@ -348,8 +348,8 @@ export default function ProfileSettings() {
             
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-slate-700 dark:text-white/95">Marketing & Promotions</h4>
-                <p className="text-xs text-slate-500 mt-1 dark:text-white/60">Promos and new proactive plans.</p>
+                <h4 className="font-heading font-bold text-slate-800 dark:text-white">Marketing & Promotions</h4>
+                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1">Promos and new proactive plans.</p>
               </div>
               <Toggle isOn={marketing} onToggle={() => setMarketing(!marketing)} />
             </div>
@@ -364,7 +364,7 @@ export default function ProfileSettings() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleSave}
-          className={`w-full max-w-md mx-auto py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-all ${isSaved ? 'bg-emerald-500 text-white dark:bg-emerald-500 dark:text-white shadow-[0_0_30px_rgba(16,185,129,0.3)]' : saveError ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'bg-slate-900 text-white dark:bg-white dark:text-black'} ${isSaving ? 'opacity-80' : ''}`}
+          className={`w-full max-w-md mx-auto py-5 rounded-2xl font-heading font-bold tracking-wide text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-all ${isSaved ? 'bg-emerald-500 text-white dark:bg-emerald-500 dark:text-white shadow-[0_0_30px_rgba(16,185,129,0.3)]' : saveError ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'bg-slate-900 text-white dark:bg-white dark:text-black'} ${isSaving ? 'opacity-80' : ''}`}
         >
           {isSaving ? (
              <>
@@ -396,7 +396,7 @@ export default function ProfileSettings() {
               console.error('Logout failed', e);
             }
           }}
-          className="w-full max-w-md mx-auto py-3 rounded-xl border border-red-200 text-red-600 font-bold bg-red-50/50 hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
+          className="w-full max-w-md mx-auto py-3 rounded-xl border border-red-200 text-red-600 font-heading font-bold tracking-wide bg-red-50/50 hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
         >
           <LogOut size={18} />
           Log Out

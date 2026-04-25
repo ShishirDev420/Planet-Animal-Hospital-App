@@ -150,8 +150,8 @@ export default function Roadmap() {
           <div className="w-24 h-24 bg-[#fec708]/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(254,199,8,0.3)] border border-[#fec708]/50">
             <Lock className="w-10 h-10 text-[#fec708]" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">Profile Incomplete</h2>
-          <p className="text-slate-600 dark:text-white/80 font-medium mb-8 leading-relaxed">
+          <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mb-3">Profile Incomplete</h2>
+          <p className="font-body font-medium text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
             A complete profile is required to unlock the personalized Longevity Roadmap for your pet.
           </p>
           <button 
@@ -184,8 +184,8 @@ export default function Roadmap() {
                         <Sparkles className="w-6 h-6 text-black" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white">Longevity Roadmap</h3>
-                        <p className="text-slate-500 dark:text-white/60 text-sm font-medium">Personalized health timeline</p>
+                        <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">Longevity Roadmap</h3>
+                        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm">Personalized health timeline</p>
                       </div>
                     </div>
                     
@@ -248,7 +248,7 @@ export default function Roadmap() {
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fec708]/20 text-[#fec708] text-xs font-bold mb-2 border border-[#fec708]/50 shadow-sm">
                           <Sparkles className="w-3 h-3" /> Roadmap Generated
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white">{formData.name}'s Plan</h2>
+                        <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">{formData.name}'s Plan</h2>
                       </div>
                       <button onClick={resetForm} className="p-2 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white bg-white/50 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200 dark:border-white/[0.08] rounded-full hover:bg-white dark:hover:bg-white/[0.08] transition-all shadow-sm" title="Start Over">
                         <RefreshCw size={18} />
@@ -258,12 +258,12 @@ export default function Roadmap() {
                     <div className="text-left text-slate-700 dark:text-white/90 leading-relaxed font-sans">
                       <Markdown
                         components={{
-                          h1: ({node, ...props}) => <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-8 mb-4 tracking-tight" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-3 tracking-tight border-b border-slate-200 dark:border-white/[0.08] pb-2" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-lg font-bold text-[#fec708] mt-6 mb-2 uppercase tracking-wide text-sm" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-4 text-base" {...props} />,
+                          h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-8 mb-4 tracking-tight" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="font-heading font-bold text-xl text-slate-900 dark:text-white mt-8 mb-3 tracking-tight border-b border-slate-200 dark:border-white/[0.08] pb-2" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="font-heading font-bold text-[#fec708] mt-6 mb-2 uppercase tracking-wide text-sm" {...props} />,
+                          p: ({node, ...props}) => <p className="font-body text-base mb-4 text-slate-700 dark:text-slate-200" {...props} />,
                           ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 space-y-2 opacity-90" {...props} />,
-                          li: ({node, ...props}) => <li className="text-slate-700 dark:text-white/90" {...props} />,
+                          li: ({node, ...props}) => <li className="font-body text-slate-700 dark:text-slate-200" {...props} />,
                           strong: ({node, ...props}) => <strong className="font-bold text-slate-900 dark:text-white" {...props} />,
                           a: ({node, ...props}) => (
                             <a 

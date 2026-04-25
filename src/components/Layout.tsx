@@ -31,7 +31,7 @@ export default function Layout() {
           <NavItem to="/plans" icon={<ShieldPlus size={24} />} label="Plans" />
           <NavItem to="/ai" icon={<Bot size={24} />} label="AI Vet" />
           <NavItem to="/roadmap" icon={<Map size={24} />} label="Roadmap" />
-          <NavItem to="/adoption" icon={<HeartHandshake size={24} />} label="Adopt" />
+          <NavItem to="/adoption" icon={<HeartHandshake size={24} />} label="Donate" />
         </nav>
       </div>
     </div>

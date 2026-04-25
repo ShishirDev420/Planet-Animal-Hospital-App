@@ -17,6 +17,7 @@ import CreateProfile from './pages/CreateProfile';
 import ProfileSettings from './pages/ProfileSettings';
 import Roadmap from './pages/Roadmap';
 import Welcome from './pages/Welcome';
+import Adoption from './pages/Adoption';
 
 // Placeholders for other routes
 const Placeholder = ({ title }: { title: string }) => (
@@ -78,7 +79,7 @@ export default function App() {
                   <Route path="plans" element={<ProactivePlans />} />
                   <Route path="ai" element={<AIVet />} />
                   <Route path="roadmap" element={<Roadmap />} />
-                  <Route path="adoption" element={<Placeholder title="Adoption Community" />} />
+                  <Route path="adoption" element={<Adoption />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
               </>
