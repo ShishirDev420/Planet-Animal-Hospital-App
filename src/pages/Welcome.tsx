@@ -223,10 +223,22 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         </div>
 
         {/* Cinematic Tagline */}
-        <div className="text-center mb-1 sm:mb-2">
-          <h1 className="font-display text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 font-medium text-4xl sm:text-5xl tracking-tighter mb-0 drop-shadow-sm">
-            20 Years of <span className="text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse font-bold" key={headerWord}>{headerWord}.</span>
+        <div className="flex flex-col items-center justify-center text-center w-full mb-1 sm:mb-2">
+          <h1 className="font-heading font-extrabold tracking-tight drop-shadow-md text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 text-4xl sm:text-5xl mb-0">
+            20 Years of
           </h1>
+          <div className="relative w-full flex justify-center items-center h-[1.5em] text-[#fec708] font-heading font-extrabold text-4xl sm:text-5xl drop-shadow-[0_0_20px_rgba(254,199,8,0.8)]">
+            {headerWords.map((word) => (
+              <span
+                key={word}
+                className={`absolute w-full text-center inset-x-0 transition-opacity duration-1000 ease-in-out ${
+                  headerWord === word ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                {word}.
+              </span>
+            ))}
+          </div>
           <div className="flex flex-row items-center justify-center gap-2 mt-4 mb-4 w-full">
             <span className="text-xs sm:text-sm font-bold text-white/50 tracking-[0.15em] uppercase whitespace-nowrap">
               Now Powered by
@@ -262,7 +274,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
               style={{ willChange: 'transform, opacity, filter' }}
               className="flex flex-col items-center justify-center text-center w-full"
             >
-              <h3 className="text-white font-extrabold text-xl sm:text-2xl tracking-tighter mb-1 drop-shadow-sm">{benefits[activeBenefit].title}</h3>
+              <h3 className="font-heading font-extrabold tracking-tight drop-shadow-md text-white text-xl sm:text-2xl mb-1">{benefits[activeBenefit].title}</h3>
               <p className="text-white/70 font-medium text-xs sm:text-sm tracking-tight leading-relaxed max-w-[280px] mx-auto">{benefits[activeBenefit].desc}</p>
             </motion.div>
           </AnimatePresence>
@@ -275,54 +287,54 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           
           {needsOnboarding ? (
             <div className="space-y-4">
-              <h3 className="text-white font-bold text-lg text-center mb-4">Welcome! Who are we caring for?</h3>
+              <h3 className="font-heading font-bold text-white text-lg text-center mb-4">Welcome! Who are we caring for?</h3>
               {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
               
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Your Name (Pet Parent)</label>
-                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Your Name (Pet Parent)</label>
+                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Pet's Name</label>
-                  <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet's Name</label>
+                  <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Pet Type</label>
-                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet Type</label>
+                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
                     <option value="Dog" className="text-black">Dog</option>
                     <option value="Cat" className="text-black">Cat</option>
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Breed</label>
-                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Breed</label>
+                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Age</label>
-                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Age</label>
+                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Gender</label>
-                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Gender</label>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
                       <option value="Male" className="text-black">Male</option>
                       <option value="Female" className="text-black">Female</option>
                     </select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Weight (lbs/kg)</label>
-                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Weight (lbs/kg)</label>
+                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1 ml-1 uppercase tracking-wider">Additional Details (Unlock Roadmap)</label>
-                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all min-h-[80px]" />
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Additional Details (Unlock Roadmap)</label>
+                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all min-h-[80px]" />
                 </div>
               </div>
 
               <div className="pt-2">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={handleCompleteProfile} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-bold py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center">
+                <motion.button whileTap={{ scale: 0.95 }} onClick={handleCompleteProfile} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-heading font-bold uppercase tracking-widest py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center">
                   Enter the Clinic
                 </motion.button>
               </div>
@@ -332,12 +344,12 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
               <div className="space-y-3">
                 {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
                 <div className="relative group">
-                  <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-white placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
-                  <label htmlFor="email" className="absolute left-4 top-1 text-[10px] font-bold text-white/50 uppercase tracking-wider transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text user-select-none">Email</label>
+                  <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
+                  <label htmlFor="email" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Email</label>
                 </div>
                 <div className="relative group">
-                  <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-white placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Password" />
-                  <label htmlFor="password" className="absolute left-4 top-1 text-[10px] font-bold text-white/50 uppercase tracking-wider transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text user-select-none">Password</label>
+                  <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Password" />
+                  <label htmlFor="password" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Password</label>
                 </div>
               </div>
 
@@ -345,22 +357,22 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                 <button 
                   onClick={handleSignIn} 
                   disabled={isEmailLoading}
-                  className="w-full bg-[#fec708] hover:bg-[#e0b006] text-black font-extrabold py-3.5 px-4 rounded-xl transition-all duration-300 ease-out shadow-[0_0_15px_rgba(254,199,8,0.2)] hover:shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center cursor-pointer"
+                  className="w-full bg-[#fec708] hover:bg-[#e0b006] text-black font-heading font-bold uppercase tracking-widest py-3.5 px-4 rounded-xl transition-all duration-300 ease-out shadow-[0_0_15px_rgba(254,199,8,0.2)] hover:shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center cursor-pointer"
                 >
                   Enter the Clinic
                 </button>
                 <div className="flex justify-between w-full px-1">
-                  <button type="button" onClick={handleForgotPassword} className="text-xs font-medium text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer">Forgot Password?</button>
-                  <button type="button" onClick={handleSignUp} className="text-xs font-medium text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer">Create an Account</button>
+                  <button type="button" onClick={handleForgotPassword} className="text-xs font-body font-bold text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer tracking-wide">Forgot Password?</button>
+                  <button type="button" onClick={handleSignUp} className="text-xs font-body font-bold text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer tracking-wide">Create an Account</button>
                 </div>
                 
                 <div className="relative flex items-center py-2">
                   <div className="flex-grow border-t border-white/10"></div>
-                  <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-bold uppercase tracking-wider">OR</span>
+                  <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-heading font-bold uppercase tracking-widest">OR</span>
                   <div className="flex-grow border-t border-white/10"></div>
                 </div>
 
-                <motion.button whileTap={{ scale: 0.95 }} onClick={handleGoogleAuth} className="w-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-bold py-3.5 rounded-xl hover:bg-white/10 transition-all duration-300 ease-out flex items-center justify-center gap-2 cursor-pointer">
+                <motion.button whileTap={{ scale: 0.95 }} onClick={handleGoogleAuth} className="w-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-heading font-bold uppercase tracking-widest py-3.5 rounded-xl hover:bg-white/10 transition-all duration-300 ease-out flex items-center justify-center gap-3 cursor-pointer">
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
