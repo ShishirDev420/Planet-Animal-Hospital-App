@@ -8,10 +8,15 @@ export function usePetProfile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribeSnapshot: (() => void) | null = null;
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
       if (user) {
         const docRef = doc(db, 'users', user.uid);
-        const unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+        unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
             setProfile(docSnap.data());
           } else {
@@ -19,18 +24,19 @@ export function usePetProfile() {
           }
           setLoading(false);
         }, (err) => {
-          console.error(err);
+          console.error('onSnapshot error in usePetProfile:', err);
           setLoading(false);
         });
-
-        return () => unsubscribeSnapshot();
       } else {
         setProfile({});
         setLoading(false);
       }
     });
 
-    return () => unsubscribeAuth();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    };
   }, []);
 
   const updateProfile = async (updates: any) => {

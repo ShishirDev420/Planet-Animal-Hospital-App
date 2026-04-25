@@ -226,23 +226,32 @@ export default function Dashboard() {
   }, [petProfile]);
 
   useEffect(() => {
+    let unsubscribeDoc: (() => void) | null = null;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+        unsubscribeDoc = null;
+      }
       if (user) {
         setUserId(user.uid);
         const userDocRef = doc(db, 'users', user.uid);
-        const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
+        unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
             setVerifiedPoints(docSnap.data().pawPoints || 0);
           }
+        }, (err) => {
+           console.error('onSnapshot error in Dashboard:', err);
         });
         setIsAuthReady(true);
-        return () => unsubscribeDoc();
       } else {
         setUserId(null);
         setIsAuthReady(true);
       }
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubscribeDoc) unsubscribeDoc();
+    };
   }, []);
 
   const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
