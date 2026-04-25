@@ -269,10 +269,11 @@ export default function Dashboard() {
 
       await addDoc(collection(db, 'requests'), {
         userId: user.uid,
-        userName: user.displayName || 'Pet Parent',
-        petName: petNameStr,
-        service: serviceName,
-        pointsValue: pointsValue,
+        patient: petNameStr,
+        reason: serviceName,
+        date: "TBD",
+        time: "TBD",
+        points: pointsValue,
         status: 'pending',
         actionId: incentiveId,
         createdAt: serverTimestamp()
@@ -385,13 +386,13 @@ export default function Dashboard() {
 
     try {
       await addDoc(collection(db, 'requests'), {
-        userId: userId,
+        userId: auth.currentUser?.uid || userId,
         patient: petProfile?.name || 'Pet',
-        service: selectedService.name,
-        pointsValue: selectedService.points,
-        status: 'pending',
+        reason: selectedService.name,
         date: bookingDate,
         time: bookingTime,
+        points: selectedService.points,
+        status: 'pending',
         createdAt: serverTimestamp()
       });
     } catch (error) {
