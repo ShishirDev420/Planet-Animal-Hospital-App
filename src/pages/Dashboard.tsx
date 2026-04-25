@@ -202,30 +202,6 @@ function getPersonalizedIncentives(pet?: { name?: string, breed?: string, age?: 
   }));
 }
 
-function getDailyTip(pet?: { name?: string, breed?: string, age?: string | number, isSenior?: boolean }) {
-  if (!pet || !pet.name) return "Welcome to Planet Animal Hospital! Keep your pet healthy and active today.";
-  const currentSeason = 'Summer';
-  const breedLower = (pet.breed || '').toLowerCase();
-
-  if ((breedLower.includes('bully') || breedLower.includes('retriever')) && currentSeason === 'Summer') {
-    return `Summer is here! ☀️ Keep ${pet.name} hydrated and avoid walking on hot pavements during peak afternoon heat.`;
-  }
-  if (pet.isSenior) {
-    return `${pet.name} is in their golden years! Regular checkups are key to catching issues early.`;
-  }
-  return `Keep ${pet.name} hydrated and active today!`;
-}
-
-function DailyTip({ pet }: { pet: any }) {
-  const tip = getDailyTip(pet);
-  return (
-    <div className="flex gap-3 items-center mt-3 pl-1">
-      <div className="w-2 h-2 rounded-full bg-[#fec708] animate-pulse shrink-0" />
-      <p className="text-white/90 font-medium text-sm leading-snug">{tip}</p>
-    </div>
-  );
-}
-
 function generateWhatsAppPayload(serviceName: string, petProfile: any) {
   const message = `Hi Planet Animal Hospital!\nI would like to book a visit.\n👤 Parent: ${petProfile?.parentName || 'Pet Parent'}\n🐾 Pet: ${petProfile?.name || 'Pet'} (Dog - ${petProfile?.breed || 'Unknown'}, Age ${petProfile?.age || 'Unknown'})\n🏥 Requested Service: ${serviceName}`;
   return 'https://wa.me/919004290923?text=' + encodeURIComponent(message);
@@ -459,7 +435,7 @@ export default function Dashboard() {
             
           {/* Center Text Container */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0 w-max pointer-events-none whitespace-nowrap">
-            <span className="text-lg font-display font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95">PLANET ANIMAL</span>
+            <span className="text-lg font-heading font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95">PLANET ANIMAL</span>
             <span className="text-[10px] font-bold text-[#fec708] uppercase tracking-[0.25em] mt-0.5 dark:text-[#fec708]">HOSPITAL & WELLNESS</span>
           </div>
 
@@ -479,10 +455,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div>
-          <h1 className="text-2xl font-display font-bold tracking-tight dark:text-white/90">Hi, {petProfile?.parentName || "Pet Parent"}</h1>
-          <p className="text-slate-500 text-sm dark:text-white/60">Let's keep {petProfile?.name || 'your pet'} healthy today.</p>
-          <DailyTip pet={petProfile} />
+        <div className="mb-6">
+          <h2 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Hi, {petProfile?.parentName || 'Shishir'}</h2>
+          <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petProfile?.name || 'your pet'} healthy today.</p>
         </div>
       </header>
 
@@ -497,8 +472,8 @@ export default function Dashboard() {
         <div className="flex flex-col items-start gap-1 pt-4">
           <h2 className="text-white/60 text-xs uppercase tracking-widest font-medium">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2">
-            <span className="font-display tracking-tighter text-6xl tabular-nums font-black text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse">{verifiedPoints.toLocaleString()}</span>
-            <span className="text-white/70 font-bold uppercase tracking-widest text-sm mb-2">pts</span>
+             <span className="font-heading tracking-tighter text-6xl tabular-nums font-extrabold text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse">{verifiedPoints.toLocaleString()}</span>
+            <span className="font-heading text-[#fec708] font-extrabold uppercase tracking-widest text-sm mb-2 drop-shadow-[0_0_10px_rgba(254,199,8,0.6)]">pts</span>
           </div>
           
           {pendingPoints > 0 && (
@@ -545,7 +520,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h3 className="font-display tracking-tight text-white/90 text-xl font-bold mb-4">Quick Actions</h3>
+        <h3 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-4">
           <ActionCard 
             icon={<Calendar className="text-teal-500" />} 
@@ -565,18 +540,18 @@ export default function Dashboard() {
       {/* Upcoming */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-display tracking-tight text-white/90 text-xl font-bold">Upcoming for {petProfile?.name || 'your pet'}</h3>
-          <button className="text-planet-yellow text-sm font-bold flex items-center">View All <ChevronRight size={16}/></button>
+          <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Upcoming for {petProfile?.name || 'your pet'}</h3>
+          <button className="text-planet-yellow text-sm font-bold flex items-center font-body">View All <ChevronRight size={16}/></button>
         </div>
         <div className="space-y-3">
           {upcomingAppts.map((appt, idx) => (
-            <div key={idx} className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-4 flex items-center gap-4">
+            <div key={idx} className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex items-center gap-4">
               <div className="bg-teal-100 dark:bg-teal-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-xl shrink-0">
                 {appt.date}
               </div>
               <div>
-                <h4 className="font-display tracking-tight font-bold text-slate-800 dark:text-white/90">{appt.title}</h4>
-                <p className="text-sm text-slate-500 dark:text-white/60">Dr. Naveen • {appt.time}</p>
+                 <h4 className="font-heading font-bold text-white text-lg">{appt.title}</h4>
+                <p className="font-body font-medium text-slate-300 text-sm">Dr. Naveen • {appt.time}</p>
               </div>
             </div>
           ))}
@@ -586,7 +561,7 @@ export default function Dashboard() {
       {/* Ways to Earn Points */}
       <div className="pt-2 relative -mx-6">
         <div className="flex items-center gap-2 mb-4 px-6 relative z-10">
-          <h3 className="font-display tracking-tight text-white/90 text-xl font-bold">Ways to Earn Paw Points</h3>
+          <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Ways to Earn Paw Points</h3>
           <PawPrint className="w-5 h-5 text-[#fec708] fill-[#fec708]/20" />
         </div>
         
@@ -716,7 +691,7 @@ export default function Dashboard() {
               <div className="space-y-6 flex-1 overflow-y-auto pb-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                 {/* Step 1: Services */}
                 <div>
-                  <h3 className="text-gray-400 font-semibold tracking-widest text-xs uppercase mb-3">Step 1: Select Service</h3>
+                  <h3 className="text-slate-200 font-semibold tracking-widest text-xs uppercase mb-3">Step 1: Select Service</h3>
                   <div className="space-y-3">
                     {BOOKING_SERVICES.map((service) => {
                       const isSelected = selectedService?.id === service.id;
@@ -748,17 +723,17 @@ export default function Dashboard() {
 
                 {/* Step 2: Date & Time */}
                 <div>
-                  <h3 className="text-gray-400 font-semibold tracking-widest text-xs uppercase mb-3">Step 2: Date & Time</h3>
+                  <h3 className="text-slate-200 font-semibold tracking-widest text-xs uppercase mb-3">Step 2: Date & Time</h3>
                   <div className="space-y-4">
                     {/* Custom Inline Calendar Grid */}
                     <div className="bg-white/40 border border-white/30 rounded-2xl shadow-sm backdrop-blur-xl p-4">
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-900 font-bold text-lg">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                        <span className="text-white font-bold text-lg">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
                         <Calendar className="text-slate-500 w-5 h-5" />
                       </div>
                       <div className="grid grid-cols-7 gap-1 mb-2">
                         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                          <div key={i} className="text-center text-xs font-semibold text-gray-400">{day}</div>
+                          <div key={i} className="text-center text-xs font-semibold text-slate-300">{day}</div>
                         ))}
                       </div>
                       <div className="grid grid-cols-7 gap-1 place-items-center">
@@ -860,14 +835,14 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
   return (
     <div 
       onClick={onClick}
-      className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-4 flex flex-col items-start gap-3 active:scale-95 transition-all cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08]"
+      className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex flex-col items-start gap-3 active:scale-95 transition-all cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08]"
     >
       <div className="bg-white p-2 rounded-xl shadow-sm dark:bg-white/10 dark:border dark:border-white/10">
         {icon}
       </div>
       <div>
-        <h4 className="font-display tracking-tight font-bold text-slate-800 text-sm dark:text-white/90">{title}</h4>
-        <p className="text-xs text-slate-500 dark:text-white/60">{subtitle}</p>
+        <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg">{title}</h4>
+        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm">{subtitle}</p>
       </div>
     </div>
   );
@@ -963,14 +938,14 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
           )}
 
           <div className="mt-8 flex flex-col items-start gap-2">
-            <h4 className="font-display tracking-tight font-bold text-slate-800 text-base leading-tight transition-all duration-500 group-hover:tracking-wide dark:text-white/90">{title}</h4>
-            {subtext && <p className="text-sm text-slate-600 leading-relaxed font-medium dark:text-white/60">{subtext}</p>}
+            <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg transition-all duration-500 group-hover:tracking-wide">{title}</h4>
+            {subtext && <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">{subtext}</p>}
           </div>
           
           <div className="mt-auto flex flex-col">
             <div className="mb-4 flex items-center gap-1.5">
               <PawPrint className="w-6 h-6 text-[#fec708] fill-[#fec708]/40 drop-shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
-              <p className="font-display font-black text-2xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-[#fec708] via-[#fec708] to-[#fec708]">
+              <p className="font-heading font-black text-2xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-[#fec708] via-[#fec708] to-[#fec708]">
                 {pointsText}
               </p>
             </div>

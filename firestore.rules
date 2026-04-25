@@ -26,7 +26,14 @@ service cloud.firestore {
         (!('createdAt' in data) || data.createdAt is timestamp) &&
         (!('petName' in data) || (data.petName is string && data.petName.size() <= 128)) &&
         (!('petType' in data) || (data.petType is string && data.petType.size() <= 64)) &&
-        (!('phone' in data) || (data.phone is string && data.phone.size() <= 64))
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 64)) &&
+        (!('parentName' in data) || (data.parentName is string)) &&
+        (!('weight' in data) || (data.weight is string)) &&
+        (!('dietaryPreferences' in data) || (data.dietaryPreferences is string)) &&
+        (!('surgicalHistory' in data) || (data.surgicalHistory is string)) &&
+        (!('medicalHistory' in data) || (data.medicalHistory is string)) &&
+        (!('age' in data) || (data.age is string)) &&
+        (!('gender' in data) || (data.gender is string))
       );
     }
     
@@ -51,7 +58,7 @@ service cloud.firestore {
                        incoming().keys().hasAll(['uid', 'email', 'pawPoints', 'createdAt']);
       allow update: if isOwner(userId) && isValidId(userId) &&
                        isValidUser(incoming()) &&
-                       incoming().diff(existing()).affectedKeys().hasOnly(['petName', 'petType', 'phone', 'pawPoints', 'displayName']);
+                       incoming().diff(existing()).affectedKeys().hasOnly(['petName', 'petType', 'phone', 'pawPoints', 'displayName', 'parentName', 'weight', 'dietaryPreferences', 'surgicalHistory', 'medicalHistory', 'age', 'gender']);
     }
 
     match /pointsQueue/{documentId} {

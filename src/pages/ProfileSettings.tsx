@@ -18,6 +18,7 @@ export default function ProfileSettings() {
   const [unit, setUnit] = useState(profile?.weight?.includes('kg') ? 'kg' : 'lbs');
   const [diet, setDiet] = useState(profile?.dietaryPreferences || '');
   const [surgicalHistory, setSurgicalHistory] = useState(profile?.surgicalHistory || '');
+  const [medicalHistory, setMedicalHistory] = useState(profile?.medicalHistory || '');
   const [age, setAge] = useState(profile?.age || '');
   const [gender, setGender] = useState(profile?.gender || '');
   const [reminders, setReminders] = useState(true);
@@ -32,6 +33,7 @@ export default function ProfileSettings() {
       }
       if (profile.dietaryPreferences) setDiet(profile.dietaryPreferences);
       if (profile.surgicalHistory) setSurgicalHistory(profile.surgicalHistory);
+      if (profile.medicalHistory) setMedicalHistory(profile.medicalHistory);
       if (profile.age) setAge(profile.age);
       if (profile.gender) setGender(profile.gender);
     }
@@ -40,6 +42,9 @@ export default function ProfileSettings() {
   const { userImage, petImage, updateUserImage, updatePetImage } = useProfileImages();
   const { theme, setTheme } = useTheme();
   const [draftTheme, setDraftTheme] = useState(theme);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const userFileInputRef = useRef<HTMLInputElement>(null);
   const petFileInputRef = useRef<HTMLInputElement>(null);
@@ -55,11 +60,22 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleSave = (e?: React.FormEvent) => {
+  const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setIsSaving(true);
+    setSaveError(false);
     setTheme(draftTheme);
-    updateProfile({ parentName: name, weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory, age, gender });
-    navigate('/');
+    try {
+      await updateProfile({ parentName: name, weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory, medicalHistory, age, gender });
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      setSaveError(true);
+      setTimeout(() => setSaveError(false), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const containerVariants: Variants = {
@@ -273,15 +289,28 @@ export default function ProfileSettings() {
                 <option value="Prescription Diet">Prescription Diet</option>
               </select>
             </div>
+            
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
+                <Stethoscope size={16} className="text-red-500" /> Medical History
+              </label>
+              <textarea 
+                value={medicalHistory}
+                onChange={(e) => setMedicalHistory(e.target.value)}
+                placeholder="e.g., allergies, chronic conditions..."
+                rows={3}
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium resize-none placeholder-gray-400"
+              />
+            </div>
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-white/60">
-                <Stethoscope size={16} className="text-red-500" /> Surgical & Medical History
+                <Stethoscope size={16} className="text-blue-500" /> Surgical History
               </label>
               <textarea 
                 value={surgicalHistory}
                 onChange={(e) => setSurgicalHistory(e.target.value)}
-                placeholder="e.g., ACL repair, allergies, etc."
+                placeholder="e.g., ACL repair, spay/neuter..."
                 rows={3}
                 className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-white font-medium resize-none placeholder-gray-400"
               />
@@ -331,13 +360,31 @@ export default function ProfileSettings() {
       {/* Save Button */}
       <div className="flex flex-col gap-4 mt-12 pb-10 px-5">
         <motion.button
+          disabled={isSaving}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleSave}
-          className="w-full max-w-md mx-auto bg-slate-900 text-white py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-transform dark:bg-white dark:text-black"
+          className={`w-full max-w-md mx-auto py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-all ${isSaved ? 'bg-emerald-500 text-white dark:bg-emerald-500 dark:text-white shadow-[0_0_30px_rgba(16,185,129,0.3)]' : saveError ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'bg-slate-900 text-white dark:bg-white dark:text-black'} ${isSaving ? 'opacity-80' : ''}`}
         >
-          <Save size={20} className="text-planet-yellow" />
-          Save Changes
+          {isSaving ? (
+             <>
+               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white dark:border-black"></div>
+               Saving...
+             </>
+          ) : isSaved ? (
+             <>
+               Saved!
+             </>
+          ) : saveError ? (
+             <>
+               Failed to Save!
+             </>
+          ) : (
+             <>
+               <Save size={20} className={draftTheme === 'dark' ? 'text-planet-yellow' : 'text-planet-yellow'} />
+               Save Changes
+             </>
+          )}
         </motion.button>
 
         <button

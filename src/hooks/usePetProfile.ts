@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -33,5 +33,11 @@ export function usePetProfile() {
     return () => unsubscribeAuth();
   }, []);
 
-  return { profile, loading };
+  const updateProfile = async (updates: any) => {
+    if (!auth.currentUser) throw new Error('Not authenticated');
+    const docRef = doc(db, 'users', auth.currentUser.uid);
+    await updateDoc(docRef, updates);
+  };
+
+  return { profile, loading, updateProfile };
 }
