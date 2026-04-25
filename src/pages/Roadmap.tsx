@@ -18,7 +18,9 @@ const generateRoadmapText = async (formData: any) => {
   }
   const model = genAI.models;
   
-  const prompt = `You are an elite, autonomous veterinary research agent. Your task is to generate a deeply contextual, living health roadmap for a pet based on their specific profile, medical history, and surgical history. 
+  const prompt = `CRITICAL VETERINARY INSTRUCTION: The patient is a ${formData.species}. You are an expert veterinary AI. You must ONLY provide a health and longevity roadmap for a ${formData.species}. Under NO circumstances should you provide advice for a dog if the patient is a cat, or vice versa. Providing cross-species medical advice is dangerous and strictly prohibited.
+
+You are an elite, autonomous veterinary research agent. Your task is to generate a deeply contextual, living health roadmap for a pet based on their specific profile, medical history, and surgical history. 
 CRITICAL RULES:
 1. Formatting: NEVER use 'Months 1-3'. Strictly use '1-3 Months', '3-6 Months', etc.
 2. Depth: Do not provide generic advice. Provide highly specific, actionable veterinary protocols based on the pet's breed and provided medical/surgical history.
@@ -52,8 +54,8 @@ export default function Roadmap() {
 
   const [formData, setFormData] = useState({ 
     name: profile?.petName || profile?.name || '', 
-    species: 'Dog', 
-    breed: profile?.petType || profile?.breed || '', 
+    species: profile?.petType || 'Dog', 
+    breed: profile?.breed || '', 
     age: profile?.age || '5', 
     issues: profile?.healthHistory || '',
     medicalHistory: profile?.medicalHistory || '',
@@ -72,8 +74,8 @@ export default function Roadmap() {
         
         const currentData = {
           name: profile?.petName || profile?.name || '',
-          species: 'Dog',
-          breed: profile?.petType || profile?.breed || '',
+          species: profile?.petType || 'Dog',
+          breed: profile?.breed || '',
           age: profile?.age || '5',
           issues: profile?.healthHistory || '',
           medicalHistory: profile?.medicalHistory || '',
@@ -121,8 +123,8 @@ export default function Roadmap() {
     setRoadmap(null);
     setFormData({ 
       name: profile?.petName || profile?.name || '', 
-      species: 'Dog', 
-      breed: profile?.petType || profile?.breed || '', 
+      species: profile?.petType || 'Dog', 
+      breed: profile?.breed || '', 
       age: profile?.age || '5', 
       issues: profile?.healthHistory || '',
       medicalHistory: profile?.medicalHistory || '',
@@ -167,6 +169,29 @@ export default function Roadmap() {
 
   return (
     <div className="h-full w-full flex flex-col pb-32">
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            key="loading-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-xl"
+          >
+            <div className="flex flex-col items-center animate-pulse gap-6 text-center select-none px-6">
+              <div className="w-16 h-16 rounded-full border-t-4 border-l-4 border-blue-500 border-r-4 border-red-500 border-b-4 border-yellow-500 animate-spin mb-4" />
+              <h2 className="text-2xl md:text-3xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-red-400 to-yellow-400 text-transparent bg-clip-text">
+                Analyzing {profile?.petName || profile?.name || 'your pet'}'s profile...<br/>Generating Longitivity Roadmap...
+              </h2>
+            </div>
+            
+            <div className="absolute bottom-12 flex flex-col items-center">
+              <p className="text-sm font-bold font-heading tracking-widest text-white uppercase drop-shadow-md">Innovated by Planet Animal Hospital</p>
+              <p className="text-xs font-extrabold font-heading tracking-wider mt-1 bg-gradient-to-r from-blue-400 via-red-400 to-yellow-400 text-transparent bg-clip-text uppercase">Powered by Google Gemini</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence mode="wait">
         <motion.div
           key="roadmap-content"
@@ -195,50 +220,15 @@ export default function Roadmap() {
                       </div>
                     )}
                     
-                    <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-5">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 dark:text-white/60 uppercase tracking-wider mb-2">Pet Name</label>
-                          <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Max" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] focus:ring-2 focus:ring-[#fec708] focus:bg-white dark:focus:bg-white/[0.08] outline-none bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 transition-all shadow-sm" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 dark:text-white/60 uppercase tracking-wider mb-2">Species</label>
-                          <select name="species" value={formData.species} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] focus:ring-2 focus:ring-[#fec708] focus:bg-white dark:focus:bg-white/[0.08] outline-none bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-slate-900 dark:text-white transition-all shadow-sm dark:[&>option]:bg-neutral-900">
-                            <option>Dog</option>
-                            <option>Cat</option>
-                            <option>Other</option>
-                          </select>
-                        </div>
-                      </div>
+                    <div className="flex-1 flex flex-col justify-center space-y-6">
+                      <p className="font-body text-slate-600 dark:text-slate-300 text-center leading-relaxed">
+                        Ready to generate a highly personalized health and longevity roadmap for <strong>{profile?.petName || profile?.name || 'your pet'}</strong> using advanced AI based on their specific breed and medical history?
+                      </p>
                       
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-white/60 uppercase tracking-wider mb-2">Breed</label>
-                        <input type="text" name="breed" value={formData.breed} onChange={handleInputChange} placeholder="e.g. American Bully" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] focus:ring-2 focus:ring-[#fec708] focus:bg-white dark:focus:bg-white/[0.08] outline-none bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 transition-all shadow-sm" />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 dark:text-white/60 uppercase tracking-wider mb-2">Age (Years)</label>
-                          <input type="number" name="age" value={formData.age} onChange={handleInputChange} placeholder="e.g. 5" min="0" step="0.1" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] focus:ring-2 focus:ring-[#fec708] focus:bg-white dark:focus:bg-white/[0.08] outline-none bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 transition-all shadow-sm" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 dark:text-white/60 uppercase tracking-wider mb-2">Known Issues</label>
-                          <input type="text" name="issues" value={formData.issues} onChange={handleInputChange} placeholder="e.g. Joint pain" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] focus:ring-2 focus:ring-[#fec708] focus:bg-white dark:focus:bg-white/[0.08] outline-none bg-white/50 dark:bg-white/[0.03] backdrop-blur-md text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 transition-all shadow-sm" />
-                        </div>
-                      </div>
-                      
-                      <button type="submit" disabled={loading} className="mt-auto w-full bg-gradient-to-r from-[#fec708] to-[#fec708] text-black py-4 rounded-xl font-bold flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all">
-                        {loading ? (
-                          <>
-                            <Loader2 className="animate-spin w-5 h-5" /> Analyzing...
-                          </>
-                        ) : (
-                          <>
-                            Generate Profile <ArrowRight className="w-5 h-5" />
-                          </>
-                        )}
+                      <button onClick={handleSubmit} disabled={loading} className="w-full bg-gradient-to-r from-[#fec708] to-[#fec708] text-black py-4 rounded-xl font-heading font-extrabold tracking-wide flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all">
+                        Generate My Roadmap <ArrowRight className="w-5 h-5" />
                       </button>
-                    </form>
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 flex-1 flex flex-col space-y-6">
