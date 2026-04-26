@@ -210,7 +210,7 @@ export default function Roadmap() {
                       </div>
                       <div>
                         <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">Longevity Roadmap</h3>
-                        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm">Personalized health timeline</p>
+                        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">Personalized health timeline</p>
                       </div>
                     </div>
                     
@@ -251,7 +251,7 @@ export default function Roadmap() {
                           h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-8 mb-4 tracking-tight" {...props} />,
                           h2: ({node, ...props}) => <h2 className="font-heading font-bold text-xl text-slate-900 dark:text-white mt-8 mb-3 tracking-tight border-b border-slate-200 dark:border-white/[0.08] pb-2" {...props} />,
                           h3: ({node, ...props}) => <h3 className="font-heading font-bold text-[#fec708] mt-6 mb-2 uppercase tracking-wide text-sm" {...props} />,
-                          p: ({node, ...props}) => <p className="font-body text-base mb-4 text-slate-700 dark:text-slate-200" {...props} />,
+                          p: ({node, ...props}) => <p className="font-body text-base mb-4 text-slate-700 dark:text-slate-200 leading-relaxed" {...props} />,
                           ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 space-y-2 opacity-90" {...props} />,
                           li: ({node, ...props}) => <li className="font-body text-slate-700 dark:text-slate-200" {...props} />,
                           strong: ({node, ...props}) => <strong className="font-bold text-slate-900 dark:text-white" {...props} />,

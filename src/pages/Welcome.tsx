@@ -237,7 +237,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           
           {needsOnboarding ? (
             <div className="space-y-4">
-              <h3 className="font-heading font-bold text-white text-lg text-center mb-4">Welcome! Who are we caring for?</h3>
+              <h3 className="font-heading font-bold tracking-tight text-white text-lg text-center mb-4">Welcome! Who are we caring for?</h3>
               {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
               
               <div className="space-y-4">
@@ -292,7 +292,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           ) : (
             <>
               <div className="space-y-3">
-                {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md">{authError}</p>}
+                {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md leading-relaxed">{authError}</p>}
                 <div className="relative group">
                   <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
                   <label htmlFor="email" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Email</label>

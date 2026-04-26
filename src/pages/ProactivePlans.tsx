@@ -50,7 +50,7 @@ export default function ProactivePlans() {
             The 'Domino Effect' in pet health is real. A skipped proactive checkup or biannual blood test can lead to hidden infections, which can lead to organ stress. Our proactive plans are designed to catch the small things before they become heartbreaking—and expensive—emergencies.
           </p>
           <div className="glass p-5 rounded-2xl border-l-4 border-l-planet-yellow dark:bg-neutral-900 dark:border-white/10">
-            <p className="text-sm font-medium font-body text-slate-200">
+            <p className="text-sm font-medium font-body text-slate-200 leading-relaxed">
               <Zap className="inline text-planet-yellow mr-1" size={16}/>
               All plans instantly unlock the <strong className="text-white">2x Points Multiplier</strong> for every visit.
             </p>
@@ -134,7 +134,7 @@ function PlanCard({ title, price, period, description, features, isPopular, isEl
       {/* Wrapping content in relative z-10 to stay above background */}
       <div className="relative z-10">
         <h3 className={`font-heading font-bold text-xl mb-1 ${isPopular ? 'text-white pt-2' : 'text-slate-800 dark:text-white'}`}>{title}</h3>
-        <p className={`font-body font-medium text-sm mb-4 ${isPopular ? 'text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{description}</p>
+        <p className={`font-body font-medium text-sm mb-4 leading-relaxed ${isPopular ? 'text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{description}</p>
         <div className="flex items-end gap-1 mb-6">
           <span className="font-heading text-4xl font-black tracking-tighter">{price}</span>
           <span className={`font-medium pb-1 font-body ${isPopular ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400'}`}>{period}</span>

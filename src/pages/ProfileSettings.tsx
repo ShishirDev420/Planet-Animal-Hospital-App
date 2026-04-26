@@ -327,7 +327,7 @@ export default function ProfileSettings() {
                 <h4 className="font-heading font-bold text-slate-800 flex items-center gap-2 dark:text-white">
                   {draftTheme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-planet-yellow" />} Dark Mode
                 </h4>
-                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1">Switch between light and dark themes.</p>
+                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1 leading-relaxed">Switch between light and dark themes.</p>
               </div>
               <Toggle isOn={draftTheme === 'dark'} onToggle={() => setDraftTheme(prev => prev === 'light' ? 'dark' : 'light')} />
             </div>
@@ -339,7 +339,7 @@ export default function ProfileSettings() {
                 <h4 className="font-heading font-bold text-slate-800 flex items-center gap-2 dark:text-white">
                   <Bell size={16} className="text-indigo-500" /> Appointment & Health Reminders
                 </h4>
-                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1">Get notified 24h before visits.</p>
+                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1 leading-relaxed">Get notified 24h before visits.</p>
               </div>
               <Toggle isOn={reminders} onToggle={() => setReminders(!reminders)} />
             </div>
@@ -349,7 +349,7 @@ export default function ProfileSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-heading font-bold text-slate-800 dark:text-white">Marketing & Promotions</h4>
-                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1">Promos and new proactive plans.</p>
+                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1 leading-relaxed">Promos and new proactive plans.</p>
               </div>
               <Toggle isOn={marketing} onToggle={() => setMarketing(!marketing)} />
             </div>

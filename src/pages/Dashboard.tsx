@@ -419,6 +419,20 @@ export default function Dashboard() {
   const whatsappMessage = `Hey, Planet Animal Hospital team, I am ${parentName}; ${petName}, pet's parent, and I'm here to inquire about the possibility of a ${selectedService?.name || selectedService} Appointment at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
+  const getAvatarSource = () => {
+    // 1. Return user's uploaded photo if it exists
+    if (petProfile?.photoURL) return petProfile.photoURL;
+    
+    // 2. Fallback logic based on pet type
+    const type = petProfile?.petType?.toLowerCase() || 'unknown';
+    
+    if (type === 'cat') return 'https://api.dicebear.com/7.x/shapes/svg?seed=Felix&backgroundColor=0f172a'; // Impeccable dark slate cat
+    if (type === 'dog') return 'https://api.dicebear.com/7.x/shapes/svg?seed=Buster&backgroundColor=064e3b'; // Impeccable dark green dog
+    
+    // 3. Generic fallback
+    return 'https://api.dicebear.com/7.x/shapes/svg?seed=Paw&backgroundColor=b45309'; 
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* Background Ambient Orbs */}
@@ -437,7 +451,7 @@ export default function Dashboard() {
           {/* Logo Container (Left) */}
           <div className="relative z-10">
             <button onClick={() => navigate('/profiles')} className="shrink-0 group">
-              <div className="animate-sync-heartbeat origin-left drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-transform active:scale-95">
+              <div className="origin-left drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-opacity duration-300 hover:opacity-90 active:scale-95">
                 <Logo className="!w-16 !h-16" />
               </div>
             </button>
@@ -452,14 +466,17 @@ export default function Dashboard() {
           {/* Profile Container (Right) */}
           <div className="relative z-10">
             <MagneticWrapper className="rounded-full">
-              <button onClick={() => navigate('/settings')} className="shrink-0 block">
-                <div className="animate-sync-heartbeat origin-center">
-                  <DualAvatar 
-                    leftImage={harshalImage}
-                    rightImage={johnnyImage}
-                    className="w-16 h-16 ring-2 ring-[#fec708]/30 ring-offset-2 ring-offset-white/50 hover:ring-[#fec708]/70 transition-all duration-300 shadow-sm active:scale-95 rounded-full"
-                  />
-                </div>
+              <button onClick={() => navigate('/settings')} className="relative flex items-center p-[2px] rounded-full bg-gradient-to-br from-white/10 to-white/0 hover:from-white/30 hover:to-white/10 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer group">
+                <img 
+                  src={petProfile?.userPhoto || 'https://api.dicebear.com/7.x/shapes/svg?seed=User&backgroundColor=1e293b'}
+                  alt="Parent Profile"
+                  className="w-10 h-10 rounded-full border-[1.5px] border-slate-800 object-cover group-hover:scale-[1.05] transition-transform duration-300 relative z-10"
+                />
+                <img 
+                  src={getAvatarSource()}
+                  alt="Pet Profile"
+                  className="w-10 h-10 rounded-full border-[1.5px] border-slate-800 object-cover group-hover:scale-[1.05] transition-transform duration-300 -ml-2 relative z-0"
+                />
               </button>
             </MagneticWrapper>
           </div>
@@ -560,8 +577,8 @@ export default function Dashboard() {
                 {appt.date}
               </div>
               <div>
-                 <h4 className="font-heading font-bold text-white text-lg">{appt.title}</h4>
-                <p className="font-body font-medium text-slate-300 text-sm">Dr. Naveen • {appt.time}</p>
+                 <h4 className="font-heading font-bold text-white text-lg tracking-tight">{appt.title}</h4>
+                <p className="font-body font-medium text-slate-300 text-sm leading-relaxed">Dr. Naveen • {appt.time}</p>
               </div>
             </div>
           ))}
@@ -851,8 +868,8 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
         {icon}
       </div>
       <div>
-        <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg">{title}</h4>
-        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm">{subtitle}</p>
+        <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg tracking-tight">{title}</h4>
+        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">{subtitle}</p>
       </div>
     </div>
   );
@@ -948,7 +965,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
           )}
 
           <div className="mt-8 flex flex-col items-start gap-2">
-            <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg transition-all duration-500 group-hover:tracking-wide">{title}</h4>
+            <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg tracking-tight transition-all duration-500 group-hover:tracking-normal">{title}</h4>
             {subtext && <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">{subtext}</p>}
           </div>
           
