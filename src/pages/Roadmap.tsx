@@ -6,26 +6,21 @@ import { usePetProfile } from '../hooks/usePetProfile';
 import { GoogleGenAI } from '@google/genai';
 import Markdown from 'react-markdown';
 
-const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-let genAI: GoogleGenAI;
-if (apiKey) {
-  genAI = new GoogleGenAI({ apiKey });
-}
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 const generateRoadmapText = async (formData: any) => {
-  if (!genAI) {
+  if (!apiKey) {
     throw new Error('Gemini API Key missing');
   }
-  const model = genAI.models;
+  
+  const ai = new GoogleGenAI({ apiKey });
   
   const prompt = `CRITICAL VETERINARY INSTRUCTION: The patient is a ${formData.species}. You are an expert veterinary AI. You must ONLY provide a health and longevity roadmap for a ${formData.species}. Under NO circumstances should you provide advice for a dog if the patient is a cat, or vice versa. Providing cross-species medical advice is dangerous and strictly prohibited.
 
 You are an elite, autonomous veterinary research agent. Your task is to generate a deeply contextual, living health roadmap for a pet based on their specific profile, medical history, and surgical history. 
-CRITICAL RULES:
-1. Formatting: NEVER use 'Months 1-3'. Strictly use '1-3 Months', '3-6 Months', etc.
-2. Depth: Do not provide generic advice. Provide highly specific, actionable veterinary protocols based on the pet's breed and provided medical/surgical history.
-3. Live Research: Use your Google Search tool to find the absolute latest veterinary best practices, studies, or nutritional guidelines relevant to this specific pet's condition. Research specifically based on the pet's history of: ${formData.medicalHistory || 'None'} and ${formData.surgicalHistory || 'None'}.
-4. Citations: At the absolute bottom of the roadmap, you MUST include a 'Sources & Literature' section with valid external URLs so the pet parent can read the research themselves. Format the output in clean, professional Markdown.
+CRITICAL RULES: Formatting and Depth: NEVER provide generic checklists. Generate an in-depth longevity plan tailored *exclusively* for the provided pet context (e.g., ${formData.name}, ${formData.age}-year-old ${formData.breed} ${formData.species}) and surgical history. Use premium typography formatting, strictly using '1-3 Months', '3-6 Months', etc., instead of 'Months 1-3'. Ask ONE clarification question to the parent if critical data is missing.
+
+Live Research: Use your Google Search tool to find the absolute latest veterinary best practices, studies, or nutritional guidelines relevant to this specific pet's condition. Research specifically based on the pet's history of: ${formData.medicalHistory || 'None'} and ${formData.surgicalHistory || 'None'}. Make sure to include proper citations and links at the absolute bottom of the roadmap under a 'Sources & Literature' section with valid external URLs so the pet parent can read the research themselves. Format the output in clean, professional Markdown.
 
 Pet Profile:
 Name: ${formData.name}
@@ -35,15 +30,20 @@ Age: ${formData.age} years old
 Medical History/Issues: ${formData.medicalHistory || formData.issues || 'None reported'}
 Surgical History: ${formData.surgicalHistory || 'None reported'}`;
 
-  const response = await model.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: {
-      tools: [{ googleSearch: {} }]
-    }
-  });
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+      }
+    });
 
-  return response.text || "Failed to generate roadmap.";
+    return response.text || "Failed to generate roadmap.";
+  } catch (error: any) {
+    console.error("Error generating roadmap:", error);
+    throw new Error(error.message || "Failed to generate roadmap.");
+  }
 };
 
 export default function Roadmap() {
@@ -176,18 +176,29 @@ export default function Roadmap() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.5 } }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-xl"
+            className="flex flex-col items-center justify-center min-h-[75vh] px-6 py-12 relative overflow-hidden"
           >
-            <div className="flex flex-col items-center animate-pulse gap-6 text-center select-none px-6">
-              <div className="w-16 h-16 rounded-full border-t-4 border-l-4 border-blue-500 border-r-4 border-red-500 border-b-4 border-yellow-500 animate-spin mb-4" />
-              <h2 className="text-2xl md:text-3xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-red-400 to-yellow-400 text-transparent bg-clip-text">
-                Analyzing {profile?.petName || profile?.name || 'your pet'}'s profile...<br/>Generating Longitivity Roadmap...
-              </h2>
+            <div className="relative flex items-center justify-center mb-12">
+              {/* Outer Aura */}
+              <div className="absolute w-64 h-64 bg-yellow-500/10 rounded-full blur-[80px] animate-pulse"></div>
+              {/* Inner Core */}
+              <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-[40px] animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              {/* The Logo Container */}
+              <div className="relative z-10 p-8 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] flex flex-col items-center justify-center">
+                <span className="text-white/90 font-extrabold text-xl tracking-widest text-center leading-tight">
+                  PLANET<br/>ANIMAL
+                </span>
+              </div>
             </div>
-            
-            <div className="absolute bottom-12 flex flex-col items-center">
-              <p className="text-sm font-bold font-heading tracking-widest text-white uppercase drop-shadow-md">Innovated by Planet Animal Hospital</p>
-              <p className="text-xs font-extrabold font-heading tracking-wider mt-1 bg-gradient-to-r from-blue-400 via-red-400 to-yellow-400 text-transparent bg-clip-text uppercase">Powered by Google Gemini</p>
+
+            <div className="flex flex-col items-center space-y-2 z-10">
+              <div className="flex items-center space-x-2 text-white/50 font-medium tracking-wide text-sm">
+                <span>Powered by Google Gemini models</span>
+                <span className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC05] to-[#34A853] animate-pulse">G</span>
+              </div>
+              <p className="text-white/30 text-xs animate-pulse" style={{ animationDelay: '1s' }}>
+                Synthesizing longevity research...
+              </p>
             </div>
           </motion.div>
         )}

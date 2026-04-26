@@ -37,52 +37,15 @@ export default function AIVet() {
   const isProcessingRef = useRef(false);
   const recRef = useRef<any>(null);
   const chatHistoryRef = useRef(chatHistory);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const animationFrameRef = useRef<number>(0);
 
   useEffect(() => {
     chatHistoryRef.current = chatHistory;
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
 
-  useEffect(() => {
-    let micStream: MediaStream | null = null;
-    let animationFrameId: number;
-    let analyser: AnalyserNode | null = null;
-
-    const startMicPhysics = async () => {
-      if (isCallActive && !isSpeaking) {
-        try {
-          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          const actx = new (window.AudioContext || (window as any).webkitAudioContext)();
-          analyser = actx.createAnalyser();
-          analyser.fftSize = 256;
-          const source = actx.createMediaStreamSource(micStream);
-          source.connect(analyser);
-
-          const dataArray = new Uint8Array(analyser.frequencyBinCount);
-          const updatePhysics = () => {
-            analyser!.getByteFrequencyData(dataArray);
-            const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-            setOrbScale(1 + (average / 255) * 0.35); // Scale based on mic input
-            animationFrameId = requestAnimationFrame(updatePhysics);
-          };
-          updatePhysics();
-        } catch (err) {
-          console.error("Mic physics failed:", err);
-        }
-      }
-    };
-
-    if (isCallActive && !isSpeaking) {
-      startMicPhysics();
-    }
-
-    return () => {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (micStream) micStream.getTracks().forEach(track => track.stop());
-      if (analyser) analyser.disconnect();
-      if (!isSpeaking) setOrbScale(1); // Reset when not active
-    };
-  }, [isCallActive, isSpeaking]);
 
   const setIsSpeakingState = (val: boolean) => {
     setIsSpeaking(val);
@@ -282,7 +245,32 @@ export default function AIVet() {
     if (!isCallActiveRef.current) {
       try {
         // Explicitly request mic permission before starting the loop
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = stream;
+        
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioCtxRef.current = audioCtx;
+        
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        const updatePhysics = () => {
+          if (!isCallActiveRef.current) return;
+          
+          if (!isSpeakingRef.current && !isProcessingRef.current) {
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+            setOrbScale(1 + (average / 255) * 0.35); // Scale based on mic input
+          }
+          
+          animationFrameRef.current = requestAnimationFrame(updatePhysics);
+        };
+        updatePhysics();
+        
         setIsCallActiveState(true);
         recognition.start(); 
         setIsListening(true);
@@ -299,6 +287,19 @@ export default function AIVet() {
       recognition.stop();
       setIsListening(false);
       window.speechSynthesis.cancel();
+      
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach(track => track.stop());
+        micStreamRef.current = null;
+      }
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
+      setOrbScale(1);
     }
   };
 

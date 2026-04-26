@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
@@ -419,19 +419,6 @@ export default function Dashboard() {
   const whatsappMessage = `Hey, Planet Animal Hospital team, I am ${parentName}; ${petName}, pet's parent, and I'm here to inquire about the possibility of a ${selectedService?.name || selectedService} Appointment at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
-  const getAvatarSource = () => {
-    // 1. Return user's uploaded photo if it exists
-    if (petProfile?.photoURL) return petProfile.photoURL;
-    
-    // 2. Fallback logic based on pet type
-    const type = petProfile?.petType?.toLowerCase() || 'unknown';
-    
-    if (type === 'cat') return 'https://api.dicebear.com/7.x/shapes/svg?seed=Felix&backgroundColor=0f172a'; // Impeccable dark slate cat
-    if (type === 'dog') return 'https://api.dicebear.com/7.x/shapes/svg?seed=Buster&backgroundColor=064e3b'; // Impeccable dark green dog
-    
-    // 3. Generic fallback
-    return 'https://api.dicebear.com/7.x/shapes/svg?seed=Paw&backgroundColor=b45309'; 
-  };
 
   return (
     <div className="relative w-full h-full">
@@ -465,20 +452,9 @@ export default function Dashboard() {
 
           {/* Profile Container (Right) */}
           <div className="relative z-10">
-            <MagneticWrapper className="rounded-full">
-              <button onClick={() => navigate('/settings')} className="relative flex items-center p-[2px] rounded-full bg-gradient-to-br from-white/10 to-white/0 hover:from-white/30 hover:to-white/10 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer group">
-                <img 
-                  src={petProfile?.userPhoto || 'https://api.dicebear.com/7.x/shapes/svg?seed=User&backgroundColor=1e293b'}
-                  alt="Parent Profile"
-                  className="w-10 h-10 rounded-full border-[1.5px] border-slate-800 object-cover group-hover:scale-[1.05] transition-transform duration-300 relative z-10"
-                />
-                <img 
-                  src={getAvatarSource()}
-                  alt="Pet Profile"
-                  className="w-10 h-10 rounded-full border-[1.5px] border-slate-800 object-cover group-hover:scale-[1.05] transition-transform duration-300 -ml-2 relative z-0"
-                />
-              </button>
-            </MagneticWrapper>
+             <button onClick={() => navigate('/settings')} className="relative flex items-center justify-center p-2 rounded-full bg-gradient-to-br from-white/10 to-white/0 hover:from-white/20 hover:to-white/5 transition-all duration-300 border border-white/5 shadow-sm cursor-pointer group">
+               <Settings className="w-5 h-5 text-white/80 group-hover:text-white transition-colors duration-300" />
+             </button>
           </div>
         </div>
 
