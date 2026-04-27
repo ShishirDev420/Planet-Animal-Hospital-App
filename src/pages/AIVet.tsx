@@ -48,6 +48,7 @@ export default function AIVet() {
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number>(0);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     chatHistoryRef.current = chatHistory;
@@ -192,6 +193,7 @@ export default function AIVet() {
       const audioBlob = await ttsResponse.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      currentAudioRef.current = audio;
       
       const animateOrb = () => {
         if (!isSpeakingRef.current) {
@@ -204,6 +206,7 @@ export default function AIVet() {
       };
 
       audio.onended = () => {
+        currentAudioRef.current = null;
         setIsSpeakingState(false);
         if (isCallActiveRef.current && recRef.current) {
           try {
@@ -216,6 +219,7 @@ export default function AIVet() {
       };
       
       audio.onerror = () => {
+        currentAudioRef.current = null;
         setIsSpeakingState(false);
         if (isCallActiveRef.current && recRef.current) {
           try {
@@ -335,9 +339,19 @@ You have access to the following patient file: Pet Name: ${petName}, Breed: ${pe
       // End Call logic
       setIsCallActiveState(false);
       setIsSpeakingState(false);
-      recognition.stop();
+      
+      if (recognition) {
+        try { recognition.abort(); } catch (e) {}
+      }
+      
       setIsListening(false);
       window.speechSynthesis.cancel();
+      
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.currentTime = 0;
+        currentAudioRef.current = null;
+      }
       
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
