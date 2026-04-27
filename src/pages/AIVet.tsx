@@ -82,6 +82,10 @@ export default function AIVet() {
       };
 
       rec.onerror = (event: any) => {
+        if (event.error === 'aborted') {
+          // Gracefully ignore intentional aborts when the user ends the call
+          return;
+        }
         if (event.error !== 'no-speech') {
           console.error('Speech recognition error:', event.error);
         }
