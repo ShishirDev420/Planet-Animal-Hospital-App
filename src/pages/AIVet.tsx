@@ -49,6 +49,7 @@ export default function AIVet() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number>(0);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const smoothedVolumeRef = useRef<number>(1.0);
 
   useEffect(() => {
     chatHistoryRef.current = chatHistory;
@@ -135,7 +136,10 @@ export default function AIVet() {
         return;
       }
       requestAnimationFrame(animateOrb);
-      setOrbScale(1 + Math.random() * 0.15 + 0.05);
+      const rawVolume = Math.random();
+      const targetVolume = 1.0 + (rawVolume * 0.08); // Scale down the raw impact
+      smoothedVolumeRef.current = (smoothedVolumeRef.current * 0.95) + (targetVolume * 0.05);
+      setOrbScale(smoothedVolumeRef.current);
     };
 
     utterance.onend = () => {
@@ -201,8 +205,11 @@ export default function AIVet() {
           return;
         }
         requestAnimationFrame(animateOrb);
-        // visualizer approximation
-        setOrbScale(1 + Math.random() * 0.15 + 0.05);
+        // visualizer approximation with smoothing
+        const rawVolume = Math.random();
+        const targetVolume = 1.0 + (rawVolume * 0.08); // Scale down the raw impact
+        smoothedVolumeRef.current = (smoothedVolumeRef.current * 0.95) + (targetVolume * 0.05);
+        setOrbScale(smoothedVolumeRef.current);
       };
 
       audio.onended = () => {
@@ -319,7 +326,9 @@ You have access to the following patient file: Pet Name: ${petName}, Breed: ${pe
           if (!isSpeakingRef.current && !isProcessingRef.current) {
             analyser.getByteFrequencyData(dataArray);
             const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-            setOrbScale(1 + (average / 255) * 0.35); // Scale based on mic input
+            const targetVolume = 1.0 + (average * 0.02); // Scale down the raw impact
+            smoothedVolumeRef.current = (smoothedVolumeRef.current * 0.95) + (targetVolume * 0.05);
+            setOrbScale(smoothedVolumeRef.current);
           }
           
           animationFrameRef.current = requestAnimationFrame(updatePhysics);
@@ -393,15 +402,14 @@ You have access to the following patient file: Pet Name: ${petName}, Breed: ${pe
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[300px] h-[300px] md:w-[600px] md:h-[600px]">
             <motion.div
               animate={{
-                scale: isSpeaking ? orbScale : (isListening ? [1, 1.25, 1] : [1, 1.05, 1]),
+                scale: orbScale,
                 boxShadow: isSpeaking || isListening 
                   ? ['inset -15px -15px 30px rgba(178,138,2,0.6), 0 0 50px rgba(254,199,8,0.8)', 'inset -15px -15px 30px rgba(178,138,2,0.6), 0 0 80px rgba(254,199,8,1)', 'inset -15px -15px 30px rgba(178,138,2,0.6), 0 0 50px rgba(254,199,8,0.8)']
                   : ['inset -15px -15px 30px rgba(178,138,2,0.6), 0 0 20px rgba(254,199,8,0.4)', 'inset -15px -15px 30px rgba(178,138,2,0.6), 0 0 30px rgba(254,199,8,0.6)', 'inset -15px -15px 30px rgba(178,138,2,0.6), 0 0 20px rgba(254,199,8,0.4)']
               }}
               transition={{
-                duration: isSpeaking ? 0.05 : (isListening ? 1.5 : 4),
-                repeat: isSpeaking ? 0 : Infinity,
-                ease: "easeOut"
+                scale: { type: "tween", ease: "easeOut", duration: 0.5 },
+                boxShadow: { duration: 1.5, repeat: Infinity, ease: "easeOut" }
               }}
               className="w-full h-full rounded-full bg-[radial-gradient(circle_at_35%_35%,#fffde7_0%,#fec708_40%,#b28a02_100%)]"
             />
