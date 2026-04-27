@@ -3,43 +3,56 @@ import { Sparkles, ArrowRight, Loader2, RefreshCw, Lock, Stethoscope } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { usePetProfile } from '../hooks/usePetProfile';
-import { GoogleGenAI } from '@google/genai';
 import Markdown from 'react-markdown';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
 const generateRoadmapText = async (formData: any) => {
   if (!apiKey) {
-    throw new Error('Gemini API Key missing');
+    throw new Error('Groq API Key missing');
   }
   
-  const ai = new GoogleGenAI({ apiKey });
-  
-  const prompt = `CRITICAL VETERINARY INSTRUCTION: The patient is a ${formData.species}. You are an expert veterinary AI. You must ONLY provide a health and longevity roadmap for a ${formData.species}. Under NO circumstances should you provide advice for a dog if the patient is a cat, or vice versa. Providing cross-species medical advice is dangerous and strictly prohibited.
-
-You are an elite, autonomous veterinary research agent. Your task is to generate a deeply contextual, living health roadmap for a pet based on their specific profile, medical history, and surgical history. 
-CRITICAL RULES: Formatting and Depth: NEVER provide generic checklists. Generate an in-depth longevity plan tailored *exclusively* for the provided pet context (e.g., ${formData.name}, ${formData.age}-year-old ${formData.breed} ${formData.species}) and surgical history. Use premium typography formatting, strictly using '1-3 Months', '3-6 Months', etc., instead of 'Months 1-3'. Ask ONE clarification question to the parent if critical data is missing.
-
-Live Research: Use your Google Search tool to find the absolute latest veterinary best practices, studies, or nutritional guidelines relevant to this specific pet's condition. Research specifically based on the pet's history of: ${formData.medicalHistory || 'None'} and ${formData.surgicalHistory || 'None'}. Make sure to include proper citations and links at the absolute bottom of the roadmap under a 'Sources & Literature' section with valid external URLs so the pet parent can read the research themselves. Format the output in clean, professional Markdown.
-
-Pet Profile:
-Name: ${formData.name}
-Species: ${formData.species}
-Breed: ${formData.breed}
-Age: ${formData.age} years old
-Medical History/Issues: ${formData.medicalHistory || formData.issues || 'None reported'}
-Surgical History: ${formData.surgicalHistory || 'None reported'}`;
+  const petProfile = {
+    name: formData.name,
+    species: formData.species,
+    breed: formData.breed,
+    age: formData.age,
+    issues: formData.issues
+  };
+  const medicalHistory = formData.medicalHistory || 'None';
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }]
-      }
-    });
+     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+       method: "POST",
+       headers: {
+         "Authorization": `Bearer ${apiKey}`,
+         "Content-Type": "application/json"
+       },
+       body: JSON.stringify({
+         model: "llama-3.3-70b-versatile",
+         messages: [
+           {
+             role: "system",
+             content: "You are an elite veterinary research agent. Generate an in-depth longevity plan tailored exclusively for the provided pet context and surgical history. Use premium typography formatting, strictly using '1-3 Months', '3-6 Months', etc. Provide actionable, deep insights."
+           },
+           {
+             role: "user",
+             content: `Generate a longevity roadmap for this pet. Profile: ${JSON.stringify(petProfile)}. Medical History: ${medicalHistory}. Surgical History: ${formData.surgicalHistory || 'None'}.`
+           }
+         ],
+         temperature: 0.7,
+         max_tokens: 2000
+       })
+     });
 
-    return response.text || "Failed to generate roadmap.";
+     if (!response.ok) {
+       const errText = await response.text();
+       throw new Error(`API Error: ${response.status} ${errText}`);
+     }
+
+     const data = await response.json();
+     const markdownText = data.choices[0].message.content;
+     return markdownText || "Failed to generate roadmap.";
   } catch (error: any) {
     console.error("Error generating roadmap:", error);
     throw new Error(error.message || "Failed to generate roadmap.");
@@ -48,7 +61,7 @@ Surgical History: ${formData.surgicalHistory || 'None reported'}`;
 
 export default function Roadmap() {
   const navigate = useNavigate();
-  const { profile, loading: profileLoading } = usePetProfile();
+  const { profile, loading: profileLoading, updateProfile } = usePetProfile();
   
   const isProfileIncomplete = !profile?.petName && !profile?.name;
 
@@ -69,9 +82,16 @@ export default function Roadmap() {
   useEffect(() => {
     if (!isProfileIncomplete && !roadmap && !loading && !hasAutoGenerated) {
       const autoGenerate = async () => {
-        setLoading(true);
         setHasAutoGenerated(true);
+
+        if (profile?.cachedRoadmap && profile?.roadmapGeneratedAt) {
+          if ((Date.now() - profile.roadmapGeneratedAt) < 5184000000) {
+            setRoadmap(profile.cachedRoadmap);
+            return;
+          }
+        }
         
+        setLoading(true);
         const currentData = {
           name: profile?.petName || profile?.name || '',
           species: profile?.petType || 'Dog',
@@ -84,7 +104,18 @@ export default function Roadmap() {
         setFormData(currentData);
 
         try {
-          setRoadmap(await generateRoadmapText(currentData));
+          const generated = await generateRoadmapText(currentData);
+          setRoadmap(generated);
+          if (updateProfile) {
+            try {
+              await updateProfile({
+                cachedRoadmap: generated,
+                roadmapGeneratedAt: Date.now()
+              });
+            } catch (err) {
+              console.error('Failed to cache roadmap:', err);
+            }
+          }
         } catch (err: any) {
           setError(err.message || 'Failed to generate roadmap.');
         } finally {
@@ -93,7 +124,7 @@ export default function Roadmap() {
       };
       autoGenerate();
     }
-  }, [isProfileIncomplete, roadmap, loading, hasAutoGenerated, profile]);
+  }, [isProfileIncomplete, roadmap, loading, hasAutoGenerated, profile, updateProfile]);
 
   const handleInputChange = (e: any) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -102,6 +133,7 @@ export default function Roadmap() {
     if (!formData.name || !formData.breed || !formData.age) return setError('Please fill in Name, Breed, and Age.');
     
     setError('');
+    setRoadmap(null);
     setLoading(true);
     
     const latestData = {
@@ -111,7 +143,18 @@ export default function Roadmap() {
     };
     
     try {
-      setRoadmap(await generateRoadmapText(latestData));
+      const generated = await generateRoadmapText(latestData);
+      setRoadmap(generated);
+      if (updateProfile) {
+        try {
+          await updateProfile({
+            cachedRoadmap: generated,
+            roadmapGeneratedAt: Date.now()
+          });
+        } catch (err) {
+          console.error('Failed to cache roadmap:', err);
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to generate roadmap.');
     } finally {
@@ -169,6 +212,16 @@ export default function Roadmap() {
 
   return (
     <div className="h-full w-full flex flex-col pb-32">
+      <div className="relative flex items-center justify-center pt-8 pb-4 w-full">
+        {/* Outer Aura */}
+        <div className="absolute w-64 h-64 bg-[#fec708]/15 rounded-full blur-3xl mix-blend-screen animate-pulse transform-gpu"></div>
+        {/* Inner Core */}
+        <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-2xl mix-blend-screen animate-pulse transform-gpu" style={{ animationDelay: '0.5s' }}></div>
+        {/* The Logo Container */}
+        <div className="relative z-10 p-6 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] flex items-center justify-center">
+          <img src="https://i.ibb.co/cXYnNTsV/logo.png" crossOrigin="anonymous" alt="Planet Animal Hospital" className="w-24 h-24 object-contain drop-shadow-2xl z-20 relative transform transition-transform duration-700 hover:scale-105" />
+        </div>
+      </div>
       <AnimatePresence>
         {loading && (
           <motion.div
@@ -176,27 +229,17 @@ export default function Roadmap() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.5 } }}
-            className="flex flex-col items-center justify-center min-h-[75vh] px-6 py-12 relative overflow-hidden"
+            className="flex flex-col items-center justify-center min-h-[50vh] px-6 py-12 relative overflow-hidden"
           >
-            <div className="relative flex items-center justify-center mb-12">
-              {/* Outer Aura */}
-              <div className="absolute w-64 h-64 bg-yellow-500/10 rounded-full blur-[80px] animate-pulse"></div>
-              {/* Inner Core */}
-              <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-[40px] animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-              {/* The Logo Container */}
-              <div className="relative z-10 p-8 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] flex flex-col items-center justify-center">
-                <span className="text-white/90 font-extrabold text-xl tracking-widest text-center leading-tight">
-                  PLANET<br/>ANIMAL
-                </span>
+            <div className="bg-white/10 dark:bg-black/20 backdrop-blur-3xl border border-slate-200/50 dark:border-white/10 rounded-3xl p-8 flex flex-col items-center shadow-xl">
+              <Loader2 className="w-12 h-12 text-[#fec708] animate-spin mb-6" />
+              <div className="text-slate-700 dark:text-white/80 font-medium tracking-wide text-sm text-center">
+                <span>Innovated by </span>
+                <span className="text-slate-900 dark:text-white font-bold">Planet Animal Hospital</span>
+                <br/>
+                <span className="text-xs text-slate-500 dark:text-white/40">Powered by Meta Llama 3</span>
               </div>
-            </div>
-
-            <div className="flex flex-col items-center space-y-2 z-10">
-              <div className="flex items-center space-x-2 text-white/50 font-medium tracking-wide text-sm">
-                <span>Powered by Google Gemini models</span>
-                <span className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC05] to-[#34A853] animate-pulse">G</span>
-              </div>
-              <p className="text-white/30 text-xs animate-pulse" style={{ animationDelay: '1s' }}>
+              <p className="text-[#fec708] text-xs animate-pulse pt-3 font-medium" style={{ animationDelay: '1s' }}>
                 Synthesizing longevity research...
               </p>
             </div>
@@ -204,8 +247,9 @@ export default function Roadmap() {
         )}
       </AnimatePresence>
       <AnimatePresence mode="wait">
-        <motion.div
-          key="roadmap-content"
+        {!loading && (
+          <motion.div
+            key="roadmap-content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
@@ -247,11 +291,11 @@ export default function Roadmap() {
                     <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/[0.08] pb-6">
                       <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fec708]/20 text-[#fec708] text-xs font-bold mb-2 border border-[#fec708]/50 shadow-sm">
-                          <Sparkles className="w-3 h-3" /> Roadmap Generated
+                          <Sparkles className="w-3 h-3" /> Roadmap Generated{profile?.roadmapGeneratedAt ? ` on ${new Date(profile.roadmapGeneratedAt).toLocaleDateString()}` : ''}
                         </div>
-                        <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">{formData.name}'s Plan</h2>
+                        <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">{(formData?.name || profile?.petName || profile?.name || 'Your Pet')}'s Plan</h2>
                       </div>
-                      <button onClick={resetForm} className="p-2 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white bg-white/50 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200 dark:border-white/[0.08] rounded-full hover:bg-white dark:hover:bg-white/[0.08] transition-all shadow-sm" title="Start Over">
+                      <button onClick={handleSubmit} className="p-2 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white bg-white/50 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200 dark:border-white/[0.08] rounded-full hover:bg-white dark:hover:bg-white/[0.08] transition-all shadow-sm" title="Refresh/Start Over">
                         <RefreshCw size={18} />
                       </button>
                     </div>
@@ -284,6 +328,7 @@ export default function Roadmap() {
               </AnimatePresence>
             </div>
           </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

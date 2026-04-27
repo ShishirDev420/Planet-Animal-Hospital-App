@@ -7,15 +7,15 @@ export default function Layout() {
   return (
     <div className="h-screen w-full bg-slate-50 text-black/90 font-sans relative overflow-x-hidden flex justify-center dark:bg-[#071912] dark:text-white/90">
       {/* Noise Overlay for Anti-Banding */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iMC4xIi8+Cjwvc3ZnPg==')] opacity-20 mix-blend-overlay pointer-events-none z-0"></div>
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
       
       <SplashScreen />
       {/* Background Blobs for Glassmorphism - Fixed to prevent scroll flickering */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
         <div className="relative w-full max-w-md h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
-          <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-[120px] opacity-60 animate-blob transform-gpu" style={{ animationDuration: '4s', animationTimingFunction: 'ease-in-out' }}></div>
+          <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-[120px] opacity-60 animate-blob transform-gpu" style={{ animationDelay: '2s', animationDuration: '4s', animationTimingFunction: 'ease-in-out' }}></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-[120px] opacity-60 animate-blob transform-gpu" style={{ animationDelay: '4s', animationDuration: '4s', animationTimingFunction: 'ease-in-out' }}></div>
         </div>
       </div>
 

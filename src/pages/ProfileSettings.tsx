@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut } from 'lucide-react';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { useTheme } from '../context/ThemeContext';
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
@@ -40,8 +39,6 @@ export default function ProfileSettings() {
   }, [profile]);
 
   const { userImage, petImage, updateUserImage, updatePetImage } = useProfileImages();
-  const { theme, setTheme } = useTheme();
-  const [draftTheme, setDraftTheme] = useState(theme);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -64,7 +61,6 @@ export default function ProfileSettings() {
     if (e) e.preventDefault();
     setIsSaving(true);
     setSaveError(false);
-    setTheme(draftTheme);
     try {
       await updateProfile({ parentName: name, weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory, medicalHistory, age, gender });
       setIsSaved(true);
@@ -325,18 +321,6 @@ export default function ProfileSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-heading font-bold text-slate-800 flex items-center gap-2 dark:text-white">
-                  {draftTheme === 'dark' ? <Moon size={16} className="text-blue-400" /> : <Sun size={16} className="text-planet-yellow" />} Dark Mode
-                </h4>
-                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1 leading-relaxed">Switch between light and dark themes.</p>
-              </div>
-              <Toggle isOn={draftTheme === 'dark'} onToggle={() => setDraftTheme(prev => prev === 'light' ? 'dark' : 'light')} />
-            </div>
-            
-            <div className="h-px bg-slate-200/50 w-full dark:bg-white/10" />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-heading font-bold text-slate-800 flex items-center gap-2 dark:text-white">
                   <Bell size={16} className="text-indigo-500" /> Appointment & Health Reminders
                 </h4>
                 <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1 leading-relaxed">Get notified 24h before visits.</p>
@@ -364,7 +348,7 @@ export default function ProfileSettings() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleSave}
-          className={`w-full max-w-md mx-auto py-5 rounded-2xl font-heading font-bold tracking-wide text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-all ${isSaved ? 'bg-emerald-500 text-white dark:bg-emerald-500 dark:text-white shadow-[0_0_30px_rgba(16,185,129,0.3)]' : saveError ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'bg-slate-900 text-white dark:bg-white dark:text-black'} ${isSaving ? 'opacity-80' : ''}`}
+          className={`w-full max-w-md mx-auto py-5 rounded-2xl font-heading font-bold tracking-wide text-lg shadow-[0_0_30px_rgba(250,204,21,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-all ${isSaved ? 'bg-emerald-500 text-white dark:bg-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : saveError ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'bg-slate-900 text-white dark:bg-white dark:text-black'} ${isSaving ? 'opacity-80' : ''}`}
         >
           {isSaving ? (
              <>
@@ -381,7 +365,7 @@ export default function ProfileSettings() {
              </>
           ) : (
              <>
-               <Save size={20} className={draftTheme === 'dark' ? 'text-planet-yellow' : 'text-planet-yellow'} />
+               <Save size={20} className="text-planet-yellow" />
                Save Changes
              </>
           )}

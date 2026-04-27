@@ -29,7 +29,6 @@ const Placeholder = ({ title }: { title: string }) => (
   </div>
 );
 
-import { ThemeProvider } from './context/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated';
@@ -63,8 +62,8 @@ export default function App() {
   }
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider>
+    <div className="dark min-h-screen bg-slate-950 text-white font-sans antialiased">
+      <ErrorBoundary>
         <BrowserRouter>
           <Routes>
             {authStatus === 'unauthenticated' || authStatus === 'onboarding' ? (
@@ -86,8 +85,8 @@ export default function App() {
             )}
           </Routes>
         </BrowserRouter>
-      </ThemeProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </div>
   );
 }
 

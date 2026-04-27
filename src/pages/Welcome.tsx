@@ -158,10 +158,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       
       {/* 🔮 THE LOCKED ORB MOAT */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="noise-overlay" />
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#34A853]/30 rounded-full blur-[120px] mix-blend-screen" style={{ animation: 'fluid-drift 11s infinite alternate ease-in-out' }}></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#4285F4]/30 rounded-full blur-[120px] mix-blend-screen" style={{ animation: 'fluid-drift 13s infinite alternate-reverse ease-in-out' }}></div>
-        <div className="absolute top-[20%] left-[20%] w-[50%] h-[50%] bg-[#fec708]/20 rounded-full blur-[120px] mix-blend-screen" style={{ animation: 'fluid-drift 17s infinite alternate ease-in-out' }}></div>
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#34A853]/30 rounded-full blur-[120px] mix-blend-screen transform-gpu" style={{ animation: 'fluid-drift 11s infinite alternate ease-in-out' }}></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#4285F4]/30 rounded-full blur-[120px] mix-blend-screen transform-gpu" style={{ animation: 'fluid-drift 13s infinite alternate-reverse ease-in-out' }}></div>
+        <div className="absolute top-[20%] left-[20%] w-[50%] h-[50%] bg-[#fec708]/20 rounded-full blur-[120px] mix-blend-screen transform-gpu" style={{ animation: 'fluid-drift 17s infinite alternate ease-in-out' }}></div>
       </div>
 
       <div className="flex flex-col min-h-full w-full pb-8">
