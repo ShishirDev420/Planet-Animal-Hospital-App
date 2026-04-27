@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut } from 'lucide-react';
-import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { signOut } from 'firebase/auth';
@@ -116,12 +115,33 @@ export default function ProfileSettings() {
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center mb-10"
       >
-        <div className="animate-[pulse_4s_ease-in-out_infinite]">
-          <DualAvatar 
-            leftImage={userImage}
-            rightImage={petImage}
-            className="w-40 h-40 mb-6"
-          />
+        <div className="animate-[pulse_4s_ease-in-out_infinite] w-40 h-40 mb-6 relative flex items-center justify-center">
+          {userImage ? (
+            <img 
+              src={userImage} 
+              alt="Parent" 
+              className="w-[60%] h-[60%] absolute top-0 left-0 rounded-full border-2 border-white dark:border-[#071912] object-cover shadow-md z-10"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-[60%] h-[60%] absolute top-0 left-0 rounded-full border-2 border-white dark:border-[#071912] bg-white/10 backdrop-blur-md shadow-md z-10 flex items-center justify-center overflow-hidden text-slate-400 dark:text-white/60">
+              <User size={32} />
+            </div>
+          )}
+          
+          {petImage ? (
+            <img 
+              src={petImage} 
+              alt="Pet" 
+              className="w-[70%] h-[70%] absolute bottom-0 right-0 rounded-full border-2 border-white dark:border-[#071912] object-cover shadow-md z-20"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-[70%] h-[70%] absolute bottom-0 right-0 rounded-full border-2 border-white dark:border-[#071912] bg-white/10 backdrop-blur-md shadow-md z-20 flex flex-col items-center justify-center overflow-hidden p-1 text-center text-slate-500 dark:text-white/80">
+              <Dog size={28} className="mb-1 opacity-70" />
+              <span className="text-[10px] leading-tight font-medium">Upload<br/>{profile?.name || "Pet"}'s<br/>Photo</span>
+            </div>
+          )}
         </div>
 
         <input 
@@ -145,20 +165,20 @@ export default function ProfileSettings() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2"
+            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2 hover:bg-white/90 dark:hover:bg-white/10 transition-colors group"
           >
-            <div className="bg-slate-100 dark:bg-white/10 p-2 rounded-full text-slate-600 dark:text-white/90 border border-transparent dark:border-white/5"><Camera size={16} /></div>
-            <span className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-300">Edit {profile?.parentName || "Parent"}'s Photo</span>
+            <div className="bg-slate-100 dark:bg-white/10 p-2 rounded-full text-slate-600 dark:text-white/90 border border-transparent dark:border-white/5 group-hover:bg-slate-200 dark:group-hover:bg-white/20 transition-colors"><Camera size={16} /></div>
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Edit {profile?.parentName || "Parent"}'s Photo</span>
           </motion.button>
           <motion.button 
             onClick={() => petFileInputRef.current?.click()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2"
+            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2 hover:bg-white/90 dark:hover:bg-white/10 transition-colors group"
           >
-            <div className="bg-planet-yellow/20 p-2 rounded-full text-planet-yellow"><Camera size={16} /></div>
-            <span className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-300">Edit {profile?.name || "Pet"}'s Photo</span>
+            <div className="bg-planet-yellow/20 p-2 rounded-full text-planet-yellow group-hover:bg-planet-yellow/30 transition-colors"><Camera size={16} /></div>
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Edit {profile?.name || "Pet"}'s Photo</span>
           </motion.button>
         </div>
       </motion.div>
