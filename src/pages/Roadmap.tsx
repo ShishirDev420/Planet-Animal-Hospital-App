@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import localLogo from '../assets/logo.png';
 import { Sparkles, ArrowRight, Loader2, RefreshCw, Lock, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +34,7 @@ const generateRoadmapText = async (formData: any) => {
          messages: [
            {
              role: "system",
-             content: "You are an elite veterinary research agent. Generate an in-depth longevity plan tailored exclusively for the provided pet context and surgical history. Use premium typography formatting, strictly using '1-3 Months', '3-6 Months', etc. Provide actionable, deep insights."
+             content: "You are an elite veterinary research agent. Generate an in-depth longevity plan tailored exclusively for the provided pet context and surgical history. Use premium typography formatting, strictly using '1-3 Months', '3-6 Months', etc. Provide actionable, deep insights. CRITICAL: You MUST include a 'Verifiable Academic Sources' section at the end. Provide 2-3 real markdown links to veterinary institutions (e.g., [AVMA](https://www.avma.org))."
            },
            {
              role: "user",
@@ -86,8 +87,9 @@ export default function Roadmap() {
 
         if (profile?.cachedRoadmap && profile?.roadmapGeneratedAt) {
           if ((Date.now() - profile.roadmapGeneratedAt) < 5184000000) {
-            setRoadmap(profile.cachedRoadmap);
-            return;
+            // CACHE BYPASSED FOR TESTING
+            // setRoadmap(profile.cachedRoadmap);
+            // return;
           }
         }
         
@@ -214,12 +216,12 @@ export default function Roadmap() {
     <div className="h-full w-full flex flex-col pb-32">
       <div className="relative flex items-center justify-center pt-8 pb-4 w-full">
         {/* Outer Aura */}
-        <div className="absolute w-64 h-64 bg-[#fec708]/15 rounded-full blur-3xl mix-blend-screen animate-pulse transform-gpu"></div>
+        <div className="absolute w-64 h-64 bg-[#fec708]/15 rounded-full blur-[100px] mix-blend-screen transform-gpu" style={{ animation: 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
         {/* Inner Core */}
-        <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-2xl mix-blend-screen animate-pulse transform-gpu" style={{ animationDelay: '0.5s' }}></div>
+        <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-[70px] mix-blend-screen transform-gpu" style={{ animation: 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite', animationDelay: '1s' }}></div>
         {/* The Logo Container */}
         <div className="relative z-10 p-6 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] flex items-center justify-center">
-          <img src="https://i.ibb.co/cXYnNTsV/logo.png" crossOrigin="anonymous" alt="Planet Animal Hospital" className="w-24 h-24 object-contain drop-shadow-2xl z-20 relative transform transition-transform duration-700 hover:scale-105" />
+          <img src={localLogo} alt="Planet Animal Hospital" className="w-24 h-24 object-contain drop-shadow-2xl z-20 relative transform transition-transform duration-700 hover:scale-105" />
         </div>
       </div>
       <AnimatePresence>
@@ -304,20 +306,13 @@ export default function Roadmap() {
                       <Markdown
                         components={{
                           h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-8 mb-4 tracking-tight" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="font-heading font-bold text-xl text-slate-900 dark:text-white mt-8 mb-3 tracking-tight border-b border-slate-200 dark:border-white/[0.08] pb-2" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="font-heading font-bold text-[#fec708] mt-6 mb-2 uppercase tracking-wide text-sm" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-[#fec708] font-extrabold text-2xl mt-8 mb-4 uppercase drop-shadow-md" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-[#fec708] font-extrabold text-xl mt-6 mb-2 uppercase drop-shadow-md" {...props} />,
                           p: ({node, ...props}) => <p className="font-body text-base mb-4 text-slate-700 dark:text-slate-200 leading-relaxed" {...props} />,
                           ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 space-y-2 opacity-90" {...props} />,
                           li: ({node, ...props}) => <li className="font-body text-slate-700 dark:text-slate-200" {...props} />,
                           strong: ({node, ...props}) => <strong className="font-bold text-slate-900 dark:text-white" {...props} />,
-                          a: ({node, ...props}) => (
-                            <a 
-                              className="inline-flex items-center gap-1 font-medium text-[#fec708] hover:text-[#e5b307] bg-[#fec708]/10 hover:bg-[#fec708]/20 px-3 py-1 rounded-full text-sm transition-colors mt-1 break-all"
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              {...props} 
-                            />
-                          )
+                          a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline font-medium" target="_blank" rel="noopener noreferrer" {...props} />
                         }}
                       >
                         {roadmap}

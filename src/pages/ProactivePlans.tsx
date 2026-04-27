@@ -14,7 +14,7 @@ export default function ProactivePlans() {
           {/* Logo Container (Left) */}
           <div className="relative z-10">
             <button onClick={() => navigate('/profiles')} className="shrink-0 group">
-              <div className="animate-sync-heartbeat origin-left drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-transform active:scale-95">
+              <div className="origin-left drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-transform active:scale-95">
                 <Logo className="!w-16 !h-16" />
               </div>
             </button>
