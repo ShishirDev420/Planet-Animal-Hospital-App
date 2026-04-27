@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import localLogo from '../assets/logo.png';
 import { Sparkles, ArrowRight, Loader2, RefreshCw, Lock, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -221,7 +220,7 @@ export default function Roadmap() {
         <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-[70px] mix-blend-screen transform-gpu" style={{ animation: 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite', animationDelay: '1s' }}></div>
         {/* The Logo Container */}
         <div className="relative z-10 p-6 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] flex items-center justify-center">
-          <img src={localLogo} alt="Planet Animal Hospital" className="w-24 h-24 object-contain drop-shadow-2xl z-20 relative transform transition-transform duration-700 hover:scale-105" />
+          <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-24 h-24 object-contain drop-shadow-2xl z-20 relative transform transition-transform duration-700 hover:scale-105" referrerPolicy="no-referrer" />
         </div>
       </div>
       <AnimatePresence>
