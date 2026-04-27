@@ -3,15 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleGenAI } from '@google/genai';
-
-const SYSTEM_PROMPT = `You are an expert, highly realistic veterinarian for Planet Animal Hospital (Thane).
-CRITICAL RULES:
-1. Tone & Behavior: You are a real doctor. Cut the BS. Be direct, authoritative, and straight to the point.
-2. Humor vs. Seriousness: Use a subtle slice of humor ONLY if the pet is healthy and the context is light. If there is ANY medical issue, be 100% serious and focused on rapid triage.
-3. No Disclaimers: DO NOT constantly remind the user you are an AI or 'not a real vet'. Act the part with absolute confidence.
-4. Web Search: Use your Google Search tool to verify medical facts, toxins, or local 24/7 emergency clinics in Thane if needed.
-5. Latency Reduction (Extreme Conciseness): Speak in 1 to 2 short sentences maximum. Long paragraphs cause voice generation delays. Ask ONE critical diagnostic question at a time.
-6. Language: Default to English. Mirror Hinglish only if the user initiates.`;
+import { usePetProfile } from '../hooks/usePetProfile';
 
 declare global {
   interface Window {
@@ -20,8 +12,24 @@ declare global {
   }
 }
 
+let cachedElevenLabsVoiceId: string | null = null;
+async function getAvailableVoiceId(apiKey: string): Promise<string> {
+  if (cachedElevenLabsVoiceId) return cachedElevenLabsVoiceId;
+  const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+    headers: { 'xi-api-key': apiKey }
+  });
+  if (!res.ok) throw new Error('Failed to fetch ElevenLabs voices');
+  const data = await res.json();
+  if (data.voices && data.voices.length > 0) {
+    cachedElevenLabsVoiceId = data.voices[0].voice_id;
+    return cachedElevenLabsVoiceId!;
+  }
+  throw new Error('No ElevenLabs voices found');
+}
+
 export default function AIVet() {
   const navigate = useNavigate();
+  const { profile } = usePetProfile();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'ai', content: string}[]>([
@@ -101,44 +109,89 @@ export default function AIVet() {
     }
   }, []);
 
+  const speakTextFallback = (text: string) => {
+    setIsSpeakingState(true);
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoices = voices.filter(v => 
+      v.name.includes("Google US English") || 
+      v.name.includes("Google UK English") || 
+      (v.lang === "en-US" && !v.name.toLowerCase().includes("local"))
+    );
+    
+    if (preferredVoices.length > 0) {
+       utterance.voice = preferredVoices[0];
+    } else if (voices.length > 0) {
+       utterance.voice = voices.find(v => v.lang.startsWith("en-US") || v.lang.startsWith("en-GB")) || voices[0];
+    }
+    
+    utterance.pitch = 1.0;
+    utterance.rate = 1.0;
+    
+    const animateOrb = () => {
+      if (!isSpeakingRef.current) {
+        setOrbScale(1);
+        return;
+      }
+      requestAnimationFrame(animateOrb);
+      setOrbScale(1 + Math.random() * 0.15 + 0.05);
+    };
+
+    utterance.onend = () => {
+      setIsSpeakingState(false);
+      if (isCallActiveRef.current && recRef.current) {
+        try { recRef.current.start(); setIsListening(true); } catch (e) {}
+      }
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeakingState(false);
+      if (isCallActiveRef.current && recRef.current) {
+        try { recRef.current.start(); setIsListening(true); } catch (e) {}
+      }
+    };
+    
+    window.speechSynthesis.speak(utterance);
+    animateOrb();
+  };
+
   const speakText = async (text: string) => {
     try {
-      const ttsResponse = await fetch("https://api.sarvam.ai/text-to-speech", {
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+      if (!apiKey) {
+        console.warn("ElevenLabs API Key missing, falling back to local TTS");
+        speakTextFallback(text);
+        return;
+      }
+
+      setIsSpeakingState(true);
+      const voiceId = await getAvailableVoiceId(apiKey);
+      const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: "POST",
         headers: {
-          "api-subscription-key": (import.meta as any).env.VITE_SARVAM_API_KEY,
+          "Accept": "audio/mpeg",
+          "xi-api-key": apiKey,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          inputs: [text],
-          target_language_code: "en-IN",
-          speaker: "priya", 
-          model: "bulbul:v3"
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75
+          }
         })
       });
 
       if (!ttsResponse.ok) {
         const errorText = await ttsResponse.text();
-        console.error("Sarvam Error:", errorText);
-        throw new Error("Sarvam TTS API Failed: " + errorText);
+        console.error("ElevenLabs Error:", errorText);
+        throw new Error("ElevenLabs TTS API Failed: " + errorText);
       }
 
-      const data = await ttsResponse.json();
-      if (!data.audios || data.audios.length === 0) throw new Error("No audio returned");
-
-      // Sarvam returns a base64 string. Convert it to a playable audio URL.
-      const audioUrl = "data:audio/wav;base64," + data.audios[0];
+      const audioBlob = await ttsResponse.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-      
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      const source = audioCtx.createMediaElementSource(audio);
-      source.connect(analyser);
-      analyser.connect(audioCtx.destination);
-      
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
       
       const animateOrb = () => {
         if (!isSpeakingRef.current) {
@@ -146,20 +199,10 @@ export default function AIVet() {
           return;
         }
         requestAnimationFrame(animateOrb);
-        analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / bufferLength;
-        setOrbScale(1 + Math.max(0, average / 255) * 0.4);
+        // visualizer approximation
+        setOrbScale(1 + Math.random() * 0.15 + 0.05);
       };
-      
-      setIsSpeakingState(true);
-      audio.play();
-      animateOrb();
-      
-      // CRITICAL: Maintain the continuous loop
+
       audio.onended = () => {
         setIsSpeakingState(false);
         if (isCallActiveRef.current && recRef.current) {
@@ -181,15 +224,14 @@ export default function AIVet() {
           } catch (e) {}
         }
       };
+      
+      await audio.play();
+      animateOrb();
+      
     } catch (error) {
-      console.error("Audio generation failed:", error);
+      console.error("Voice generation failed:", error);
       setIsSpeakingState(false);
-      if (isCallActiveRef.current && recRef.current) {
-        try {
-          recRef.current.start();
-          setIsListening(true);
-        } catch (e) {}
-      }
+      speakTextFallback(text);
     }
   };
 
@@ -200,6 +242,15 @@ export default function AIVet() {
     isProcessingRef.current = true;
     
     try {
+      const petName = profile?.name || "the pet";
+      const petBreed = profile?.breed || "unknown breed";
+      const petAge = profile?.age ? `${profile.age.years}y ${profile.age.months}m` : "unknown age";
+      const medicalHistory = profile?.medicalHistory || "None";
+      
+      const dynamicSystemPrompt = `You are the Lead Clinical AI at Planet Animal Hospital. You are highly advanced, exceptionally knowledgeable, and deeply empathetic. Your communication style is professional, neutral, and clear (similar to Gemini). 
+CRITICAL CAPABILITY: You are a multilingual bridge. You must seamlessly auto-detect the user's language. If they speak in English, respond in English. If they speak in Hindi, Marathi, Telugu, Tamil, Kannada, or a mixed dialect like Hinglish, you MUST dynamically adjust your output to match their language perfectly. Your default baseline is neutral English.
+You have access to the following patient file: Pet Name: ${petName}, Breed: ${petBreed}, Age: ${petAge}, Medical History: ${medicalHistory}. Use this data proactively. Keep responses concise and medically sound.`;
+
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         throw new Error("Gemini API Key missing");
@@ -215,7 +266,7 @@ export default function AIVet() {
         model: 'gemini-2.5-flash',
         contents,
         config: {
-          systemInstruction: SYSTEM_PROMPT,
+          systemInstruction: dynamicSystemPrompt,
           tools: [{ googleSearch: {} }]
         }
       });

@@ -65,7 +65,7 @@ export default function ProactivePlans() {
           price="₹999"
           period="/month"
           description="Perfect for young, healthy pets to stay on track."
-          features={["25% Off Every Consultation", "Discounted Core Vaccinations", "Free Quarterly Deworming Follow-up & Administration"]}
+          features={["15% Off Every Consultation", "10% Off Every Grooming", "Discounted Core Vaccinations", "Free Quarterly Deworming Follow-up & Administration"]}
           delay={0.1}
         />
         <PlanCard
@@ -75,7 +75,7 @@ export default function ProactivePlans() {
           description="Comprehensive care for adult pets."
           features={[
             "Everything in Essential", 
-            "Biannual Blood Panels", 
+            "15% Off Biannual Blood Panels", 
             "Free Dental Exam & Consult (Once every 6 months)", 
             "1 Free Grooming (Once every 3 months)",
             "Dedicated Longevity Officer (Monthly Updates)"
