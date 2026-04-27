@@ -169,31 +169,34 @@ function getPersonalizedIncentives(pet?: { name?: string, breed?: string, age?: 
 
   // Standard baseline options
   incentives.push({
-    id: "general-checkup",
-    title: "General Checkup",
-    subtext: "Standard wellness check.",
+    id: "general-wellness-checkup",
+    title: "General Wellness Checkup",
+    subtext: "Comprehensive proactive health screening tailored to your pet.",
     pointsText: "+1,000 pts",
     pointsValue: 1000,
     highValue: true,
-    theme: "yellow" as const
+    theme: "yellow" as const,
+    actionText: "Book Now"
   });
   
   incentives.push({
-    id: "vaccinations",
-    title: "Vaccinations",
-    subtext: "Keep them protected.",
-    pointsText: "+750 pts",
-    pointsValue: 750,
-    theme: "yellow" as const
+    id: "proactive-dental-exam",
+    title: "Proactive Dental Exam",
+    subtext: "Preventative oral care assessment.",
+    pointsText: "+500 pts",
+    pointsValue: 500,
+    theme: "blue" as const,
+    actionText: "Book Now"
   });
 
   incentives.push({
-    id: "social-spotlight",
-    title: "Social Spotlight",
-    subtext: "Tag us in a pic of your pet!",
-    pointsText: "+300 pts",
-    pointsValue: 300,
-    theme: "purple" as const
+    id: "log-preventative-meds",
+    title: "Log Preventative Meds",
+    subtext: "Update monthly flea, tick & heartworm.",
+    pointsText: "+100 pts",
+    pointsValue: 100,
+    theme: "green" as const,
+    actionText: "Log Meds"
   });
 
   return incentives.map((incentive, index) => ({
@@ -590,6 +593,7 @@ export default function Dashboard() {
                   pointsValue={incentive.pointsValue}
                   highValue={incentive.highValue}
                   theme={incentive.theme}
+                  actionText={(incentive as any).actionText}
                   isPending={pendingIncentives.includes(incentive.id)}
                   onBook={() => handleBookingRequest(incentive.title, incentive.pointsValue, incentive.id)} 
                   carouselRef={carouselRef}
@@ -890,7 +894,7 @@ function MagneticWrapper({ children, className }: { children: React.ReactNode, c
   );
 }
 
-function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPending, theme = 'yellow', onBook, carouselRef }: { id: string, title: string, subtext?: string, pointsText: string, pointsValue: number, highValue?: boolean, isPending: boolean, theme?: 'blue' | 'orange' | 'green' | 'purple' | 'yellow', onBook: (id: string, points: number, title: string) => void, carouselRef?: React.RefObject<HTMLElement> }) {
+function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPending, theme = 'yellow', actionText = 'Book Now', onBook, carouselRef }: { id: string, title: string, subtext?: string, pointsText: string, pointsValue: number, highValue?: boolean, isPending: boolean, theme?: 'blue' | 'orange' | 'green' | 'purple' | 'yellow', actionText?: string, onBook: (id: string, points: number, title: string) => void, carouselRef?: React.RefObject<HTMLElement> }) {
   const cardRef = useRef<HTMLDivElement>(null);
   
   const { scrollXProgress } = useScroll({
@@ -963,7 +967,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
                     : 'bg-[#fec708] backdrop-blur-xl border border-[#fec708] text-white hover:bg-[#fec708]/90'
                 }`}
               >
-                {isPending ? 'Pending Confirmation' : 'Book Now'}
+                {isPending ? 'Pending Confirmation' : actionText}
               </button>
             </MagneticWrapper>
           </div>
