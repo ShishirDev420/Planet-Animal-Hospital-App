@@ -146,25 +146,17 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-y-auto overflow-x-hidden z-10 bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-      <style>{`
-        @keyframes fluid-drift {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-      `}</style>
-      
-      {/* 🔮 THE LOCKED ORB MOAT */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#34A853]/30 rounded-full blur-[120px] mix-blend-screen transform-gpu" style={{ animation: 'fluid-drift 11s infinite alternate ease-in-out' }}></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#4285F4]/30 rounded-full blur-[120px] mix-blend-screen transform-gpu" style={{ animation: 'fluid-drift 13s infinite alternate-reverse ease-in-out' }}></div>
-        <div className="absolute top-[20%] left-[20%] w-[50%] h-[50%] bg-[#fec708]/20 rounded-full blur-[120px] mix-blend-screen transform-gpu" style={{ animation: 'fluid-drift 17s infinite alternate ease-in-out' }}></div>
+    <div className="relative overflow-hidden w-full min-h-screen bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+      {/* Background Ambient Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
+        <div className="relative w-full max-w-md h-full">
+          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        </div>
       </div>
 
-      <div className="flex flex-col min-h-full w-full pb-8">
+      <div className="relative z-10 flex flex-col min-h-screen w-full pb-8">
         {/* ✨ MAIN UI CONTENT */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 pt-12 pb-4 shrink-0">
           
