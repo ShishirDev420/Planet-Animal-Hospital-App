@@ -41,7 +41,7 @@ export default function App() {
       if (user) {
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (!userDoc.exists() || !userDoc.data()?.petName) {
+          if (!userDoc.exists() || !userDoc.data()?.petName || userDoc.data()?.petName === 'Pending') {
             setAuthStatus('onboarding');
           } else {
             setAuthStatus('authenticated');

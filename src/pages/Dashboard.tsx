@@ -462,7 +462,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mb-6">
-          <h2 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Hi, {petProfile?.parentName || 'Shishir'}</h2>
+          <h2 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
           <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petProfile?.name || 'your pet'} healthy today.</p>
         </div>
       </header>

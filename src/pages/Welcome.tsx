@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { Loader2, Heart } from 'lucide-react';
 
 export default function Welcome({ initialOnboarding = false, onComplete }: { initialOnboarding?: boolean, onComplete?: () => void }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
@@ -72,12 +74,16 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           pawPoints: 500,
           createdAt: serverTimestamp()
         });
+        setNeedsOnboarding(true);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (e: any) {
       console.error('Auth failed', e);
-      if (e.code === 'auth/invalid-credential') {
+      if (e.code === 'auth/network-request-failed') {
+        import('firebase/auth').then(({ signOut }) => signOut(auth));
+        setAuthError("Network error. Please try again.");
+      } else if (e.code === 'auth/invalid-credential') {
         setAuthError("Incorrect email/password, or account doesn't exist. Please check your details or Sign Up.");
       } else if (e.code === 'auth/email-already-in-use') {
         setAuthError("An account with this email already exists. Please verify your password and sign in.");
@@ -97,6 +103,9 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       // App.tsx uses onAuthStateChanged to intercept into onboarding
     } catch (e: any) {
       console.error('Google Login failed', e);
+      if (e.code === 'auth/network-request-failed') {
+        import('firebase/auth').then(({ signOut }) => signOut(auth));
+      }
       setAuthError(e.message || 'Google Auth failed');
     }
   };
@@ -124,12 +133,14 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           additionalDetails: additionalDetails.trim(),
           pawPoints: 500,
           createdAt: serverTimestamp()
-        });
+        }, { merge: true });
+        
         if (onComplete) {
           onComplete();
         } else {
           setNeedsOnboarding(false);
         }
+        navigate('/');
       }
     } catch (e: any) {
       console.error('Onboarding failed', e);
@@ -151,6 +162,79 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       setAuthError(e.message || 'Failed to send password reset email');
     }
   };
+
+  if (needsOnboarding) {
+    return (
+      <div className="relative overflow-hidden w-full min-h-screen bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+        {/* Background Ambient Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
+          <div className="relative w-full max-w-md h-full">
+            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+            <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+            <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          </div>
+        </div>
+
+        <div className="relative z-20 w-full max-w-sm mx-auto px-4 pb-12 pt-12 shrink-0">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="font-heading font-bold tracking-tight text-white text-lg text-center mb-4">Welcome! Who are we caring for?</h3>
+              {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Your Name (Pet Parent)</label>
+                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet's Name</label>
+                  <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet Type</label>
+                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+                    <option value="Dog" className="text-black">Dog</option>
+                    <option value="Cat" className="text-black">Cat</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Breed</label>
+                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Age</label>
+                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Gender</label>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+                      <option value="Male" className="text-black">Male</option>
+                      <option value="Female" className="text-black">Female</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Weight (lbs/kg)</label>
+                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Additional Details (Unlock Roadmap)</label>
+                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all min-h-[80px]" />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <motion.button whileTap={{ scale: 0.95 }} onClick={handleCompleteProfile} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-heading font-bold uppercase tracking-widest py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center">
+                  Enter the Clinic
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden w-full min-h-screen bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
@@ -233,62 +317,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         {/* 🔐 BOTTOM AUTH FORM / ONBOARDING SWAP */}
         <div className="relative z-20 w-full max-w-sm mx-auto px-4 pb-12 shrink-0">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          
-          {needsOnboarding ? (
-            <div className="space-y-4">
-              <h3 className="font-heading font-bold tracking-tight text-white text-lg text-center mb-4">Welcome! Who are we caring for?</h3>
-              {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Your Name (Pet Parent)</label>
-                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet's Name</label>
-                  <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet Type</label>
-                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
-                    <option value="Dog" className="text-black">Dog</option>
-                    <option value="Cat" className="text-black">Cat</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Breed</label>
-                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Age</label>
-                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Gender</label>
-                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
-                      <option value="Male" className="text-black">Male</option>
-                      <option value="Female" className="text-black">Female</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Weight (lbs/kg)</label>
-                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Additional Details (Unlock Roadmap)</label>
-                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all min-h-[80px]" />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={handleCompleteProfile} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-heading font-bold uppercase tracking-widest py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center">
-                  Enter the Clinic
-                </motion.button>
-              </div>
-            </div>
-          ) : (
             <>
               <div className="space-y-3">
                 {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md leading-relaxed">{authError}</p>}
@@ -338,8 +366,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                 </button>
               </div>
             </>
-          )}
-        </motion.div>
+          </motion.div>
         </div>
       </div>
     </div>
