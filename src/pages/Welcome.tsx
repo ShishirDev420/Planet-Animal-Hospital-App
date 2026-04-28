@@ -64,7 +64,14 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     setAuthError('');
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          petName: 'Pending',
+          pawPoints: 0,
+          createdAt: serverTimestamp()
+        });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
