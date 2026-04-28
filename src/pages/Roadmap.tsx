@@ -301,17 +301,17 @@ export default function Roadmap() {
                       </button>
                     </div>
                     
-                    <div className="text-left text-slate-700 dark:text-white/90 leading-relaxed font-sans">
+                    <div className="font-sans text-slate-300 text-base leading-relaxed tracking-wide text-left space-y-6">
                       <Markdown
                         components={{
-                          h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-8 mb-4 tracking-tight" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-[#fec708] font-extrabold text-2xl mt-8 mb-4 uppercase drop-shadow-md" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-[#fec708] font-extrabold text-xl mt-6 mb-2 uppercase drop-shadow-md" {...props} />,
-                          p: ({node, ...props}) => <p className="font-body text-base mb-4 text-slate-700 dark:text-slate-200 leading-relaxed" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 space-y-2 opacity-90" {...props} />,
-                          li: ({node, ...props}) => <li className="font-body text-slate-700 dark:text-slate-200" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-bold text-slate-900 dark:text-white" {...props} />,
-                          a: ({node, ...props}) => <a className="text-teal-400 hover:text-teal-300 underline font-medium" target="_blank" rel="noopener noreferrer" {...props} />
+                          h1: ({node, ...props}) => <h1 className="text-[#fec708] font-semibold text-3xl mt-8 mb-4 tracking-tight" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-[#fec708] font-semibold text-2xl mt-8 mb-4 tracking-tight" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-white font-semibold text-xl mt-8 mb-4 tracking-tight" {...props} />,
+                          p: ({node, ...props}) => <p className="text-slate-200 leading-loose mb-4" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc pl-5 space-y-3 mb-6" {...props} />,
+                          li: ({node, ...props}) => <li className="text-slate-300 leading-relaxed" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-bold text-white" {...props} />,
+                          a: ({node, ...props}) => <a className="text-[#fec708] hover:text-white underline underline-offset-4 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
                         }}
                       >
                         {roadmap}
