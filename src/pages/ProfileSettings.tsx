@@ -38,6 +38,8 @@ export default function ProfileSettings() {
   }, [profile]);
 
   const { userImage, petImage, updateUserImage, updatePetImage } = useProfileImages();
+  const user = { photoUrl: userImage };
+  const pet = { photoUrl: petImage };
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -115,33 +117,16 @@ export default function ProfileSettings() {
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center mb-10"
       >
-        <div className="animate-[pulse_4s_ease-in-out_infinite] w-40 h-40 mb-6 relative flex items-center justify-center">
-          {userImage ? (
-            <img 
-              src={userImage} 
-              alt="Parent" 
-              className="w-[60%] h-[60%] absolute top-0 left-0 rounded-full border-2 border-white dark:border-[#071912] object-cover shadow-md z-10"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-[60%] h-[60%] absolute top-0 left-0 rounded-full border-2 border-white dark:border-[#071912] bg-white/10 backdrop-blur-md shadow-md z-10 flex items-center justify-center overflow-hidden text-slate-400 dark:text-white/60">
-              <User size={32} />
-            </div>
-          )}
+        <div className="flex flex-row items-center justify-center -space-x-4 relative mb-8 mt-2 p-1">
+          <div className="absolute inset-0 z-0 rounded-full bg-planet-yellow/20 opacity-50 blur-md animate-[pulse_3s_ease-in-out_infinite]"></div>
           
-          {petImage ? (
-            <img 
-              src={petImage} 
-              alt="Pet" 
-              className="w-[70%] h-[70%] absolute bottom-0 right-0 rounded-full border-2 border-white dark:border-[#071912] object-cover shadow-md z-20"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-[70%] h-[70%] absolute bottom-0 right-0 rounded-full border-2 border-white dark:border-[#071912] bg-white/10 backdrop-blur-md shadow-md z-20 flex flex-col items-center justify-center overflow-hidden p-1 text-center text-slate-500 dark:text-white/80">
-              <Dog size={28} className="mb-1 opacity-70" />
-              <span className="text-[10px] leading-tight font-medium">Upload<br/>{profile?.name || "Pet"}'s<br/>Photo</span>
-            </div>
-          )}
+          <div className="relative w-24 h-24 rounded-full bg-white/5 backdrop-blur-md border-[1.5px] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] flex items-center justify-center overflow-hidden">
+            {user.photoUrl && <img src={user.photoUrl} alt="Parent" className="w-full h-full object-cover" />}
+          </div>
+          
+          <div className="relative w-24 h-24 rounded-full bg-white/5 backdrop-blur-md border-[1.5px] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] flex items-center justify-center overflow-hidden">
+            {pet.photoUrl && <img src={pet.photoUrl} alt="Pet" className="w-full h-full object-cover" />}
+          </div>
         </div>
 
         <input 
