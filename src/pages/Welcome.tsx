@@ -69,7 +69,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           uid: userCredential.user.uid,
           email: userCredential.user.email,
           petName: 'Pending',
-          pawPoints: 0,
+          pawPoints: 500,
           createdAt: serverTimestamp()
         });
       } else {
