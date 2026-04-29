@@ -219,8 +219,18 @@ export default function Dashboard() {
   
   const [verifiedPoints, setVerifiedPoints] = useState(0);
   const [pendingPoints, setPendingPoints] = useState(0);
+  const [currentPlan, setCurrentPlan] = useState('free');
   const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
   const [incentivesOrder, setIncentivesOrder] = useState<any[]>([]);
+
+  const getMultiplier = (plan: string) => {
+    switch (plan?.toLowerCase()) {
+      case 'essential': return 0.5;
+      case 'advanced': return 1.5;
+      case 'prestige': return 2;
+      default: return 1;
+    }
+  };
 
   useEffect(() => {
     if (petProfile) {
@@ -240,7 +250,9 @@ export default function Dashboard() {
         const userDocRef = doc(db, 'users', user.uid);
         unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
-            setVerifiedPoints(docSnap.data().pawPoints || 0);
+            const data = docSnap.data();
+            setVerifiedPoints(data.pawPoints || 0);
+            setCurrentPlan(data.currentPlan || 'free');
           }
         }, (err) => {
            console.error('onSnapshot error in Dashboard:', err);
@@ -260,9 +272,11 @@ export default function Dashboard() {
   const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
     if (!userId) return;
     
+    const finalPoints = pointsValue * getMultiplier(currentPlan);
+
     // Optimistic UI updates
     setPendingIncentives(prev => [...prev, incentiveId]);
-    setPendingPoints(prev => prev + pointsValue);
+    setPendingPoints(prev => prev + finalPoints);
     
     try {
       const user = auth.currentUser;
@@ -276,7 +290,7 @@ export default function Dashboard() {
         reason: serviceName,
         date: "TBD",
         time: "TBD",
-        points: pointsValue,
+        points: finalPoints,
         status: 'pending',
         actionId: incentiveId,
         createdAt: serverTimestamp()
@@ -290,7 +304,7 @@ export default function Dashboard() {
       handleFirestoreError(e, OperationType.CREATE, 'requests');
       // Revert optimistic update on failure
       setPendingIncentives(prev => prev.filter(id => id !== incentiveId));
-      setPendingPoints(prev => prev - pointsValue);
+      setPendingPoints(prev => prev - finalPoints);
     }
   };
 
@@ -387,6 +401,8 @@ export default function Dashboard() {
   const submitBooking = async () => {
     if (!selectedService || !bookingDate || !bookingTime || !userId) return;
 
+    const finalPoints = selectedService.points * getMultiplier(currentPlan);
+
     try {
       await addDoc(collection(db, 'requests'), {
         userId: auth.currentUser?.uid || userId,
@@ -394,7 +410,7 @@ export default function Dashboard() {
         reason: selectedService.name,
         date: bookingDate,
         time: bookingTime,
-        points: selectedService.points,
+        points: finalPoints,
         status: 'pending',
         createdAt: serverTimestamp()
       });

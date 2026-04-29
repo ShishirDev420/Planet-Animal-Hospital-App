@@ -72,6 +72,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           email: userCredential.user.email,
           petName: 'Pending',
           pawPoints: 500,
+          currentPlan: 'free',
           createdAt: serverTimestamp()
         });
         setNeedsOnboarding(true);
