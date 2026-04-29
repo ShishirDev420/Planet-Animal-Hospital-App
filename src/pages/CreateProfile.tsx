@@ -37,7 +37,7 @@ export default function CreateProfile() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex-1"
+        className="flex-1 max-w-3xl mx-auto w-full"
       >
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2 dark:text-white/95">

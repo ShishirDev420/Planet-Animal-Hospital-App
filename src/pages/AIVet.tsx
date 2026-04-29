@@ -67,6 +67,42 @@ export default function AIVet() {
     isCallActiveRef.current = val;
   };
 
+  const stopAllActivity = () => {
+    setIsCallActiveState(false);
+    setIsSpeakingState(false);
+    isProcessingRef.current = false;
+    
+    if (recRef.current) {
+      try { recRef.current.abort(); } catch(e){}
+    }
+    
+    window.speechSynthesis.cancel();
+    
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+    }
+    
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+    }
+    
+    if (audioCtxRef.current) {
+      try {
+        audioCtxRef.current.close();
+      } catch(e) {}
+      audioCtxRef.current = null;
+    }
+    
+    setOrbScale(1);
+  };
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -76,6 +112,8 @@ export default function AIVet() {
       rec.lang = 'en-IN';
 
       rec.onresult = async (event: any) => {
+        if (!isCallActiveRef.current || isProcessingRef.current) return;
+        
         const transcript = event.results[0][0].transcript;
         setIsListening(false);
         await handleUserMessage(transcript);
@@ -111,8 +149,8 @@ export default function AIVet() {
     }
     
     return () => {
-      window.speechSynthesis.cancel();
-    }
+      stopAllActivity();
+    };
   }, []);
 
   const speakTextFallback = (text: string) => {
@@ -160,6 +198,10 @@ export default function AIVet() {
       }
     };
     
+    if (!isCallActiveRef.current) {
+      setIsSpeakingState(false);
+      return;
+    }
     window.speechSynthesis.speak(utterance);
     animateOrb();
   };
@@ -198,9 +240,14 @@ export default function AIVet() {
         throw new Error("ElevenLabs TTS API Failed: " + errorText);
       }
       
-      if (!isCallActiveRef.current) return;
+      if (!isCallActiveRef.current) {
+        setIsSpeakingState(false);
+        return;
+      }
 
       const audioBlob = await ttsResponse.blob();
+      if (!isCallActiveRef.current) return;
+      
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       currentAudioRef.current = audio;
@@ -242,6 +289,10 @@ export default function AIVet() {
         }
       };
       
+      if (!isCallActiveRef.current) {
+        setIsSpeakingState(false);
+        return;
+      }
       await audio.play();
       animateOrb();
       
@@ -270,44 +321,46 @@ CRITICAL CAPABILITY: You are a multilingual bridge. You must seamlessly auto-det
 GUARDRAIL: If the user mentions an app bug, UI issue, or technical problem, DO NOT give medical advice. Simply state: 'Please contact technical support.'
 You have access to the following patient file: Pet Name: ${petName}, Breed: ${petBreed}, Age: ${petAge}, Medical History: ${medicalHistory}. Use this data proactively. Keep responses concise and medically sound.`;
 
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         throw new Error("Gemini API Key missing");
       }
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI(apiKey);
       
       const contents = newChatHistory.map(msg => ({
         role: msg.role === 'ai' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       }));
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const response = await model.generateContent({
         contents,
-        config: {
-          systemInstruction: dynamicSystemPrompt,
-          tools: [{ googleSearch: {} }]
+        generationConfig: {
+          maxOutputTokens: 200,
+          temperature: 0.7,
         }
       });
       
-      if (!isCallActiveRef.current) {
-        isProcessingRef.current = false;
-        return;
-      }
-      
-      const aiText = response.text || "I'm having trouble connecting right now.";
+      const result = await response.response;
+      const aiText = result.text();
       
       setChatHistory(prev => [...prev, { role: 'ai', content: aiText }]);
       isProcessingRef.current = false;
-      speakText(aiText);
+      if (isCallActiveRef.current) {
+        speakText(aiText);
+      }
 
     } catch (e) {
       console.error(e);
       isProcessingRef.current = false;
       setIsSpeakingState(false);
-      const errorText = "I'm having a little trouble connecting right now, let's try again in a moment.";
-      setChatHistory(prev => [...prev, { role: 'ai', content: errorText }]);
-      speakText(errorText);
+      
+      // CRITICAL: Only speak the error if the user hasn't already ended the call
+      if (isCallActiveRef.current) {
+        const errorText = "I'm having a little trouble connecting right now, let's try again in a moment.";
+        setChatHistory(prev => [...prev, { role: 'ai', content: errorText }]);
+        speakText(errorText);
+      }
     }
   };
 
@@ -358,35 +411,7 @@ You have access to the following patient file: Pet Name: ${petName}, Breed: ${pe
         setIsListening(false);
       }
     } else {
-      // End Call logic
-      setIsCallActiveState(false);
-      setIsSpeakingState(false);
-      
-      if (recognition) {
-        try { recognition.abort(); } catch (e) {}
-      }
-      
-      setIsListening(false);
-      window.speechSynthesis.cancel();
-      
-      if (currentAudioRef.current) {
-        currentAudioRef.current.pause();
-        currentAudioRef.current.currentTime = 0;
-        currentAudioRef.current = null;
-      }
-      
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (micStreamRef.current) {
-        micStreamRef.current.getTracks().forEach(track => track.stop());
-        micStreamRef.current = null;
-      }
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close();
-        audioCtxRef.current = null;
-      }
-      setOrbScale(1);
+      stopAllActivity();
     }
   };
 
@@ -409,7 +434,7 @@ You have access to the following patient file: Pet Name: ${petName}, Breed: ${pe
 
       {/* Main UI Area */}
       <div className="flex-1 overflow-y-auto px-6 pb-40 z-10 no-scrollbar relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <div className="flex flex-col gap-6 max-w-lg mx-auto min-h-[100%]">
+        <div className="flex flex-col gap-6 max-w-lg md:max-w-3xl mx-auto min-h-[100%]">
           
           {/* Spatial Orb Visualizer */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[300px] h-[300px] md:w-[600px] md:h-[600px]">

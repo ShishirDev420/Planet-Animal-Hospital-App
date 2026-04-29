@@ -18,6 +18,11 @@ import ProfileSettings from './pages/ProfileSettings';
 import Roadmap from './pages/Roadmap';
 import Welcome from './pages/Welcome';
 import Adoption from './pages/Adoption';
+import MobilePreview from './components/MobilePreview';
+
+// Check if we are already inside the preview frame to avoid recursion
+const isInsideFrame = window.location.search.includes('preview_frame=true');
+const isPreviewRoute = window.location.pathname === '/preview';
 
 // Placeholders for other routes
 const Placeholder = ({ title }: { title: string }) => (
@@ -48,7 +53,10 @@ export default function App() {
           }
         } catch (e) {
           console.error("Error fetching user doc during auth state change:", e);
-          setAuthStatus('onboarding'); // Fallback to onboarding if missing
+          // Hard-code logic: If we fail to fetch the user doc, sign them out and revert to the sign-in page.
+          // This prevents returning users from being incorrectly pushed into the onboarding flow.
+          import('firebase/auth').then(({ signOut }) => signOut(auth));
+          setAuthStatus('unauthenticated');
         }
       } else {
         setAuthStatus('unauthenticated');
@@ -65,25 +73,35 @@ export default function App() {
     <div className="dark min-h-screen bg-slate-950 text-white font-sans antialiased">
       <ErrorBoundary>
         <BrowserRouter>
-          <Routes>
-            {authStatus === 'unauthenticated' || authStatus === 'onboarding' ? (
-              <Route path="*" element={<Welcome initialOnboarding={authStatus === 'onboarding'} onComplete={() => setAuthStatus('authenticated')} />} />
-            ) : (
-              <>
-                <Route path="/profiles" element={<ProfileSelection />} />
-                <Route path="/create-profile" element={<CreateProfile />} />
-                <Route path="/settings" element={<ProfileSettings />} />
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="plans" element={<ProactivePlans />} />
-                  <Route path="ai" element={<AIVet />} />
-                  <Route path="roadmap" element={<Roadmap />} />
-                  <Route path="adoption" element={<Adoption />} />
-                </Route>
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </>
-            )}
-          </Routes>
+          {isPreviewRoute && !isInsideFrame ? (
+            <Routes>
+              <Route path="/preview" element={<MobilePreview />} />
+              <Route path="*" element={<Navigate to="/preview" replace />} />
+            </Routes>
+          ) : (
+            <Routes>
+              {authStatus === 'unauthenticated' || authStatus === 'onboarding' ? (
+                <>
+                  <Route path="/" element={<Welcome initialOnboarding={authStatus === 'onboarding'} onComplete={() => setAuthStatus('authenticated')} />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </>
+              ) : (
+                <>
+                  <Route path="/profiles" element={<ProfileSelection />} />
+                  <Route path="/create-profile" element={<CreateProfile />} />
+                  <Route path="/settings" element={<ProfileSettings />} />
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="plans" element={<ProactivePlans />} />
+                    <Route path="ai" element={<AIVet />} />
+                    <Route path="roadmap" element={<Roadmap />} />
+                    <Route path="adoption" element={<Adoption />} />
+                  </Route>
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </>
+              )}
+            </Routes>
+          )}
         </BrowserRouter>
       </ErrorBoundary>
     </div>

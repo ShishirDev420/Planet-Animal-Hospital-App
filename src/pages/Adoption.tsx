@@ -4,7 +4,7 @@ import { HeartHandshake } from 'lucide-react';
 export default function Adoption() {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center p-6 pb-32">
-      <div className="glass-card dark:bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-sm rounded-[2rem] p-10 max-w-md w-full flex flex-col items-center relative overflow-hidden">
+      <div className="glass-card dark:bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-sm rounded-[2rem] p-10 max-w-md md:max-w-2xl w-full flex flex-col items-center relative overflow-hidden">
         {/* Glow effect */}
         <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#fec708] rounded-full blur-[80px] opacity-20"></div>
 

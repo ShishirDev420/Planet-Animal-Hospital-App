@@ -192,14 +192,14 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       <div className="relative overflow-hidden w-full min-h-screen bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
         {/* Background Ambient Orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
-          <div className="relative w-full max-w-md h-full">
-            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
-            <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="relative w-full max-w-5xl h-full">
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+            <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+            <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
           </div>
         </div>
 
-        <div className="relative z-20 w-full max-w-sm mx-auto px-4 pb-12 pt-4 shrink-0">
+        <div className="relative z-20 w-full max-w-md md:max-w-xl mx-auto px-4 pb-12 pt-4 shrink-0">
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
@@ -280,10 +280,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     <div className="relative overflow-hidden w-full min-h-screen bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
       {/* Background Ambient Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
-        <div className="relative w-full max-w-md h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
-          <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        <div className="relative w-full max-w-5xl h-full">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
         </div>
       </div>
 
@@ -336,7 +336,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         </div>
 
         {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-sm my-1 sm:my-2 h-[90px] sm:h-[110px] flex flex-col justify-center items-center text-center bg-white/[0.08] backdrop-blur-3xl border border-white/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] rounded-3xl py-2 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10" style={{ willChange: 'auto' }}>
+        <div className="w-full max-w-md md:max-w-xl my-1 sm:my-2 h-[90px] sm:h-[110px] flex flex-col justify-center items-center text-center bg-white/[0.08] backdrop-blur-3xl border border-white/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] rounded-3xl py-2 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10" style={{ willChange: 'auto' }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeBenefit}
@@ -355,7 +355,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       </div>
 
         {/* 🔐 BOTTOM AUTH FORM / ONBOARDING SWAP */}
-        <div className="relative z-20 w-full max-w-sm mx-auto px-4 pb-12 shrink-0">
+        <div className="relative z-20 w-full max-w-md md:max-w-xl mx-auto px-4 pb-12 shrink-0">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <>
               <div className="space-y-3">

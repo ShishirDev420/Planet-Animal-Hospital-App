@@ -443,10 +443,10 @@ export default function Dashboard() {
     <div className="relative w-full h-full">
       {/* Background Ambient Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
-        <div className="relative w-full max-w-md h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
-          <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        <div className="relative w-full max-w-5xl h-full">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
         </div>
       </div>
 
@@ -538,7 +538,7 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <div>
         <h3 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <ActionCard 
             icon={<Calendar className="text-teal-500" />} 
             title="Book Visit" 
@@ -550,6 +550,18 @@ export default function Dashboard() {
             title="Medical Records" 
             subtitle="Vaccines & History" 
             onClick={() => setActiveModal('records')}
+          />
+          <ActionCard 
+            icon={<Bot className="text-planet-yellow" />} 
+            title="AI Vet" 
+            subtitle="Instant Health Advice" 
+            onClick={() => navigate('/ai')}
+          />
+          <ActionCard 
+            icon={<Map className="text-amber-500" />} 
+            title="Roadmap" 
+            subtitle="Longevity Plan" 
+            onClick={() => navigate('/roadmap')}
           />
         </div>
       </div>

@@ -39,14 +39,14 @@ export default function Layout() {
         
         {/* Desktop Main Content */}
         <div className="flex-1 flex justify-center overflow-y-auto">
-          <div className="w-full max-w-2xl px-6 py-8">
+          <div className="w-full max-w-5xl px-6 py-8">
             <Outlet />
           </div>
         </div>
       </div>
 
       {/* Mobile Container */}
-      <div className="lg:hidden w-full max-w-md mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
+      <div className="lg:hidden w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
         <main className="flex-1 overflow-y-auto pb-24 hide-scrollbar">
           <Outlet />
         </main>

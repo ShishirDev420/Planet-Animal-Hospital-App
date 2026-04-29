@@ -36,7 +36,16 @@ export default function ProactivePlans() {
   };
 
   return (
-    <div className="pb-12 dark:text-white/95">
+    <div className="pb-12 dark:text-white/95 relative min-h-screen">
+      {/* Background Ambient Orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
+        <div className="relative w-full max-w-5xl h-full">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
+          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+        </div>
+      </div>
+
       {/* Header with Logo */}
       <header className="px-6 pt-4 mb-2">
         <div className="relative flex items-center justify-between w-full py-4">
@@ -179,9 +188,9 @@ function PlanCard({ title, planId, price, period, description, features, isPopul
 
         <ul className="space-y-3 mb-8">
           {features.map((f: string, i: number) => (
-            <li key={i} className="flex items-start gap-3 text-sm font-body font-medium">
-              <CheckCircle2 className="shrink-0 text-[#fec708]" size={18} />
-              <span className={`${isPopular ? 'text-slate-200' : 'text-slate-700 dark:text-slate-200'}`}>{f}</span>
+            <li key={i} className="flex items-start gap-3 text-sm font-body font-medium leading-tight">
+              <CheckCircle2 className="shrink-0 text-[#fec708] mt-0.5" size={16} />
+              <span className={`${isPopular ? 'text-slate-200' : 'text-slate-700 dark:text-slate-200'} break-words`}>{f}</span>
             </li>
           ))}
         </ul>

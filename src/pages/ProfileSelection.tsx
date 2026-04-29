@@ -50,7 +50,7 @@ export default function ProfileSelection() {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md z-10 flex flex-col items-center"
+        className="w-full max-w-md md:max-w-2xl z-10 flex flex-col items-center"
       >
         <div className="flex flex-col items-center mb-12">
           <Logo size="lg" className="mb-6" />
