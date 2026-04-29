@@ -476,9 +476,19 @@ export default function Dashboard() {
       >
         {/* Asymmetric Floating Layout */}
         <div className="flex flex-col items-start gap-1 pt-4">
+          <style>{`
+            @keyframes pulsate-synchronized-glow {
+              0%, 100% { filter: drop-shadow(0 0 15px rgba(254,199,8,0.7)); opacity: 1; }
+              33% { filter: drop-shadow(0 0 25px rgba(254,199,8,0.9)); opacity: 0.8; }
+              66% { filter: drop-shadow(0 0 10px rgba(254,199,8,0.5)); opacity: 0.9; }
+            }
+            .animate-pulsate-synchronized-glow {
+              animation: pulsate-synchronized-glow 7s infinite ease-in-out;
+            }
+          `}</style>
           <h2 className="text-white/60 text-xs uppercase tracking-widest font-medium">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2">
-             <span className="font-heading tracking-tighter text-6xl tabular-nums font-extrabold text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse">{verifiedPoints.toLocaleString()}</span>
+             <span className="font-heading tracking-tighter text-6xl tabular-nums font-extrabold text-[#fec708] animate-pulsate-synchronized-glow">{verifiedPoints.toLocaleString()}</span>
             <span className="font-heading text-[#fec708] font-extrabold uppercase tracking-widest text-sm mb-2 drop-shadow-[0_0_10px_rgba(254,199,8,0.6)]">pts</span>
           </div>
           
@@ -493,33 +503,18 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="mt-6 w-full">
-            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+          <div className="mt-8 w-full">
+            <p className="text-[10px] text-white/60 font-medium mb-3 uppercase tracking-widest">
+              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} PTS TO NEXT UNLOCK
+            </p>
+            <div className="relative h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm">
               <motion.div 
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: Math.min(1, verifiedPoints / 5000) }}
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                className="h-full bg-gradient-to-r from-[#fec708] to-yellow-200 rounded-full origin-left"
+                className="h-full bg-gradient-to-r from-planet-yellow to-yellow-300 shadow-[0_0_15px_rgba(254,199,8,0.7)] animate-pulsate-synchronized-glow rounded-full"
               />
             </div>
-            <p className="text-[10px] text-white/60 font-medium mt-3 uppercase tracking-widest">
-              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} POINTS UNTIL YOUR NEXT FREE CONSULTATION
-            </p>
-          </div>
-          
-          <div className="flex gap-3 mt-8 w-full">
-            <button 
-              onClick={() => verifiedPoints >= 5000 && setActiveModal('redeem')}
-              disabled={verifiedPoints < 5000}
-              className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
-                verifiedPoints < 5000
-                  ? 'bg-white/10 text-white/50 border border-white/10 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-[#fec708] to-[#fec708] text-zinc-900 border border-transparent shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] font-bold'
-              }`}
-            >
-              {verifiedPoints < 5000 ? <Lock size={16} className="text-white/50" /> : <Gift size={16} className="text-zinc-900" />}
-              {verifiedPoints < 5000 ? 'Claim Free Consult' : 'Claim Free Consult'}
-            </button>
           </div>
         </div>
       </motion.div>
