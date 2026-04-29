@@ -197,6 +197,8 @@ export default function AIVet() {
         console.error("ElevenLabs Error:", errorText);
         throw new Error("ElevenLabs TTS API Failed: " + errorText);
       }
+      
+      if (!isCallActiveRef.current) return;
 
       const audioBlob = await ttsResponse.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -257,13 +259,15 @@ export default function AIVet() {
     isProcessingRef.current = true;
     
     try {
-      const petName = profile?.name || "the pet";
+      const petName = profile?.petName || "the pet";
+      const parentName = profile?.parentName || "a pet parent";
       const petBreed = profile?.breed || "unknown breed";
-      const petAge = profile?.age ? `${profile.age.years}y ${profile.age.months}m` : "unknown age";
-      const medicalHistory = profile?.medicalHistory || "None";
+      const petAge = profile?.age || "unknown age";
+      const medicalHistory = profile?.additionalDetails || "None";
       
-      const dynamicSystemPrompt = `You are the Lead Clinical AI at Planet Animal Hospital. You are highly advanced, exceptionally knowledgeable, and deeply empathetic. Your communication style is professional, neutral, and clear (similar to Gemini). 
+      const dynamicSystemPrompt = `You are the Lead Clinical AI at Planet Animal Hospital. You are highly advanced, exceptionally knowledgeable, and deeply empathetic. Your communication style is professional, neutral, and clear. You are speaking with ${parentName} about their pet, ${petName}.
 CRITICAL CAPABILITY: You are a multilingual bridge. You must seamlessly auto-detect the user's language. If they speak in English, respond in English. If they speak in Hindi, Marathi, Telugu, Tamil, Kannada, or a mixed dialect like Hinglish, you MUST dynamically adjust your output to match their language perfectly. Your default baseline is neutral English.
+GUARDRAIL: If the user mentions an app bug, UI issue, or technical problem, DO NOT give medical advice. Simply state: 'Please contact technical support.'
 You have access to the following patient file: Pet Name: ${petName}, Breed: ${petBreed}, Age: ${petAge}, Medical History: ${medicalHistory}. Use this data proactively. Keep responses concise and medically sound.`;
 
       const apiKey = process.env.GEMINI_API_KEY;
@@ -285,6 +289,11 @@ You have access to the following patient file: Pet Name: ${petName}, Breed: ${pe
           tools: [{ googleSearch: {} }]
         }
       });
+      
+      if (!isCallActiveRef.current) {
+        isProcessingRef.current = false;
+        return;
+      }
       
       const aiText = response.text || "I'm having trouble connecting right now.";
       

@@ -131,8 +131,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           gender,
           weight: weight.trim(),
           additionalDetails: additionalDetails.trim(),
-          pawPoints: 500,
-          createdAt: serverTimestamp()
         }, { merge: true });
         
         if (onComplete) {
@@ -175,57 +173,73 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           </div>
         </div>
 
-        <div className="relative z-20 w-full max-w-sm mx-auto px-4 pb-12 pt-12 shrink-0">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <div className="space-y-4">
-              <h3 className="font-heading font-bold tracking-tight text-white text-lg text-center mb-4">Welcome! Who are we caring for?</h3>
+        <div className="relative z-20 w-full max-w-sm mx-auto px-4 pb-12 pt-4 shrink-0">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.5, ease: "easeOut" }} 
+            className="w-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 sm:p-8"
+          >
+            <div className="space-y-6">
+              <h3 className="font-heading font-bold tracking-tight text-white text-xl text-center">Welcome! Who are we caring for?</h3>
               {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
               
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Your Name (Pet Parent)</label>
-                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet's Name</label>
-                  <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Pet Type</label>
-                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+              <motion.div 
+                initial="hidden"
+                animate="show"
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.1 }
+                  }
+                }}
+                className="space-y-4"
+              >
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Your Name (Pet Parent)</label>
+                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
+                </motion.div>
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Pet's Name</label>
+                  <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
+                </motion.div>
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Pet Type</label>
+                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all appearance-none backdrop-blur-sm shadow-inner">
                     <option value="Dog" className="text-black">Dog</option>
                     <option value="Cat" className="text-black">Cat</option>
                   </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Breed</label>
-                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
+                </motion.div>
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Breed</label>
+                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
+                </motion.div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Age</label>
-                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Gender</label>
-                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all appearance-none">
+                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                    <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Age</label>
+                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
+                  </motion.div>
+                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                    <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Gender</label>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all appearance-none backdrop-blur-sm shadow-inner">
                       <option value="Male" className="text-black">Male</option>
                       <option value="Female" className="text-black">Female</option>
                     </select>
-                  </div>
+                  </motion.div>
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Weight (lbs/kg)</label>
-                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-xs font-heading font-bold tracking-widest uppercase text-white/80 mb-1 ml-1">Additional Details (Unlock Roadmap)</label>
-                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 font-body font-medium text-slate-100 placeholder:text-white/40 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708] transition-all min-h-[80px]" />
-                </div>
-              </div>
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Weight (lbs/kg)</label>
+                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
+                </motion.div>
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Additional Details</label>
+                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all min-h-[100px] backdrop-blur-sm shadow-inner resize-none" />
+                </motion.div>
+              </motion.div>
 
               <div className="pt-2">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={handleCompleteProfile} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-600 text-white font-heading font-bold uppercase tracking-widest py-4 rounded-2xl shadow-[0_4px_20px_rgba(254,199,8,0.4)] hover:shadow-[0_4px_25px_rgba(254,199,8,0.6)] transition-all flex items-center justify-center">
+                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} onClick={handleCompleteProfile} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-500 text-black font-heading font-bold uppercase tracking-widest py-4 rounded-2xl shadow-[0_0_20px_rgba(254,199,8,0.3)] hover:shadow-[0_0_30px_rgba(254,199,8,0.5)] transition-all flex items-center justify-center border border-yellow-400">
                   Enter the Clinic
                 </motion.button>
               </div>
