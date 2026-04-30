@@ -606,24 +606,28 @@ export default function Dashboard() {
       <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95">
         {/* Header with Logo */}
       <header className="pt-4 mb-2">
-        <div className="relative flex items-center justify-between w-full py-4">
-          {/* Logo Container (Left) */}
-          <div className="relative z-10">
-            <button onClick={() => navigate('/profiles')} className="shrink-0 group">
-              <div className="origin-left drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-opacity duration-300 hover:opacity-90 active:scale-95">
-                <Logo className="!w-16 !h-16" />
+        <div className="flex items-center justify-between w-full py-4 relative gap-2">
+          {/* Logo Container (Left) - Fixed width for centering */}
+          <div className="flex items-center shrink-0 w-12 sm:w-16">
+            <button onClick={() => navigate('/profiles')} className="group">
+              <div className="drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-opacity duration-300 hover:opacity-90 active:scale-95">
+                <Logo className="!w-12 !h-12 sm:!w-16 sm:!h-16" />
               </div>
             </button>
           </div>
             
-          {/* Center Text Container */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0 w-max pointer-events-none whitespace-nowrap">
-            <span className="text-lg font-heading font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95">PLANET ANIMAL</span>
-            <span className="text-[10px] font-bold text-[#fec708] uppercase tracking-[0.25em] mt-0.5 dark:text-[#fec708]">HOSPITAL & WELLNESS</span>
+          {/* Branding Text (Center) - Truly centered via symmetric side widths */}
+          <div className="flex flex-col items-center flex-1 min-w-0 text-center pointer-events-none">
+            <h1 className="text-sm sm:text-lg font-heading font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95 whitespace-nowrap">
+              PLANET ANIMAL
+            </h1>
+            <p className="text-[7px] sm:text-[10px] font-bold text-[#fec708] uppercase tracking-[0.1em] sm:tracking-[0.25em] mt-0.5 dark:text-[#fec708] whitespace-nowrap">
+              HOSPITAL & WELLNESS
+            </p>
           </div>
 
-          {/* Profile Container (Right) */}
-          <div className="relative z-10">
+          {/* Profile Container (Right) - Matching width of Logo Container */}
+          <div className="flex items-center justify-end shrink-0 w-12 sm:w-16">
              <button onClick={() => navigate('/settings')} className="relative flex items-center justify-center p-2 rounded-full bg-gradient-to-br from-white/10 to-white/0 hover:from-white/20 hover:to-white/5 transition-all duration-300 border border-white/5 shadow-sm cursor-pointer group">
                <Settings className="w-5 h-5 text-white/80 group-hover:text-white transition-colors duration-300" />
              </button>

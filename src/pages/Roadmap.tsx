@@ -301,29 +301,32 @@ export default function Roadmap() {
                     </div>
                   </motion.div>
                 ) : (
-                  <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 flex-1 flex flex-col space-y-6">
+                  <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 sm:p-10 flex-1 flex flex-col space-y-8">
                     {/* Header */}
-                    <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/[0.08] pb-6">
+                    <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/[0.08] pb-8">
                       <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fec708]/20 text-[#fec708] text-xs font-bold mb-2 border border-[#fec708]/50 shadow-sm">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fec708]/20 text-[#fec708] text-xs font-bold mb-3 border border-[#fec708]/50 shadow-sm">
                           <Sparkles className="w-3 h-3" /> Roadmap Generated{profile?.roadmapGeneratedAt ? ` on ${new Date(profile.roadmapGeneratedAt).toLocaleDateString()}` : ''}
                         </div>
-                        <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">{(formData?.name || profile?.petName || profile?.name || 'Your Pet')}'s Plan</h2>
+                        <h2 className="font-heading font-extrabold text-3xl md:text-4xl text-[#fec708] tracking-tight drop-shadow-sm">
+                          {(formData?.name || profile?.petName || profile?.name || 'Your Pet')}'s <span className="text-white dark:text-white">Longevity Plan</span>
+                        </h2>
                       </div>
-                      <button onClick={handleSubmit} className="p-2 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white bg-white/50 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200 dark:border-white/[0.08] rounded-full hover:bg-white dark:hover:bg-white/[0.08] transition-all shadow-sm" title="Refresh/Start Over">
-                        <RefreshCw size={18} />
+                      <button onClick={handleSubmit} className="p-3 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white bg-white/50 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200 dark:border-white/[0.08] rounded-full hover:bg-white dark:hover:bg-white/[0.08] transition-all shadow-sm group active:scale-95" title="Refresh/Start Over">
+                        <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500" />
                       </button>
                     </div>
                     
-                    <div className="font-body text-slate-300 text-base leading-relaxed tracking-wide text-justify space-y-6">
+                    <div className="font-body text-slate-300 text-base leading-relaxed tracking-wide space-y-6">
                       <Markdown
                         components={{
-                          h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-3xl text-white mt-12 mb-6 border-b border-white/10 pb-4 tracking-tight" {...props} />,
+                          h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-3xl text-[#fec708] mt-12 mb-6 border-b border-[#fec708]/20 pb-4 tracking-tight" {...props} />,
                           h2: ({node, ...props}) => <h2 className="font-heading font-bold text-2xl text-[#fec708] mt-10 mb-5 tracking-tight border-l-4 border-[#fec708] pl-4" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="font-heading font-semibold text-xl text-white/90 mt-8 mb-4 tracking-tight uppercase" {...props} />,
-                          p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-justify [hyphens:auto] [text-align-last:left]" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="font-heading font-semibold text-xl text-[#fec708]/90 mt-8 mb-4 tracking-tight" {...props} />,
+                          h4: ({node, ...props}) => <h4 className="font-heading font-bold text-lg text-[#fec708]/80 mt-6 mb-3 tracking-tight" {...props} />,
+                          p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-left md:text-justify [hyphens:auto] [text-align-last:left] break-words" {...props} />,
                           ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-4 mb-8 text-left" {...props} />,
-                          li: ({node, ...props}) => <li className="font-body text-slate-300 leading-relaxed pl-2 text-justify [hyphens:auto]" {...props} />,
+                          li: ({node, ...props}) => <li className="font-body text-slate-300 leading-relaxed pl-2 text-left md:text-justify [hyphens:auto] break-words" {...props} />,
                           strong: ({node, ...props}) => <strong className="font-bold text-[#fec708]" {...props} />,
                           a: ({node, ...props}) => <a className="text-[#fec708] hover:text-white underline underline-offset-4 decoration-[#fec708]/30 hover:decoration-white transition-all" target="_blank" rel="noopener noreferrer" {...props} />
                         }}

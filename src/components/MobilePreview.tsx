@@ -33,22 +33,40 @@ export default function MobilePreview() {
         <div className="absolute -inset-10 bg-planet-yellow/5 blur-[100px] rounded-full -z-10 animate-pulse"></div>
       </div>
       
-      {/* Controls Overlay */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
-        <div className="px-6 py-3 glass rounded-full flex items-center gap-4 border-white/10 shadow-2xl">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs font-medium text-white/70 uppercase tracking-widest">Mobile Preview Active</span>
-          </div>
-          <div className="h-4 w-[1px] bg-white/10"></div>
+      {/* Controls Overlay - Unobtrusive Bottom Right */}
+      <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-[60]">
+        <div className="group flex items-center gap-2 p-1.5 bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl transition-all hover:bg-black/80">
           <button 
-            onClick={() => window.location.href = '/'}
-            className="text-xs font-bold text-planet-yellow hover:text-white transition-colors"
+            onClick={() => window.open(window.location.origin, '_blank')}
+            className="flex items-center gap-2 px-4 py-2 bg-planet-yellow text-black rounded-xl font-heading font-black text-[10px] uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all"
+            title="Open full app in new tab (Required for Google Sign-In)"
           >
-            EXIT PREVIEW
+            <span>Open Full App</span>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
           </button>
+          
+          <div className="flex items-center gap-1 px-2 border-l border-white/10">
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="p-2 text-white/40 hover:text-white/80 transition-all"
+              title="Exit Preview"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <p className="text-[10px] text-white/30 uppercase tracking-[0.2em]">Designed by Planet Animal AI Team</p>
+        
+        {/* Tiny helper badge */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+          <p className="text-[8px] text-white/40 uppercase tracking-[0.2em] font-black">
+            Mobile Mode Active
+          </p>
+        </div>
       </div>
     </div>
   );

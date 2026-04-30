@@ -24,6 +24,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [gender, setGender] = useState('Male');
   const [weight, setWeight] = useState('');
   const [additionalDetails, setAdditionalDetails] = useState('');
+  const isInsideFrame = window.self !== window.top || window.location.search.includes('preview_frame=true');
 
   // Effect to handle initial onboarding state but KEEP landing page as the first view
   useEffect(() => {
@@ -143,7 +144,15 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       if (e.code === 'auth/network-request-failed') {
         import('firebase/auth').then(({ signOut }) => signOut(auth));
       }
-      setAuthError(e.message || 'Google Auth failed');
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.message?.includes('cross-origin')) {
+        if (isInsideFrame) {
+          setAuthError("Google Sign-In is blocked inside the preview frame. Please click the yellow 'OPEN FULL APP' button at the top to sign in.");
+        } else {
+          setAuthError("Popup was blocked or closed. Please allow popups for this site.");
+        }
+      } else {
+        setAuthError(e.message || 'Google Auth failed');
+      }
     }
   };
 
@@ -415,6 +424,16 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                   </svg>
                   <span>{isSignUp ? 'Sign up with Google' : 'Sign in with Google'}</span>
                 </button>
+                {isInsideFrame && (
+                  <div className="bg-planet-yellow/10 border border-planet-yellow/20 rounded-xl p-3 space-y-1.5">
+                    <p className="text-[11px] text-center text-planet-yellow font-bold uppercase tracking-wider">
+                      Preview Mode detected
+                    </p>
+                    <p className="text-[10px] text-center text-white/60 font-medium">
+                      Google Sign-In requires the <span className="text-white font-bold">Open Full App</span> button at the very top of your screen.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           </motion.div>
