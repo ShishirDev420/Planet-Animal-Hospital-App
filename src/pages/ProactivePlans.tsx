@@ -127,7 +127,7 @@ export default function ProactivePlans() {
           isUpdating={isUpdating}
         />
         <PlanCard
-          title="Prestige Paws"
+          title="Prestige Premium"
           planId="prestige"
           price="₹3,499"
           period="/month"
@@ -153,7 +153,7 @@ export default function ProactivePlans() {
 function PlanCard({ title, planId, price, period, description, features, isPopular, isElite, delay, currentPlan, onSelect, isUpdating }: any) {
   const isCurrentPlan = currentPlan === planId;
   const baseClasses = isElite 
-    ? 'glass-card dark:bg-neutral-900 dark:border-white/10 ring-2 ring-[#fec708] relative overflow-hidden z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#e8bc4b]/15 to-transparent'
+    ? 'glass-card dark:bg-neutral-900 dark:border-white/10 ring-2 ring-[#fec708] relative overflow-hidden z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#e8bc4b]/15 to-transparent prestige-glow'
     : isPopular 
       ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 dark:bg-black dark:border dark:border-white/20 mt-10 md:mt-0 md:scale-105 z-20' 
       : 'glass-card dark:bg-neutral-900 dark:border-white/10';
@@ -196,21 +196,8 @@ function PlanCard({ title, planId, price, period, description, features, isPopul
         </ul>
       </div>
       
-      <div className="relative z-10 mt-auto">
-        {isCurrentPlan ? (
-          <button disabled className="w-full py-4 bg-green-500/20 text-green-500 border border-green-500/30 font-bold rounded-xl flex items-center justify-center gap-2">
-            <Check size={18} /> Current Plan
-          </button>
-        ) : (
-          <button 
-            disabled={isUpdating}
-            onClick={() => onSelect(planId)} 
-            className="w-full py-4 bg-[#fec708] text-black font-bold rounded-xl shadow-lg hover:scale-105 transition-transform duration-300 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
-          >
-            {isUpdating ? 'Updating...' : 'Choose Plan'} <ArrowRight size={18} />
-          </button>
-        )}
-      </div>
+      {/* Interaction buttons removed for educational showcase */}
+      <div className="relative z-10 mt-auto pb-4"></div>
     </motion.div>
   );
 }

@@ -21,11 +21,8 @@
   }
 
 
-  /* Prevent banding on animated gradient layers */
-  * {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
+  /* GPU-promotion is applied per-element via .animate-blob / .gpu-layer,
+     NOT globally — a blanket * rule causes gradient banding. */
 
   /* Only promote actual animated GPU layers, not everything */
   .gpu-layer {
@@ -37,6 +34,9 @@
 @theme {
   --color-planet-yellow: #fec708;
   --color-planet-dark: #1A1A1A;
+  --color-planet-deep: #071912;
+  --color-planet-gold: #e8bc4b;
+  --color-planet-amber: #b28a02;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Outfit", sans-serif;
@@ -68,6 +68,18 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
+  /* Liquid Glass - elevated glassmorphism for premium cards */
+  .liquid-glass {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+    backdrop-filter: blur(40px) saturate(1.8);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.06),
+      0 8px 40px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.03);
+  }
+
   .glass-nav {
     background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(24px);
@@ -75,8 +87,11 @@
     border-top: 1px solid rgba(255, 255, 255, 0.5);
   }
   .dark .glass-nav {
-    background: rgba(23, 23, 23, 0.85);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 10, 10, 0.88);
+    backdrop-filter: blur(30px) saturate(1.5);
+    -webkit-backdrop-filter: blur(30px) saturate(1.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
   }
 
   .hide-scrollbar::-webkit-scrollbar {
@@ -90,14 +105,53 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 1rem);
   }
+
+  /* Prestige Premium glow - animated golden halo */
+  .prestige-glow {
+    position: relative;
+    overflow: visible;
+  }
+  .prestige-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from 0deg,
+      #fec708, #e8bc4b, #fffde7, #fec708, #b28a02, #fec708
+    );
+    opacity: 0.6;
+    z-index: -1;
+    animation: prestige-rotate 6s linear infinite;
+    filter: blur(12px);
+  }
+  .prestige-glow::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from 180deg,
+      transparent 60%, #fec708 75%, transparent 90%
+    );
+    opacity: 0.4;
+    z-index: -1;
+    animation: prestige-rotate 4s linear infinite reverse;
+    filter: blur(8px);
+  }
 }
 
 @layer components {
   .animate-blob {
-    animation: blob 7s infinite;
-    will-change: transform;
-    transform-style: preserve-3d;
+    animation: blob 7s infinite ease-in-out;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    image-rendering: auto;
+    -webkit-filter: blur(0);
+    filter: blur(0);
   }
   .animation-delay-2000 {
     animation-delay: 2s;
@@ -106,6 +160,8 @@
     animation-delay: 4s;
   }
 }
+
+/* === KEYFRAMES === */
 
 @keyframes blob {
   0% { transform: translate(0px, 0px) scale(1); }
@@ -133,9 +189,70 @@
   }
 }
 
+/* Neural pulse rings for AI Vet visualizer */
+@keyframes neural-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes neural-ring-expand {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+    border-color: rgba(254, 199, 8, 0.4);
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+    border-color: rgba(254, 199, 8, 0);
+  }
+}
+
+/* Prestige Premium rotating conic glow */
+@keyframes prestige-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Subtle float for idle orb */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Nav active indicator slide */
+@keyframes nav-indicator-in {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
 @layer utilities {
   .animate-sync-heartbeat {
     animation: sync-heartbeat 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .animate-neural-pulse {
+    animation: neural-pulse 2s ease-out infinite;
+  }
+
+  .animate-float-gentle {
+    animation: float-gentle 4s ease-in-out infinite;
   }
 
   .noise-overlay {

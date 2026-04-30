@@ -15,7 +15,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [isSignUp, setIsSignUp] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [headerWord, setHeaderWord] = useState('Love');
-  const [needsOnboarding, setNeedsOnboarding] = useState(initialOnboarding);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [parentName, setParentName] = useState('');
   const [petName, setPetName] = useState('');
   const [petType, setPetType] = useState('Dog');
@@ -25,12 +25,13 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [weight, setWeight] = useState('');
   const [additionalDetails, setAdditionalDetails] = useState('');
 
+  // Effect to handle initial onboarding state but KEEP landing page as the first view
   useEffect(() => {
-    setNeedsOnboarding(initialOnboarding);
+    // We don't set needsOnboarding(true) here anymore to ensure sign-in page is seen first
     if (initialOnboarding && auth.currentUser?.displayName && !parentName) {
       setParentName(auth.currentUser.displayName.split(' ')[0]);
     }
-  }, [initialOnboarding]);
+  }, [initialOnboarding, parentName]);
 
   const headerWords = ['Love', 'Care', 'Trust', 'Healing'];
 
@@ -77,6 +78,12 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         });
         setNeedsOnboarding(true);
       } else {
+        // If already in onboarding state (authenticated but no profile), 
+        // clicking "Enter the Clinic" should just trigger the onboarding form.
+        if (initialOnboarding && auth.currentUser) {
+          setNeedsOnboarding(true);
+          return;
+        }
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (e: any) {
@@ -124,6 +131,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           await auth.signOut();
           setAuthError("No account found for this Google profile. Please create an account first.");
           return;
+        }
+        // If they are an existing user who needs onboarding, set the state
+        if (initialOnboarding) {
+          setNeedsOnboarding(true);
         }
       }
       // App.tsx uses onAuthStateChanged to intercept into onboarding
@@ -247,10 +258,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                     <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
                   </motion.div>
                   <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                    <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Gender</label>
                     <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all appearance-none backdrop-blur-sm shadow-inner">
                       <option value="Male" className="text-black">Male</option>
                       <option value="Female" className="text-black">Female</option>
+                      <option value="Other" className="text-black">Other</option>
                     </select>
                   </motion.div>
                 </div>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
@@ -108,100 +108,253 @@ const SERVICE_MENU = [
 
 import { usePetProfile } from '../hooks/usePetProfile';
 
-function getPersonalizedIncentives(pet?: { name?: string, breed?: string, age?: string | number, isSenior?: boolean, isOverweight?: boolean }) {
-  if (!pet || !pet.breed) return [];
-  const incentives = [];
+interface PetProfileForIncentives {
+  name?: string;
+  breed?: string;
+  age?: string | number;
+  petType?: string;
+  weight?: string;
+  healthHistory?: string;
+  medicalHistory?: string;
+  surgicalHistory?: string;
+  cachedRoadmap?: string;
+}
 
-  if (pet.isOverweight) {
-    incentives.push({
-      id: "weight-management",
-      title: "Weight Management Plan",
-      subtext: `Tailored cardio and nutrition for ${pet.name}’s frame.`,
-      pointsText: "+1,500 pts",
+type CardTheme = 'blue' | 'orange' | 'green' | 'purple' | 'yellow';
+
+interface IncentiveCard {
+  id: string;
+  title: string;
+  subtext: string;
+  pointsText: string;
+  pointsValue: number;
+  highValue?: boolean;
+  theme: CardTheme;
+  actionText?: string;
+}
+
+function getPersonalizedIncentives(pet?: PetProfileForIncentives): IncentiveCard[] {
+  if (!pet) return [];
+  const cards: IncentiveCard[] = [];
+  const petName = pet.name || 'your pet';
+
+  // ─── Determine age-based flags ───
+  const ageNum = typeof pet.age === 'number' ? pet.age : parseFloat(String(pet.age || '0'));
+  const isSenior = ageNum >= 7;
+
+  // ─── Determine weight-based flags ───
+  const weightStr = (pet.weight || '').toLowerCase();
+  const weightNum = parseFloat(weightStr.replace(/[^0-9.]/g, ''));
+  const isKg = weightStr.includes('kg');
+  const weightLbs = isKg ? weightNum * 2.205 : weightNum;
+  // Rough overweight heuristic: >30lbs for small breeds, >80lbs for large breeds
+  const breedLower = (pet.breed || '').toLowerCase();
+  const petTypeLower = (pet.petType || 'dog').toLowerCase();
+  const isCat = petTypeLower === 'cat';
+  const isOverweight = isCat
+    ? weightLbs > 15
+    : (breedLower.includes('chihuahua') || breedLower.includes('pomeranian') || breedLower.includes('shih') || breedLower.includes('yorkie'))
+      ? weightLbs > 15
+      : weightLbs > 80;
+
+  // ─── 1. Condition-Based Cards ───
+  if (isOverweight && weightNum > 0) {
+    cards.push({
+      id: 'cond-weight-mgmt',
+      title: 'Weight Management Plan',
+      subtext: `Tailored nutrition & exercise for ${petName}'s ideal weight.`,
+      pointsText: '+1,500 pts',
       pointsValue: 1500,
       highValue: true,
-      theme: "purple" as const
+      theme: 'purple'
     });
   }
 
-  if (pet.isSenior) {
-    incentives.push({
-      id: "senior-health",
-      title: "Senior Health Screening",
-      subtext: "Specialized care for the golden years.",
-      pointsText: "+1,200 pts",
+  if (isSenior) {
+    cards.push({
+      id: 'cond-senior-health',
+      title: 'Senior Health Screening',
+      subtext: 'Comprehensive bloodwork & organ function for the golden years.',
+      pointsText: '+1,200 pts',
       pointsValue: 1200,
       highValue: true,
-      theme: "blue" as const
+      theme: 'blue'
     });
   }
 
-  const breedLower = pet.breed.toLowerCase();
-  if (breedLower.includes('bully') || breedLower.includes('pug')) {
-    incentives.push({
-      id: "joint-mobility",
-      title: "Joint & Mobility Check",
-      subtext: "Keep those joints healthy.",
-      pointsText: "+800 pts",
-      pointsValue: 800,
-      highValue: true,
-      theme: "blue" as const
-    });
-    incentives.push({
-      id: "respiratory-wellness",
-      title: "Respiratory Wellness",
-      subtext: "Breathe easy and stay active.",
-      pointsText: "+700 pts",
-      pointsValue: 700,
-      theme: "green" as const
-    });
-  } else if (breedLower.includes('golden retriever')) {
-    incentives.push({
-      id: "advanced-grooming",
-      title: "Advanced Grooming Spa",
-      subtext: "Deep clean for that golden coat.",
-      pointsText: "+900 pts",
-      pointsValue: 900,
-      highValue: true,
-      theme: "yellow" as const
-    });
+  // ─── 2. Breed-Specific Cards (12 categories, vet-verified) ───
+  if (breedLower) {
+    // Labrador Retriever
+    if (breedLower.includes('labrador') || breedLower.includes('lab retriever')) {
+      cards.push(
+        { id: 'lab-hip-elbow', title: 'Hip & Elbow Dysplasia Screen', subtext: 'Early detection for Labs\' #1 joint risk.', pointsText: '+1,200 pts', pointsValue: 1200, highValue: true, theme: 'blue' },
+        { id: 'lab-weight', title: 'Weight Management Check', subtext: 'Labs are genetically prone to obesity.', pointsText: '+1,000 pts', pointsValue: 1000, theme: 'green' },
+        { id: 'lab-skin', title: 'Skin Allergy Assessment', subtext: 'Environmental & food allergy panel.', pointsText: '+900 pts', pointsValue: 900, theme: 'orange' },
+        { id: 'lab-ear', title: 'Ear Health Panel', subtext: 'Floppy ears mean higher infection risk.', pointsText: '+650 pts', pointsValue: 650, theme: 'yellow' }
+      );
+    }
+    // German Shepherd
+    else if (breedLower.includes('german shepherd') || breedLower.includes('gsd') || breedLower.includes('alsatian')) {
+      cards.push(
+        { id: 'gsd-hip-elbow', title: 'Hip & Elbow Dysplasia Screen', subtext: '19-20% breed prevalence — early screen critical.', pointsText: '+1,200 pts', pointsValue: 1200, highValue: true, theme: 'blue' },
+        { id: 'gsd-dm', title: 'Degenerative Myelopathy Test', subtext: 'DNA-based screening for spinal cord disease.', pointsText: '+900 pts', pointsValue: 900, theme: 'purple' },
+        { id: 'gsd-bloat', title: 'Bloat Prevention Assessment', subtext: 'GDV risk eval & gastropexy counseling.', pointsText: '+850 pts', pointsValue: 850, theme: 'orange' },
+        { id: 'gsd-skin', title: 'Skin & Coat Health', subtext: 'Manage allergic dermatitis & hot spots.', pointsText: '+700 pts', pointsValue: 700, theme: 'green' }
+      );
+    }
+    // Golden Retriever
+    else if (breedLower.includes('golden retriever')) {
+      cards.push(
+        { id: 'golden-cancer', title: 'Cancer Screening Panel', subtext: 'Goldens have elevated cancer risk — early detection saves lives.', pointsText: '+1,300 pts', pointsValue: 1300, highValue: true, theme: 'purple' },
+        { id: 'golden-joint', title: 'Joint & Mobility Check', subtext: 'Protect against hip dysplasia & cruciate tears.', pointsText: '+1,000 pts', pointsValue: 1000, theme: 'blue' },
+        { id: 'golden-groom', title: 'Advanced Grooming Spa', subtext: 'Deep clean for that legendary golden coat.', pointsText: '+900 pts', pointsValue: 900, theme: 'yellow' }
+      );
+    }
+    // Bulldog / Pug / French Bulldog (Brachycephalic)
+    else if (breedLower.includes('bulldog') || breedLower.includes('bully') || breedLower.includes('pug') || breedLower.includes('french bull') || breedLower.includes('frenchie') || breedLower.includes('shih tzu') || breedLower.includes('pekingese')) {
+      cards.push(
+        { id: 'brachy-airway', title: 'Airway Assessment (BOAS)', subtext: 'Brachycephalic airway syndrome screening.', pointsText: '+1,000 pts', pointsValue: 1000, theme: 'blue' },
+        { id: 'brachy-eye', title: 'Eye Health Check', subtext: 'Proptosis, cherry eye & corneal ulcer screening.', pointsText: '+750 pts', pointsValue: 750, theme: 'green' },
+        { id: 'brachy-dental', title: 'Dental Assessment', subtext: 'Crowded teeth & malocclusion check.', pointsText: '+700 pts', pointsValue: 700, theme: 'yellow' },
+        { id: 'brachy-skin', title: 'Skin Fold Care', subtext: 'Prevent intertrigo & fold dermatitis.', pointsText: '+650 pts', pointsValue: 650, theme: 'orange' }
+      );
+    }
+    // Beagle
+    else if (breedLower.includes('beagle')) {
+      cards.push(
+        { id: 'beagle-ear', title: 'Ear Health Panel', subtext: 'Long ears trap moisture — infection prevention.', pointsText: '+650 pts', pointsValue: 650, theme: 'yellow' },
+        { id: 'beagle-thyroid', title: 'Thyroid Function Check', subtext: 'Hypothyroidism screening for Beagles.', pointsText: '+750 pts', pointsValue: 750, theme: 'blue' },
+        { id: 'beagle-weight', title: 'Weight Control Plan', subtext: 'Beagles are food-driven — proactive weight management.', pointsText: '+800 pts', pointsValue: 800, theme: 'green' }
+      );
+    }
+    // Dachshund
+    else if (breedLower.includes('dachshund') || breedLower.includes('doxie') || breedLower.includes('wiener')) {
+      cards.push(
+        { id: 'dach-spine', title: 'Spine & Back Assessment (IVDD)', subtext: 'Highest breed risk for intervertebral disc disease.', pointsText: '+1,100 pts', pointsValue: 1100, highValue: true, theme: 'purple' },
+        { id: 'dach-weight', title: 'Weight Management', subtext: 'Excess weight worsens spinal compression.', pointsText: '+800 pts', pointsValue: 800, theme: 'green' },
+        { id: 'dach-dental', title: 'Dental Health Check', subtext: 'Small jaws mean crowded teeth & tartar buildup.', pointsText: '+700 pts', pointsValue: 700, theme: 'yellow' }
+      );
+    }
+    // Chihuahua / Small Breeds
+    else if (breedLower.includes('chihuahua') || breedLower.includes('pomeranian') || breedLower.includes('yorkie') || breedLower.includes('yorkshire') || breedLower.includes('maltese') || breedLower.includes('toy')) {
+      cards.push(
+        { id: 'small-patella', title: 'Patella Luxation Screen', subtext: 'Small breeds are prone to kneecap displacement.', pointsText: '+800 pts', pointsValue: 800, theme: 'blue' },
+        { id: 'small-dental', title: 'Dental Care Package', subtext: 'Toy breeds need extra dental attention.', pointsText: '+700 pts', pointsValue: 700, theme: 'yellow' },
+        { id: 'small-cardiac', title: 'Cardiac Check', subtext: 'Mitral valve disease screening.', pointsText: '+750 pts', pointsValue: 750, theme: 'purple' }
+      );
+    }
+    // Boxer
+    else if (breedLower.includes('boxer')) {
+      cards.push(
+        { id: 'boxer-cancer', title: 'Cancer Screening Panel', subtext: 'Boxers have one of the highest cancer rates.', pointsText: '+1,300 pts', pointsValue: 1300, highValue: true, theme: 'purple' },
+        { id: 'boxer-cardiac', title: 'Cardiac Exam (ARVC)', subtext: 'Arrhythmogenic right ventricular cardiomyopathy screening.', pointsText: '+1,000 pts', pointsValue: 1000, theme: 'blue' }
+      );
+    }
+    // Rottweiler
+    else if (breedLower.includes('rottweiler') || breedLower.includes('rottie')) {
+      cards.push(
+        { id: 'rott-cardiac-hip', title: 'Cardiac & Hip Assessment', subtext: 'Heart disease + hip dysplasia dual screening.', pointsText: '+1,400 pts', pointsValue: 1400, highValue: true, theme: 'blue' },
+        { id: 'rott-bone-cancer', title: 'Bone Cancer Awareness Screen', subtext: 'Osteosarcoma early detection protocol.', pointsText: '+1,300 pts', pointsValue: 1300, highValue: true, theme: 'purple' }
+      );
+    }
+    // Husky / Malamute
+    else if (breedLower.includes('husky') || breedLower.includes('malamute')) {
+      cards.push(
+        { id: 'husky-eye', title: 'Ophthalmology Screen', subtext: 'Cataracts & progressive retinal atrophy check.', pointsText: '+900 pts', pointsValue: 900, theme: 'blue' },
+        { id: 'husky-skin', title: 'Zinc-Responsive Dermatosis Check', subtext: 'Northern breed-specific skin condition.', pointsText: '+750 pts', pointsValue: 750, theme: 'orange' }
+      );
+    }
+    // ─── Cat Breeds ───
+    // Persian
+    else if (breedLower.includes('persian') || breedLower.includes('exotic shorthair') || breedLower.includes('himalayan')) {
+      cards.push(
+        { id: 'persian-pkd', title: 'PKD Screening (Kidney)', subtext: '38% of Persians affected — ultrasound recommended.', pointsText: '+1,000 pts', pointsValue: 1000, theme: 'purple' },
+        { id: 'persian-groom', title: 'Grooming & Mat Prevention', subtext: 'Long coat maintenance & skin health.', pointsText: '+900 pts', pointsValue: 900, theme: 'yellow' },
+        { id: 'persian-dental', title: 'Dental Assessment', subtext: 'Flat face = dental crowding & disease.', pointsText: '+850 pts', pointsValue: 850, theme: 'orange' },
+        { id: 'persian-eye', title: 'Eye & Tear Duct Check', subtext: 'Epiphora & corneal ulcer prevention.', pointsText: '+650 pts', pointsValue: 650, theme: 'green' }
+      );
+    }
+    // Maine Coon
+    else if (breedLower.includes('maine coon')) {
+      cards.push(
+        { id: 'maine-hcm', title: 'HCM Cardiac Screen', subtext: 'Highest breed risk for hypertrophic cardiomyopathy.', pointsText: '+1,200 pts', pointsValue: 1200, highValue: true, theme: 'purple' },
+        { id: 'maine-hip', title: 'Hip & Joint Assessment', subtext: '18-24% hip dysplasia prevalence in Maine Coons.', pointsText: '+850 pts', pointsValue: 850, theme: 'blue' },
+        { id: 'maine-groom', title: 'Grooming Wellness', subtext: 'Semi-long coat care & hairball prevention.', pointsText: '+850 pts', pointsValue: 850, theme: 'yellow' }
+      );
+    }
+    // Siamese
+    else if (breedLower.includes('siamese') || breedLower.includes('oriental') || breedLower.includes('burmese')) {
+      cards.push(
+        { id: 'siamese-kidney', title: 'Kidney Function Panel', subtext: 'Amyloidosis & early CKD detection.', pointsText: '+800 pts', pointsValue: 800, theme: 'purple' },
+        { id: 'siamese-dental', title: 'Dental Health Check', subtext: 'Siamese cats are prone to periodontal disease.', pointsText: '+750 pts', pointsValue: 750, theme: 'yellow' },
+        { id: 'siamese-respiratory', title: 'Respiratory Assessment', subtext: 'Asthma & upper respiratory screening.', pointsText: '+700 pts', pointsValue: 700, theme: 'green' }
+      );
+    }
   }
 
-  // Standard baseline options
-  incentives.push({
-    id: "general-wellness-checkup",
-    title: "General Wellness Checkup",
-    subtext: "Comprehensive proactive health screening tailored to your pet.",
-    pointsText: "+1,000 pts",
-    pointsValue: 1000,
-    highValue: true,
-    theme: "yellow" as const,
-    actionText: "Book Now"
-  });
-  
-  incentives.push({
-    id: "proactive-dental-exam",
-    title: "Proactive Dental Exam",
-    subtext: "Preventative oral care assessment.",
-    pointsText: "+500 pts",
-    pointsValue: 500,
-    theme: "blue" as const,
-    actionText: "Book Now"
+  // ─── 3. Roadmap & Medical History Keyword Parsing ───
+  const historyBlob = [
+    pet.healthHistory || '',
+    pet.medicalHistory || '',
+    pet.surgicalHistory || '',
+    pet.cachedRoadmap || ''
+  ].join(' ').toLowerCase();
+
+  const keywordCards: Record<string, IncentiveCard> = {
+    allergy: { id: 'hist-allergy', title: 'Allergy Management', subtext: 'Comprehensive environmental & food allergy panel.', pointsText: '+900 pts', pointsValue: 900, theme: 'orange' },
+    dental: { id: 'hist-dental', title: 'Dental Deep Clean', subtext: 'Follow-up on dental history — scaling & polishing.', pointsText: '+800 pts', pointsValue: 800, theme: 'yellow' },
+    heart: { id: 'hist-cardiac', title: 'Cardiac Follow-Up', subtext: 'Echocardiogram & heart health monitoring.', pointsText: '+1,000 pts', pointsValue: 1000, theme: 'purple' },
+    cardiac: { id: 'hist-cardiac', title: 'Cardiac Follow-Up', subtext: 'Echocardiogram & heart health monitoring.', pointsText: '+1,000 pts', pointsValue: 1000, theme: 'purple' },
+    joint: { id: 'hist-joint', title: 'Joint & Mobility Review', subtext: 'Ongoing joint health monitoring & support.', pointsText: '+850 pts', pointsValue: 850, theme: 'blue' },
+    arthritis: { id: 'hist-joint', title: 'Joint & Mobility Review', subtext: 'Ongoing joint health monitoring & support.', pointsText: '+850 pts', pointsValue: 850, theme: 'blue' },
+    eye: { id: 'hist-eye', title: 'Ophthalmology Follow-Up', subtext: 'Continued eye health monitoring.', pointsText: '+750 pts', pointsValue: 750, theme: 'green' },
+    ear: { id: 'hist-ear', title: 'Ear Health Follow-Up', subtext: 'Otitis prevention & ongoing ear care.', pointsText: '+650 pts', pointsValue: 650, theme: 'yellow' },
+    kidney: { id: 'hist-kidney', title: 'Kidney Function Panel', subtext: 'BUN/Creatinine monitoring & renal health.', pointsText: '+900 pts', pointsValue: 900, theme: 'purple' },
+    renal: { id: 'hist-kidney', title: 'Kidney Function Panel', subtext: 'BUN/Creatinine monitoring & renal health.', pointsText: '+900 pts', pointsValue: 900, theme: 'purple' },
+    thyroid: { id: 'hist-thyroid', title: 'Thyroid Function Test', subtext: 'T4 levels & metabolic health assessment.', pointsText: '+750 pts', pointsValue: 750, theme: 'blue' },
+    skin: { id: 'hist-skin', title: 'Dermatology Follow-Up', subtext: 'Skin condition monitoring & treatment plan.', pointsText: '+800 pts', pointsValue: 800, theme: 'orange' },
+    spine: { id: 'hist-spine', title: 'Spinal Health Check', subtext: 'Ongoing back & spinal cord monitoring.', pointsText: '+950 pts', pointsValue: 950, theme: 'purple' },
+    surgery: { id: 'hist-post-op', title: 'Post-Surgery Follow-Up', subtext: 'Surgical recovery monitoring & wound check.', pointsText: '+800 pts', pointsValue: 800, theme: 'blue' }
+  };
+
+  if (historyBlob.length > 0) {
+    const addedHistoryIds = new Set<string>();
+    for (const [keyword, card] of Object.entries(keywordCards)) {
+      if (historyBlob.includes(keyword) && !addedHistoryIds.has(card.id)) {
+        cards.push(card);
+        addedHistoryIds.add(card.id);
+      }
+    }
+  }
+
+  // ─── 4. Baseline Cards (all pets get these) ───
+  cards.push(
+    { id: 'base-wellness', title: 'General Wellness Checkup', subtext: `Comprehensive proactive health screening for ${petName}.`, pointsText: '+1,000 pts', pointsValue: 1000, theme: 'yellow', actionText: 'Book Now' },
+    { id: 'base-vaccination', title: 'Vaccination Booster', subtext: 'Stay up-to-date on core & lifestyle vaccines.', pointsText: '+750 pts', pointsValue: 750, theme: 'green', actionText: 'Book Now' },
+    { id: 'base-dental', title: 'Proactive Dental Exam', subtext: 'Preventative oral care assessment & cleaning.', pointsText: '+800 pts', pointsValue: 800, theme: 'blue', actionText: 'Book Now' },
+    { id: 'base-grooming', title: 'Grooming Spa Session', subtext: 'Full grooming, coat care & skin check.', pointsText: '+700 pts', pointsValue: 700, theme: 'yellow', actionText: 'Book Now' }
+  );
+
+  // ─── 5. Deduplicate by title ───
+  const seen = new Set<string>();
+  const unique = cards.filter(card => {
+    const key = card.title.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
 
-  incentives.push({
-    id: "log-preventative-meds",
-    title: "Log Preventative Meds",
-    subtext: "Update monthly flea, tick & heartworm.",
-    pointsText: "+100 pts",
-    pointsValue: 100,
-    theme: "green" as const,
-    actionText: "Log Meds"
-  });
+  // ─── 6. Sort ascending (small wins → big rewards) ───
+  unique.sort((a, b) => a.pointsValue - b.pointsValue);
 
-  return incentives.map((incentive, index) => ({
-    ...incentive,
-    id: `${incentive.id}-${crypto.randomUUID()}`
+  // ─── 7. Cap at 7 cards ───
+  const capped = unique.slice(0, 7);
+
+  // ─── 8. Assign unique IDs & highValue badge ───
+  return capped.map(card => ({
+    ...card,
+    id: `${card.id}-${crypto.randomUUID()}`,
+    highValue: card.highValue || card.pointsValue >= 1200
   }));
 }
 
@@ -442,11 +595,11 @@ export default function Dashboard() {
   return (
     <div className="relative w-full h-full">
       {/* Background Ambient Orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center isolate">
         <div className="relative w-full max-w-5xl h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
-          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob transform-gpu"></div>
+          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000 transform-gpu"></div>
+          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000 transform-gpu"></div>
         </div>
       </div>
 
@@ -558,7 +711,7 @@ export default function Dashboard() {
             onClick={() => navigate('/ai')}
           />
           <ActionCard 
-            icon={<Map className="text-amber-500" />} 
+            icon={<Map className="text-planet-yellow" />} 
             title="Roadmap" 
             subtitle="Longevity Plan" 
             onClick={() => navigate('/roadmap')}
@@ -600,13 +753,13 @@ export default function Dashboard() {
         <div className="relative w-full mt-12">
           <div 
             ref={carouselRef}
-            className="flex overflow-x-auto hide-scrollbar gap-4 py-40 -my-40 px-[calc(50%-160px)] relative z-10 [&::-webkit-scrollbar]:hidden snap-x snap-mandatory transform-gpu will-change-transform"
+            className="flex overflow-x-auto hide-scrollbar gap-4 md:gap-6 py-40 -my-40 px-6 md:px-8 relative z-10 [&::-webkit-scrollbar]:hidden snap-x snap-mandatory transform-gpu will-change-transform md:max-w-6xl md:mx-auto"
             style={{ scrollbarWidth: 'none' }}
           >
             {incentivesOrder.map((incentive) => (
               <div 
                 key={incentive.id} 
-                className="flex-none w-[320px] group snap-center"
+                className="flex-none min-w-[280px] max-w-[320px] w-[80vw] md:w-[320px] group snap-center"
               >
                 <EarnCard 
                   id={incentive.id}
@@ -863,9 +1016,12 @@ export default function Dashboard() {
 
 function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode, title: string, subtitle: string, onClick: () => void }) {
   return (
-    <div 
+    <motion.div 
       onClick={onClick}
-      className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex flex-col items-start gap-3 active:scale-95 transition-all cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08]"
+      whileHover={{ y: -4, scale: 1.03, boxShadow: '0 12px 32px rgba(254,199,8,0.15)' }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex flex-col items-start gap-3 cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08]"
     >
       <div className="bg-white p-2 rounded-xl shadow-sm dark:bg-white/10 dark:border dark:border-white/10">
         {icon}
@@ -874,7 +1030,7 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
         <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg tracking-tight">{title}</h4>
         <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">{subtitle}</p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -943,7 +1099,7 @@ function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPe
   };
 
   return (
-    <motion.div ref={cardRef} style={{ scale, opacity }} className="relative min-w-[240px] shrink-0 w-full h-[260px] group origin-center transform-gpu will-change-transform">
+    <motion.div ref={cardRef} style={{ scale, opacity }} className="relative min-w-[280px] shrink-0 w-full h-[260px] group origin-center transform-gpu will-change-transform">
       {/* Background Glow - Broad and Soft Dissipation */}
       <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] ${themeGradients[theme]} to-transparent blur-[90px] scale-[1.5] opacity-40 pointer-events-none z-0 transition-all duration-700 group-hover:opacity-70 group-hover:scale-[1.8]`} />
       

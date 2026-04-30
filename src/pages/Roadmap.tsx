@@ -315,17 +315,17 @@ export default function Roadmap() {
                       </button>
                     </div>
                     
-                    <div className="font-sans text-slate-300 text-base leading-relaxed tracking-wide text-left space-y-6">
+                    <div className="font-body text-slate-300 text-base leading-relaxed tracking-wide text-justify space-y-6">
                       <Markdown
                         components={{
-                          h1: ({node, ...props}) => <h1 className="text-[#fec708] font-semibold text-3xl mt-8 mb-4 tracking-tight" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-[#fec708] font-semibold text-2xl mt-8 mb-4 tracking-tight" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-white font-semibold text-xl mt-8 mb-4 tracking-tight" {...props} />,
-                          p: ({node, ...props}) => <p className="text-slate-200 leading-loose mb-4" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc pl-5 space-y-3 mb-6" {...props} />,
-                          li: ({node, ...props}) => <li className="text-slate-300 leading-relaxed" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-bold text-white" {...props} />,
-                          a: ({node, ...props}) => <a className="text-[#fec708] hover:text-white underline underline-offset-4 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+                          h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-3xl text-white mt-12 mb-6 border-b border-white/10 pb-4 tracking-tight" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="font-heading font-bold text-2xl text-[#fec708] mt-10 mb-5 tracking-tight border-l-4 border-[#fec708] pl-4" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="font-heading font-semibold text-xl text-white/90 mt-8 mb-4 tracking-tight uppercase" {...props} />,
+                          p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-justify [hyphens:auto] [text-align-last:left]" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-4 mb-8 text-left" {...props} />,
+                          li: ({node, ...props}) => <li className="font-body text-slate-300 leading-relaxed pl-2 text-justify [hyphens:auto]" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-bold text-[#fec708]" {...props} />,
+                          a: ({node, ...props}) => <a className="text-[#fec708] hover:text-white underline underline-offset-4 decoration-[#fec708]/30 hover:decoration-white transition-all" target="_blank" rel="noopener noreferrer" {...props} />
                         }}
                       >
                         {roadmap}

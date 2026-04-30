@@ -82,7 +82,7 @@ export default function App() {
             <Routes>
               {authStatus === 'unauthenticated' || authStatus === 'onboarding' ? (
                 <>
-                  <Route path="/" element={<Welcome initialOnboarding={authStatus === 'onboarding'} onComplete={() => setAuthStatus('authenticated')} />} />
+                  <Route path="/" element={<Welcome key={authStatus} initialOnboarding={authStatus === 'onboarding'} onComplete={() => setAuthStatus('authenticated')} />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </>
               ) : (
