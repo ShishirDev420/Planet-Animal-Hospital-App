@@ -70,7 +70,7 @@ export default function Layout() {
         </main>
 
         {/* Bottom Navigation - Premium Liquid Glass */}
-        <nav className="absolute bottom-0 w-full glass-nav px-4 py-3 pb-safe flex justify-around items-center z-50 rounded-t-2xl dark:bg-neutral-900/80 dark:border-white/10">
+        <nav className="absolute bottom-0 w-full liquid-glass-nav px-4 pt-3 pb-8 flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <NavItem to="/" icon={<Home size={22} />} label="Home" />
           <NavItem to="/plans" icon={<ShieldPlus size={22} />} label="Plans" />
           <NavItem to="/ai" icon={<Bot size={22} />} label="AI Vet" isCenter />

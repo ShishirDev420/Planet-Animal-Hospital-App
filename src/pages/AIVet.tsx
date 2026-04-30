@@ -339,71 +339,124 @@ export default function AIVet() {
     window.speechSynthesis.speak(utterance);
   };
 
+  const playAudioFromBlob = async (audioBlob: Blob) => {
+    if (!isCallActiveRef.current) return;
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    currentAudioRef.current = audio;
+    const animateSpeak = () => {
+      if (!isSpeakingRef.current) { setVolume(0); return; }
+      const raw = Math.random();
+      smoothedVolumeRef.current = smoothedVolumeRef.current * 0.85 + raw * 0.15;
+      setVolume(smoothedVolumeRef.current);
+      animationFrameRef.current = requestAnimationFrame(animateSpeak);
+    };
+    audio.onended = () => {
+      currentAudioRef.current = null;
+      setIsSpeakingState(false);
+      setVolume(0);
+      if (isCallActiveRef.current) startSarvamListening();
+    };
+    audio.onerror = () => {
+      currentAudioRef.current = null;
+      setIsSpeakingState(false);
+      setVolume(0);
+    };
+    if (!isCallActiveRef.current) { audio.pause(); audio.src = ""; setIsSpeakingState(false); return; }
+    await audio.play();
+    animateSpeak();
+  };
+
+  const speakTextSarvam = async (text: string): Promise<boolean> => {
+    const sarvamApiKey = import.meta.env.VITE_SARVAM_API_KEY || 'sk_is9hzfwk_EuLpgNMcBQ7XC9LzKhfcYsHl';
+    if (!sarvamApiKey) {
+      console.log('❌ No Sarvam API key');
+      return false;
+    }
+    console.log('🎤 Attempting Sarvam TTS...');
+    const ttsResponse = await fetch('https://api.sarvam.ai/text-to-speech', {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': sarvamApiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        inputs: [text],
+        target_language_code: 'en-IN',
+        model: 'bulbul:v3',
+        speaker: 'shubh',
+        speech_sample_rate: 24000
+      })
+    });
+    if (!ttsResponse.ok) {
+      console.error('❌ Sarvam TTS error:', ttsResponse.status, await ttsResponse.text());
+      return false;
+    }
+    const ttsData = await ttsResponse.json();
+    
+    if (!ttsData.audios || ttsData.audios.length === 0) {
+      console.error('❌ No audio returned from Sarvam');
+      return false;
+    }
+    const audioBase64 = ttsData.audios[0];
+    const audioByteArray = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
+    const audioBlob = new Blob([audioByteArray], { type: 'audio/wav' });
+    
+    console.log('✅ Sarvam TTS SUCCESS');
+    await playAudioFromBlob(audioBlob);
+    return true;
+  };
+
+  const speakTextElevenLabs = async (text: string): Promise<boolean> => {
+    const elevenLabsApiKey = import.meta.env.VITE_ELEVENLABS_API_KEY || 'sk_33a9fa989ea578a739bc8cb35aafb1f7191fff2466a86366';
+    if (!elevenLabsApiKey) {
+      console.log('❌ No ElevenLabs API key');
+      return false;
+    }
+    console.log('🎤 Attempting ElevenLabs TTS...');
+    // Using default Adam voice instead of a library voice to avoid free-tier restrictions
+    const ttsResponse = await fetch('https://api.elevenlabs.io/v1/text-to-speech/pNInz6obpgDQGcFmaJgB', {
+      method: 'POST',
+      headers: {
+        'xi-api-key': elevenLabsApiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75
+        }
+      })
+    });
+    if (!ttsResponse.ok) {
+      console.error('❌ ElevenLabs TTS error:', ttsResponse.status);
+      return false;
+    }
+    const audioBlob = await ttsResponse.blob();
+    console.log('✅ ElevenLabs TTS SUCCESS');
+    await playAudioFromBlob(audioBlob);
+    return true;
+  };
+
   const speakText = async (text: string) => {
     try {
-      const sarvamApiKey = import.meta.env.VITE_SARVAM_API_KEY || 'sk_is9hzfwk_EuLpgNMcBQ7XC9LzKhfcYsHl';
       setIsSpeakingState(true);
-      console.log("Starting Sarvam TTS...", { speaker: 'shubh', textLength: text.length });
-      // Call Sarvam TTS API
-      const ttsResponse = await fetch('https://api.sarvam.ai/v1/text-to-speech', {
-        method: 'POST',
-        headers: {
-          'api-subscription-key': sarvamApiKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: text,
-          target_language_code: 'en-IN',
-          model: 'bulbul:v3',
-          speaker: 'shubh', // Restored credible male voice
-          speech_sample_rate: 24000
-        })
-      });
-      if (!ttsResponse.ok) {
-        console.error("Sarvam TTS error:", ttsResponse.status, await ttsResponse.text());
-        throw new Error("Sarvam TTS failed");
-      }
-      if (!isCallActiveRef.current) { 
-        setIsSpeakingState(false); 
-        return; 
-      }
-      const ttsData = await ttsResponse.json();
+      // Primary: Try Sarvam TTS first
+      const sarvamSuccess = await speakTextSarvam(text);
+      if (sarvamSuccess) return;
+      console.log('⚠️ Sarvam failed, trying ElevenLabs...');
       
-      if (!ttsData.audios || ttsData.audios.length === 0) {
-        throw new Error("No audio returned from Sarvam");
-      }
-      // Decode base64 audio
-      const audioBase64 = ttsData.audios[0];
-      const audioByteArray = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
-      const audioBlob = new Blob([audioByteArray], { type: 'audio/wav' });
+      // Backup: Try ElevenLabs
+      const elevenLabsSuccess = await speakTextElevenLabs(text);
+      if (elevenLabsSuccess) return;
+      console.log('⚠️ ElevenLabs failed, falling back to Web Speech...');
       
-      if (!isCallActiveRef.current) return;
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      currentAudioRef.current = audio;
-      const animateSpeak = () => {
-        if (!isSpeakingRef.current) { setVolume(0); return; }
-        const raw = Math.random();
-        smoothedVolumeRef.current = smoothedVolumeRef.current * 0.85 + raw * 0.15;
-        setVolume(smoothedVolumeRef.current);
-        animationFrameRef.current = requestAnimationFrame(animateSpeak);
-      };
-      audio.onended = () => {
-        currentAudioRef.current = null;
-        setIsSpeakingState(false);
-        setVolume(0);
-        if (isCallActiveRef.current) startSarvamListening();
-      };
-      audio.onerror = () => {
-        currentAudioRef.current = null;
-        setIsSpeakingState(false);
-        setVolume(0);
-      };
-      if (!isCallActiveRef.current) { audio.pause(); audio.src = ""; setIsSpeakingState(false); return; }
-      await audio.play();
-      animateSpeak();
+      // Last resort: Web Speech
+      speakTextFallback(text);
     } catch (error) {
-      console.error("TTS Error:", error);
+      console.error('TTS Error:', error);
       if (!isCallActiveRef.current) return;
       setIsSpeakingState(false);
       speakTextFallback(text);
