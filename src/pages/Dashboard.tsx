@@ -676,7 +676,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="mt-8 w-full">
+          <div className="mt-8 w-full cursor-pointer" onClick={() => navigate('/rewards')}>
             <p className="text-[10px] text-white/60 font-medium mb-3 uppercase tracking-widest">
               {Math.max(0, 5000 - verifiedPoints).toLocaleString()} PTS TO NEXT UNLOCK
             </p>

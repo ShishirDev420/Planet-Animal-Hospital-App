@@ -18,6 +18,7 @@ import ProfileSettings from './pages/ProfileSettings';
 import Roadmap from './pages/Roadmap';
 import Welcome from './pages/Welcome';
 import Adoption from './pages/Adoption';
+import Rewards from './pages/Rewards';
 import MobilePreview from './components/MobilePreview';
 
 // Check if we are already inside the preview frame to avoid recursion
@@ -96,6 +97,7 @@ export default function App() {
                     <Route path="ai" element={<AIVet />} />
                     <Route path="roadmap" element={<Roadmap />} />
                     <Route path="adoption" element={<Adoption />} />
+                    <Route path="rewards" element={<Rewards />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </>
