@@ -153,7 +153,7 @@ export default function ProactivePlans() {
           currentPlan={currentPlan}
           onSelect={handleSelectPlan}
           isUpdating={isUpdating}
-          className="mt-16 md:mt-12 md:ml-4"
+          className="mt-16 md:mt-12 md:ml-12"
         />
       </div>
     </div>
@@ -161,9 +161,8 @@ export default function ProactivePlans() {
 }
 
 function PlanCard({ title, planId, price, period, description, features, isPopular, isElite, delay, currentPlan, onSelect, isUpdating, className }: any) {
-  const isCurrentPlan = currentPlan === planId;
   const baseClasses = isElite 
-    ? 'glass-card dark:bg-neutral-900 dark:border-white/10 ring-2 ring-[#fec708] relative overflow-hidden z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#e8bc4b]/15 to-transparent prestige-glow'
+    ? 'glass-card dark:bg-neutral-900 relative z-10 prestige-glow'
     : isPopular 
       ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 dark:bg-black dark:border dark:border-white/20 mt-10 md:mt-0 md:scale-105 z-20' 
       : 'glass-card dark:bg-neutral-900 dark:border-white/10';
@@ -181,6 +180,7 @@ function PlanCard({ title, planId, price, period, description, features, isPopul
           MOST POPULAR
         </div>
       )}
+
       <div className="relative z-10 flex-grow">
         <h3 className={`font-heading font-bold text-xl mb-1 ${isPopular ? 'text-white pt-2' : isElite ? 'text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]' : 'text-slate-800 dark:text-white'}`}>{title}</h3>
         <p className={`font-body font-medium text-sm mb-4 leading-relaxed ${isPopular ? 'text-slate-200' : isElite ? 'text-white/85' : 'text-slate-600 dark:text-slate-300'}`}>{description}</p>

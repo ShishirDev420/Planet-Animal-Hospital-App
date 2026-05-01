@@ -2,6 +2,12 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@property --glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 @layer base {
   html, body, #root {
     margin: 0;
@@ -112,42 +118,69 @@
     padding-bottom: env(safe-area-inset-bottom, 1rem);
   }
 
-  /* Premium Paws - organic mesh gradient glow (Nano Banana-inspired) */
+  /* Premium Paws - Golden Aura (Overdrive Mode) */
   .prestige-glow {
     position: relative;
-    overflow: visible;
-    border: 1px solid rgba(254,199,8,0.2);
-    border-radius: 1.5rem;
-    transition: border-color 3s ease-in-out;
+    z-index: 10;
+    border: none !important;
+    /* Corner-only glows — tight 28% stops keep glow well away from center text */
+    background:
+      radial-gradient(ellipse at top left,     rgba(254, 199, 8, 0.25) 0%, transparent 28%),
+      radial-gradient(ellipse at top right,    rgba(232, 188, 75, 0.18) 0%, transparent 28%),
+      radial-gradient(ellipse at bottom left,  rgba(232, 188, 75, 0.18) 0%, transparent 28%),
+      radial-gradient(ellipse at bottom right, rgba(254, 199, 8, 0.25) 0%, transparent 28%),
+      rgba(10, 10, 10, 0.94) !important;
+    backdrop-filter: blur(20px);
   }
+
+  /* Outer Aura — 100px spread, strong opacity for tier separation */
   .prestige-glow::before {
     content: '';
     position: absolute;
-    inset: -20px;
-    border-radius: 2rem;
-    background: 
-      radial-gradient(ellipse at 20% 50%, rgba(254,199,8,0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(232,188,75,0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 80%, rgba(255,253,231,0.08) 0%, transparent 50%);
-    filter: blur(30px);
-    animation: mesh-float 8s ease-in-out infinite;
-    z-index: -1;
-    will-change: opacity;
+    inset: -100px;
+    background: conic-gradient(
+      from var(--glow-angle),
+      transparent 0%,
+      rgba(254, 199, 8, 0.10) 10%,
+      rgba(232, 188, 75, 0.35) 25%,
+      rgba(255, 244, 214, 0.28) 40%,
+      rgba(232, 188, 75, 0.35) 55%,
+      rgba(254, 199, 8, 0.10) 70%,
+      transparent 100%
+    );
+    filter: blur(85px);
+    border-radius: 4rem;
+    z-index: -2;
+    animation: aura-rotate 10s linear infinite;
+    will-change: transform, opacity;
   }
+
+  /* The Liquid Gold Border - Thinner, more precise */
   .prestige-glow::after {
     content: '';
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-      135deg,
-      rgba(254,199,8,0.05) 0%,
-      transparent 50%,
-      rgba(254,199,8,0.03) 100%
+    inset: -1px;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--glow-angle),
+      #fec708,
+      #e8bc4b,
+      #fff4d6,
+      #e8bc4b,
+      #fec708
     );
-    opacity: 0.3;
+    border-radius: 1.6rem;
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
     z-index: -1;
-    will-change: opacity;
+    animation: aura-rotate 10s linear infinite;
+    will-change: transform;
   }
 }
 
@@ -228,16 +261,29 @@
   }
 }
 
+/* Premium Paws - Golden Aura Rotation */
+@keyframes aura-rotate {
+  from {
+    --glow-angle: 0deg;
+  }
+  to {
+    --glow-angle: 360deg;
+  }
+}
+
 /* Premium Paws - organic mesh gradient float */
 @keyframes mesh-float {
-  0%, 100% { 
-    opacity: 0.5;
-  }
-  33% { 
+  0% { 
+    background-position: 0% 50%;
     opacity: 0.7;
   }
-  66% { 
-    opacity: 0.6;
+  50% { 
+    background-position: 100% 50%;
+    opacity: 0.9;
+  }
+  100% { 
+    background-position: 0% 50%;
+    opacity: 0.7;
   }
 }
 

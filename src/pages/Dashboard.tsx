@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
@@ -393,10 +393,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     let unsubscribeDoc: (() => void) | null = null;
+    let unsubscribeRequests: (() => void) | null = null;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (unsubscribeDoc) {
         unsubscribeDoc();
         unsubscribeDoc = null;
+      }
+      if (unsubscribeRequests) {
+        unsubscribeRequests();
+        unsubscribeRequests = null;
       }
       if (user) {
         setUserId(user.uid);
@@ -410,6 +415,14 @@ export default function Dashboard() {
         }, (err) => {
            console.error('onSnapshot error in Dashboard:', err);
         });
+        
+        const requestsRef = collection(db, 'requests');
+        const q = query(requestsRef, where('userId', '==', user.uid));
+        unsubscribeRequests = onSnapshot(q, (snapshot) => {
+          const appts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+          setUpcomingAppts(appts);
+        });
+        
         setIsAuthReady(true);
       } else {
         setUserId(null);
@@ -419,6 +432,7 @@ export default function Dashboard() {
     return () => {
       unsubscribe();
       if (unsubscribeDoc) unsubscribeDoc();
+      if (unsubscribeRequests) unsubscribeRequests();
     };
   }, []);
 
@@ -465,16 +479,18 @@ export default function Dashboard() {
   
   // Booking State
   const [isBookVisitOpen, setIsBookVisitOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<{id: number, name: string, points: number} | null>(null);
+  const [selectedServices, setSelectedServices] = useState<{id: number, name: string, points: number, icon: any, desc: string}[]>([]);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
-  const [upcomingAppts, setUpcomingAppts] = useState([{ date: '12', title: 'Annual Wellness Exam', time: '10:30 AM' }]);
+  const [upcomingAppts, setUpcomingAppts] = useState<any[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
 
   const BOOKING_SERVICES = [
-    { id: 1, name: 'General Checkup', points: 1000 },
-    { id: 2, name: 'Full Grooming', points: 800 },
-    { id: 3, name: 'Vaccinations', points: 750 }
+    { id: 1, name: 'General Checkup', points: 1000, icon: Stethoscope, desc: 'Full health assessment' },
+    { id: 2, name: 'Full Grooming', points: 800, icon: Sparkles, desc: 'Bath, trim & nail care' },
+    { id: 3, name: 'Vaccinations', points: 750, icon: Syringe, desc: 'Core & booster shots' },
+    { id: 4, name: 'Ear Cleaning', points: 200, icon: Ear, desc: 'Deep clean & inspection' },
+    { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' }
   ];
 
   // Drag-to-Scroll State
@@ -552,15 +568,17 @@ export default function Dashboard() {
   }, []);
 
   const submitBooking = async () => {
-    if (!selectedService || !bookingDate || !bookingTime || !userId) return;
+    if (selectedServices.length === 0 || !bookingDate || !bookingTime || !userId) return;
 
-    const finalPoints = selectedService.points * getMultiplier(currentPlan);
+    const totalPoints = selectedServices.reduce((acc, curr) => acc + curr.points, 0);
+    const finalPoints = totalPoints * getMultiplier(currentPlan);
+    const serviceNames = selectedServices.map(s => s.name).join(', ');
 
     try {
       await addDoc(collection(db, 'requests'), {
         userId: auth.currentUser?.uid || userId,
         patient: petProfile?.name || 'Pet',
-        reason: selectedService.name,
+        reason: serviceNames,
         date: bookingDate,
         time: bookingTime,
         points: finalPoints,
@@ -572,7 +590,7 @@ export default function Dashboard() {
     }
 
     setIsBookVisitOpen(false);
-    setSelectedService(null);
+    setSelectedServices([]);
     setBookingDate('');
     setBookingTime('');
   };
@@ -588,7 +606,8 @@ export default function Dashboard() {
 
   const parentName = petProfile?.parentName || "Pet Parent";
   const petName = petProfile?.name || 'Pet';
-  const whatsappMessage = `Hey, Planet Animal Hospital team, I am ${parentName}; ${petName}, pet's parent, and I'm here to inquire about the possibility of a ${selectedService?.name || selectedService} Appointment at ${bookingDate}, at ${bookingTime}. Please get back to me as soon as you see this message. Thank you.`;
+  const serviceNamesText = selectedServices.length > 0 ? selectedServices.map(s => s.name).join(', ') : '';
+  const whatsappMessage = `Hey Planet Animal Hospital team! I am ${parentName}, ${petName}'s parent. I would like to book an appointment for: ${serviceNamesText} on ${bookingDate} at ${bookingTime}. Please get back to me as soon as you see this message. Thank you!`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
 
@@ -697,13 +716,13 @@ export default function Dashboard() {
         <h3 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <ActionCard 
-            icon={<Calendar className="text-teal-500" />} 
+            icon={<Calendar className="text-planet-yellow" />} 
             title="Book Visit" 
             subtitle="Checkups & Grooming" 
             onClick={() => setIsBookVisitOpen(true)}
           />
           <ActionCard 
-            icon={<FileText className="text-indigo-500" />} 
+            icon={<FileText className="text-planet-yellow" />} 
             title="Medical Records" 
             subtitle="Vaccines & History" 
             onClick={() => setActiveModal('records')}
@@ -724,25 +743,27 @@ export default function Dashboard() {
       </div>
 
       {/* Upcoming */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Upcoming for {petProfile?.name || 'your pet'}</h3>
-          <button className="text-planet-yellow text-sm font-bold flex items-center font-body">View All <ChevronRight size={16}/></button>
-        </div>
-        <div className="space-y-3">
-          {upcomingAppts.map((appt, idx) => (
-            <div key={idx} className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex items-center gap-4">
-              <div className="bg-teal-100 dark:bg-teal-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-xl shrink-0">
-                {appt.date}
+      {upcomingAppts.length > 0 && (
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Upcoming for {petProfile?.name || 'your pet'}</h3>
+            <button className="text-planet-yellow text-sm font-bold flex items-center font-body">View All <ChevronRight size={16}/></button>
+          </div>
+          <div className="space-y-3">
+            {upcomingAppts.map((appt, idx) => (
+              <div key={idx} className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex items-center gap-4">
+                <div className="bg-teal-100 dark:bg-teal-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-xl shrink-0">
+                  {appt.date ? String(appt.date).substring(8, 10) : 'TBD'}
+                </div>
+                <div>
+                   <h4 className="font-heading font-bold text-white text-lg tracking-tight">{appt.reason || appt.title}</h4>
+                  <p className="font-body font-medium text-slate-300 text-sm leading-relaxed capitalize">{appt.status || 'pending'} • {appt.time || 'TBD'}</p>
+                </div>
               </div>
-              <div>
-                 <h4 className="font-heading font-bold text-white text-lg tracking-tight">{appt.title}</h4>
-                <p className="font-body font-medium text-slate-300 text-sm leading-relaxed">Dr. Naveen • {appt.time}</p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Ways to Earn Points */}
       <div className="pt-2 relative -mx-6">
@@ -848,7 +869,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Book Visit Master Modal (Liquid Glass) */}
+      {/* Book Visit Master Modal (Premium Liquid Glass) */}
       <AnimatePresence>
         {isBookVisitOpen && (
           <motion.div
@@ -856,51 +877,121 @@ export default function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-3xl z-[100] flex items-center justify-center p-4"
+            onClick={() => setIsBookVisitOpen(false)}
+            className="fixed inset-0 bg-black/85 backdrop-blur-2xl z-[100] flex items-end sm:items-center justify-center"
           >
             <motion.div
               key="book-visit-modal"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white/30 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-3xl p-6 w-full max-w-md h-full max-h-[85vh] flex flex-col relative"
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 60 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-md bg-gradient-to-b from-[#0c1a14]/95 to-[#071912]/98 backdrop-blur-3xl border border-white/[0.08] shadow-[0_-8px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] rounded-t-[2rem] sm:rounded-[2rem] max-h-[92vh] flex flex-col overflow-hidden"
             >
-              <div className="sticky top-0 bg-transparent z-10 pb-4 mb-4 border-b border-white/20 flex justify-between items-center shrink-0">
-                <h2 className="text-2xl font-bold text-[#fec708]">Book an Appointment</h2>
-                <button 
-                  onClick={() => setIsBookVisitOpen(false)} 
-                  className="p-2 bg-white/40 hover:bg-white/60 rounded-full text-slate-600 transition-colors"
-                >
-                  <X size={20}/>
-                </button>
+              {/* Ambient Glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#fec708]/10 rounded-full blur-[100px] pointer-events-none" />
+
+              {/* Drag Handle (mobile) */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+                <div className="w-10 h-1 rounded-full bg-white/20" />
               </div>
 
-              <div className="space-y-6 flex-1 overflow-y-auto pb-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                {/* Step 1: Services */}
+              {/* Header */}
+              <div className="px-6 pt-4 pb-4 flex justify-between items-start shrink-0">
                 <div>
-                  <h3 className="text-slate-200 font-semibold tracking-widest text-xs uppercase mb-3">Step 1: Select Service</h3>
-                  <div className="space-y-3">
+                  <h2 className="text-[22px] font-bold text-white tracking-tight">Book Appointment</h2>
+                  <p className="text-white/40 text-[13px] font-medium mt-0.5">for {petProfile?.name || 'your pet'}</p>
+                </div>
+                <motion.button 
+                  whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsBookVisitOpen(false)} 
+                  className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X size={18}/>
+                </motion.button>
+              </div>
+
+              {/* Step Progress */}
+              <div className="px-6 pb-4 flex items-center gap-2 shrink-0">
+                {[
+                  { n: 1, label: 'Services', done: selectedServices.length > 0 },
+                  { n: 2, label: 'Date', done: !!bookingDate },
+                  { n: 3, label: 'Time', done: !!bookingTime },
+                ].map((step, i) => (
+                  <div key={step.n} className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 ${
+                      step.done 
+                        ? 'bg-[#fec708] text-black shadow-[0_0_12px_rgba(254,199,8,0.4)]' 
+                        : 'bg-white/[0.06] text-white/30 border border-white/[0.08]'
+                    }`}>
+                      {step.done ? <Check size={12} strokeWidth={3} /> : step.n}
+                    </div>
+                    <span className={`text-[11px] font-semibold tracking-wide ${step.done ? 'text-white/70' : 'text-white/25'}`}>{step.label}</span>
+                    {i < 2 && <div className={`w-4 h-px ${step.done ? 'bg-[#fec708]/40' : 'bg-white/[0.06]'}`} />}
+                  </div>
+                ))}
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-6 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                
+                {/* Step 1: Services */}
+                <div className="mb-6">
+                  <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/30 mb-3">Select Services</h3>
+                  <div className="space-y-2.5">
                     {BOOKING_SERVICES.map((service) => {
-                      const isSelected = selectedService?.id === service.id;
+                      const isSelected = selectedServices.some(s => s.id === service.id);
+                      const ServiceIcon = service.icon;
                       return (
                         <motion.button 
                           key={service.id}
-                          whileTap={{ scale: 0.92 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                          onClick={() => setSelectedService(service)}
-                          className={`w-full text-left cursor-pointer transition-all ${
+                          whileTap={{ scale: 0.97 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          onClick={() => {
+                            setSelectedServices(prev => 
+                              prev.some(s => s.id === service.id)
+                                ? prev.filter(s => s.id !== service.id)
+                                : [...prev, service]
+                            );
+                          }}
+                          className={`relative w-full text-left transition-all duration-200 cursor-pointer overflow-hidden group ${
                             isSelected 
-                              ? 'bg-[#fec708] text-white shadow-[0_0_15px_rgba(254,199,8,0.6)] border border-[#fec708] rounded-2xl p-4' 
-                              : 'bg-white/40 border border-white/30 backdrop-blur-md rounded-2xl p-4 hover:bg-white/60'
-                          }`}
+                              ? 'bg-[#fec708]/[0.12] border-[#fec708]/40 shadow-[0_0_20px_rgba(254,199,8,0.08)]' 
+                              : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12]'
+                          } border rounded-2xl p-4`}
                         >
-                          <div className="flex justify-between items-center">
-                            <span className={`font-bold ${isSelected ? 'text-white' : 'text-slate-700'}`}>
-                              {service.name}
-                            </span>
-                            <span className={`text-sm font-bold flex items-center gap-1 ${isSelected ? 'text-white/90' : 'text-slate-500'}`}>
-                              <PawPrint size={14} /> {service.points} pts
-                            </span>
+                          <div className="flex items-center gap-3.5 relative z-10">
+                            {/* Icon */}
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                              isSelected 
+                                ? 'bg-[#fec708]/20 text-[#fec708]' 
+                                : 'bg-white/[0.04] text-white/30 group-hover:text-white/50'
+                            }`}>
+                              <ServiceIcon size={20} />
+                            </div>
+                            
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <span className={`font-semibold text-[15px] tracking-tight block ${isSelected ? 'text-white' : 'text-white/80'}`}>
+                                {service.name}
+                              </span>
+                              <span className={`text-[12px] ${isSelected ? 'text-white/40' : 'text-white/25'}`}>
+                                {service.desc}
+                              </span>
+                            </div>
+
+                            {/* Points + Check */}
+                            <div className="flex items-center gap-2.5 shrink-0">
+                              <span className={`text-[13px] font-bold flex items-center gap-1 ${isSelected ? 'text-[#fec708]' : 'text-white/25'}`}>
+                                <PawPrint size={12} /> +{service.points}
+                              </span>
+                              <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-200 ${
+                                isSelected ? 'border-[#fec708] bg-[#fec708]' : 'border-white/15 group-hover:border-white/25'
+                              }`}>
+                                {isSelected && <Check size={12} className="text-black" strokeWidth={3} />}
+                              </div>
+                            </div>
                           </div>
                         </motion.button>
                       );
@@ -908,105 +999,132 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Step 2: Date & Time */}
-                <div>
-                  <h3 className="text-slate-200 font-semibold tracking-widest text-xs uppercase mb-3">Step 2: Date & Time</h3>
-                  <div className="space-y-4">
-                    {/* Custom Inline Calendar Grid */}
-                    <div className="bg-white/40 border border-white/30 rounded-2xl shadow-sm backdrop-blur-xl p-4">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-white font-bold text-lg">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                        <Calendar className="text-slate-500 w-5 h-5" />
-                      </div>
-                      <div className="grid grid-cols-7 gap-1 mb-2">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                          <div key={i} className="text-center text-xs font-semibold text-slate-300">{day}</div>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-7 gap-1 place-items-center">
-                        {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
-                          <div key={`blank-${i}`} className="h-10 w-10"></div>
-                        ))}
-                        {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
-                          const day = i + 1;
-                          const dateObj = new Date(new Date().getFullYear(), new Date().getMonth(), day);
-                          const year = dateObj.getFullYear();
-                          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                          const dayStr = String(dateObj.getDate()).padStart(2, '0');
-                          const dateString = `${year}-${month}-${dayStr}`;
-                          
-                          const todayObj = new Date();
-                          todayObj.setHours(0, 0, 0, 0);
-                          const isPast = dateObj < todayObj;
-                          const isSelected = bookingDate === dateString;
-
-                          return (
-                            <motion.button
-                              key={day}
-                              whileTap={isPast ? undefined : { scale: 0.85 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                              onClick={() => !isPast && setBookingDate(dateString)}
-                              disabled={isPast}
-                              className={`h-10 w-10 flex items-center justify-center rounded-full text-[15px] transition-colors ${
-                                isPast 
-                                  ? 'text-gray-300 pointer-events-none dark:text-white/20' 
-                                  : isSelected 
-                                    ? 'bg-[#fec708] text-white font-bold shadow-[0_0_15px_rgba(254,199,8,0.6)] border border-[#fec708]' 
-                                    : 'text-gray-900 font-bold hover:bg-white/50 dark:text-white/90 dark:hover:bg-white/10'
-                              }`}
-                            >
-                              {day}
-                            </motion.button>
-                          );
-                        })}
-                      </div>
+                {/* Step 2: Date */}
+                <div className="mb-6">
+                  <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/30 mb-3">Pick a Date</h3>
+                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-white/80 font-semibold text-[15px]">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                      <Calendar className="text-[#fec708]/50 w-4 h-4" />
                     </div>
+                    <div className="grid grid-cols-7 gap-0.5 mb-1.5">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className="text-center text-[10px] font-bold text-white/20 py-1">{day}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-0.5 place-items-center">
+                      {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
+                        <div key={`blank-${i}`} className="h-9 w-9"></div>
+                      ))}
+                      {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
+                        const day = i + 1;
+                        const dateObj = new Date(new Date().getFullYear(), new Date().getMonth(), day);
+                        const year = dateObj.getFullYear();
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const dayStr = String(dateObj.getDate()).padStart(2, '0');
+                        const dateString = `${year}-${month}-${dayStr}`;
+                        
+                        const todayObj = new Date();
+                        todayObj.setHours(0, 0, 0, 0);
+                        const isPast = dateObj < todayObj;
+                        const isToday = dateObj.getTime() === todayObj.getTime();
+                        const isSelected = bookingDate === dateString;
 
-                    {/* Apple-Grade 'Time Pill' Grid */}
-                    <div className="grid grid-cols-3 gap-3 p-2">
-                      {['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM'].map((time) => {
-                        const isSelected = bookingTime === time;
                         return (
                           <motion.button
-                            key={time}
-                            whileTap={{ scale: 0.92 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                            onClick={() => setBookingTime(time)}
-                            className={`py-3 rounded-2xl text-[15px] transition-all ${
-                              isSelected
-                                ? 'font-bold bg-[#fec708] text-white shadow-[0_0_15px_rgba(254,199,8,0.6)] border border-[#fec708]'
-                                : 'font-medium bg-white/30 border border-white/20 text-gray-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md hover:bg-white/50 dark:bg-neutral-800 dark:border-white/10 dark:text-white/90 dark:hover:bg-neutral-700'
+                            key={day}
+                            whileTap={isPast ? undefined : { scale: 0.85 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                            onClick={() => !isPast && setBookingDate(dateString)}
+                            disabled={isPast}
+                            className={`h-9 w-9 flex items-center justify-center rounded-xl text-[13px] transition-all duration-200 relative ${
+                              isPast 
+                                ? 'text-white/10 cursor-default' 
+                                : isSelected 
+                                  ? 'bg-[#fec708] text-black font-bold shadow-[0_0_16px_rgba(254,199,8,0.5)]' 
+                                  : 'text-white/70 font-medium hover:bg-white/[0.06] cursor-pointer'
                             }`}
                           >
-                            {time}
+                            {day}
+                            {isToday && !isSelected && (
+                              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#fec708]" />
+                            )}
                           </motion.button>
                         );
                       })}
                     </div>
                   </div>
                 </div>
+
+                {/* Step 3: Time Slots — Grouped */}
+                <div className="mb-2">
+                  <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/30 mb-3">Choose a Time</h3>
+                  {[
+                    { label: 'Morning', slots: ['10:00 AM', '11:00 AM'] },
+                    { label: 'Afternoon', slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
+                    { label: 'Evening', slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM'] },
+                  ].map((group) => (
+                    <div key={group.label} className="mb-3">
+                      <p className="text-[10px] font-semibold text-white/15 uppercase tracking-widest mb-1.5 ml-1">{group.label}</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {group.slots.map((time) => {
+                          const isSelected = bookingTime === time;
+                          return (
+                            <motion.button
+                              key={time}
+                              whileTap={{ scale: 0.93 }}
+                              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                              onClick={() => setBookingTime(time)}
+                              className={`py-2.5 rounded-xl text-[13px] transition-all duration-200 cursor-pointer ${
+                                isSelected
+                                  ? 'font-bold bg-[#fec708] text-black shadow-[0_0_16px_rgba(254,199,8,0.4)]'
+                                  : 'font-medium bg-white/[0.03] border border-white/[0.06] text-white/50 hover:bg-white/[0.06] hover:text-white/70'
+                              }`}
+                            >
+                              {time}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="mt-4 pt-4 border-t border-white/20 shrink-0">
+              {/* Sticky Footer — Summary + CTA */}
+              <div className="shrink-0 border-t border-white/[0.06] bg-[#071912]/90 backdrop-blur-xl px-6 py-4">
+                {/* Points Summary */}
+                {selectedServices.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} 
+                    className="flex items-center justify-between mb-3 text-[13px]"
+                  >
+                    <span className="text-white/40 font-medium">{selectedServices.length} service{selectedServices.length > 1 ? 's' : ''} selected</span>
+                    <span className="text-[#fec708] font-bold flex items-center gap-1">
+                      <PawPrint size={13} /> +{selectedServices.reduce((a, s) => a + s.points, 0).toLocaleString()} pts
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* CTA */}
                 <a
-                  href={(!selectedService || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
+                  href={(selectedServices.length === 0 || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
-                    if (!selectedService || !bookingDate || !bookingTime) {
+                    if (selectedServices.length === 0 || !bookingDate || !bookingTime) {
                       e.preventDefault();
                     } else {
                       submitBooking();
                     }
                   }}
-                  className={`transition-all w-full py-4 rounded-[20px] font-bold text-[17px] flex justify-center items-center gap-2 ${
-                    !selectedService || !bookingDate || !bookingTime
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50 dark:bg-neutral-800 dark:text-white/20 pointer-events-none'
-                      : 'bg-black text-white shadow-xl dark:bg-white dark:text-black'
+                  className={`block w-full py-3.5 rounded-2xl font-bold text-[15px] text-center transition-all duration-300 ${
+                    selectedServices.length === 0 || !bookingDate || !bookingTime
+                      ? 'bg-white/[0.04] text-white/15 cursor-not-allowed border border-white/[0.04]'
+                      : 'bg-[#fec708] text-black shadow-[0_4px_24px_rgba(254,199,8,0.3)] hover:shadow-[0_4px_32px_rgba(254,199,8,0.5)] hover:brightness-110 cursor-pointer'
                   }`}
                 >
-                  Confirm Booking
+                  {selectedServices.length === 0 ? 'Select a service to continue' : !bookingDate ? 'Pick a date' : !bookingTime ? 'Choose a time' : 'Confirm Booking'}
                 </a>
               </div>
             </motion.div>
