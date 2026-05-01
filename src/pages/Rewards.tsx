@@ -66,7 +66,7 @@ export default function Rewards() {
   const nextUnlockPoints = nextUnlock ? nextUnlock.points - currentPoints : 0;
 
   return (
-    <div className="min-h-screen relative overflow-hidden font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-[#0d0d0d]">
+    <div className="relative w-full h-full overflow-hidden font-sans pb-8">
       {/* Ambient Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#fec708]/5 rounded-full blur-[100px]" />
@@ -89,6 +89,16 @@ export default function Rewards() {
 
       {/* Current Balance Card */}
       <div className="px-6 relative z-10">
+        <style>{`
+          @keyframes pulsate-synchronized-glow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(254,199,8,0.7)); opacity: 1; }
+            33% { filter: drop-shadow(0 0 25px rgba(254,199,8,0.9)); opacity: 0.8; }
+            66% { filter: drop-shadow(0 0 10px rgba(254,199,8,0.5)); opacity: 0.9; }
+          }
+          .animate-pulsate-synchronized-glow {
+            animation: pulsate-synchronized-glow 7s infinite ease-in-out;
+          }
+        `}</style>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -96,7 +106,7 @@ export default function Rewards() {
         >
           <p className="text-white/60 text-xs uppercase tracking-widest font-medium mb-2">Your Balance</p>
           <div className="flex items-baseline gap-2">
-            <span className="font-heading text-5xl font-black text-[#fec708]">{currentPoints.toLocaleString()}</span>
+            <span className="font-heading text-5xl font-black text-[#fec708] animate-pulsate-synchronized-glow">{currentPoints.toLocaleString()}</span>
             <span className="text-[#fec708] font-bold text-lg">PTS</span>
           </div>
 
