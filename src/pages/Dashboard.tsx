@@ -3,8 +3,9 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight, Plus
 } from 'lucide-react';
+import { cn } from '../lib/utils';
 import Logo from '../components/Logo';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
@@ -869,7 +870,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Book Visit Master Modal (Premium Liquid Glass) */}
+      {/* Book Visit Master Modal (Classy & Glassy Overhaul) */}
       <AnimatePresence>
         {isBookVisitOpen && (
           <motion.div
@@ -878,76 +879,117 @@ export default function Dashboard() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsBookVisitOpen(false)}
-            className="fixed inset-0 bg-black/85 backdrop-blur-2xl z-[100] flex items-end sm:items-center justify-center"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
           >
             <motion.div
               key="book-visit-modal"
-              initial={{ opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 60 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md bg-gradient-to-b from-[#0c1a14]/95 to-[#071912]/98 backdrop-blur-3xl border border-white/[0.08] shadow-[0_-8px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] rounded-t-[2rem] sm:rounded-[2rem] max-h-[92vh] flex flex-col overflow-hidden"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                // Subtle tilt effect for premium feel
+                e.currentTarget.style.transform = `perspective(1200px) rotateX(${-y / 80}deg) rotateY(${x / 80}deg)`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg)`;
+              }}
+              style={{ perspective: '1200px', transition: 'transform 0.2s ease-out' }}
+              className="relative w-full max-w-2xl liquid-glass-modal rounded-t-[2.5rem] sm:rounded-[3rem] h-[92dvh] sm:h-[85vh] flex flex-col overflow-hidden"
             >
-              {/* Ambient Glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#fec708]/10 rounded-full blur-[100px] pointer-events-none" />
+              {/* Premium Glass Highlights */}
+              <div className="absolute -top-[20%] -left-[20%] w-[140%] h-[50%] bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+              <div className="absolute top-0 left-1/4 w-32 h-32 bg-planet-yellow/20 rounded-full blur-[80px] pointer-events-none" />
 
               {/* Drag Handle (mobile) */}
-              <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+              <div className="flex justify-center pt-4 pb-2 sm:hidden shrink-0">
                 <div className="w-10 h-1 rounded-full bg-white/20" />
               </div>
 
               {/* Header */}
-              <div className="px-6 pt-4 pb-4 flex justify-between items-start shrink-0">
+              <div className="px-8 pt-6 pb-4 flex justify-between items-start shrink-0 z-10">
                 <div>
-                  <h2 className="text-[22px] font-bold text-white tracking-tight">Book Appointment</h2>
-                  <p className="text-white/40 text-[13px] font-medium mt-0.5">for {petProfile?.name || 'your pet'}</p>
+                  <h2 className="text-2xl font-heading font-black text-white tracking-tight">
+                    Book <span className="text-planet-yellow">Visit</span>
+                  </h2>
+                  <p className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-planet-yellow shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
+                    {petProfile?.name ? `Schedule for ${petProfile.name}` : 'Pet Health Scheduler'}
+                  </p>
                 </div>
                 <motion.button 
-                  whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.1, rotate: 90 }} 
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setIsBookVisitOpen(false)} 
-                  className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-2.5 rounded-2xl bg-white/10 border border-white/20 text-white/60 hover:text-white transition-all shadow-xl backdrop-blur-md"
                 >
-                  <X size={18}/>
+                  <X size={20}/>
                 </motion.button>
               </div>
 
-              {/* Step Progress */}
-              <div className="px-6 pb-4 flex items-center gap-2 shrink-0">
+              {/* Progress Stepper - Refined */}
+              <div className="px-10 pb-6 flex items-center justify-between shrink-0 z-10">
                 {[
-                  { n: 1, label: 'Services', done: selectedServices.length > 0 },
+                  { n: 1, label: 'Service', done: selectedServices.length > 0 },
                   { n: 2, label: 'Date', done: !!bookingDate },
                   { n: 3, label: 'Time', done: !!bookingTime },
                 ].map((step, i) => (
-                  <div key={step.n} className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 ${
-                      step.done 
-                        ? 'bg-[#fec708] text-black shadow-[0_0_12px_rgba(254,199,8,0.4)]' 
-                        : 'bg-white/[0.06] text-white/30 border border-white/[0.08]'
-                    }`}>
-                      {step.done ? <Check size={12} strokeWidth={3} /> : step.n}
-                    </div>
-                    <span className={`text-[11px] font-semibold tracking-wide ${step.done ? 'text-white/70' : 'text-white/25'}`}>{step.label}</span>
-                    {i < 2 && <div className={`w-4 h-px ${step.done ? 'bg-[#fec708]/40' : 'bg-white/[0.06]'}`} />}
+                  <div key={step.n} className="flex flex-col items-center gap-2 flex-1 relative">
+                    {i < 2 && (
+                      <div className="absolute left-[calc(50%+12px)] right-[calc(-50%+12px)] top-[10px] h-[1px] bg-white/10 overflow-hidden">
+                         <motion.div 
+                          initial={{ x: '-100%' }}
+                          animate={{ x: step.done ? '0%' : '-100%' }}
+                          className="h-full bg-planet-yellow/50"
+                         />
+                      </div>
+                    )}
+                    <motion.div 
+                      animate={{ 
+                        backgroundColor: step.done ? '#fec708' : 'transparent',
+                        borderColor: step.done ? '#fec708' : 'rgba(255,255,255,0.2)',
+                        boxShadow: step.done ? '0 0 15px rgba(254,199,8,0.4)' : 'none'
+                      }}
+                      className="w-[20px] h-[20px] rounded-full flex items-center justify-center border z-10 transition-colors"
+                    >
+                      {step.done ? <Check size={10} className="text-black" strokeWidth={4} /> : <div className="w-1 h-1 rounded-full bg-white/40" />}
+                    </motion.div>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${step.done ? 'text-planet-yellow' : 'text-white/40'}`}>
+                      {step.label}
+                    </span>
                   </div>
                 ))}
               </div>
 
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto px-6 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto px-8 pb-8 hide-scrollbar scroll-smooth">
                 
-                {/* Step 1: Services */}
-                <div className="mb-6">
-                  <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/30 mb-3">Select Services</h3>
-                  <div className="space-y-2.5">
+                {/* 1. Services Section */}
+                <section id="services-section" className="mb-10">
+                  <div className="flex justify-between items-end mb-4 px-1">
+                    <h3 className="text-[10px] font-black tracking-[0.25em] uppercase text-white/40">Select Services</h3>
+                    {selectedServices.length > 0 && (
+                      <button 
+                        onClick={() => setSelectedServices([])} 
+                        className="text-[9px] font-bold text-planet-yellow/60 hover:text-planet-yellow transition-colors uppercase tracking-widest"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
                     {BOOKING_SERVICES.map((service) => {
                       const isSelected = selectedServices.some(s => s.id === service.id);
                       const ServiceIcon = service.icon;
                       return (
                         <motion.button 
                           key={service.id}
-                          whileTap={{ scale: 0.97 }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          whileHover={{ scale: 1.01, x: 4 }}
+                          whileTap={{ scale: 0.99 }}
                           onClick={() => {
                             setSelectedServices(prev => 
                               prev.some(s => s.id === service.id)
@@ -955,177 +997,219 @@ export default function Dashboard() {
                                 : [...prev, service]
                             );
                           }}
-                          className={`relative w-full text-left transition-all duration-200 cursor-pointer overflow-hidden group ${
+                          className={cn(
+                            "relative w-full text-left rounded-[1.5rem] p-4 flex items-center gap-4 border transition-all duration-300",
                             isSelected 
-                              ? 'bg-[#fec708]/[0.12] border-[#fec708]/40 shadow-[0_0_20px_rgba(254,199,8,0.08)]' 
-                              : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12]'
-                          } border rounded-2xl p-4`}
+                              ? 'bg-planet-yellow/20 border-planet-yellow shadow-[0_10px_30px_rgba(254,199,8,0.2)]' 
+                              : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/30'
+                          )}
                         >
-                          <div className="flex items-center gap-3.5 relative z-10">
-                            {/* Icon */}
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                              isSelected 
-                                ? 'bg-[#fec708]/20 text-[#fec708]' 
-                                : 'bg-white/[0.04] text-white/30 group-hover:text-white/50'
-                            }`}>
-                              <ServiceIcon size={20} />
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                            isSelected 
+                              ? 'bg-planet-yellow text-black shadow-[0_0_20px_rgba(254,199,8,0.4)]' 
+                              : 'bg-white/10 text-white/50'
+                          )}>
+                            <ServiceIcon size={24} />
+                          </div>
+  
+                          <div className="flex-1">
+                            <p className={cn("font-bold text-base tracking-tight", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
+                            <p className="text-white/50 text-[10px] font-medium mt-0.5 leading-tight">{service.desc}</p>
+                          </div>
+  
+                          <div className="text-right">
+                            <div className={cn("flex items-center gap-1 mb-1 justify-end", isSelected ? 'text-planet-yellow' : 'text-white/30')}>
+                               <PawPrint size={10} className={isSelected ? 'fill-planet-yellow' : ''} />
+                               <span className="text-xs font-black">+{service.points}</span>
                             </div>
-                            
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <span className={`font-semibold text-[15px] tracking-tight block ${isSelected ? 'text-white' : 'text-white/80'}`}>
-                                {service.name}
-                              </span>
-                              <span className={`text-[12px] ${isSelected ? 'text-white/40' : 'text-white/25'}`}>
-                                {service.desc}
-                              </span>
-                            </div>
-
-                            {/* Points + Check */}
-                            <div className="flex items-center gap-2.5 shrink-0">
-                              <span className={`text-[13px] font-bold flex items-center gap-1 ${isSelected ? 'text-[#fec708]' : 'text-white/25'}`}>
-                                <PawPrint size={12} /> +{service.points}
-                              </span>
-                              <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-200 ${
-                                isSelected ? 'border-[#fec708] bg-[#fec708]' : 'border-white/15 group-hover:border-white/25'
-                              }`}>
-                                {isSelected && <Check size={12} className="text-black" strokeWidth={3} />}
-                              </div>
+                            <div className={cn(
+                              "w-5 h-5 rounded-full border-2 ml-auto flex items-center justify-center transition-all duration-300",
+                              isSelected ? 'border-planet-yellow bg-planet-yellow' : 'border-white/10'
+                            )}>
+                              {isSelected && <Check size={12} className="text-black" strokeWidth={4} />}
                             </div>
                           </div>
                         </motion.button>
                       );
                     })}
                   </div>
-                </div>
+                </section>
+ 
+                {/* 2. Calendar Section */}
+                <section id="date-section" className="mb-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">2</div>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Preferred Date</h3>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
+                      const date = new Date();
+                      date.setDate(date.getDate() + offset);
+                      const isToday = offset === 0;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const isSelected = bookingDate === dateStr;
+                      
+                      return (
+                        <motion.button
+                          key={offset}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setBookingDate(dateStr)}
+                          className={cn(
+                            "flex flex-col items-center justify-center py-4 rounded-2xl border transition-all duration-300",
+                            isSelected
+                              ? 'bg-planet-yellow text-black border-planet-yellow shadow-lg'
+                              : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
+                          )}
+                        >
+                          <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
+                            {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}
+                          </span>
+                          <span className="text-lg font-black">{date.getDate()}</span>
+                          <span className="text-[9px] font-bold uppercase tracking-tighter opacity-40">
+                            {date.toLocaleDateString('en-US', { month: 'short' })}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </section>
 
-                {/* Step 2: Date */}
-                <div className="mb-6">
-                  <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/30 mb-3">Pick a Date</h3>
-                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-white/80 font-semibold text-[15px]">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                      <Calendar className="text-[#fec708]/50 w-4 h-4" />
-                    </div>
-                    <div className="grid grid-cols-7 gap-0.5 mb-1.5">
-                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                        <div key={i} className="text-center text-[10px] font-bold text-white/20 py-1">{day}</div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-0.5 place-items-center">
-                      {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
-                        <div key={`blank-${i}`} className="h-9 w-9"></div>
-                      ))}
-                      {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
-                        const day = i + 1;
-                        const dateObj = new Date(new Date().getFullYear(), new Date().getMonth(), day);
-                        const year = dateObj.getFullYear();
-                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                        const dayStr = String(dateObj.getDate()).padStart(2, '0');
-                        const dateString = `${year}-${month}-${dayStr}`;
-                        
-                        const todayObj = new Date();
-                        todayObj.setHours(0, 0, 0, 0);
-                        const isPast = dateObj < todayObj;
-                        const isToday = dateObj.getTime() === todayObj.getTime();
-                        const isSelected = bookingDate === dateString;
+                {/* 3. Time Selection */}
+                <section id="time-section" className="pb-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">3</div>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Preferred Time</h3>
+                  </div>
+                  <div className="space-y-6">
+                    {[
+                      { label: 'Morning', icon: <Clock size={12}/>, slots: ['9:00 AM', '10:00 AM', '11:00 AM'] },
+                      { label: 'Afternoon', icon: <Sparkles size={12}/>, slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
+                      { label: 'Evening', icon: <PawPrint size={12}/>, slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'] },
+                    ].map((group) => (
+                      <div key={group.label}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="text-planet-yellow/60">
+                            {group.icon}
+                          </div>
+                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white/40">{group.label}</span>
+                          <div className="h-px flex-1 bg-white/10 ml-2" />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2.5">
+                          {group.slots.map((time) => {
+                            const isSelected = bookingTime === time;
+                            return (
+                              <motion.button
+                                key={time}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setBookingTime(time)}
+                                className={cn(
+                                  "py-3.5 rounded-xl text-xs font-black transition-all border",
+                                  isSelected
+                                    ? 'bg-planet-yellow text-black border-planet-yellow shadow-[0_10px_20px_rgba(254,199,8,0.2)]'
+                                    : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
+                                )}
+                              >
+                                {time}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
 
-                        return (
-                          <motion.button
-                            key={day}
-                            whileTap={isPast ? undefined : { scale: 0.85 }}
-                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                            onClick={() => !isPast && setBookingDate(dateString)}
-                            disabled={isPast}
-                            className={`h-9 w-9 flex items-center justify-center rounded-xl text-[13px] transition-all duration-200 relative ${
-                              isPast 
-                                ? 'text-white/10 cursor-default' 
-                                : isSelected 
-                                  ? 'bg-[#fec708] text-black font-bold shadow-[0_0_16px_rgba(254,199,8,0.5)]' 
-                                  : 'text-white/70 font-medium hover:bg-white/[0.06] cursor-pointer'
-                            }`}
-                          >
-                            {day}
-                            {isToday && !isSelected && (
-                              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#fec708]" />
-                            )}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
+              {/* Sticky Footer - Premium & Always Visible */}
+              <div className="sticky bottom-0 shrink-0 bg-white/5 backdrop-blur-[40px] border-t border-white/10 px-8 py-7 pb-safe z-20 shadow-[0_-30px_60px_rgba(0,0,0,0.4)]">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex -space-x-3">
+                    {selectedServices.length > 0 ? (
+                      selectedServices.slice(0, 3).map((s, idx) => (
+                        <motion.div 
+                          key={idx} 
+                          initial={{ scale: 0, x: -20, rotate: -15 }}
+                          animate={{ scale: 1, x: 0, rotate: 0 }}
+                          className="w-11 h-11 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-2xl flex items-center justify-center text-planet-yellow shadow-2xl"
+                        >
+                          <s.icon size={18} />
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 border-dashed flex items-center justify-center text-white/20">
+                        <Plus size={18} />
+                      </div>
+                    )}
+                    {selectedServices.length > 3 && (
+                      <div className="w-11 h-11 rounded-2xl bg-planet-yellow border border-black/10 flex items-center justify-center text-xs font-black text-black shadow-xl ring-2 ring-black/20">
+                        +{selectedServices.length - 3}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em]">Reward Points</p>
+                    <motion.p 
+                      key={selectedServices.length}
+                      initial={{ y: 5, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      className="text-2xl font-black text-planet-yellow leading-none flex items-center justify-end gap-1.5 mt-2 drop-shadow-[0_0_15px_rgba(254,199,8,0.8)]"
+                    >
+                      {selectedServices.reduce((a, s) => a + s.points, 0).toLocaleString()}
+                      <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">pts</span>
+                    </motion.p>
                   </div>
                 </div>
 
-                {/* Step 3: Time Slots — Grouped */}
-                <div className="mb-2">
-                  <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/30 mb-3">Choose a Time</h3>
-                  {[
-                    { label: 'Morning', slots: ['10:00 AM', '11:00 AM'] },
-                    { label: 'Afternoon', slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
-                    { label: 'Evening', slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM'] },
-                  ].map((group) => (
-                    <div key={group.label} className="mb-3">
-                      <p className="text-[10px] font-semibold text-white/15 uppercase tracking-widest mb-1.5 ml-1">{group.label}</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {group.slots.map((time) => {
-                          const isSelected = bookingTime === time;
-                          return (
-                            <motion.button
-                              key={time}
-                              whileTap={{ scale: 0.93 }}
-                              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                              onClick={() => setBookingTime(time)}
-                              className={`py-2.5 rounded-xl text-[13px] transition-all duration-200 cursor-pointer ${
-                                isSelected
-                                  ? 'font-bold bg-[#fec708] text-black shadow-[0_0_16px_rgba(254,199,8,0.4)]'
-                                  : 'font-medium bg-white/[0.03] border border-white/[0.06] text-white/50 hover:bg-white/[0.06] hover:text-white/70'
-                              }`}
-                            >
-                              {time}
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sticky Footer — Summary + CTA */}
-              <div className="shrink-0 border-t border-white/[0.06] bg-[#071912]/90 backdrop-blur-xl px-6 py-4">
-                {/* Points Summary */}
-                {selectedServices.length > 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} 
-                    className="flex items-center justify-between mb-3 text-[13px]"
-                  >
-                    <span className="text-white/40 font-medium">{selectedServices.length} service{selectedServices.length > 1 ? 's' : ''} selected</span>
-                    <span className="text-[#fec708] font-bold flex items-center gap-1">
-                      <PawPrint size={13} /> +{selectedServices.reduce((a, s) => a + s.points, 0).toLocaleString()} pts
-                    </span>
-                  </motion.div>
-                )}
-
-                {/* CTA */}
-                <a
-                  href={(selectedServices.length === 0 || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    if (selectedServices.length === 0 || !bookingDate || !bookingTime) {
-                      e.preventDefault();
-                    } else {
-                      submitBooking();
-                    }
-                  }}
-                  className={`block w-full py-3.5 rounded-2xl font-bold text-[15px] text-center transition-all duration-300 ${
-                    selectedServices.length === 0 || !bookingDate || !bookingTime
-                      ? 'bg-white/[0.04] text-white/15 cursor-not-allowed border border-white/[0.04]'
-                      : 'bg-[#fec708] text-black shadow-[0_4px_24px_rgba(254,199,8,0.3)] hover:shadow-[0_4px_32px_rgba(254,199,8,0.5)] hover:brightness-110 cursor-pointer'
-                  }`}
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  {selectedServices.length === 0 ? 'Select a service to continue' : !bookingDate ? 'Pick a date' : !bookingTime ? 'Choose a time' : 'Confirm Booking'}
-                </a>
+                  <a
+                    href={(selectedServices.length === 0 || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      if (selectedServices.length === 0 || !bookingDate || !bookingTime) {
+                        e.preventDefault();
+                        if (selectedServices.length === 0) {
+                          document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' });
+                        } else if (!bookingDate) {
+                          document.getElementById('date-section')?.scrollIntoView({ behavior: 'smooth' });
+                        } else if (!bookingTime) {
+                          document.getElementById('time-section')?.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      } else {
+                        submitBooking();
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center justify-center gap-3 w-full py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl relative overflow-hidden group",
+                      (selectedServices.length === 0 || !bookingDate || !bookingTime)
+                        ? "bg-white/10 text-white/40 border border-white/20 hover:bg-white/15"
+                        : "bg-planet-yellow text-black hover:shadow-[0_0_40px_rgba(254,199,8,0.5)] active:scale-[0.98]"
+                    )}
+                  >
+                    {/* Glossy Button Shine */}
+                    {(selectedServices.length > 0 && bookingDate && bookingTime) && (
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                    )}
+                    
+                    <span className="flex items-center gap-2">
+                      {selectedServices.length === 0 
+                        ? 'Select Services to Continue' 
+                        : !bookingDate 
+                          ? 'Select Date to Continue'
+                          : !bookingTime 
+                            ? 'Select Time to Continue' 
+                            : 'Confirm Appointment'
+                      }
+                      <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                    </span>
+                  </a>
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>
