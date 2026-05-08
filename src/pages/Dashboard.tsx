@@ -638,6 +638,7 @@ export default function Dashboard() {
 
 
   return (
+    <>
     <div className="relative w-full h-full">
       {/* Background Ambient Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center isolate">
@@ -1388,6 +1389,7 @@ export default function Dashboard() {
         }
       }} 
     />
+    </>
   );
 }
 

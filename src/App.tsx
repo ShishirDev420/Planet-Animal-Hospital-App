@@ -94,6 +94,7 @@ export default function App() {
                     <Route path="plans" element={<ProactivePlans />} />
                     <Route path="ai" element={<AIVet />} />
                     <Route path="agents" element={<AIAgents />} />
+                    <Route path="agents/:agentId" element={<AIAgents />} />
                     <Route path="roadmap" element={<Roadmap />} />
                     <Route path="adoption" element={<Adoption />} />
                     <Route path="rewards" element={<Rewards />} />

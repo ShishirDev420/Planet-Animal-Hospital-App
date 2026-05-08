@@ -1,43 +1,44 @@
-import React from 'react';
-
 export default function MobilePreview() {
-  // Use the origin to point to the root of the app
-  const url = window.location.origin + '/?preview_frame=true';
+  const requestedPath = new URLSearchParams(window.location.search).get('path') || '/agents';
+  const normalizedPath = requestedPath.startsWith('/') ? requestedPath : `/${requestedPath}`;
+  const url = `${window.location.origin}${normalizedPath}?preview_frame=true&demo_mode=true`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a] overflow-hidden">
-      <div className="relative scale-90 sm:scale-100">
-        {/* Phone Frame SVG/Div */}
-        <div className="relative mx-auto border-[#1a1a1a] bg-[#1a1a1a] border-[12px] rounded-[3rem] h-[720px] w-[360px] shadow-[0_0_100px_rgba(0,0,0,0.5)] border-t-[14px] border-b-[14px]">
-          {/* Speaker/Camera Notch */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#1a1a1a] rounded-b-2xl z-20"></div>
-          
-          {/* Side Buttons */}
-          <div className="h-[40px] w-[3px] bg-[#1a1a1a] absolute -left-[15px] top-[100px] rounded-l-lg"></div>
-          <div className="h-[60px] w-[3px] bg-[#1a1a1a] absolute -left-[15px] top-[160px] rounded-l-lg"></div>
-          <div className="h-[60px] w-[3px] bg-[#1a1a1a] absolute -left-[15px] top-[230px] rounded-l-lg"></div>
-          <div className="h-[80px] w-[3px] bg-[#1a1a1a] absolute -right-[15px] top-[180px] rounded-r-lg"></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(254,199,8,0.15),transparent_34%),#050505] px-4 py-6">
+      <div className="relative scale-[0.56] sm:scale-[0.68] md:scale-[0.78] lg:scale-[0.88] xl:scale-[0.94] 2xl:scale-100">
+        <div className="absolute -inset-10 rounded-[5rem] bg-planet-yellow/10 blur-[90px]" />
+        <div className="absolute -inset-4 rounded-[4.2rem] bg-gradient-to-br from-white/18 via-white/4 to-black/60 p-px shadow-[0_60px_160px_rgba(0,0,0,0.9)]">
+          <div className="h-full w-full rounded-[4.15rem] bg-[#111]" />
+        </div>
 
-          {/* Screen Content */}
-          <div className="rounded-[2.2rem] overflow-hidden w-full h-full bg-slate-950 border-[2px] border-white/5">
+        {/* iPhone 16 Pro Max-style frame: 6.9-inch aspect ratio, titanium rails, Dynamic Island. */}
+        <div className="relative mx-auto h-[956px] w-[440px] rounded-[4rem] border-[10px] border-[#1a1a1a] bg-[#101010] shadow-[inset_0_0_0_2px_rgba(255,255,255,0.08),0_40px_120px_rgba(0,0,0,0.75)]">
+          <div className="absolute inset-[5px] rounded-[3.45rem] border border-white/10 pointer-events-none z-30" />
+          <div className="absolute left-1/2 top-4 z-40 flex h-9 w-[132px] -translate-x-1/2 items-center justify-center rounded-full bg-black shadow-[0_2px_12px_rgba(0,0,0,0.65)]">
+            <div className="mr-3 h-2.5 w-2.5 rounded-full bg-slate-800 shadow-[inset_0_0_4px_rgba(255,255,255,0.22)]" />
+            <div className="h-1.5 w-12 rounded-full bg-slate-900" />
+          </div>
+          
+          <div className="absolute -left-[14px] top-[146px] h-[44px] w-[4px] rounded-l-lg bg-[#2a2a2a]" />
+          <div className="absolute -left-[14px] top-[220px] h-[78px] w-[4px] rounded-l-lg bg-[#2a2a2a]" />
+          <div className="absolute -left-[14px] top-[318px] h-[78px] w-[4px] rounded-l-lg bg-[#2a2a2a]" />
+          <div className="absolute -right-[14px] top-[252px] h-[112px] w-[4px] rounded-r-lg bg-[#2a2a2a]" />
+
+          <div className="h-full w-full overflow-hidden rounded-[3.28rem] border-[2px] border-white/5 bg-slate-950">
             <iframe 
               src={url} 
               className="w-full h-full border-none select-none"
-              title="Planet Animal App Preview"
+              title="Planet Animal App Preview in iPhone 16 Pro Max"
               id="preview-iframe"
             />
           </div>
         </div>
-        
-        {/* Reflection/Glow Effect */}
-        <div className="absolute -inset-10 bg-planet-yellow/5 blur-[100px] rounded-full -z-10 animate-pulse"></div>
       </div>
       
-      {/* Controls Overlay - Unobtrusive Bottom Right */}
       <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-[60]">
         <div className="group flex items-center gap-2 p-1.5 bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl transition-all hover:bg-black/80">
           <button 
-            onClick={() => window.open(window.location.origin, '_blank')}
+            onClick={() => window.open(url, '_blank')}
             className="flex items-center gap-2 px-4 py-2 bg-planet-yellow text-black rounded-xl font-heading font-black text-[10px] uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all"
             title="Open full app in new tab (Required for Google Sign-In)"
           >
@@ -60,11 +61,10 @@ export default function MobilePreview() {
           </div>
         </div>
         
-        {/* Tiny helper badge */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
           <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
           <p className="text-[8px] text-white/40 uppercase tracking-[0.2em] font-black">
-            Mobile Mode Active
+            iPhone 16 Pro Max Preview
           </p>
         </div>
       </div>

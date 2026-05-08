@@ -411,7 +411,7 @@ export default function Rewards() {
                           : 'ascension-glow bg-[#0a0a0a] border-[#fec708]/40 text-[#fec708]'
                       )}
                     >
-                      {isLocked ? <Lock className="w-10 h-10" /> : React.cloneElement(tier.icon as React.ReactElement, { size: 40 })}
+                      {isLocked ? <Lock className="w-10 h-10" /> : tier.icon}
                     </motion.div>
                     
                     {/* Glowing point on line */}
