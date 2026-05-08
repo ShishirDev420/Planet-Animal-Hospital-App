@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
@@ -12,6 +12,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ProactivePlans from './pages/ProactivePlans';
 import AIVet from './pages/AIVet';
+import AIAgents from './pages/AIAgents';
 import ProfileSelection from './pages/ProfileSelection';
 import CreateProfile from './pages/CreateProfile';
 import ProfileSettings from './pages/ProfileSettings';
@@ -19,30 +20,28 @@ import Roadmap from './pages/Roadmap';
 import Welcome from './pages/Welcome';
 import Adoption from './pages/Adoption';
 import Rewards from './pages/Rewards';
+import DailyBriefing from './pages/DailyBriefing';
 import MobilePreview from './components/MobilePreview';
-
-// Check if we are already inside the preview frame to avoid recursion
-const isInsideFrame = window.location.search.includes('preview_frame=true');
-const isPreviewRoute = window.location.pathname === '/preview';
-
-// Placeholders for other routes
-const Placeholder = ({ title }: { title: string }) => (
-  <div className="flex items-center justify-center h-full">
-    <div className="glass-card p-8 rounded-3xl text-center max-w-[80%]">
-      <h2 className="text-2xl font-bold text-slate-800 mb-2">{title}</h2>
-      <p className="text-slate-500 text-sm">Coming soon in Phase 2.</p>
-    </div>
-  </div>
-);
-
 import ErrorBoundary from './components/ErrorBoundary';
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated';
 
 export default function App() {
+  const location = useLocation();
+  
+  // Check if we are already inside the preview frame to avoid recursion
+  const isInsideFrame = location.search.includes('preview_frame=true');
+  const isDemoMode = location.search.includes('demo_mode=true');
+  const isPreviewRoute = location.pathname === '/preview';
+
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
 
   useEffect(() => {
+    if (isDemoMode) {
+      setAuthStatus('authenticated');
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
@@ -64,7 +63,7 @@ export default function App() {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [isDemoMode]);
 
   if (authStatus === 'loading') {
     return null; // or a loading spinner
@@ -73,7 +72,6 @@ export default function App() {
   return (
     <div className="dark min-h-screen bg-slate-950 text-white font-sans antialiased">
       <ErrorBoundary>
-        <BrowserRouter>
           {isPreviewRoute && !isInsideFrame ? (
             <Routes>
               <Route path="/preview" element={<MobilePreview />} />
@@ -95,18 +93,18 @@ export default function App() {
                     <Route index element={<Dashboard />} />
                     <Route path="plans" element={<ProactivePlans />} />
                     <Route path="ai" element={<AIVet />} />
+                    <Route path="agents" element={<AIAgents />} />
                     <Route path="roadmap" element={<Roadmap />} />
                     <Route path="adoption" element={<Adoption />} />
                     <Route path="rewards" element={<Rewards />} />
+                    <Route path="briefing" element={<DailyBriefing />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </>
               )}
             </Routes>
           )}
-        </BrowserRouter>
       </ErrorBoundary>
     </div>
   );
 }
-

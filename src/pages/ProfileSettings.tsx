@@ -380,7 +380,7 @@ export default function ProfileSettings() {
           onClick={async () => {
             try {
               await signOut(auth);
-              navigate('/');
+              window.location.href = '/';
             } catch (e) {
               console.error('Logout failed', e);
             }

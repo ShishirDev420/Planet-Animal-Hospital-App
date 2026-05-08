@@ -14,7 +14,13 @@ export default function ProfileSelection() {
   const { userImage, petImage } = useProfileImages();
   const [profileName, setProfileName] = useState('Loading...');
 
+  const isDemoMode = typeof window !== 'undefined' && window.location.search.includes('demo_mode=true');
+
   useEffect(() => {
+    if (isDemoMode) {
+      setProfileName('Shishir & Onyx');
+      return;
+    }
     const fetchProfile = async () => {
       if (auth.currentUser) {
         try {
@@ -35,7 +41,7 @@ export default function ProfileSelection() {
       }
     };
     fetchProfile();
-  }, []);
+  }, [isDemoMode]);
 
   const profiles = [
     { id: 'current_user', name: profileName },
@@ -110,7 +116,7 @@ export default function ProfileSelection() {
             onClick={async () => {
               try {
                 await signOut(auth);
-                navigate('/');
+                window.location.href = '/';
               } catch (e) {
                 console.error('Logout failed', e);
               }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, Loader2, RefreshCw, Lock, Stethoscope } from 'lucide-react';
+import { Sparkles, ArrowRight, Loader2, RefreshCw, Lock, Stethoscope, Shield, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { usePetProfile } from '../hooks/usePetProfile';
+import HealthJourney, { Stage, Task } from '../components/HealthJourney';
 import Markdown from 'react-markdown';
 
 const apiKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -28,20 +29,23 @@ const generateRoadmapText = async (formData: any) => {
          "Authorization": `Bearer ${apiKey}`,
          "Content-Type": "application/json"
        },
-       body: JSON.stringify({
-         model: "llama-3.3-70b-versatile",
-         messages: [
-           {
-             role: "system",
-             content: `You are an elite veterinary longevity researcher at Planet Animal Hospital. 
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            {
+              role: "system",
+              content: `You are an elite veterinary longevity researcher at Planet Animal Hospital. 
 Your task is to generate a comprehensive, science-backed health roadmap.
-FORMATTING RULES:
-1. Use clear headings for '1-3 Months', '3-6 Months', '6-12 Months', and 'Long-term'.
-2. For every recommendation, explain the 'Scientific Rationale'.
-3. Include a 'Verifiable Sources' section at the end with 2-3 real links to institutions like AVMA (avma.org), AAHA (aaha.org), or Cornell Vet (vet.cornell.edu).
-4. Tone: Professional, authoritative, yet deeply empathetic.
-5. Use Markdown for all formatting.`
-           },
+
+STRUCTURE RULES (CRITICAL):
+1. Use EXACTLY these headings for phases: '### Phase: 1-3 Months', '### Phase: 3-6 Months', '### Phase: 6-12 Months', '### Phase: Long-term'.
+2. For each phase, provide 3 specific action items as bullet points.
+3. Format each bullet point EXACTLY like this:
+   * **[Action Name]**: [Short Description] | [Scientific Rationale: ...]
+4. Each rationale should be a concise, authoritative explanation of WHY this extends life or improves health.
+5. Include a '### Verifiable Sources' section at the end with 2-3 real links to institutions like AVMA (avma.org), AAHA (aaha.org), or Cornell Vet (vet.cornell.edu).
+6. Tone: Premium, visionary, and deeply scientific. Avoid fluff.`
+            },
            {
              role: "user",
              content: `Generate a longevity roadmap for ${petProfile.name}.
@@ -70,6 +74,70 @@ Surgical History: ${formData.surgicalHistory || 'None'}`
     console.error("Error generating roadmap:", error);
     throw new Error(error.message || "Failed to generate roadmap.");
   }
+};
+
+const parseRoadmap = (text: string, progressData: any = {}): Stage[] => {
+  const stages: Stage[] = [];
+  
+  // More robust regex to split by any header that looks like a Phase
+  const phaseRegex = /### Phase:\s*([^\n]+)/gi;
+  let match;
+  const phaseIndices: { start: number; title: string }[] = [];
+  
+  while ((match = phaseRegex.exec(text)) !== null) {
+    phaseIndices.push({ start: match.index, title: match[1].trim() });
+  }
+  
+  for (let i = 0; i < phaseIndices.length; i++) {
+    const start = phaseIndices[i].start;
+    const end = phaseIndices[i + 1]?.start || text.length;
+    const phaseContent = text.substring(start, end);
+    const title = phaseIndices[i].title;
+    
+    const tasks: Task[] = [];
+    // Robust task extraction: bullet point followed by **Name**: Desc | Rationale
+    const taskRegex = /\*\s+\*\*([^*]+)\*\*\s*:\s*([^|]+)(?:\|\s*(?:Scientific Rationale:\s*)?([^|*\n]+))?/gi;
+    let tMatch;
+    let taskIdx = 0;
+    
+    while ((tMatch = taskRegex.exec(phaseContent)) !== null) {
+      const taskName = tMatch[1].trim();
+      const taskDesc = tMatch[2].trim();
+      const rationale = tMatch[3]?.trim() || '';
+      
+      const taskId = `${title}-${taskIdx}`;
+      const isCompleted = progressData[taskId] || false;
+      
+      tasks.push({
+        id: taskId,
+        text: `${taskName}: ${taskDesc}`,
+        rationale: rationale,
+        completed: isCompleted
+      });
+      taskIdx++;
+    }
+
+    if (tasks.length > 0) {
+      stages.push({
+        id: title,
+        title: title,
+        tasks: tasks,
+        isUnlocked: false // Will be set in the next pass
+      });
+    }
+  }
+
+  // Ensure stages are unlocked sequentially based on completion
+  for (let i = 0; i < stages.length; i++) {
+    if (i === 0) {
+      stages[i].isUnlocked = true;
+    } else {
+      const prevStage = stages[i-1];
+      stages[i].isUnlocked = prevStage.tasks.length > 0 && prevStage.tasks.every(t => t.completed);
+    }
+  }
+  
+  return stages;
 };
 
 export default function Roadmap() {
@@ -317,22 +385,92 @@ export default function Roadmap() {
                       </button>
                     </div>
                     
-                    <div className="font-body text-slate-300 text-base leading-relaxed tracking-wide space-y-6">
-                      <Markdown
-                        components={{
-                          h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-3xl text-[#fec708] mt-12 mb-6 border-b border-[#fec708]/20 pb-4 tracking-tight" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="font-heading font-bold text-2xl text-[#fec708] mt-10 mb-5 tracking-tight border-l-4 border-[#fec708] pl-4" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="font-heading font-semibold text-xl text-[#fec708]/90 mt-8 mb-4 tracking-tight" {...props} />,
-                          h4: ({node, ...props}) => <h4 className="font-heading font-bold text-lg text-[#fec708]/80 mt-6 mb-3 tracking-tight" {...props} />,
-                          p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-left md:text-justify [hyphens:auto] [text-align-last:left] break-words" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-4 mb-8 text-left" {...props} />,
-                          li: ({node, ...props}) => <li className="font-body text-slate-300 leading-relaxed pl-2 text-left md:text-justify [hyphens:auto] break-words" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-bold text-[#fec708]" {...props} />,
-                          a: ({node, ...props}) => <a className="text-[#fec708] hover:text-white underline underline-offset-4 decoration-[#fec708]/30 hover:decoration-white transition-all" target="_blank" rel="noopener noreferrer" {...props} />
-                        }}
-                      >
-                        {roadmap}
-                      </Markdown>
+                    <div className="font-body text-slate-300 text-base leading-relaxed tracking-wide space-y-12">
+                      {parseRoadmap(roadmap, profile?.roadmapProgress || {}).length > 0 ? (
+                        <>
+                          <HealthJourney 
+                            petName={profile?.petName || profile?.name || 'Your Pet'}
+                            stages={parseRoadmap(roadmap, profile?.roadmapProgress || {})}
+                            onToggleTask={async (stageId, taskId) => {
+                              const currentProgress = profile?.roadmapProgress || {};
+                              const newProgress = {
+                                ...currentProgress,
+                                [taskId]: !currentProgress[taskId]
+                              };
+                              
+                              if (updateProfile) {
+                                try {
+                                  await updateProfile({
+                                    roadmapProgress: newProgress
+                                  });
+                                } catch (err) {
+                                  console.error('Failed to update roadmap progress:', err);
+                                }
+                              }
+                            }}
+                          />
+
+                          <div className="pt-16 mt-12 border-t border-white/10 relative">
+                            {/* Vault Icon Header */}
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-[#fec708] rounded-full flex items-center gap-2 shadow-[0_0_30px_rgba(254,199,8,0.4)]">
+                              <Shield size={16} className="text-black" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Evidence Vault</span>
+                            </div>
+
+                            <div className="bg-black/40 rounded-[2rem] p-8 border border-white/5 shadow-2xl">
+                              <h3 className="font-heading font-black text-2xl uppercase tracking-tighter italic text-white mb-6 flex items-center gap-3">
+                                <Stethoscope className="text-[#fec708]" /> Scientific <span className="text-[#fec708]">Foundation</span>
+                              </h3>
+                              
+                              <div className="prose prose-invert max-w-none">
+                                <Markdown
+                                  components={{
+                                    h1: ({node, ...props}) => <h1 className="hidden" {...props} />,
+                                    h2: ({node, ...props}) => <h2 className="hidden" {...props} />,
+                                    h3: ({node, ...props}) => <h3 className="font-heading text-lg font-black uppercase tracking-tight text-white/90 mt-6 mb-3" {...props} />,
+                                    p: ({node, ...props}) => <p className="font-body text-white/50 text-sm leading-relaxed mb-4" {...props} />,
+                                    ul: ({node, ...props}) => <ul className="space-y-3 mb-8" {...props} />,
+                                    li: ({node, ...props}) => (
+                                      <li className="flex items-start gap-3 text-xs text-white/70 bg-white/[0.03] p-4 rounded-xl border border-white/5 hover:border-[#fec708]/20 transition-colors">
+                                        <div className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#fec708] shadow-[0_0_8px_rgba(254,199,8,0.8)]" />
+                                        <span className="flex-1">{props.children}</span>
+                                      </li>
+                                    ),
+                                    a: ({node, ...props}) => (
+                                      <a 
+                                        className="inline-flex items-center gap-1 text-[#fec708] hover:text-white font-bold transition-all group" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        {...props}
+                                      >
+                                        {props.children}
+                                        <ExternalLink size={10} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                      </a>
+                                    )
+                                  }}
+                                >
+                                  {roadmap.split('### Verifiable Sources')[1] || ''}
+                                </Markdown>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <Markdown
+                          components={{
+                            h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-3xl text-[#fec708] mt-12 mb-6 border-b border-[#fec708]/20 pb-4 tracking-tight" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="font-heading font-bold text-2xl text-[#fec708] mt-10 mb-5 tracking-tight border-l-4 border-[#fec708] pl-4" {...props} />,
+                            h3: ({node, ...props}) => <h3 className="font-heading font-semibold text-xl text-[#fec708]/90 mt-8 mb-4 tracking-tight" {...props} />,
+                            p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-left" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-4 mb-8 text-left" {...props} />,
+                            li: ({node, ...props}) => <li className="font-body text-slate-300 leading-relaxed pl-2 text-left" {...props} />,
+                            strong: ({node, ...props}) => <strong className="font-bold text-[#fec708]" {...props} />,
+                            a: ({node, ...props}) => <a className="text-[#fec708] hover:text-white underline underline-offset-4 decoration-[#fec708]/30 hover:decoration-white transition-all" target="_blank" rel="noopener noreferrer" {...props} />
+                          }}
+                        >
+                          {roadmap}
+                        </Markdown>
+                      )}
                     </div>
                   </motion.div>
                 )}

@@ -3,14 +3,17 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight, Plus
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Logo from '../components/Logo';
+import LogoutModal from '../components/LogoutModal';
 import DualAvatar from '../components/DualAvatar';
 import { useProfileImages } from '../hooks/useProfileImages';
+import { usePetProfile } from '../hooks/usePetProfile';
+import { usePawlMessage } from '../hooks/usePawlMessage';
 import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc } from 'firebase/firestore';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 
 enum OperationType {
@@ -107,7 +110,7 @@ const SERVICE_MENU = [
   }
 ];
 
-import { usePetProfile } from '../hooks/usePetProfile';
+
 
 interface PetProfileForIncentives {
   name?: string;
@@ -327,7 +330,6 @@ function getPersonalizedIncentives(pet?: PetProfileForIncentives): IncentiveCard
       }
     }
   }
-
   // ─── 4. Baseline Cards (all pets get these) ───
   cards.push(
     { id: 'base-wellness', title: 'General Wellness Checkup', subtext: `Comprehensive proactive health screening for ${petName}.`, pointsText: '+1,000 pts', pointsValue: 1000, theme: 'yellow', actionText: 'Book Now' },
@@ -365,9 +367,22 @@ function generateWhatsAppPayload(serviceName: string, petProfile: any) {
 }
 
 export default function Dashboard() {
-  const { profile: petProfile, loading: profileLoading } = usePetProfile();
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const isDemoMode = window.location.search.includes('demo_mode=true');
+  const { profile: realPetProfile, loading: realProfileLoading } = usePetProfile();
+  
+  const petProfile = isDemoMode ? {
+    name: 'Luna',
+    parentName: 'Demo Parent',
+    breed: 'Golden Retriever',
+    pawPoints: 1250,
+    healthHistory: 'History: Luna had a routine vaccination last month. We noticed she has been very active. Recommendation: Consider joint supplements as she ages. Also, she loves running in the park.'
+  } : realPetProfile;
+  
+  const profileLoading = isDemoMode ? false : realProfileLoading;
+
+  const { message: pawlMessage, loading: pawlLoading, error: pawlError } = usePawlMessage();
+  const [isAuthReady, setIsAuthReady] = useState(isDemoMode);
+  const [userId, setUserId] = useState<string | null>(isDemoMode ? 'demo-user' : null);
   const navigate = useNavigate();
   const { userImage: harshalImage, petImage: johnnyImage } = useProfileImages();
   
@@ -376,6 +391,7 @@ export default function Dashboard() {
   const [currentPlan, setCurrentPlan] = useState('free');
   const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
   const [incentivesOrder, setIncentivesOrder] = useState<any[]>([]);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const getMultiplier = (plan: string) => {
     switch (plan?.toLowerCase()) {
@@ -393,6 +409,15 @@ export default function Dashboard() {
   }, [petProfile]);
 
   useEffect(() => {
+    if (isDemoMode) {
+      setVerifiedPoints(1250);
+      setCurrentPlan('prestige');
+      setUpcomingAppts([
+        { id: '1', patient: 'Luna', reason: 'Wellness Checkup', date: 'Oct 24, 2024', time: '10:30 AM', status: 'confirmed' }
+      ]);
+      return;
+    }
+
     let unsubscribeDoc: (() => void) | null = null;
     let unsubscribeRequests: (() => void) | null = null;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -447,7 +472,7 @@ export default function Dashboard() {
     setPendingPoints(prev => prev + finalPoints);
     
     try {
-      const user = auth.currentUser;
+      const user = auth.currentUser || (window.location.search.includes('demo_mode=true') ? { uid: 'demo-user', email: 'demo@planetanimal.com', displayName: 'Demo Parent' } : null);
       if (!user) return;
 
       const petNameStr = petProfile?.name || 'Pet';
@@ -647,9 +672,20 @@ export default function Dashboard() {
           </div>
 
           {/* Profile Container (Right) - Matching width of Logo Container */}
-          <div className="flex items-center justify-end shrink-0 w-12 sm:w-16">
-             <button onClick={() => navigate('/settings')} className="relative flex items-center justify-center p-2 rounded-full bg-gradient-to-br from-white/10 to-white/0 hover:from-white/20 hover:to-white/5 transition-all duration-300 border border-white/5 shadow-sm cursor-pointer group">
+          <div className="flex items-center justify-end shrink-0 gap-2">
+             <button 
+               onClick={() => navigate('/settings')} 
+               title="Settings" 
+               className="relative flex items-center justify-center p-2 rounded-full bg-gradient-to-br from-white/10 to-white/0 hover:from-white/20 hover:to-white/5 transition-all duration-300 border border-white/5 shadow-sm cursor-pointer group"
+             >
                <Settings className="w-5 h-5 text-white/80 group-hover:text-white transition-colors duration-300" />
+             </button>
+             <button 
+               onClick={() => setIsLogoutModalOpen(true)} 
+               title="Logout" 
+               className="relative flex items-center justify-center p-2 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/0 hover:from-red-500/20 hover:to-red-500/5 transition-all duration-300 border border-red-500/10 shadow-sm cursor-pointer group"
+             >
+               <LogOut className="w-5 h-5 text-red-400 group-hover:text-red-500 transition-colors duration-300" />
              </button>
           </div>
         </div>
@@ -659,6 +695,50 @@ export default function Dashboard() {
           <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petProfile?.petName || 'your pet'} healthy today.</p>
         </div>
       </header>
+
+      {/* Pawl Daily Briefing Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        onClick={() => navigate('/briefing')}
+        className="group relative cursor-pointer glass-card p-6 rounded-[2.5rem] border border-amber-100/20 dark:border-amber-400/10 bg-gradient-to-br from-amber-50/10 to-yellow-50/5 dark:from-amber-900/10 dark:to-yellow-900/5 mb-8 overflow-hidden"
+      >
+        {/* Background Animation */}
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+        
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-200 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/20 rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
+                <Bot className="w-8 h-8 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#0f172a] animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Daily Briefing</h3>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-wider border border-amber-500/20">New</span>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-white/60">
+                {pawlLoading ? 'Analyzing health data...' : `Personalized update for ${petName}`}
+              </p>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors duration-300">
+            <ChevronRight className="w-6 h-6 text-white/40 group-hover:text-amber-500 transition-colors duration-300" />
+          </div>
+        </div>
+
+        {/* Peek at message if available */}
+        {!pawlLoading && pawlMessage && (
+          <div className="mt-4 pt-4 border-t border-white/5">
+            <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 italic leading-relaxed">
+              "{pawlMessage}"
+            </p>
+          </div>
+        )}
+      </motion.div>
 
       {/* Points Wallet - Typographic Layout */}
       <motion.div
@@ -766,45 +846,123 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Ways to Earn Points */}
-      <div className="pt-2 relative -mx-6">
-        <div className="flex items-center gap-2 mb-4 px-6 relative z-10">
-          <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Ways to Earn Paw Points</h3>
-          <PawPrint className="w-5 h-5 text-[#fec708] fill-[#fec708]/20" />
-        </div>
-        
-        {/* The Shelf Effect */}
-        <div className="absolute bottom-8 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none z-0" />
+{/* Paw Points Program */}
+       <div className="pt-2">
+         <div className="flex items-center gap-2 mb-6 px-2">
+           <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Paw Points Program</h3>
+           <PawPrint className="w-5 h-5 text-[#fec708] fill-[#fec708]/20" />
+         </div>
+         
+         {/* Tier Progress Bar */}
+         <div className="glass-card bg-white/5 dark:bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 mb-8">
+           <div className="flex items-center justify-between mb-4">
+             <span className="text-xs font-bold text-white/60 uppercase tracking-widest">Current Tier</span>
+             <span className="text-xs font-bold text-white/40">{verifiedPoints.toLocaleString()} / 5,000 PTS</span>
+           </div>
+           
+           {/* Tier Indicators */}
+           <div className="flex items-center justify-between mb-3 px-2">
+             {['Bronze', 'Silver', 'Gold', 'Platinum', 'Founder'].map((tier, idx) => {
+               const tierThresholds = [500, 1500, 3000, 5000, 100000];
+               const isActive = verifiedPoints >= tierThresholds[idx];
+               const isCurrent = verifiedPoints >= tierThresholds[idx] && (idx === tierThresholds.length - 1 || verifiedPoints < tierThresholds[idx + 1]);
+               
+               return (
+                 <div key={tier} className="flex flex-col items-center gap-1">
+                   <div className={cn(
+                     "w-3 h-3 rounded-full transition-all duration-500",
+                     isCurrent ? "bg-[#fec708] shadow-[0_0_20px_rgba(254,199,8,0.6)] animate-pulse" : 
+                     isActive ? "bg-[#fec708]/60" : "bg-white/20"
+                   )} />
+                   <span className={cn(
+                     "text-[9px] font-bold uppercase tracking-wider",
+                     isCurrent ? "text-[#fec708]" : isActive ? "text-white/60" : "text-white/30"
+                   )}>
+                     {tier}
+                   </span>
+                 </div>
+               );
+             })}
+           </div>
+           
+           {/* Progress Bar */}
+           <div className="h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm">
+             <motion.div 
+               initial={{ width: 0 }}
+               animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
+               transition={{ duration: 0.8, ease: "easeOut" }}
+               className="h-full bg-gradient-to-r from-[#fec708] to-amber-300 rounded-full shadow-[0_0_15px_rgba(254,199,8,0.5)]"
+             />
+           </div>
+           
+           {/* View My Journey Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                navigate('/rewards');
+                setTimeout(() => {
+                  document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="mt-5 w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/80 font-bold text-xs uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+            >
+             View My Journey
+             <ChevronDown className="w-4 h-4" />
+           </motion.button>
+         </div>
 
-        <div className="relative w-full mt-12">
-          <div 
-            ref={carouselRef}
-            className="flex overflow-x-auto hide-scrollbar gap-4 md:gap-6 py-40 -my-40 px-6 md:px-8 relative z-10 [&::-webkit-scrollbar]:hidden snap-x snap-mandatory transform-gpu will-change-transform md:max-w-6xl md:mx-auto"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            {incentivesOrder.map((incentive) => (
-              <div 
-                key={incentive.id} 
-                className="flex-none min-w-[280px] max-w-[320px] w-[80vw] md:w-[320px] group snap-center"
-              >
-                <EarnCard 
-                  id={incentive.id}
-                  title={incentive.title}
-                  subtext={incentive.subtext}
-                  pointsText={incentive.pointsText}
-                  pointsValue={incentive.pointsValue}
-                  highValue={incentive.highValue}
-                  theme={incentive.theme}
-                  actionText={(incentive as any).actionText}
-                  isPending={pendingIncentives.includes(incentive.id)}
-                  onBook={() => handleBookingRequest(incentive.title, incentive.pointsValue, incentive.id)} 
-                  carouselRef={carouselRef}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+         {/* Milestone Grid - Reduced to 5 key milestones */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           {[
+             { points: 500, title: 'Active Baseline', icon: <TrendingUp className="w-5 h-5" />, unlocked: verifiedPoints >= 500 },
+             { points: 1500, title: 'Health Savior', icon: <Star className="w-5 h-5" />, unlocked: verifiedPoints >= 1500 },
+             { points: 3000, title: 'Wellness Master', icon: <Zap className="w-5 h-5" />, unlocked: verifiedPoints >= 3000 },
+             { points: 5000, title: 'Consultation Key', icon: <Award className="w-5 h-5" />, unlocked: verifiedPoints >= 5000 },
+             { points: 100000, title: 'Founder Picnic', icon: <Trophy className="w-5 h-5" />, unlocked: verifiedPoints >= 100000 },
+           ].map((milestone) => (
+             <motion.div
+               key={milestone.title}
+               whileHover={{ y: -2 }}
+               className={cn(
+                 "relative rounded-[1.5rem] p-5 flex items-center gap-4 transition-all duration-500 overflow-hidden",
+                 milestone.unlocked 
+                   ? "bg-gradient-to-br from-[#fec708]/20 to-amber-500/10 border border-[#fec708]/40 shadow-[0_0_30px_rgba(254,199,8,0.2)]" 
+                   : "bg-white/5 border border-white/10 opacity-60"
+               )}
+             >
+               {milestone.unlocked && (
+                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#fec708]/30 rounded-full blur-3xl animate-pulse" />
+                 </div>
+               )}
+               
+               <div className={cn(
+                 "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
+                 milestone.unlocked 
+                   ? "bg-gradient-to-br from-[#fec708] to-amber-500 text-black shadow-[0_0_20px_rgba(254,199,8,0.4)]" 
+                   : "bg-white/10 text-white/30 border border-white/10"
+               )}>
+                 {milestone.icon}
+               </div>
+               
+               <div className="flex-1">
+                 <h4 className={cn(
+                   "font-bold text-sm tracking-tight",
+                   milestone.unlocked ? "text-white" : "text-white/50"
+                 )}>{milestone.title}</h4>
+                 <p className="text-[10px] text-white/40 font-medium">{milestone.points.toLocaleString()} PTS</p>
+               </div>
+               
+               {milestone.unlocked ? (
+                 <Check className="w-5 h-5 text-[#fec708]" />
+               ) : (
+                 <Lock className="w-5 h-5 text-white/30" />
+               )}
+             </motion.div>
+           ))}
+         </div>
+       </div>
 
       {/* Modals / Bottom Sheets */}
       <AnimatePresence>
@@ -1217,6 +1375,19 @@ export default function Dashboard() {
       </AnimatePresence>
     </div>
     </div>
+
+    <LogoutModal 
+      isOpen={isLogoutModalOpen} 
+      onClose={() => setIsLogoutModalOpen(false)} 
+      onConfirm={async () => {
+        try {
+          await signOut(auth);
+          navigate('/');
+        } catch (e) {
+          console.error('Logout failed', e);
+        }
+      }} 
+    />
   );
 }
 
@@ -1275,89 +1446,6 @@ function MagneticWrapper({ children, className }: { children: React.ReactNode, c
       <div className="relative z-10 w-full h-full">
         {children}
       </div>
-    </motion.div>
-  );
-}
-
-function EarnCard({ id, title, subtext, pointsText, pointsValue, highValue, isPending, theme = 'yellow', actionText = 'Book Now', onBook, carouselRef }: { id: string, title: string, subtext?: string, pointsText: string, pointsValue: number, highValue?: boolean, isPending: boolean, theme?: 'blue' | 'orange' | 'green' | 'purple' | 'yellow', actionText?: string, onBook: (id: string, points: number, title: string) => void, carouselRef?: React.RefObject<HTMLElement> }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  
-  const { scrollXProgress } = useScroll({
-    container: carouselRef,
-    target: cardRef,
-    axis: "x",
-    offset: ["center end", "center start"]
-  });
-
-  const rawScale = useTransform(scrollXProgress, [0, 0.5, 1], [0.9, 1.15, 0.9]);
-  const rawOpacity = useTransform(scrollXProgress, [0, 0.5, 1], [0.5, 1, 0.5]);
-
-  const springConfig = { stiffness: 400, damping: 40, mass: 1 };
-  const scale = useSpring(rawScale, springConfig);
-  const opacity = useSpring(rawOpacity, springConfig);
-
-  const themeGradients = {
-    blue: 'from-blue-400/20',
-    orange: 'from-orange-400/20',
-    green: 'from-emerald-400/20',
-    purple: 'from-purple-400/20',
-    yellow: 'from-[#fec708]/20'
-  };
-
-  return (
-    <motion.div ref={cardRef} style={{ scale, opacity }} className="relative min-w-[280px] shrink-0 w-full h-[260px] group origin-center transform-gpu will-change-transform">
-      {/* Background Glow - Broad and Soft Dissipation */}
-      <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] ${themeGradients[theme]} to-transparent blur-[90px] scale-[1.5] opacity-40 pointer-events-none z-0 transition-all duration-700 group-hover:opacity-70 group-hover:scale-[1.8]`} />
-      
-      <motion.div 
-        whileHover={{ y: -5, scale: 1.02 }}
-        className="relative flex flex-col cursor-grab active:cursor-grabbing w-full h-full bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] transition-all duration-300 hover:shadow-[0_16px_48px_rgba(245,158,11,0.15)]"
-      >
-        {/* Shimmer Effect Wrapper - Clipped to card shape */}
-        <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
-          {highValue && (
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-amber-200/5 to-transparent skew-x-12 animate-[shimmer_15s_linear_infinite] pointer-events-none z-0 mix-blend-overlay" />
-          )}
-        </div>
-
-        <div className="relative z-10 flex flex-col h-full p-6">
-          {/* Absolute High Value Badge */}
-          {highValue && (
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/60 backdrop-blur-md border border-white/50 text-[#fec708] text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:bg-white/10 dark:border-white/20 dark:text-[#fec708]">
-              <Sparkles className="w-3 h-3" />
-              High Value
-            </div>
-          )}
-
-          <div className="mt-8 flex flex-col items-start gap-2">
-            <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg tracking-tight transition-all duration-500 group-hover:tracking-normal">{title}</h4>
-            {subtext && <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">{subtext}</p>}
-          </div>
-          
-          <div className="mt-auto flex flex-col">
-            <div className="mb-4 flex items-center gap-1.5">
-              <PawPrint className="w-6 h-6 text-[#fec708] fill-[#fec708]/40 drop-shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
-              <p className="font-heading font-black text-2xl tracking-tighter drop-shadow-sm bg-clip-text text-transparent bg-gradient-to-br from-[#fec708] via-[#fec708] to-[#fec708]">
-                {pointsText}
-              </p>
-            </div>
-            
-            <MagneticWrapper className="w-full rounded-xl">
-              <button 
-                onClick={() => onBook(id, pointsValue, title)}
-                disabled={isPending}
-                className={`text-xs font-bold py-3 rounded-xl w-full transition-all shadow-xl ${
-                  isPending 
-                    ? 'bg-gray-100/50 text-gray-500 cursor-not-allowed border border-white/40' 
-                    : 'bg-[#fec708] backdrop-blur-xl border border-[#fec708] text-white hover:bg-[#fec708]/90'
-                }`}
-              >
-                {isPending ? 'Pending Confirmation' : actionText}
-              </button>
-            </MagneticWrapper>
-          </div>
-        </div>
-      </motion.div>
     </motion.div>
   );
 }

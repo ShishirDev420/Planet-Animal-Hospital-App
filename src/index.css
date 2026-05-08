@@ -8,6 +8,18 @@
   inherits: false;
 }
 
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @layer base {
   html, body, #root {
     margin: 0;
@@ -115,22 +127,14 @@
     box-shadow: 
       inset 0 1px 1px rgba(255, 255, 255, 0.05),
       0 -8px 32px rgba(0, 0, 0, 0.4);
-  }
-
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .pb-safe {
+}
+   
+   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 1rem);
   }
 
   /* Premium Paws - Golden Aura (Overdrive Mode) */
-  .prestige-glow {
+  .ascension-glow {
     position: relative;
     z-index: 10;
     border: none !important;
@@ -142,6 +146,93 @@
       radial-gradient(ellipse at bottom right, rgba(254, 199, 8, 0.25) 0%, transparent 28%),
       rgba(10, 10, 10, 0.94) !important;
     backdrop-filter: blur(20px);
+  }
+
+  /* Liquid Glass Premium - Ultra high fidelity */
+  .liquid-glass-premium {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+    backdrop-filter: blur(50px) saturate(2.2);
+    -webkit-backdrop-filter: blur(50px) saturate(2.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+      inset 0 1px 1px rgba(255, 255, 255, 0.2),
+      0 12px 48px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .liquid-glass-glossy {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(80px) saturate(2.5);
+    -webkit-backdrop-filter: blur(80px) saturate(2.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+      inset 0 20px 40px rgba(255, 255, 255, 0.1),
+      0 24px 60px rgba(0, 0, 0, 0.6);
+    position: relative;
+  }
+
+  .liquid-glass-glossy::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.15), transparent);
+    pointer-events: none;
+  }
+
+  .holographic-foil {
+    background: linear-gradient(
+      115deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.05) 30%,
+      rgba(255, 255, 255, 0.2) 45%,
+      rgba(255, 255, 255, 0.05) 60%,
+      transparent 100%
+    );
+    background-size: 200% 200%;
+    animation: foil-shimmer 8s linear infinite;
+  }
+
+  .bento-card-premium {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+    backdrop-filter: blur(50px) saturate(2.2);
+    -webkit-backdrop-filter: blur(50px) saturate(2.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+      inset 0 1px 1px rgba(255, 255, 255, 0.2),
+      0 12px 48px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+    border-radius: 2.5rem;
+    padding: 2rem;
+    transition: all 0.5s ease;
+  }
+
+  .bento-card-premium:hover {
+    transform: scale(1.02);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .liquid-glass-premium::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 50%
+    );
+    animation: liquid-swirl 20s linear infinite;
+    pointer-events: none;
   }
 
   /* Outer Aura — 100px spread, strong opacity for tier separation */
@@ -316,6 +407,33 @@
   }
 }
 
+@keyframes liquid-swirl {
+  0% { transform: rotate(0deg) translate(0, 0); }
+  50% { transform: rotate(180deg) translate(5%, 5%); }
+  100% { transform: rotate(360deg) translate(0, 0); }
+}
+
+@keyframes text-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes foil-shimmer {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
+@keyframes liquid-rise {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0%); }
+}
+
+@keyframes wave-flow {
+  0% { transform: translateX(-50%) skewY(-2deg); }
+  50% { transform: translateX(0%) skewY(2deg); }
+  100% { transform: translateX(-50%) skewY(-2deg); }
+}
+
 @layer utilities {
   .animate-sync-heartbeat {
     animation: sync-heartbeat 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
@@ -338,4 +456,37 @@
     z-index: 5;
     mix-blend-mode: overlay;
   }
+
+  .progress-gold {
+    background: linear-gradient(90deg, #fec708, #e8bc4b, #fff4d6, #e8bc4b);
+    background-size: 200% 100%;
+    animation: text-shimmer 3s linear infinite;
+    box-shadow: 0 0 20px rgba(254, 199, 8, 0.4);
+  }
+
+  .streak-active {
+    background: linear-gradient(135deg, #fec708 0%, #b28a02 100%);
+    box-shadow: 0 0 15px rgba(254, 199, 8, 0.5);
+    animation: float-gentle 4s ease-in-out infinite;
+  }
+}
+
+.thinking-gradient {
+  background: linear-gradient(270deg, rgba(254, 199, 8, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(254, 199, 8, 0.05) 100%);
+  background-size: 200% 200%;
+  animation: thinking-pulse 4s ease infinite;
+}
+
+.neural-mesh-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+}
+
+@keyframes thinking-pulse {
+  0% { background-position: 0% 50%; opacity: 0.5; }
+  50% { background-position: 100% 50%; opacity: 0.8; }
+  100% { background-position: 0% 50%; opacity: 0.5; }
 }
