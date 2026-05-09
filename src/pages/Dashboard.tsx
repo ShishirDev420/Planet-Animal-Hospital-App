@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate, animate, useScroll, useSpring } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
   CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
@@ -384,6 +384,7 @@ export default function Dashboard() {
   const [isAuthReady, setIsAuthReady] = useState(isDemoMode);
   const [userId, setUserId] = useState<string | null>(isDemoMode ? 'demo-user' : null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { userImage: harshalImage, petImage: johnnyImage } = useProfileImages();
   
   const [verifiedPoints, setVerifiedPoints] = useState(0);
@@ -518,6 +519,24 @@ export default function Dashboard() {
     { id: 4, name: 'Ear Cleaning', points: 200, icon: Ear, desc: 'Deep clean & inspection' },
     { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' }
   ];
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('openBooking') !== 'true') return;
+
+    setIsBookVisitOpen(true);
+
+    const serviceQuery = params.get('service')?.toLowerCase();
+    if (serviceQuery) {
+      const suggestedService = BOOKING_SERVICES.find((service) => service.name.toLowerCase().includes(serviceQuery));
+      if (suggestedService) setSelectedServices([suggestedService]);
+    }
+
+    const date = params.get('date');
+    const time = params.get('time');
+    if (date) setBookingDate(date);
+    if (time) setBookingTime(time);
+  }, [location.search]);
 
   // Drag-to-Scroll State
   const carouselRef = useRef<any>(null);
