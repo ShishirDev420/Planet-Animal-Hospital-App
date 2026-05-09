@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, Loader2, RefreshCw, Lock, Stethoscope, Shield, ExternalLink } from 'lucide-react';
+import { Sparkles, ArrowRight, RefreshCw, Lock, Stethoscope, Shield, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { DEMO_ROADMAP_TEXT, usePetProfile } from '../hooks/usePetProfile';
 import HealthJourney, { Stage, Task } from '../components/HealthJourney';
 import Markdown from 'react-markdown';
+import Logo from '../components/Logo';
+import PlanetOrbLoader from '../components/PlanetOrbLoader';
 
 const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
@@ -264,10 +266,11 @@ export default function Roadmap() {
 
   if (profileLoading) {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center p-6 pb-32">
-        <Loader2 className="w-10 h-10 text-[#fec708] animate-spin mb-4" />
-        <p className="text-white/60 font-medium">Loading pet profile...</p>
-      </div>
+      <PlanetOrbLoader
+        label="Loading Pet Profile"
+        detail="Gathering the health context for your roadmap"
+        className="h-full pb-32"
+      />
     );
   }
 
@@ -306,31 +309,18 @@ export default function Roadmap() {
         <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-[70px] mix-blend-screen transform-gpu" style={{ animation: 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite', animationDelay: '1s' }}></div>
         {/* The Logo Container */}
         <div className="relative z-10 p-6 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] flex items-center justify-center">
-          <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-24 h-24 object-contain drop-shadow-2xl z-20 relative transform transition-transform duration-700 hover:scale-105" referrerPolicy="no-referrer" />
+          <Logo className="!w-24 !h-24 z-20 relative transform transition-transform duration-700 hover:scale-105" />
         </div>
       </div>
       <AnimatePresence>
         {loading && (
-          <motion.div
+          <PlanetOrbLoader
             key="loading-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.5 } }}
-            className="flex flex-col items-center justify-center min-h-[50vh] px-6 py-12 relative overflow-hidden"
-          >
-            <div className="bg-white/10 dark:bg-black/20 backdrop-blur-3xl border border-slate-200/50 dark:border-white/10 rounded-3xl p-8 flex flex-col items-center shadow-xl">
-              <Loader2 className="w-12 h-12 text-[#fec708] animate-spin mb-6" />
-              <div className="text-slate-700 dark:text-white/80 font-medium tracking-wide text-sm text-center">
-                <span>Innovated by </span>
-                <span className="text-slate-900 dark:text-white font-bold">Planet Animal Hospital</span>
-                <br/>
-                <span className="text-xs text-slate-500 dark:text-white/40">Powered by Meta Llama 3</span>
-              </div>
-              <p className="text-[#fec708] text-xs animate-pulse pt-3 font-medium" style={{ animationDelay: '1s' }}>
-                Synthesizing longevity research...
-              </p>
-            </div>
-          </motion.div>
+            compact
+            label="Building Longevity Roadmap"
+            detail="Synthesizing Planet Animal Hospital care signals"
+            className="min-h-[56vh]"
+          />
         )}
       </AnimatePresence>
       <AnimatePresence mode="wait">

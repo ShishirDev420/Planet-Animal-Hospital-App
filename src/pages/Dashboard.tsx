@@ -3,12 +3,13 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplat
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, Loader2, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
+  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Logo from '../components/Logo';
 import LogoutModal from '../components/LogoutModal';
 import DualAvatar from '../components/DualAvatar';
+import PlanetOrbLoader from '../components/PlanetOrbLoader';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { usePawlMessage } from '../hooks/usePawlMessage';
@@ -655,6 +656,15 @@ export default function Dashboard() {
   const whatsappMessage = `Hey Planet Animal Hospital team! I am ${parentName}, ${petName}'s parent. I would like to book an appointment for: ${serviceNamesText} on ${bookingDate} at ${bookingTime}. Please get back to me as soon as you see this message. Thank you!`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
+  if (profileLoading || !isAuthReady) {
+    return (
+      <PlanetOrbLoader
+        label="Planet Animal Hospital"
+        detail="Loading the main care dashboard"
+        className="h-full pb-32"
+      />
+    );
+  }
 
   return (
     <>

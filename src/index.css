@@ -490,3 +490,60 @@
   50% { background-position: 100% 50%; opacity: 0.8; }
   100% { background-position: 0% 50%; opacity: 0.5; }
 }
+
+.planet-loader-ambient {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(254, 199, 8, 0.22), transparent 28%),
+    radial-gradient(circle at 50% 46%, rgba(45, 212, 191, 0.12), transparent 42%);
+  animation: planet-ambient-breathe 2.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+.planet-orb-stage::before,
+.planet-orb-stage::after {
+  content: '';
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.planet-orb-stage::before {
+  inset: 18%;
+  background: radial-gradient(circle, rgba(254, 199, 8, 0.3), rgba(254, 199, 8, 0.08) 44%, transparent 68%);
+  filter: blur(22px);
+  animation: planet-core-emanate 2.4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+
+.planet-orb-stage::after {
+  inset: 8%;
+  border: 1px solid rgba(254, 199, 8, 0.18);
+  box-shadow:
+    0 0 80px rgba(254, 199, 8, 0.16),
+    inset 0 0 38px rgba(254, 199, 8, 0.08);
+  animation: planet-ring-emanate 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes planet-ambient-breathe {
+  0%, 100% { opacity: 0.62; transform: scale(0.98); }
+  50% { opacity: 0.95; transform: scale(1.04); }
+}
+
+@keyframes planet-core-emanate {
+  0%, 100% { opacity: 0.54; transform: scale(0.9); }
+  52% { opacity: 0.95; transform: scale(1.12); }
+}
+
+@keyframes planet-ring-emanate {
+  0% { opacity: 0.68; transform: scale(0.92); }
+  70% { opacity: 0.12; transform: scale(1.18); }
+  100% { opacity: 0.04; transform: scale(1.24); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planet-loader-ambient,
+  .planet-orb-stage::before,
+  .planet-orb-stage::after {
+    animation: none !important;
+  }
+}

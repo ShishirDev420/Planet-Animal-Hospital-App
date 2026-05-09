@@ -23,6 +23,7 @@ import Rewards from './pages/Rewards';
 import DailyBriefing from './pages/DailyBriefing';
 import MobilePreview from './components/MobilePreview';
 import ErrorBoundary from './components/ErrorBoundary';
+import PlanetOrbLoader from './components/PlanetOrbLoader';
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated';
 
@@ -66,7 +67,13 @@ export default function App() {
   }, [isDemoMode]);
 
   if (authStatus === 'loading') {
-    return null; // or a loading spinner
+    return (
+      <PlanetOrbLoader
+        fullscreen
+        label="Planet Animal Hospital"
+        detail="Syncing the main care dashboard"
+      />
+    );
   }
 
   return (

@@ -1,4 +1,5 @@
 import React from 'react';
+import planetLogo from '../assets/planet-logo.png';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -14,10 +15,9 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
 
   return (
     <img
-      src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4"
+      src={planetLogo}
       alt="Planet Animal Hospital Logo"
       className={`${sizeClasses[size]} h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] ${className}`}
-      referrerPolicy="no-referrer"
     />
   );
 }

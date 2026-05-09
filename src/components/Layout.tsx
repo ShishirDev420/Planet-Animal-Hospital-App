@@ -1,8 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShieldPlus, Bot, Map, HeartHandshake, Smartphone, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import SplashScreen from './SplashScreen';
+import PlanetOrbLoader from './PlanetOrbLoader';
 
 const pageTransition = {
   initial: { opacity: 0, y: 8 },
@@ -15,6 +17,41 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isInsideFrame = location.search.includes('preview_frame=true');
+  const preservedSearch = isInsideFrame || location.search.includes('demo_mode=true') ? location.search : '';
+  const preservePreviewSearch = (to: string) => `${to}${preservedSearch}`;
+  const previousPathRef = useRef(location.pathname);
+  const [routeLoader, setRouteLoader] = useState<null | {
+    key: number;
+    label: string;
+    detail: string;
+  }>(null);
+
+  useEffect(() => {
+    const previousPath = previousPathRef.current;
+    const nextPath = location.pathname;
+    previousPathRef.current = nextPath;
+
+    if (previousPath === nextPath) return;
+
+    const cameFromAgents = previousPath === '/agents' || previousPath.startsWith('/agents/');
+    const isMainDashboard = nextPath === '/';
+    const isRoadmap = nextPath === '/roadmap';
+
+    if (!cameFromAgents || (!isMainDashboard && !isRoadmap)) return;
+
+    const key = Date.now();
+    setRouteLoader({
+      key,
+      label: isRoadmap ? 'Preparing Health Roadmap' : 'Planet Animal Hospital',
+      detail: isRoadmap ? 'Aligning care milestones around your pet' : 'Bringing your main dashboard into focus',
+    });
+
+    const timer = window.setTimeout(() => {
+      setRouteLoader((current) => (current?.key === key ? null : current));
+    }, 920);
+
+    return () => window.clearTimeout(timer);
+  }, [location.pathname]);
 
   return (
     <div className="h-screen w-full bg-slate-50 text-black/90 font-sans relative overflow-x-hidden dark:bg-[#071912] dark:text-white/90">
@@ -23,6 +60,16 @@ export default function Layout() {
       
       {/* SplashScreen only shows outside preview frame */}
       {!isInsideFrame && <SplashScreen />}
+      <AnimatePresence>
+        {routeLoader && (
+          <PlanetOrbLoader
+            key={routeLoader.key}
+            fullscreen
+            label={routeLoader.label}
+            detail={routeLoader.detail}
+          />
+        )}
+      </AnimatePresence>
       {/* Background Blobs for Glassmorphism - Fixed to prevent scroll flickering */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[5%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-[120px] opacity-60 animate-blob transform-gpu" style={{ animationDuration: '4s', animationTimingFunction: 'ease-in-out' }}></div>
@@ -40,14 +87,14 @@ export default function Layout() {
             <p className="text-[10px] font-bold text-planet-yellow uppercase tracking-[0.25em]">Hospital & Wellness</p>
           </div>
           <div className="flex-1 py-6 px-4 space-y-1">
-            <DesktopNavItem to="/" icon={<Home size={20} />} label="Home" />
-            <DesktopNavItem to="/plans" icon={<ShieldPlus size={20} />} label="Plans" />
-            <DesktopNavItem to="/ai" icon={<Bot size={20} />} label="AI Vet" />
-            <DesktopNavItem to="/agents" icon={<Users size={20} />} label="AI Agents" />
-            <DesktopNavItem to="/roadmap" icon={<Map size={20} />} label="Roadmap" />
+            <DesktopNavItem to={preservePreviewSearch('/')} icon={<Home size={20} />} label="Home" />
+            <DesktopNavItem to={preservePreviewSearch('/plans')} icon={<ShieldPlus size={20} />} label="Plans" />
+            <DesktopNavItem to={preservePreviewSearch('/ai')} icon={<Bot size={20} />} label="AI Vet" />
+            <DesktopNavItem to={preservePreviewSearch('/agents')} icon={<Users size={20} />} label="AI Agents" />
+            <DesktopNavItem to={preservePreviewSearch('/roadmap')} icon={<Map size={20} />} label="Roadmap" />
           </div>
           <div className="p-4 border-t border-white/8">
-            <DesktopNavItem to="/profiles" icon={<span className="text-lg">??</span>} label="Switch Profile" />
+            <DesktopNavItem to={preservePreviewSearch('/profiles')} icon={<span className="text-lg">??</span>} label="Switch Profile" />
           </div>
         </nav>
         
@@ -79,11 +126,11 @@ export default function Layout() {
 
         {/* Bottom Navigation - Premium Liquid Glass - Updated with 5 items */}
         <nav className="absolute bottom-0 w-full liquid-glass-nav px-2 pt-3 pb-8 flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
-          <NavItem to="/" icon={<Home size={22} />} label="Home" />
-          <NavItem to="/plans" icon={<ShieldPlus size={22} />} label="Plans" />
-          <NavItem to="/ai" icon={<Bot size={22} />} label="AI Vet" isCenter />
-          <NavItem to="/agents" icon={<Users size={22} />} label="Agents" />
-          <NavItem to="/roadmap" icon={<Map size={22} />} label="Roadmap" />
+          <NavItem to={preservePreviewSearch('/')} icon={<Home size={22} />} label="Home" />
+          <NavItem to={preservePreviewSearch('/plans')} icon={<ShieldPlus size={22} />} label="Plans" />
+          <NavItem to={preservePreviewSearch('/ai')} icon={<Bot size={22} />} label="AI Vet" isCenter />
+          <NavItem to={preservePreviewSearch('/agents')} icon={<Users size={22} />} label="Agents" />
+          <NavItem to={preservePreviewSearch('/roadmap')} icon={<Map size={22} />} label="Roadmap" />
         </nav>
       </div>
 
