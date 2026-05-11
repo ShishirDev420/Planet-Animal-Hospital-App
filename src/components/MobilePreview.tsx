@@ -1,18 +1,44 @@
+import { useEffect, useMemo, useState } from 'react';
+
 export default function MobilePreview() {
   const requestedPath = new URLSearchParams(window.location.search).get('path') || '/agents';
   const requestedDevice = new URLSearchParams(window.location.search).get('device') || 'iphone-16-pro-max';
   const isSamsungUltra = requestedDevice.toLowerCase().includes('samsung');
   const normalizedPath = requestedPath.startsWith('/') ? requestedPath : `/${requestedPath}`;
   const url = `${window.location.origin}${normalizedPath}?preview_frame=true&demo_mode=true`;
+  const frame = isSamsungUltra ? { width: 432, height: 952 } : { width: 440, height: 956 };
+  const [viewport, setViewport] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
+
+  useEffect(() => {
+    const syncViewport = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    syncViewport();
+    window.addEventListener('resize', syncViewport);
+    return () => window.removeEventListener('resize', syncViewport);
+  }, []);
+
+  const previewScale = useMemo(() => {
+    const widthScale = (viewport.width - 32) / frame.width;
+    const heightScale = (viewport.height - 32) / frame.height;
+    return Math.max(0.42, Math.min(widthScale, heightScale, 0.82));
+  }, [frame.height, frame.width, viewport.height, viewport.width]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(254,199,8,0.15),transparent_34%),#050505] px-4 py-6">
-      <div className="relative scale-[0.54] sm:scale-[0.66] md:scale-[0.76] lg:scale-[0.86] xl:scale-[0.94] 2xl:scale-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(254,199,8,0.15),transparent_34%),#050505] p-4">
+      <div
+        className="relative origin-center"
+        style={{ transform: `scale(${previewScale})` }}
+      >
         <div className="absolute -inset-10 rounded-[5rem] bg-planet-yellow/10 blur-[90px]" />
         {isSamsungUltra ? <SamsungUltraFrame url={url} /> : <IphoneFrame url={url} />}
       </div>
       
-      <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-[60]">
+      <div className="fixed right-4 top-4 z-[60] flex flex-col items-end gap-3 sm:right-6 sm:top-6">
         <div className="group flex items-center gap-2 p-1.5 bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl transition-all hover:bg-black/80">
           <button 
             onClick={() => window.open(url, '_blank')}
@@ -41,7 +67,7 @@ export default function MobilePreview() {
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
           <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
           <p className="text-[8px] text-white/40 uppercase tracking-[0.2em] font-black">
-            {isSamsungUltra ? 'Samsung S20T6 Ultra Preview' : 'iPhone 16 Pro Max Preview'}
+            {isSamsungUltra ? 'Samsung S26 Ultra Preview' : 'iPhone 16 Pro Max Preview'}
           </p>
         </div>
       </div>
@@ -100,7 +126,7 @@ function SamsungUltraFrame({ url }: { url: string }) {
           <iframe
             src={url}
             className="w-full h-full border-none select-none"
-            title="Planet Animal App Preview in Samsung S20T6 Ultra"
+            title="Planet Animal App Preview in Samsung S26 Ultra"
             id="preview-iframe"
           />
         </div>
