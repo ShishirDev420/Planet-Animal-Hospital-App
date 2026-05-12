@@ -3,9 +3,13 @@ import { useEffect, useMemo, useState } from 'react';
 export default function MobilePreview() {
   const requestedPath = new URLSearchParams(window.location.search).get('path') || '/agents';
   const requestedDevice = new URLSearchParams(window.location.search).get('device') || 'iphone-16-pro-max';
+  const isDemoMode = new URLSearchParams(window.location.search).get('demo_mode') === 'true';
   const isSamsungUltra = requestedDevice.toLowerCase().includes('samsung');
   const normalizedPath = requestedPath.startsWith('/') ? requestedPath : `/${requestedPath}`;
-  const url = `${window.location.origin}${normalizedPath}?preview_frame=true&demo_mode=true`;
+  const frameUrl = new URL(normalizedPath, window.location.origin);
+  frameUrl.searchParams.set('preview_frame', 'true');
+  if (isDemoMode) frameUrl.searchParams.set('demo_mode', 'true');
+  const url = frameUrl.toString();
   const frame = isSamsungUltra ? { width: 432, height: 952 } : { width: 440, height: 956 };
   const [viewport, setViewport] = useState(() => ({
     width: window.innerWidth,
@@ -43,7 +47,7 @@ export default function MobilePreview() {
           <button 
             onClick={() => window.open(url, '_blank')}
             className="flex items-center gap-2 px-4 py-2 bg-planet-yellow text-black rounded-xl font-heading font-black text-[10px] uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all"
-            title="Open full app in new tab (Required for Google Sign-In)"
+            title="Open full app in a new tab"
           >
             <span>Open Full App</span>
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,6 +101,7 @@ function IphoneFrame({ url }: { url: string }) {
         <div className="h-full w-full overflow-hidden rounded-[3.28rem] border-[2px] border-white/5 bg-slate-950">
           <iframe
             src={url}
+            allow="publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in iPhone 16 Pro Max"
             id="preview-iframe"
@@ -125,6 +130,7 @@ function SamsungUltraFrame({ url }: { url: string }) {
         <div className="h-full w-full overflow-hidden rounded-[2.75rem] border-[1px] border-white/5 bg-slate-950">
           <iframe
             src={url}
+            allow="publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in Samsung S26 Ultra"
             id="preview-iframe"

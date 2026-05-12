@@ -681,48 +681,43 @@ export default function Dashboard() {
       <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95">
         {/* Header with Logo */}
       <header className="pt-4 mb-2">
-        <div className="flex items-center justify-between w-full py-4 relative gap-2">
-          {/* Logo Container (Left) - Fixed width for centering */}
-          <div className="flex items-center shrink-0 w-12 sm:w-16">
-            <button onClick={() => navigate('/profiles')} className="group">
-              <div className="drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-opacity duration-300 hover:opacity-90 active:scale-95">
-                <Logo className="!w-12 !h-12 sm:!w-16 sm:!h-16" />
-              </div>
-            </button>
-          </div>
+        <div className="grid w-full grid-cols-[76px_minmax(0,1fr)_76px] items-center py-4 sm:grid-cols-[88px_minmax(0,1fr)_88px]">
+          <button onClick={() => navigate('/profiles')} className="group flex justify-start" aria-label="Switch profile">
+            <div className="rounded-2xl p-1 drop-shadow-[0_0_18px_rgba(245,158,11,0.28)] transition-all duration-300 group-hover:scale-105 group-active:scale-95">
+              <Logo className="!w-14 !h-14 sm:!w-16 sm:!h-16" />
+            </div>
+          </button>
             
-          {/* Branding Text (Center) - Truly centered via symmetric side widths */}
-          <div className="flex flex-col items-center flex-1 min-w-0 text-center pointer-events-none">
-            <h1 className="text-sm sm:text-lg font-heading font-black text-slate-800 tracking-tight uppercase block leading-none dark:text-white/95 whitespace-nowrap">
-              PLANET ANIMAL
+          <div className="flex min-w-0 flex-col items-center text-center">
+            <h1 className="font-heading text-[15px] font-black uppercase leading-none tracking-[-0.01em] text-white sm:text-lg">
+              Planet Animal
             </h1>
-            <p className="text-[7px] sm:text-[10px] font-bold text-[#fec708] uppercase tracking-[0.1em] sm:tracking-[0.25em] mt-0.5 dark:text-[#fec708] whitespace-nowrap">
-              HOSPITAL & WELLNESS
+            <p className="mt-1 text-[7px] font-black uppercase tracking-[0.24em] text-[#fec708] sm:text-[9px]">
+              Hospital & Wellness
             </p>
           </div>
 
-          {/* Profile Container (Right) - Matching width of Logo Container */}
-          <div className="flex items-center justify-end shrink-0 gap-2">
+          <div className="flex items-center justify-end gap-2">
              <button 
                onClick={() => navigate('/settings')} 
                title="Settings" 
-               className="relative flex items-center justify-center p-2 rounded-full bg-gradient-to-br from-white/10 to-white/0 hover:from-white/20 hover:to-white/5 transition-all duration-300 border border-white/5 shadow-sm cursor-pointer group"
-             >
-               <Settings className="w-5 h-5 text-white/80 group-hover:text-white transition-colors duration-300" />
+               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-sm transition-all duration-300 hover:bg-white/[0.14] cursor-pointer group"
+              >
+                <Settings className="w-4 h-4 text-white/80 group-hover:text-white transition-colors duration-300" />
              </button>
              <button 
                onClick={() => setIsLogoutModalOpen(true)} 
                title="Logout" 
-               className="relative flex items-center justify-center p-2 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/0 hover:from-red-500/20 hover:to-red-500/5 transition-all duration-300 border border-red-500/10 shadow-sm cursor-pointer group"
-             >
-               <LogOut className="w-5 h-5 text-red-400 group-hover:text-red-500 transition-colors duration-300" />
+               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-red-400/15 bg-red-500/[0.08] shadow-sm transition-all duration-300 hover:bg-red-500/[0.14] cursor-pointer group"
+              >
+                <LogOut className="w-4 h-4 text-red-400 group-hover:text-red-500 transition-colors duration-300" />
              </button>
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-5 mt-2">
           <h2 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
-          <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petProfile?.petName || 'your pet'} healthy today.</p>
+          <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petName || 'your pet'} healthy today.</p>
         </div>
       </header>
 
@@ -732,42 +727,47 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         onClick={() => navigate('/briefing')}
-        className="group relative cursor-pointer glass-card p-6 rounded-[2.5rem] border border-amber-100/20 dark:border-amber-400/10 bg-gradient-to-br from-amber-50/10 to-yellow-50/5 dark:from-amber-900/10 dark:to-yellow-900/5 mb-8 overflow-hidden"
+        className="group relative mb-7 cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.065] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/30 hover:bg-white/[0.085]"
       >
-        {/* Background Animation */}
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#fec708]/55 to-transparent" />
+        <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#fec708]/14 blur-3xl transition-opacity duration-300 group-hover:opacity-80" />
         
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-200 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/20 rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
-                <Bot className="w-8 h-8 text-white" />
+        <div className="relative">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fec708] text-black shadow-[0_0_24px_rgba(254,199,8,0.28)]">
+                <Bot className="h-6 w-6" />
               </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#0f172a] animate-pulse" />
+              <div className="min-w-0">
+                <div className="mb-1 flex items-center gap-2">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#fec708]">Daily Briefing</p>
+                  <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">Today</span>
+                </div>
+                <h3 className="truncate font-heading text-xl font-black tracking-tight text-white">Morning care check-in</h3>
+                <p className="mt-0.5 text-xs font-semibold text-white/58">
+                  {pawlLoading ? 'Preparing a personalized update...' : `Personalized for ${petName}`}
+                </p>
+              </div>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Daily Briefing</h3>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-wider border border-amber-500/20">New</span>
-              </div>
-              <p className="text-sm text-slate-500 dark:text-white/60">
-                {pawlLoading ? 'Analyzing health data...' : `Personalized update for ${petName}`}
-              </p>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] transition-all duration-300 group-hover:border-[#fec708]/30 group-hover:bg-[#fec708]/15">
+              <ChevronRight className="h-5 w-5 text-white/44 transition-colors duration-300 group-hover:text-[#fec708]" />
             </div>
           </div>
-          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors duration-300">
-            <ChevronRight className="w-6 h-6 text-white/40 group-hover:text-amber-500 transition-colors duration-300" />
-          </div>
-        </div>
 
-        {/* Peek at message if available */}
-        {!pawlLoading && pawlMessage && (
-          <div className="mt-4 pt-4 border-t border-white/5">
-            <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 italic leading-relaxed">
-              "{pawlMessage}"
+          <div className="mt-4 rounded-[1.35rem] border border-white/10 bg-black/18 px-4 py-3">
+            <p className="line-clamp-2 text-sm font-medium leading-6 text-white/72">
+              {pawlLoading ? 'Checking care reminders, upcoming visits, and reward signals.' : pawlMessage || `${petName}'s daily care summary is ready.`}
             </p>
           </div>
-        )}
+
+          <div className="mt-3 flex items-center justify-between gap-3 px-1">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/36">
+              <Clock className="h-3.5 w-3.5 text-[#fec708]" />
+              2 min read
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#fec708]">Open Briefing</span>
+          </div>
+        </div>
       </motion.div>
 
       {/* Points Wallet - Typographic Layout */}

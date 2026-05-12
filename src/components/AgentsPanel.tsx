@@ -188,7 +188,24 @@ export default function AgentsPanel() {
       </div>
 
       <motion.div variants={container} initial="hidden" animate="show" className="mx-auto max-w-6xl">
-        <motion.header variants={item} className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <motion.div variants={item} className="mb-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Choose Your Agent</p>
+              <p className="mt-1 text-sm font-semibold text-white/70">Switch instantly between Pawl, Pawlina, and Pritpawl.</p>
+            </div>
+            <span className="hidden rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/45 sm:inline-flex">
+              3 agents live
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {agents.map((agent) => (
+              <AgentSwitchCard key={agent.id} agent={agent} active={agent.id === activeAgent.id} state={agentState} onClick={() => selectAgent(agent)} />
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.header variants={item} className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 shadow-2xl backdrop-blur-2xl">
               <span className="relative flex h-2.5 w-2.5">
@@ -227,12 +244,6 @@ export default function AgentsPanel() {
             onSubmit={(prompt) => submitPrompt(activeAgent, prompt)}
             onPrimaryAction={runPrimaryAction}
           />
-        </motion.div>
-
-        <motion.div variants={container} className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-          {agents.map((agent) => (
-            <AgentSwitchCard key={agent.id} agent={agent} active={agent.id === activeAgent.id} state={agentState} onClick={() => selectAgent(agent)} />
-          ))}
         </motion.div>
       </motion.div>
     </section>
@@ -378,15 +389,34 @@ function AgentSwitchCard({ agent, active, state, onClick }: { agent: Agent; acti
   const metric = getLiveMetrics(agent.id, state)[0];
 
   return (
-    <button onClick={onClick} className={cn('flex items-center gap-3 rounded-[1.5rem] border p-3 text-left transition-all', active ? 'border-white/24 bg-white/[0.10]' : 'border-white/10 bg-white/[0.045] hover:bg-white/[0.08]')}>
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-black" style={{ backgroundColor: agent.theme.accent }}>
-        <Icon size={20} />
+    <button
+      onClick={onClick}
+      className={cn(
+        'group relative min-h-[126px] overflow-hidden rounded-[1.75rem] border p-3 text-left shadow-2xl transition-all duration-300',
+        active ? 'border-white/28 bg-white/[0.11]' : 'border-white/10 bg-white/[0.045] hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.08]',
+      )}
+      style={{ boxShadow: active ? `0 18px 46px ${agent.theme.glow}` : undefined }}
+      aria-pressed={active}
+    >
+      <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-90" style={{ background: agent.theme.mesh }} />
+      {active && <div className="absolute inset-0 opacity-95" style={{ background: agent.theme.mesh }} />}
+      <div className="absolute right-[-36px] top-[-44px] h-28 w-28 rounded-full blur-3xl" style={{ backgroundColor: agent.theme.glow }} />
+      <div className="relative z-10 flex items-center gap-3">
+        <AgentAvatar agent={agent} compact />
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-1.5">
+            <Icon size={13} style={{ color: agent.theme.accent }} />
+            <p className="truncate text-[9px] font-black uppercase tracking-[0.16em] text-white/42">{agent.role}</p>
+          </div>
+          <p className="truncate font-heading text-xl font-black text-white">{agent.name}</p>
+          <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-white/62">{agent.purpose}</p>
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-black text-white">{agent.name}</p>
-        <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-white/36">{metric.label}: {metric.value}</p>
+      <div className="relative z-10 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 backdrop-blur-xl">
+        <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-white/40">{metric.label}</p>
+        <p className="truncate text-xs font-black text-white">{metric.value}</p>
       </div>
-      {active && <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: agent.theme.accent }} />}
+      {active && <CheckCircle2 className="absolute right-3 top-3 z-20 h-4 w-4 shrink-0" style={{ color: agent.theme.accent }} />}
     </button>
   );
 }
@@ -514,10 +544,10 @@ function buildAgentReply(agentId: AgentId, prompt: string, profile: any, state: 
   return 'Use "Generate health roadmap" and I will return a structured JSON prescription and roadmap object.';
 }
 
-function AgentAvatar({ agent, large = false }: { agent: Agent; large?: boolean }) {
+function AgentAvatar({ agent, large = false, compact = false }: { agent: Agent; large?: boolean; compact?: boolean }) {
   const Avatar = agent.Avatar;
   return (
-    <div className={cn('relative shrink-0', large ? 'h-28 w-28' : 'h-20 w-20')}>
+    <div className={cn('relative shrink-0', large ? 'h-28 w-28' : compact ? 'h-16 w-16' : 'h-20 w-20')}>
       <motion.div className="absolute inset-0 rounded-[1.7rem]" animate={{ rotate: [0, 3, 0, -3, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} style={{ backgroundColor: agent.theme.ring, filter: 'blur(18px)' }} />
       <div className="relative h-full w-full overflow-hidden rounded-[1.65rem] border border-white/25 bg-black shadow-2xl">
         <Avatar />
