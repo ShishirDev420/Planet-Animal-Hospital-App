@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, CheckCircle2, Info, Sun, Moon, SunDim, ChevronRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { CheckCircle2, Info, Sun, Moon, SunDim, ChevronRight } from 'lucide-react';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { usePawlMessage } from '../hooks/usePawlMessage';
 import { useTimeOfDay, type TimePeriod, PERIOD_DISPLAY } from '../hooks/useTimeOfDay';
@@ -194,15 +194,11 @@ export default function DailyBriefing() {
     totalPeriods,
   } = useCheckInStatus(uid, currentPeriod);
 
-  const [activePeriod, setActivePeriod] = useState<TimePeriod>(currentPeriod);
+  const [activePeriod, setActivePeriod] = useState<TimePeriod>(
+    () => currentIncompletePeriod || currentPeriod
+  );
   const { message, loading: messageLoading, error: messageError } = usePawlMessage(activePeriod);
   const [justCompleted, setJustCompleted] = useState(false);
-
-  useEffect(() => {
-    if (currentIncompletePeriod && activePeriod !== currentIncompletePeriod) {
-      setActivePeriod(currentIncompletePeriod);
-    }
-  }, [currentIncompletePeriod]);
 
   const sections = useMemo(() => message ? parseMessageSections(message) : [], [message]);
 
@@ -214,7 +210,6 @@ export default function DailyBriefing() {
 
   const display = PERIOD_DISPLAY[activePeriod];
   const isActiveComplete = completedPeriods.includes(activePeriod);
-  const periodIndex = PERIOD_ORDER.indexOf(activePeriod);
 
   const handleComplete = () => {
     setJustCompleted(true);
@@ -252,14 +247,6 @@ export default function DailyBriefing() {
               {display.subtitle}
             </p>
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.6, rotate: -20 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 250, damping: 18, delay: 0.1 }}
-            className="w-12 h-12 rounded-2xl bg-gradient-to-br from-planet-yellow/15 to-planet-yellow/5 border border-planet-yellow/20 flex items-center justify-center shadow-lg shadow-planet-yellow/10"
-          >
-            <Sparkles size={22} className="text-planet-yellow icon-premium" />
-          </motion.div>
         </div>
       </header>
 
@@ -295,13 +282,6 @@ export default function DailyBriefing() {
                   </div>
                 )}
                 {period}
-                {isActive && !completed && (
-                  <motion.div
-                    layoutId="activePeriod"
-                    className="absolute inset-0 rounded-xl border-2 border-planet-yellow/30"
-                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                  />
-                )}
               </motion.button>
             );
           })}
@@ -323,46 +303,39 @@ export default function DailyBriefing() {
 
       <div className="px-4 space-y-5">
         {/* All Complete State */}
-        <AnimatePresence mode="wait">
-          {allComplete ? (
+        {allComplete ? (
+          <motion.div
+            key="all-done"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            className="text-center py-16"
+          >
             <motion.div
-              key="all-done"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="text-center py-16"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+              className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400/20 to-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-emerald-500/10"
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400/20 to-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-emerald-500/10"
-              >
-                <CheckCircle2 size={48} className="text-emerald-500 icon-premium" />
-              </motion.div>
-              <h2 className="font-cinematic text-3xl text-slate-900 dark:text-white mb-2">
-                All Done Today
-              </h2>
-              <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs mx-auto font-medium">
-                {profile?.petName || 'Your pet'} is all set. See you tomorrow!
-              </p>
+              <CheckCircle2 size={48} className="text-emerald-500 icon-premium" />
             </motion.div>
-          ) : (
-            <motion.div
-              key={`briefing-${activePeriod}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-5"
-            >
-              {/* Pawl's Daily Insight */}
-              <motion.section
-                key={activePeriod}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 180, damping: 22, delay: 0.05 }}
-                className="relative overflow-hidden"
-              >
+            <h2 className="font-cinematic text-3xl text-slate-900 dark:text-white mb-2">
+              All Done Today
+            </h2>
+            <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs mx-auto font-medium">
+              {profile?.petName || 'Your pet'} is all set. See you tomorrow!
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key={activePeriod}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+            className="space-y-5"
+          >
+            {/* Pawl's Daily Insight */}
+            <section className="relative overflow-hidden">
                 {/* Ambient glow */}
                 <div className={cn(
                   "absolute -top-20 -right-20 w-48 h-48 rounded-full opacity-20 blur-3xl pointer-events-none",
@@ -459,10 +432,9 @@ export default function DailyBriefing() {
                     )}
                   </div>
                 </div>
-              </motion.section>
+              </section>
             </motion.div>
           )}
-        </AnimatePresence>
       </div>
     </div>
   );
