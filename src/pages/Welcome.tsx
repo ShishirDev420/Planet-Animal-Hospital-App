@@ -89,6 +89,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
 
     const data = existingProfile.data();
+    if (data && !data.pawPoints) {
+      await setDoc(docRef, { pawPoints: 500 }, { merge: true });
+      data.pawPoints = 500;
+    }
     const hasCompletedProfile = Boolean(data?.petName && data.petName !== 'Pending');
     return { hasCompletedProfile };
   };
@@ -194,6 +198,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           gender,
           weight: weight.trim(),
           additionalDetails: additionalDetails.trim(),
+          pawPoints: 500,
         }, { merge: true });
         
         if (onComplete) {

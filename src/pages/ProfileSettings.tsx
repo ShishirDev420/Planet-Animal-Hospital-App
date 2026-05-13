@@ -125,7 +125,7 @@ export default function ProfileSettings() {
           </div>
           
           <div className="relative w-24 h-24 rounded-full bg-white/5 backdrop-blur-md border-[1.5px] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] flex items-center justify-center overflow-hidden">
-            {pet.photoUrl && <img src={pet.photoUrl} alt="Pet" className="w-full h-full object-cover" />}
+            {pet.photoUrl && <img src={pet.photoUrl} alt={profile?.name || "Pet"} className="w-full h-full object-cover" />}
           </div>
         </div>
 

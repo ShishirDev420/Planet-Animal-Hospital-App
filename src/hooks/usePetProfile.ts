@@ -6,6 +6,14 @@ import { useLocation } from 'react-router-dom';
 
 const DEMO_PROFILE_KEY = 'planet_animal_demo_profile';
 
+function normalizeProfile(data: any) {
+  if (!data) return data;
+  return {
+    ...data,
+    name: data.petName || data.name || '',
+  };
+}
+
 export const DEMO_ROADMAP_TEXT = `### Phase: 1-3 Months
 * **Baseline Wellness Exam**: Complete a full nose-to-tail veterinary exam | Scientific Rationale: Establishes clinical baselines for early detection.
 * **Joint Mobility Check**: Screen hips, elbows, and gait because Labs are active, larger dogs | Scientific Rationale: Early mobility care preserves long-term comfort.
@@ -57,9 +65,9 @@ export function usePetProfile() {
   const readDemoProfile = () => {
     try {
       const saved = localStorage.getItem(DEMO_PROFILE_KEY);
-      if (!saved) return demoProfile;
+      if (!saved) return normalizeProfile(demoProfile);
       const parsed = JSON.parse(saved);
-      return {
+      return normalizeProfile({
         ...demoProfile,
         ...parsed,
         cachedRoadmap: parsed.cachedRoadmap || demoProfile.cachedRoadmap,
@@ -68,9 +76,9 @@ export function usePetProfile() {
           ...demoProfile.roadmapProgress,
           ...(parsed.roadmapProgress || {}),
         },
-      };
+      });
     } catch {
-      return demoProfile;
+      return normalizeProfile(demoProfile);
     }
   };
 
@@ -94,7 +102,7 @@ export function usePetProfile() {
         const docRef = doc(db, 'users', user.uid);
         unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
-            setProfile(docSnap.data());
+            setProfile(normalizeProfile(docSnap.data()));
           } else {
             setProfile({});
           }
@@ -118,7 +126,7 @@ export function usePetProfile() {
   const updateProfile = async (updates: any) => {
     if (isDemoMode) {
       setProfile((current: any) => {
-        const nextProfile = { ...current, ...updates };
+        const nextProfile = normalizeProfile({ ...current, ...updates });
         localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(nextProfile));
         return nextProfile;
       });

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate, animate, useScroll, useSpring } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -371,15 +371,15 @@ export default function Dashboard() {
   const isDemoMode = window.location.search.includes('demo_mode=true');
   const { profile: realPetProfile, loading: realProfileLoading } = usePetProfile();
   
-  const petProfile = isDemoMode ? {
+  const petProfile = useMemo(() => isDemoMode ? {
     name: 'Luna',
     parentName: 'Demo Parent',
     breed: 'Golden Retriever',
     pawPoints: 1250,
     healthHistory: 'History: Luna had a routine vaccination last month. We noticed she has been very active. Recommendation: Consider joint supplements as she ages. Also, she loves running in the park.'
-  } : realPetProfile;
+  } : realPetProfile, [isDemoMode, realPetProfile]);
   
-  const profileLoading = isDemoMode ? false : realProfileLoading;
+  const profileLoading = useMemo(() => isDemoMode ? false : realProfileLoading, [isDemoMode, realProfileLoading]);
 
   const { message: pawlMessage, loading: pawlLoading, error: pawlError } = usePawlMessage();
   const [isAuthReady, setIsAuthReady] = useState(isDemoMode);
@@ -717,7 +717,7 @@ export default function Dashboard() {
 
         <div className="mb-5 mt-2">
           <h2 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
-          <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petName || 'your pet'} healthy today.</p>
+          <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petName} healthy today.</p>
         </div>
       </header>
 
@@ -806,11 +806,16 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="mt-8 w-full cursor-pointer" onClick={() => navigate('/rewards')}>
-            <p className="text-[10px] text-white/60 font-medium mb-3 uppercase tracking-widest">
-              {Math.max(0, 5000 - verifiedPoints).toLocaleString()} PTS TO NEXT UNLOCK
-            </p>
-            <div className="relative h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm">
+          <div className="mt-8 w-full">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] text-white/60 font-medium uppercase tracking-widest">
+                {Math.max(0, 5000 - verifiedPoints).toLocaleString()} PTS TO LIFE-MAXING
+              </p>
+              <p className="text-[10px] text-[#fec708] font-black uppercase tracking-widest">
+                ₹{(verifiedPoints * 0.25).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="relative h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm mb-3">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
@@ -818,6 +823,29 @@ export default function Dashboard() {
                 className="h-full bg-gradient-to-r from-planet-yellow to-yellow-300 shadow-[0_0_15px_rgba(254,199,8,0.7)] animate-pulsate-synchronized-glow rounded-full"
               />
             </div>
+            {/* Premium Nudge — TAP FOR REWARD DETAILS */}
+            <motion.button
+              onClick={() => navigate('/rewards')}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl overflow-hidden border border-[#fec708]/30 bg-[#fec708]/5 hover:bg-[#fec708]/10 transition-all duration-300"
+              style={{ boxShadow: '0 0 20px rgba(254,199,8,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' }}
+            >
+              <motion.div
+                className="absolute inset-0 rounded-2xl bg-[#fec708]/8 pointer-events-none"
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <motion.span animate={{ opacity: [0.7, 1, 0.7] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}>
+                <Sparkles className="w-3 h-3 text-[#fec708]" />
+              </motion.span>
+              <span className="relative text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">
+                TAP FOR REWARD DETAILS
+              </span>
+              <motion.span animate={{ opacity: [0.7, 1, 0.7] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}>
+                <ChevronRight className="w-3.5 h-3.5 text-[#fec708] group-hover:translate-x-0.5 transition-transform" />
+              </motion.span>
+            </motion.button>
           </div>
         </div>
       </motion.div>
@@ -857,7 +885,7 @@ export default function Dashboard() {
       {upcomingAppts.length > 0 && (
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Upcoming for {petProfile?.name || 'your pet'}</h3>
+            <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Upcoming for {petName}</h3>
             <button className="text-planet-yellow text-sm font-bold flex items-center font-body">View All <ChevronRight size={16}/></button>
           </div>
           <div className="space-y-3">
@@ -867,8 +895,8 @@ export default function Dashboard() {
                   {appt.date ? String(appt.date).substring(8, 10) : 'TBD'}
                 </div>
                 <div>
-                   <h4 className="font-heading font-bold text-white text-lg tracking-tight">{appt.reason || appt.title}</h4>
-                  <p className="font-body font-medium text-slate-300 text-sm leading-relaxed capitalize">{appt.status || 'pending'} • {appt.time || 'TBD'}</p>
+                   <h4 className="font-heading font-bold text-white text-xl tracking-tight">{appt.reason || appt.title}</h4>
+                  <p className="font-body font-medium text-slate-300 text-base leading-relaxed capitalize">{appt.status || 'pending'} • {appt.time || 'TBD'}</p>
                 </div>
               </div>
             ))}
@@ -942,14 +970,15 @@ export default function Dashboard() {
            </motion.button>
          </div>
 
-         {/* Milestone Grid - Reduced to 5 key milestones */}
+         {/* Milestone Grid — synced with Rewards roadmap */}
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
            {[
-             { points: 500, title: 'Active Baseline', icon: <TrendingUp className="w-5 h-5" />, unlocked: verifiedPoints >= 500 },
-             { points: 1500, title: 'Health Savior', icon: <Star className="w-5 h-5" />, unlocked: verifiedPoints >= 1500 },
-             { points: 3000, title: 'Wellness Master', icon: <Zap className="w-5 h-5" />, unlocked: verifiedPoints >= 3000 },
-             { points: 5000, title: 'Consultation Key', icon: <Award className="w-5 h-5" />, unlocked: verifiedPoints >= 5000 },
-             { points: 100000, title: 'Founder Picnic', icon: <Trophy className="w-5 h-5" />, unlocked: verifiedPoints >= 100000 },
+             { points: 500,   title: 'Health Starter',         subtitle: 'Program entry reward', icon: <TrendingUp className="w-5 h-5" />, unlocked: verifiedPoints >= 500 },
+             { points: 1500,  title: '15% Bill Rebate',         subtitle: 'Instant discount unlock', icon: <Star className="w-5 h-5" />, unlocked: verifiedPoints >= 1500 },
+             { points: 2500,  title: '20% Bill Rebate',         subtitle: 'Deep savings tier', icon: <Zap className="w-5 h-5" />, unlocked: verifiedPoints >= 2500 },
+             { points: 5000,  title: 'Life-Maxing Consultation', subtitle: 'Breed-specific longevity plan', icon: <Award className="w-5 h-5" />, unlocked: verifiedPoints >= 5000 },
+             { points: 7500,  title: 'Premium Spa & Therapy',   subtitle: 'Full grooming & medicated baths', icon: <Sparkles className="w-5 h-5" />, unlocked: verifiedPoints >= 7500 },
+             { points: 10000, title: 'Full Hematology Panel',   subtitle: 'Comprehensive blood examination', icon: <Trophy className="w-5 h-5" />, unlocked: verifiedPoints >= 10000 },
            ].map((milestone) => (
              <motion.div
                key={milestone.title}
@@ -968,7 +997,7 @@ export default function Dashboard() {
                )}
                
                <div className={cn(
-                 "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
+                 "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0",
                  milestone.unlocked 
                    ? "bg-gradient-to-br from-[#fec708] to-amber-500 text-black shadow-[0_0_20px_rgba(254,199,8,0.4)]" 
                    : "bg-white/10 text-white/30 border border-white/10"
@@ -976,18 +1005,19 @@ export default function Dashboard() {
                  {milestone.icon}
                </div>
                
-               <div className="flex-1">
+               <div className="flex-1 min-w-0">
                  <h4 className={cn(
-                   "font-bold text-sm tracking-tight",
+                   "font-bold text-sm tracking-tight leading-tight",
                    milestone.unlocked ? "text-white" : "text-white/50"
                  )}>{milestone.title}</h4>
-                 <p className="text-[10px] text-white/40 font-medium">{milestone.points.toLocaleString()} PTS</p>
+                 <p className="text-[10px] text-white/35 font-medium mt-0.5">{milestone.subtitle}</p>
+                 <p className="text-[10px] text-white/25 font-medium">{milestone.points.toLocaleString()} PTS</p>
                </div>
                
                {milestone.unlocked ? (
-                 <Check className="w-5 h-5 text-[#fec708]" />
+                 <Check className="w-5 h-5 text-[#fec708] shrink-0" />
                ) : (
-                 <Lock className="w-5 h-5 text-white/30" />
+                 <Lock className="w-5 h-5 text-white/30 shrink-0" />
                )}
              </motion.div>
            ))}
@@ -1029,7 +1059,7 @@ export default function Dashboard() {
                     </div>
                     <h3 className="text-lg font-bold mb-2">Awaiting First Visit</h3>
                     <p className="text-slate-500 text-sm leading-relaxed">
-                      Your pet's medical records, vaccination history, and test results will automatically populate here as you keep visiting us.
+                      {petName}'s medical records, vaccination history, and test results will automatically populate here as you keep visiting us.
                     </p>
                   </div>
                 </div>
@@ -1045,7 +1075,7 @@ export default function Dashboard() {
                     <Gift className="w-12 h-12 text-[#fec708] mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-slate-800 mb-2">You've Unlocked a Free Consultation!</h3>
                     <p className="text-slate-600 mb-6">
-                      Show this screen to our staff at checkout to claim your free consultation for {petProfile?.name || 'your pet'}.
+                      Show this screen to our staff at checkout to claim your free consultation for {petName}.
                     </p>
                     <div className="bg-white rounded-xl p-4 shadow-sm inline-block">
                       <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>
@@ -1101,10 +1131,10 @@ export default function Dashboard() {
               {/* Header */}
               <div className="px-8 pt-6 pb-4 flex justify-between items-start shrink-0 z-10">
                 <div>
-                  <h2 className="text-2xl font-heading font-black text-white tracking-tight">
+                  <h2 className="text-3xl font-heading font-black text-white tracking-tight">
                     Book <span className="text-planet-yellow">Visit</span>
                   </h2>
-                  <p className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                  <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-planet-yellow shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
                     {petProfile?.name ? `Schedule for ${petProfile.name}` : 'Pet Health Scheduler'}
                   </p>
@@ -1146,7 +1176,7 @@ export default function Dashboard() {
                     >
                       {step.done ? <Check size={10} className="text-black" strokeWidth={4} /> : <div className="w-1 h-1 rounded-full bg-white/40" />}
                     </motion.div>
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${step.done ? 'text-planet-yellow' : 'text-white/40'}`}>
+                    <span className={`text-[11px] font-black uppercase tracking-widest ${step.done ? 'text-planet-yellow' : 'text-white/40'}`}>
                       {step.label}
                     </span>
                   </div>
@@ -1159,11 +1189,11 @@ export default function Dashboard() {
                 {/* 1. Services Section */}
                 <section id="services-section" className="mb-10">
                   <div className="flex justify-between items-end mb-4 px-1">
-                    <h3 className="text-[10px] font-black tracking-[0.25em] uppercase text-white/40">Select Services</h3>
+                    <h3 className="text-xs font-black tracking-[0.25em] uppercase text-white/40">Select Services</h3>
                     {selectedServices.length > 0 && (
                       <button 
                         onClick={() => setSelectedServices([])} 
-                        className="text-[9px] font-bold text-planet-yellow/60 hover:text-planet-yellow transition-colors uppercase tracking-widest"
+                        className="text-[11px] font-bold text-planet-yellow/60 hover:text-planet-yellow transition-colors uppercase tracking-widest"
                       >
                         Reset
                       </button>
@@ -1202,14 +1232,14 @@ export default function Dashboard() {
                           </div>
   
                           <div className="flex-1">
-                            <p className={cn("font-bold text-base tracking-tight", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
-                            <p className="text-white/50 text-[10px] font-medium mt-0.5 leading-tight">{service.desc}</p>
+                            <p className={cn("font-bold text-lg tracking-tight", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
+                            <p className="text-white/50 text-xs font-medium mt-0.5 leading-tight">{service.desc}</p>
                           </div>
   
                           <div className="text-right">
                             <div className={cn("flex items-center gap-1 mb-1 justify-end", isSelected ? 'text-planet-yellow' : 'text-white/30')}>
                                <PawPrint size={10} className={isSelected ? 'fill-planet-yellow' : ''} />
-                               <span className="text-xs font-black">+{service.points}</span>
+                               <span className="text-sm font-black">+{service.points}</span>
                             </div>
                             <div className={cn(
                               "w-5 h-5 rounded-full border-2 ml-auto flex items-center justify-center transition-all duration-300",
@@ -1228,7 +1258,7 @@ export default function Dashboard() {
                 <section id="date-section" className="mb-10">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">2</div>
-                    <h3 className="text-lg font-bold text-white tracking-tight">Preferred Date</h3>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Preferred Date</h3>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
                     {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
@@ -1251,11 +1281,11 @@ export default function Dashboard() {
                               : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
                           )}
                         >
-                          <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
+                          <span className="text-xs font-black uppercase tracking-widest opacity-60 mb-1">
                             {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}
                           </span>
                           <span className="text-lg font-black">{date.getDate()}</span>
-                          <span className="text-[9px] font-bold uppercase tracking-tighter opacity-40">
+                          <span className="text-[11px] font-bold uppercase tracking-tighter opacity-40">
                             {date.toLocaleDateString('en-US', { month: 'short' })}
                           </span>
                         </motion.button>
@@ -1268,7 +1298,7 @@ export default function Dashboard() {
                 <section id="time-section" className="pb-10">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">3</div>
-                    <h3 className="text-lg font-bold text-white tracking-tight">Preferred Time</h3>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Preferred Time</h3>
                   </div>
                   <div className="space-y-6">
                     {[
@@ -1281,7 +1311,7 @@ export default function Dashboard() {
                           <div className="text-planet-yellow/60">
                             {group.icon}
                           </div>
-                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white/40">{group.label}</span>
+                          <span className="text-[11px] font-black uppercase tracking-[0.15em] text-white/40">{group.label}</span>
                           <div className="h-px flex-1 bg-white/10 ml-2" />
                         </div>
                         <div className="grid grid-cols-3 gap-2.5">
@@ -1294,7 +1324,7 @@ export default function Dashboard() {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setBookingTime(time)}
                                 className={cn(
-                                  "py-3.5 rounded-xl text-xs font-black transition-all border",
+                                  "py-3.5 rounded-xl text-sm font-black transition-all border",
                                   isSelected
                                     ? 'bg-planet-yellow text-black border-planet-yellow shadow-[0_10px_20px_rgba(254,199,8,0.2)]'
                                     : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
@@ -1338,7 +1368,7 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em]">Reward Points</p>
+                    <p className="text-xs font-black text-white/40 uppercase tracking-[0.25em]">Reward Points</p>
                     <motion.p 
                       key={selectedServices.length}
                       initial={{ y: 5, opacity: 0 }}
@@ -1346,7 +1376,7 @@ export default function Dashboard() {
                       className="text-2xl font-black text-planet-yellow leading-none flex items-center justify-end gap-1.5 mt-2 drop-shadow-[0_0_15px_rgba(254,199,8,0.8)]"
                     >
                       {selectedServices.reduce((a, s) => a + s.points, 0).toLocaleString()}
-                      <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">pts</span>
+                      <span className="text-xs uppercase tracking-widest text-white/50 font-bold">pts</span>
                     </motion.p>
                   </div>
                 </div>
@@ -1374,7 +1404,7 @@ export default function Dashboard() {
                       }
                     }}
                     className={cn(
-                      "flex items-center justify-center gap-3 w-full py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl relative overflow-hidden group",
+                      "flex items-center justify-center gap-3 w-full py-5 rounded-2xl font-black text-base uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl relative overflow-hidden group",
                       (selectedServices.length === 0 || !bookingDate || !bookingTime)
                         ? "bg-white/10 text-white/40 border border-white/20 hover:bg-white/15"
                         : "bg-planet-yellow text-black hover:shadow-[0_0_40px_rgba(254,199,8,0.5)] active:scale-[0.98]"
@@ -1435,8 +1465,8 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
         {icon}
       </div>
       <div>
-        <h4 className="font-heading font-bold text-slate-800 dark:text-white text-lg tracking-tight">{title}</h4>
-        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">{subtitle}</p>
+        <h4 className="font-heading font-bold text-slate-800 dark:text-white text-xl tracking-tight">{title}</h4>
+        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-base leading-relaxed">{subtitle}</p>
       </div>
     </motion.div>
   );

@@ -30,16 +30,83 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { cn } from '../lib/utils';
+import planetLogo from '../assets/planet-logo.png';
+
+const PAW_POINT_TO_INR = 0.25; // 1 Paw Point = ₹0.25
 
 const pawPointsRoadmap = [
-  { id: 'tier1', points: 500, title: 'Core Foundation', description: 'Unlock core health tracking and daily pulse check rewards.', icon: <Activity className="w-10 h-10" />, color: 'from-emerald-400 to-cyan-500' },
-  { id: 'tier2', points: 1500, title: 'Health Savior', description: '25% discount on your next clinical visit or specialist consultation.', icon: <HeartPulse className="w-10 h-10" />, color: 'from-blue-400 to-indigo-500' },
-  { id: 'tier3', points: 3000, title: 'Wellness Master', description: '35% off all preventive lab tests and metabolic screenings.', icon: <Zap className="w-10 h-10" />, color: 'from-[#fec708] to-orange-500' },
-  { id: 'tier4', points: 5000, title: 'Expert Access', description: '1 FREE Virtual Vet Consultation with our senior specialists.', icon: <Stethoscope className="w-10 h-10" />, color: 'from-purple-400 to-pink-500' },
-  { id: 'tier5', points: 7500, title: 'Clinical Privilege', description: '15% OFF all consultations for three months. Priority booking included.', icon: <ShieldCheck className="w-10 h-10" />, color: 'from-rose-400 to-red-500' },
-  { id: 'tier6', points: 10000, title: 'The Lifeline Sentinel', description: '50% off next major surgery + Lifetime 5% discount + Priority Emergency Line + Personalized Wellness Concierge.', icon: <Award className="w-10 h-10" />, color: 'from-amber-400 to-yellow-600' },
-  { id: 'tier7', points: 25000, title: 'Archive Elite', description: 'Exclusive 24/7 Concierge Health Line and Home Visits.', icon: <Crown className="w-10 h-10" />, color: 'from-indigo-400 to-purple-600' },
-  { id: 'tier8', points: 100000, title: "The Founder's Peak", description: 'Luxury all-inclusive estate event for you and your pack. Our highest honor.', icon: <Trophy className="w-10 h-10" />, color: 'from-yellow-400 to-orange-600' },
+  {
+    id: 'tier1',
+    points: 500,
+    title: 'Health Starter',
+    description: 'Welcome to the Program! Unlock the foundation of your pet\'s personalized care journey.',
+    icon: <Activity className="w-10 h-10" />,
+    color: 'from-emerald-400 to-cyan-500',
+    badge: 'Entry',
+  },
+  {
+    id: 'tier2',
+    points: 1500,
+    title: '15% Bill Rebate',
+    description: 'Congratulations! Enjoy an instant 15% discount on your entire Planet Animal bill — valid on your next visit.',
+    icon: <ShoppingBag className="w-10 h-10" />,
+    color: 'from-blue-400 to-indigo-500',
+    badge: 'Savings',
+  },
+  {
+    id: 'tier3',
+    points: 2500,
+    title: '20% Bill Rebate',
+    description: 'You\'re serious about your pet\'s health. Redeem a deeper 20% discount on your next complete bill.',
+    icon: <Zap className="w-10 h-10" />,
+    color: 'from-[#fec708] to-orange-500',
+    badge: 'Deep Savings',
+  },
+  {
+    id: 'tier4',
+    points: 5000,
+    title: 'Life-Maxing Consultation',
+    description: 'The Crown Jewel. A private, 1-on-1 consultation with our specialist doctors — tailored to your pet\'s breed, size, weight, and lifestyle — to craft a comprehensive, individualized longevity plan.',
+    icon: <Stethoscope className="w-10 h-10" />,
+    color: 'from-purple-400 to-pink-500',
+    badge: '★ Signature',
+  },
+  {
+    id: 'tier5',
+    points: 7500,
+    title: 'Premium Spa & Therapy',
+    description: 'Your pet deserves a full reset. Complimentary full-day spa including grooming, deep conditioning, and medicated baths if required for skin conditions.',
+    icon: <Sparkles className="w-10 h-10" />,
+    color: 'from-rose-400 to-red-500',
+    badge: 'Luxury',
+  },
+  {
+    id: 'tier6',
+    points: 10000,
+    title: 'Full Hematology Panel',
+    description: 'A super comprehensive, full-spectrum blood examination to detect, prevent, and optimize your pet\'s internal health from the inside out.',
+    icon: <HeartPulse className="w-10 h-10" />,
+    color: 'from-amber-400 to-yellow-600',
+    badge: 'Clinical',
+  },
+  {
+    id: 'tier7',
+    points: 25000,
+    title: 'Elite Health Sentinel',
+    description: 'Exclusive 24/7 Concierge Health Line and the privilege of scheduling home visits from our veterinary team.',
+    icon: <Crown className="w-10 h-10" />,
+    color: 'from-indigo-400 to-purple-600',
+    badge: 'Elite',
+  },
+  {
+    id: 'tier8',
+    points: 100000,
+    title: "The Founder's Peak",
+    description: 'The highest honor in the Planet Animal universe. An exclusive invite to our annual Founder\'s Medical Gala — a luxury event celebrating the world\'s most dedicated pet parents.',
+    icon: <Trophy className="w-10 h-10" />,
+    color: 'from-yellow-400 to-orange-600',
+    badge: '∞ Founder',
+  },
 ];
 
 const HolographicFoil = () => (
@@ -99,16 +166,16 @@ export default function Rewards() {
   ], []);
 
   const clinicalInventory = useMemo(() => [
-    { id: 'item1', name: 'Vitality Kibble+', description: 'Scientifically formulated for cardiac support.', points: 450, price: '$45.00', image: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&q=80&w=200' },
-    { id: 'item2', name: 'Neuro-Enhance Treats', description: 'Brain health and cognitive support formula.', points: 150, price: '$18.00', image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=200' },
-    { id: 'item3', name: 'Articulator Paste', description: 'High-potency joint and mobility lubricant.', points: 300, price: '$32.00', image: 'https://images.unsplash.com/photo-1541591047357-124c2a49ae21?auto=format&fit=crop&q=80&w=200' },
-    { id: 'item4', name: 'Dermal-Pure Serum', description: 'Advanced skin barrier recovery and coat shine.', points: 280, price: '$28.00', image: 'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&q=80&w=200' },
+    { id: 'item1', name: 'Clinical Nutrition Program', description: 'Individualized, breed-specific dietary blueprint for optimal metabolic health.', points: 1000, price: '₹4,500.00', image: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&q=80&w=200' },
+    { id: 'item2', name: 'Dermal-Pure Serum', description: 'Advanced skin barrier recovery and coat shine formula.', points: 280, price: '₹1,200.00', image: 'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&q=80&w=200' },
+    { id: 'item3', name: 'Proactive Dental Kit', description: 'Clinical grade oral hygiene set with enzyme-based cleanser.', points: 450, price: '₹1,850.00', image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=200' },
+    { id: 'item4', name: 'Mobility Matrix', description: 'High-potency joint support supplement for senior pets.', points: 600, price: '₹2,400.00', image: 'https://images.unsplash.com/photo-1541591047357-124c2a49ae21?auto=format&fit=crop&q=80&w=200' },
   ], []);
 
   const recentActivity = useMemo(() => [
     { id: 1, type: 'earned', activity: 'Morning Pulse Check', points: 25, date: '2 hours ago', icon: <Activity className="w-4 h-4" /> },
     { id: 2, type: 'earned', activity: 'Completed Annual Labs', points: 500, date: 'Yesterday', icon: <ShieldCheck className="w-4 h-4" /> },
-    { id: 3, type: 'redeemed', activity: 'Vitality Kibble+ Purchase', points: -450, date: '2 days ago', icon: <ShoppingBag className="w-4 h-4" /> },
+    { id: 3, type: 'redeemed', activity: 'Nutrition Program Activation', points: -1000, date: '2 days ago', icon: <ShoppingBag className="w-4 h-4" /> },
     { id: 4, type: 'earned', activity: 'Weekly Social Share', points: 100, date: '3 days ago', icon: <Share2 className="w-4 h-4" /> },
   ], []);
 
@@ -157,10 +224,10 @@ export default function Rewards() {
           <ChevronLeft size={20} />
         </motion.button>
         <div className="flex flex-col items-center">
-          <h1 className="font-heading font-black text-xl uppercase italic tracking-tighter text-[#fec708]">ASCENSION</h1>
+          <h1 className="font-heading font-black text-xl uppercase italic tracking-tighter text-[#fec708]">PAW POINTS</h1>
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-[#fec708] animate-pulse" />
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Vitality Archive</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Health Rewards</span>
           </div>
         </div>
         <motion.button 
@@ -180,8 +247,8 @@ export default function Rewards() {
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl mb-8 shadow-2xl overflow-hidden group"
           >
             <HolographicFoil />
-            <Sparkles className="w-4 h-4 text-[#fec708] group-hover:rotate-12 transition-transform" />
-            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-white/80">Ecosystem Status &bull; <span className="text-[#fec708]">Ascension</span></span>
+            <PawPrint className="w-4 h-4 text-[#fec708] group-hover:rotate-12 transition-transform" />
+            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-white/80">Rewards Hub &bull; <span className="text-[#fec708]">Paw Points</span></span>
           </motion.div>
           
           <motion.h1 
@@ -189,7 +256,7 @@ export default function Rewards() {
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl md:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.95]"
           >
-            THE <span className="text-[#fec708] italic">VITALITY</span><br />ARCHIVE
+            YOUR <span className="text-[#fec708] italic">PAW</span><br />POINTS
           </motion.h1>
           
           <motion.p 
@@ -198,7 +265,7 @@ export default function Rewards() {
             transition={{ delay: 0.1 }}
             className="text-xl text-white/40 font-medium leading-relaxed max-w-2xl mx-auto mb-16"
           >
-            Your dedication to pet longevity translates into tangible clinical assets. Scale the tiers, unlock absolute medical excellence.
+            Every visit, every check-in, every act of care earns Paw Points. Unlock real clinical rewards on your journey to pet longevity.
           </motion.p>
 
           {/* Points Counter - Prestige Glow Implementation */}
@@ -211,8 +278,35 @@ export default function Rewards() {
             <div className="bg-[#0a0a0a]/95 rounded-[2.9rem] px-16 py-10 backdrop-blur-3xl flex flex-col items-center relative overflow-hidden">
               <HolographicFoil />
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fec708]/40 to-transparent" />
+
+              {/* Inline Orb — compact visual anchor */}
+              <div className="mb-3 relative grid place-items-center" style={{ width: 100, height: 100 }}>
+                <motion.div
+                  className="absolute inset-2 rounded-full border border-[#fec708]/25 shadow-[0_0_48px_rgba(254,199,8,0.22)]"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3.8, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.div
+                  className="absolute inset-0 rounded-full border border-dashed border-teal-200/15"
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 5.4, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.div
+                  className="absolute inset-1 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.32),rgba(255,246,204,0.12),rgba(45,212,191,0.12),transparent)] blur-lg"
+                  animate={{ rotate: 360, scale: [1, 1.04, 1] }}
+                  transition={{ rotate: { duration: 6.5, repeat: Infinity, ease: 'linear' }, scale: { duration: 2.2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
+                />
+                <motion.div
+                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_32px_rgba(254,199,8,0.45),inset_0_1px_16px_rgba(255,255,255,0.28)] h-14 w-14"
+                  animate={{ scale: [1, 1.035, 1], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] }}
+                  transition={{ duration: 1.9, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
+                >
+                  <img src={planetLogo} alt="Planet Animal" className="h-full w-full rounded-full object-cover" />
+                  <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_22%,rgba(255,255,255,0.38),transparent_30%)]" />
+                </motion.div>
+              </div>
               
-              <span className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.5em] mb-4 opacity-60">Archive Balance</span>
+              <span className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.5em] mb-4 opacity-60">Points Balance</span>
               <div className="flex items-end gap-3">
                 <motion.span 
                   key={currentPoints}
@@ -233,20 +327,91 @@ export default function Rewards() {
                 const nextTier = pawPointsRoadmap.find(t => t.points > currentPoints) || pawPointsRoadmap[pawPointsRoadmap.length - 1];
                 const prevTier = [...pawPointsRoadmap].reverse().find(t => t.points <= currentPoints) || { points: 0 };
                 const progress = Math.min(100, Math.max(0, ((currentPoints - prevTier.points) / (nextTier.points - prevTier.points)) * 100));
+                const ptsToNext = Math.max(0, nextTier.points - currentPoints);
                 
                 return (
-                  <div className="mt-10 w-full max-w-[280px]">
-                    <div className="flex justify-between items-end mb-3">
+                  <div className="mt-10 w-full max-w-[320px]">
+                    <div className="flex justify-between items-end mb-2">
                       <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Next: {nextTier.title}</span>
                       <span className="text-[10px] font-black text-[#fec708] uppercase tracking-widest">{Math.round(progress)}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 mb-2">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 1.5, ease: "circOut" }}
-                        className="h-full bg-gradient-to-r from-[#fec708] to-orange-500 shadow-[0_0_15px_rgba(254,199,8,0.5)]"
+                        className="h-full bg-gradient-to-r from-[#fec708] to-orange-400 shadow-[0_0_18px_rgba(254,199,8,0.7)] rounded-full"
                       />
+                    </div>
+                    <p className="text-[9px] font-bold text-white/25 mb-4">{ptsToNext.toLocaleString()} pts away from your next reward</p>
+                    {/* Premium Nudge — TAP FOR REWARD DETAILS */}
+                    <motion.button
+                      onClick={() => {
+                        const el = document.getElementById('roadmap-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl overflow-hidden border border-[#fec708]/30 bg-[#fec708]/5 hover:bg-[#fec708]/12 transition-all duration-300"
+                      style={{ boxShadow: '0 0 24px rgba(254,199,8,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' }}
+                    >
+                      {/* Breathing glow layer */}
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl bg-[#fec708]/10 pointer-events-none"
+                        animate={{ opacity: [0.4, 0.9, 0.4] }}
+                        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                      />
+                      <motion.div
+                        animate={{ opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <Sparkles className="w-3 h-3 text-[#fec708]" />
+                      </motion.div>
+                      <span className="relative text-[10px] font-black uppercase tracking-[0.22em] text-[#fec708]">
+                        TAP FOR REWARD DETAILS
+                      </span>
+                      <motion.div
+                        animate={{ opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5 text-[#fec708] group-hover:translate-x-0.5 transition-transform" />
+                      </motion.div>
+                    </motion.button>
+
+                    {/* Gamification Stats Row */}
+                    <div className="mt-5 grid grid-cols-3 gap-2 w-full">
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.75 }}
+                        className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5"
+                      >
+                        <span className="text-lg font-black text-orange-400">🔥 7</span>
+                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Day Streak</span>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.85 }}
+                        className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5"
+                      >
+                        <span className="text-lg font-black text-[#fec708]">
+                          {currentPoints >= 25000 ? '★ Elite' : currentPoints >= 10000 ? '◆ Senior' : currentPoints >= 5000 ? '✦ Guard' : currentPoints >= 1500 ? '● Care' : '○ New'}
+                        </span>
+                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Your Rank</span>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.95 }}
+                        className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5"
+                      >
+                        <span className="text-lg font-black text-emerald-400">1.5×</span>
+                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Boost</span>
+                      </motion.div>
                     </div>
                   </div>
                 );
@@ -276,8 +441,14 @@ export default function Rewards() {
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <span className="text-lg font-bold text-white/80">Current Value</span>
-                <span className="text-2xl font-black text-indigo-400">${(currentPoints / 100).toFixed(2)}</span>
+                <div>
+                  <span className="text-base font-bold text-white/80">Cash Value</span>
+                  <p className="text-[10px] text-white/30 font-medium mt-0.5">1 Point = ₹0.25</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-[#fec708]">₹{(currentPoints * PAW_POINT_TO_INR).toFixed(2)}</span>
+                  <p className="text-[10px] text-white/30 font-medium mt-0.5 text-right">redeemable</p>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -288,19 +459,27 @@ export default function Rewards() {
             transition={{ delay: 0.4 }}
             className="bento-card-premium group"
           >
-            <div className="flex items-center gap-6 mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-[#fec708]/10 flex items-center justify-center border border-[#fec708]/20 group-hover:scale-110 transition-transform">
-                <Clock className="w-8 h-8 text-[#fec708]" />
+            <div className="flex items-center gap-6 mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover:scale-110 transition-transform">
+                <span className="text-2xl">🔥</span>
               </div>
               <div>
-                <h3 className="text-2xl font-black text-white mb-1">Archive Multiplier</h3>
-                <p className="text-white/40 font-medium italic text-xs">Active health streak bonus</p>
+                <h3 className="text-2xl font-black text-white mb-1">Health Streak</h3>
+                <p className="text-white/40 font-medium italic text-xs">Active check-in bonus</p>
               </div>
             </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <span className="text-lg font-bold text-white/80">Earning Rate</span>
-                <span className="text-2xl font-black text-[#fec708]">1.5x Boost</span>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-sm font-bold text-white/80">Current Streak</span>
+                <span className="text-2xl font-black text-orange-400">7 Days</span>
+              </div>
+              <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-sm font-bold text-white/80">Streak Multiplier</span>
+                <span className="text-xl font-black text-emerald-400">1.5× Boost</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#fec708]/5 border border-[#fec708]/15">
+                <p className="text-[10px] font-black text-[#fec708] uppercase tracking-widest mb-1">Daily Challenge</p>
+                <p className="text-xs text-white/50 font-medium">Complete 1 Pulse Check today → <span className="text-[#fec708] font-bold">+10 bonus pts</span></p>
               </div>
             </div>
           </motion.div>
@@ -308,7 +487,7 @@ export default function Rewards() {
       </section>
 
       {/* Vertical Prestige Roadmap */}
-      <section className="mb-32 max-w-5xl mx-auto px-6 relative">
+      <section id="roadmap-section" className="mb-32 max-w-5xl mx-auto px-6 relative">
         <div className="flex flex-col items-center mb-24 text-center">
           <motion.div
             initial={{ opacity: 0 }}
@@ -321,10 +500,10 @@ export default function Rewards() {
             viewport={{ once: true }}
             className="text-5xl md:text-7xl font-black text-white mb-6 uppercase italic tracking-tighter"
           >
-            Ascension <span className="text-[#fec708]">Path</span>
+            Reward <span className="text-[#fec708]">Milestones</span>
           </motion.h2>
           <p className="text-xl text-white/30 font-medium max-w-xl leading-relaxed">
-            From essential care to absolute legendary status. Your journey is recorded in the block.
+            From your first visit to legendary status — every Paw Point you earn gets you closer to real clinical rewards.
           </p>
         </div>
 
@@ -369,7 +548,7 @@ export default function Rewards() {
                           {isLocked ? (
                             <><Lock className="w-3.5 h-3.5" /> Locked &bull; {tier.points.toLocaleString()} pts</>
                           ) : (
-                            <><Sparkles className="w-3.5 h-3.5 animate-pulse" /> Ascension Achieved</>
+                            <><CheckCircle2 className="w-3.5 h-3.5" /> Milestone Reached</>
                           )}
                         </div>
                         
@@ -394,7 +573,7 @@ export default function Rewards() {
                             whileTap={{ scale: 0.95 }}
                             className="mt-6 flex items-center gap-3 text-[#fec708] font-black text-xs uppercase tracking-[0.3em] group/btn bg-[#fec708]/5 px-6 py-3 rounded-2xl border border-[#fec708]/10 hover:bg-[#fec708] hover:text-black transition-all"
                           >
-                            Claim Legacy <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
+                            Claim Reward <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
                           </motion.button>
                         )}
                       </div>
@@ -441,7 +620,7 @@ export default function Rewards() {
               Clinical <span className="text-[#fec708]">Marketplace</span>
             </motion.h2>
             <p className="text-xl text-white/30 font-medium leading-relaxed">
-              Exchange your ascension points for medical-grade products and elite services. Each transaction contributes to your pet's lifelong legacy.
+              Redeem your Paw Points for real clinical products and services. Each redemption is a step forward in your pet's health journey.
             </p>
           </div>
           <div className="flex gap-4">
@@ -547,8 +726,8 @@ export default function Rewards() {
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-3xl font-black text-white tracking-tight uppercase">Vitality Ledger</h2>
-                <p className="text-white/30 font-medium text-sm tracking-wide">Historical integrity of your clinical contributions.</p>
+                <h2 className="text-3xl font-black text-white tracking-tight uppercase">Points History</h2>
+                <p className="text-white/30 font-medium text-sm tracking-wide">A complete record of your earned and redeemed Paw Points.</p>
               </div>
             </div>
             <button className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.2em] border-b border-[#fec708]/20 pb-1 hover:text-white hover:border-white transition-all">
@@ -604,9 +783,9 @@ export default function Rewards() {
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#fec708]/5 blur-[100px] rounded-full -mr-64 -mt-64" />
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="flex-1">
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Expand the <span className="text-[#fec708]">Archive</span></h2>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Invite a <span className="text-[#fec708]">Friend</span></h2>
               <p className="text-xl text-white/60 font-medium leading-relaxed mb-8">
-                Refer a fellow pet parent. When they join the Planet Animal family, you both receive 2,500 Paw Points instantly.
+                Refer a fellow pet parent. When they join the Planet Animal family, you both receive <span className="text-[#fec708] font-black">2,500 Paw Points</span> instantly — enough to unlock your first bill rebate.
               </p>
               <div className="flex flex-wrap gap-4">
                 <button className="px-8 py-4 rounded-2xl bg-[#fec708] text-black font-black text-sm uppercase tracking-widest shadow-[0_20px_40px_rgba(254,199,8,0.3)] hover:scale-105 active:scale-95 transition-all">
@@ -647,9 +826,9 @@ export default function Rewards() {
                 <Crown className="text-black w-10 h-10" />
               </div>
               
-              <h4 className="text-white text-3xl font-black uppercase tracking-tight mb-2">Legacy <span className="text-[#fec708]">Ascended</span></h4>
+              <h4 className="text-white text-3xl font-black uppercase tracking-tight mb-2">Reward <span className="text-[#fec708]">Redeemed!</span></h4>
               <p className="text-white/60 font-medium text-sm leading-relaxed mb-8">
-                Your request for <span className="text-white font-bold">"{redeemedReward}"</span> has been authenticated and added to your clinical profile.
+                <span className="text-white font-bold">"{redeemedReward}"</span> has been confirmed and added to your health profile. Our team will be in touch.
               </p>
               
               <div className="flex gap-4">
