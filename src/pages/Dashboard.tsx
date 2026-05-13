@@ -13,6 +13,8 @@ import PlanetOrbLoader from '../components/PlanetOrbLoader';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { usePawlMessage } from '../hooks/usePawlMessage';
+import { useTimeOfDay, PERIOD_DISPLAY } from '../hooks/useTimeOfDay';
+import { useCheckInStatus } from '../hooks/useCheckInStatus';
 import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
@@ -382,6 +384,11 @@ export default function Dashboard() {
   const profileLoading = useMemo(() => isDemoMode ? false : realProfileLoading, [isDemoMode, realProfileLoading]);
 
   const { message: pawlMessage, loading: pawlLoading, error: pawlError } = usePawlMessage();
+  const { currentPeriod } = useTimeOfDay();
+  const { completedCount, totalPeriods, isPeriodComplete } = useCheckInStatus(
+    realPetProfile?.uid || realPetProfile?.parentName || 'demo',
+    currentPeriod
+  );
   const [isAuthReady, setIsAuthReady] = useState(isDemoMode);
   const [userId, setUserId] = useState<string | null>(isDemoMode ? 'demo-user' : null);
   const navigate = useNavigate();
@@ -741,9 +748,19 @@ export default function Dashboard() {
               <div className="min-w-0">
                 <div className="mb-1 flex items-center gap-2">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#fec708]">Daily Briefing</p>
-                  <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">Today</span>
+                  <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">
+                    {completedCount >= totalPeriods ? 'Done' : `${completedCount}/${totalPeriods}`}
+                  </span>
                 </div>
-                <h3 className="truncate font-heading text-xl font-black tracking-tight text-white">Morning care check-in</h3>
+                <h3 className="truncate font-heading text-xl font-black tracking-tight text-white">
+                  {completedCount >= totalPeriods ? (
+                    <span>All check-ins done ✓</span>
+                  ) : isPeriodComplete(currentPeriod) ? (
+                    <span>Next check-in</span>
+                  ) : (
+                    <span>{PERIOD_DISPLAY[currentPeriod].title} care check-in</span>
+                  )}
+                </h3>
                 <p className="mt-0.5 text-xs font-semibold text-white/58">
                   {pawlLoading ? 'Preparing a personalized update...' : `Personalized for ${petName}`}
                 </p>
