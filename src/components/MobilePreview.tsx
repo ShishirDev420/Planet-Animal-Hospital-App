@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 export default function MobilePreview() {
-  const requestedPath = new URLSearchParams(window.location.search).get('path') || '/agents';
+  const requestedPath = new URLSearchParams(window.location.search).get('path') || '/';
   const requestedDevice = new URLSearchParams(window.location.search).get('device') || 'iphone-16-pro-max';
   const isDemoMode = new URLSearchParams(window.location.search).get('demo_mode') === 'true';
   const isSamsungUltra = requestedDevice.toLowerCase().includes('samsung');

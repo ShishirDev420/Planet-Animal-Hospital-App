@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import PlanetOrbLoader from './PlanetOrbLoader';
 
 export default function SplashScreen() {
   const isInsideFrame = typeof window !== 'undefined' && (window.self !== window.top || window.location.search.includes('preview_frame=true'));
   const [isVisible, setIsVisible] = useState(() => !sessionStorage.getItem('splashShown'));
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isVisible) return;
@@ -21,10 +19,9 @@ export default function SplashScreen() {
     const timer = setTimeout(() => {
       setIsVisible(false);
       sessionStorage.setItem('splashShown', 'true');
-      navigate('/profiles');
     }, 2500);
     return () => clearTimeout(timer);
-  }, [isVisible, navigate, isInsideFrame]);
+  }, [isVisible, isInsideFrame]);
 
   return (
     <AnimatePresence>

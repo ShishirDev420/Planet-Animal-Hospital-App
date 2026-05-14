@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
@@ -29,11 +29,13 @@ type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated'
 
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Check if we are already inside the preview frame to avoid recursion
   const isInsideFrame = location.search.includes('preview_frame=true');
   const isDemoMode = location.search.includes('demo_mode=true');
   const isPreviewRoute = location.pathname === '/preview';
+  const startupRedirectHandledRef = useRef(false);
 
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
 
@@ -65,6 +67,19 @@ export default function App() {
     });
     return () => unsubscribe();
   }, [isDemoMode]);
+
+  useEffect(() => {
+    if (authStatus === 'loading' || isPreviewRoute || isInsideFrame || startupRedirectHandledRef.current) {
+      return;
+    }
+
+    startupRedirectHandledRef.current = true;
+
+    const startupSearch = isDemoMode ? '?demo_mode=true' : '';
+    if (location.pathname !== '/' || location.search !== startupSearch) {
+      navigate({ pathname: '/', search: startupSearch }, { replace: true });
+    }
+  }, [authStatus, isDemoMode, isInsideFrame, isPreviewRoute, location.pathname, location.search, navigate]);
 
   if (authStatus === 'loading') {
     return (
