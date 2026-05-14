@@ -1,16 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Trophy, 
-  Star, 
-  TrendingUp, 
+  Trophy,
   Zap,
   CheckCircle2,
   Lock,
   ChevronRight,
   ArrowRight,
   Sparkles,
-  Award,
-  ArrowLeft,
   ChevronLeft,
   Medal,
   PawPrint,
@@ -159,18 +155,7 @@ export default function Rewards() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [redeemedReward, setRedeemedReward] = useState<string | null>(null);
 
-  const specialOffers = useMemo(() => [
-    { id: 'off1', title: 'Longevity Bundle', description: 'Complete metabolic panel + 3 months of premium diagnostics.', points: 1200, icon: <Activity className="w-8 h-8" />, tag: 'Popular' },
-    { id: 'off2', title: 'Specialist Direct', description: 'Skip the queue. Direct access to our chief surgical officer.', points: 2500, icon: <ShieldCheck className="w-8 h-8" />, tag: 'Elite' },
-    { id: 'off3', title: 'Genome Mapping', description: 'Advanced DNA screening for hereditary longevity markers.', points: 5000, icon: <Zap className="w-8 h-8" />, tag: 'Advanced' },
-  ], []);
-
-  const clinicalInventory = useMemo(() => [
-    { id: 'item1', name: 'Clinical Nutrition Program', description: 'Individualized, breed-specific dietary blueprint for optimal metabolic health.', points: 1000, price: '₹4,500.00', image: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&q=80&w=200' },
-    { id: 'item2', name: 'Dermal-Pure Serum', description: 'Advanced skin barrier recovery and coat shine formula.', points: 280, price: '₹1,200.00', image: 'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&q=80&w=200' },
-    { id: 'item3', name: 'Proactive Dental Kit', description: 'Clinical grade oral hygiene set with enzyme-based cleanser.', points: 450, price: '₹1,850.00', image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=200' },
-    { id: 'item4', name: 'Mobility Matrix', description: 'High-potency joint support supplement for senior pets.', points: 600, price: '₹2,400.00', image: 'https://images.unsplash.com/photo-1541591047357-124c2a49ae21?auto=format&fit=crop&q=80&w=200' },
-  ], []);
+  const referralCount = 12;
 
   const recentActivity = useMemo(() => [
     { id: 1, type: 'earned', activity: 'Morning Pulse Check', points: 25, date: '2 hours ago', icon: <Activity className="w-4 h-4" /> },
@@ -387,30 +372,53 @@ export default function Rewards() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.75 }}
-                        className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5"
+                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
                       >
-                        <span className="text-lg font-black text-orange-400">🔥 7</span>
-                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Day Streak</span>
+                        <motion.div
+                          className="absolute inset-0 bg-orange-500/5 rounded-2xl"
+                          animate={{ opacity: [0.3, 0.8, 0.3] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                        />
+                        <motion.span
+                          className="relative text-lg font-black text-orange-400"
+                          animate={{ scale: [1, 1.08, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                        >🔥 7</motion.span>
+                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Day Streak</span>
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.85 }}
-                        className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5"
+                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
                       >
-                        <span className="text-lg font-black text-[#fec708]">
+                        <motion.div
+                          className="absolute inset-0 bg-[#fec708]/5 rounded-2xl"
+                          animate={{ opacity: [0.2, 0.6, 0.2] }}
+                          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                        />
+                        <span className="relative text-lg font-black text-[#fec708]">
                           {currentPoints >= 25000 ? '★ Elite' : currentPoints >= 10000 ? '◆ Senior' : currentPoints >= 5000 ? '✦ Guard' : currentPoints >= 1500 ? '● Care' : '○ New'}
                         </span>
-                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Your Rank</span>
+                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Your Rank</span>
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.95 }}
-                        className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5"
+                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
                       >
-                        <span className="text-lg font-black text-emerald-400">1.5×</span>
-                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Boost</span>
+                        <motion.div
+                          className="absolute inset-0 bg-emerald-500/5 rounded-2xl"
+                          animate={{ opacity: [0.2, 0.7, 0.2] }}
+                          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+                        />
+                        <motion.span
+                          className="relative text-lg font-black text-emerald-400"
+                          animate={{ scale: [1, 1.06, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        >1.5×</motion.span>
+                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Boost</span>
                       </motion.div>
                     </div>
                   </div>
@@ -440,16 +448,24 @@ export default function Rewards() {
               </div>
             </div>
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <motion.div
+                className="flex justify-between items-center p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                whileHover={{ scale: 1.01 }}
+              >
                 <div>
                   <span className="text-base font-bold text-white/80">Cash Value</span>
                   <p className="text-[10px] text-white/30 font-medium mt-0.5">1 Point = ₹0.25</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-[#fec708]">₹{(currentPoints * PAW_POINT_TO_INR).toFixed(2)}</span>
+                  <motion.span
+                    key={Math.round(currentPoints * PAW_POINT_TO_INR * 100)}
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-2xl font-black text-[#fec708] tabular-nums"
+                  >₹{(currentPoints * PAW_POINT_TO_INR).toFixed(2)}</motion.span>
                   <p className="text-[10px] text-white/30 font-medium mt-0.5 text-right">redeemable</p>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
 
@@ -460,9 +476,17 @@ export default function Rewards() {
             className="bento-card-premium group"
           >
             <div className="flex items-center gap-6 mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover:scale-110 transition-transform">
-                <span className="text-2xl">🔥</span>
-              </div>
+              <motion.div
+                className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover:scale-110 transition-transform"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <motion.span
+                  className="text-2xl"
+                  animate={{ rotate: [0, -5, 5, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                >🔥</motion.span>
+              </motion.div>
               <div>
                 <h3 className="text-2xl font-black text-white mb-1">Health Streak</h3>
                 <p className="text-white/40 font-medium italic text-xs">Active check-in bonus</p>
@@ -471,28 +495,119 @@ export default function Rewards() {
             <div className="space-y-3">
               <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10">
                 <span className="text-sm font-bold text-white/80">Current Streak</span>
-                <span className="text-2xl font-black text-orange-400">7 Days</span>
+                <motion.span
+                  className="text-2xl font-black text-orange-400"
+                  key="7"
+                  initial={{ scale: 1.3, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+                >7 Days</motion.span>
               </div>
               <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10">
                 <span className="text-sm font-bold text-white/80">Streak Multiplier</span>
-                <span className="text-xl font-black text-emerald-400">1.5× Boost</span>
+                <motion.span
+                  className="text-xl font-black text-emerald-400"
+                  animate={{ scale: [1, 1.04, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >1.5× Boost</motion.span>
               </div>
-              <div className="p-4 rounded-2xl bg-[#fec708]/5 border border-[#fec708]/15">
-                <p className="text-[10px] font-black text-[#fec708] uppercase tracking-widest mb-1">Daily Challenge</p>
-                <p className="text-xs text-white/50 font-medium">Complete 1 Pulse Check today → <span className="text-[#fec708] font-bold">+10 bonus pts</span></p>
-              </div>
+              <motion.div
+                className="p-4 rounded-2xl bg-[#fec708]/5 border border-[#fec708]/15 relative overflow-hidden"
+                whileHover={{ scale: 1.01 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-[#fec708]/5 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                />
+                <p className="relative text-[10px] font-black text-[#fec708] uppercase tracking-widest mb-1">Daily Challenge</p>
+                <p className="relative text-xs text-white/50 font-medium">Complete 1 Pulse Check today → <span className="text-[#fec708] font-bold">+10 bonus pts</span></p>
+              </motion.div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Vertical Prestige Roadmap */}
+      {/* Referral Program */}
+      <section className="mb-24 max-w-6xl mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative overflow-hidden p-10 md:p-14 rounded-[3rem] liquid-glass-premium border-[#fec708]/10"
+        >
+          <HolographicFoil />
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#fec708]/5 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+            <div className="flex-1 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fec708]/10 border border-[#fec708]/20 mb-6">
+                <Share2 className="w-3.5 h-3.5 text-[#fec708]" />
+                <span className="text-[9px] font-black text-[#fec708] uppercase tracking-[0.2em]">Referral Rewards</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+                Invite a <span className="text-[#fec708]">Friend</span>
+              </h2>
+              <p className="text-lg text-white/50 font-medium leading-relaxed max-w-xl mb-8">
+                Refer a fellow pet parent. When they join Planet Animal, <span className="text-white font-bold">you both receive <span className="text-[#fec708]">2,500 Paw Points</span></span> instantly — enough to unlock your first bill rebate.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    navigator.clipboard.writeText('https://planetanimal.in/refer/papyrus');
+                    alert('Referral link copied!');
+                  }}
+                  className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#fec708] text-black font-black text-sm uppercase tracking-widest shadow-[0_20px_40px_rgba(254,199,8,0.3)] overflow-hidden"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                  />
+                  <span className="relative">Copy Referral Link</span>
+                  <Check className="relative w-4 h-4 group-hover:scale-110 transition-transform" />
+                </motion.button>
+              </div>
+            </div>
+            <div className="shrink-0">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="relative p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 flex flex-col items-center shadow-2xl backdrop-blur-2xl overflow-hidden"
+              >
+                <motion.div
+                  className="absolute inset-0 rounded-[2.5rem] bg-[#fec708]/5"
+                  animate={{ opacity: [0.3, 0.7, 0.3] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full bg-[#fec708]/10 border border-[#fec708]/20 flex items-center justify-center mb-4">
+                    <Gift className="w-8 h-8 text-[#fec708]" />
+                  </div>
+                  <span className="text-white/40 font-bold uppercase tracking-widest text-[10px] mb-1">Your Referrals</span>
+                  <motion.span
+                    key={referralCount}
+                    initial={{ scale: 1.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-5xl font-black text-white tabular-nums"
+                  >
+                    {referralCount}
+                  </motion.span>
+                  <span className="text-[9px] font-black text-[#fec708] uppercase tracking-[0.2em] mt-2">Papyrus sent</span>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Reward Milestones */}
       <section id="roadmap-section" className="mb-32 max-w-5xl mx-auto px-6 relative">
-        <div className="flex flex-col items-center mb-24 text-center">
+        <div className="flex flex-col items-center mb-20 text-center">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            className="w-px h-24 bg-gradient-to-b from-[#fec708] to-transparent mb-8"
+            className="w-px h-20 bg-gradient-to-b from-[#fec708] to-transparent mb-6"
           />
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
@@ -502,13 +617,29 @@ export default function Rewards() {
           >
             Reward <span className="text-[#fec708]">Milestones</span>
           </motion.h2>
-          <p className="text-xl text-white/30 font-medium max-w-xl leading-relaxed">
-            From your first visit to legendary status — every Paw Point you earn gets you closer to real clinical rewards.
-          </p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-xl text-white/30 font-medium max-w-xl leading-relaxed"
+          >
+            From your first visit to legendary status — every Paw Point you earn brings real clinical rewards closer.
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#fec708]/5 border border-[#fec708]/15"
+          >
+            <Zap className="w-3.5 h-3.5 text-[#fec708]" />
+            <span className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.2em]">
+              {pawPointsRoadmap.filter(t => currentPoints >= t.points).length} of {pawPointsRoadmap.length} Milestones Reached
+            </span>
+          </motion.p>
         </div>
 
         <div className="relative">
-          {/* Timeline Line - Animated Gradient */}
+          {/* Timeline Line */}
           <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] hidden md:block overflow-hidden">
             <div className="absolute inset-0 bg-white/5" />
             <motion.div 
@@ -517,86 +648,131 @@ export default function Rewards() {
             />
           </div>
 
-          <div className="space-y-24 relative">
+          <div className="space-y-20 relative">
             {pawPointsRoadmap.map((tier, index) => {
               const isLocked = currentPoints < tier.points;
               const isEven = index % 2 === 0;
+              const isNext = index > 0 && currentPoints >= (pawPointsRoadmap[index - 1]?.points || 0) && isLocked;
 
               return (
                 <motion.div
                   key={tier.id}
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  className={`flex flex-col md:flex-row items-center gap-12 ${isEven ? 'md:flex-row-reverse' : ''}`}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.6 }}
+                  className={`flex flex-col md:flex-row items-center gap-10 ${isEven ? 'md:flex-row-reverse' : ''}`}
                 >
                   <div className={`flex-1 w-full ${isEven ? 'md:text-right' : 'md:text-left'}`}>
                     <div className={cn(
-                      "p-10 rounded-[3rem] relative overflow-hidden group transition-all duration-700",
+                      "p-8 md:p-10 rounded-[3rem] relative overflow-hidden group transition-all duration-700",
                       isLocked 
-                        ? 'bg-white/[0.02] border border-white/5 grayscale opacity-60' 
-                        : 'liquid-glass-premium border-[#fec708]/20 shadow-[0_40px_80px_rgba(0,0,0,0.4)]'
+                        ? 'bg-white/[0.02] border border-white/5' 
+                        : 'liquid-glass-premium border-[#fec708]/20 shadow-[0_40px_80px_rgba(0,0,0,0.4)]',
+                      isNext && !isLocked ? '' : '',
+                      isNext && isLocked ? 'ring-1 ring-[#fec708]/20' : ''
                     )}>
                       {!isLocked && <HolographicFoil />}
                       <div className={`absolute inset-0 bg-gradient-to-br ${tier.color} opacity-0 group-hover:opacity-[0.08] transition-opacity duration-700`} />
                       
-                      <div className={`flex flex-col ${isEven ? 'md:items-end' : 'md:items-start'} gap-6 relative z-10`}>
+                      <div className={`flex flex-col ${isEven ? 'md:items-end' : 'md:items-start'} gap-4 relative z-10`}>
                         <div className={cn(
-                          "inline-flex items-center gap-2 px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]",
+                          "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]",
                           isLocked ? 'bg-white/5 text-white/30' : 'bg-[#fec708]/10 text-[#fec708]'
                         )}>
                           {isLocked ? (
-                            <><Lock className="w-3.5 h-3.5" /> Locked &bull; {tier.points.toLocaleString()} pts</>
+                            <><Lock className="w-3 h-3" /> Locked &bull; {tier.points.toLocaleString()} pts</>
                           ) : (
-                            <><CheckCircle2 className="w-3.5 h-3.5" /> Milestone Reached</>
+                            <><CheckCircle2 className="w-3.5 h-3.5" /> Unlocked</>
                           )}
                         </div>
                         
                         <h3 className={cn(
-                          "text-4xl md:text-5xl font-black transition-all group-hover:tracking-tight duration-500",
+                          "text-3xl md:text-4xl font-black transition-all group-hover:tracking-tight duration-500",
                           isLocked ? 'text-white/20' : 'text-white'
                         )}>
                           {tier.title}
                         </h3>
                         
                         <p className={cn(
-                          "text-xl font-medium leading-relaxed max-w-md",
-                          isLocked ? 'text-white/10' : 'text-white/50'
+                          "text-base md:text-lg font-medium leading-relaxed max-w-md",
+                          isLocked ? 'text-white/10' : 'text-white/40'
                         )}>
                           {tier.description}
                         </p>
 
+                        {/* Gamification progress for locked tiers */}
+                        {isLocked && (
+                          <div className="mt-4 w-full max-w-xs">
+                            <div className="flex justify-between items-center mb-1.5">
+                              <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Progress</span>
+                              <span className="text-[8px] font-black text-white/20">{Math.min(100, Math.round((currentPoints / tier.points) * 100))}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${Math.min(100, (currentPoints / tier.points) * 100)}%` }}
+                                transition={{ duration: 1.5, ease: 'circOut' }}
+                                className="h-full bg-gradient-to-r from-[#fec708]/30 to-[#fec708]/60 rounded-full"
+                              />
+                            </div>
+                            <p className="text-[8px] font-bold text-white/10 mt-1.5">
+                              {Math.max(0, tier.points - currentPoints).toLocaleString()} pts to unlock
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Unlocked — reward claim */}
                         {!isLocked && (
                           <motion.button
                             onClick={() => handleRedeem(tier)}
-                            whileHover={{ scale: 1.05, x: isEven ? -10 : 10 }}
+                            whileHover={{ scale: 1.05, x: isEven ? -8 : 8 }}
                             whileTap={{ scale: 0.95 }}
-                            className="mt-6 flex items-center gap-3 text-[#fec708] font-black text-xs uppercase tracking-[0.3em] group/btn bg-[#fec708]/5 px-6 py-3 rounded-2xl border border-[#fec708]/10 hover:bg-[#fec708] hover:text-black transition-all"
+                            className="mt-4 flex items-center gap-3 text-[#fec708] font-black text-xs uppercase tracking-[0.3em] group/btn bg-[#fec708]/5 px-5 py-2.5 rounded-2xl border border-[#fec708]/10 hover:bg-[#fec708] hover:text-black transition-all"
                           >
-                            Claim Reward <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
+                            Claim Reward <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
                           </motion.button>
                         )}
                       </div>
                     </div>
                   </div>
 
+                  {/* Orb Icon — unlocked tiers get animated orb */}
                   <div className="relative z-20 shrink-0">
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: isEven ? -10 : 10 }}
-                      className={cn(
-                        "w-24 h-24 rounded-[2rem] flex items-center justify-center border-2 transition-all duration-700 shadow-2xl",
-                        isLocked 
-                          ? 'bg-[#0d0d0d] border-white/5 text-white/5' 
-                          : 'ascension-glow bg-[#0a0a0a] border-[#fec708]/40 text-[#fec708]'
-                      )}
-                    >
-                      {isLocked ? <Lock className="w-10 h-10" /> : tier.icon}
-                    </motion.div>
+                    {isLocked ? (
+                      <motion.div
+                        whileHover={{ scale: 1.15 }}
+                        className="w-20 h-20 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center border-2 border-white/5 bg-[#0d0d0d] text-white/5 shadow-xl"
+                      >
+                        <Lock className="w-8 h-8 md:w-10 md:h-10" />
+                      </motion.div>
+                    ) : (
+                      <div className="relative grid place-items-center" style={{ width: 96, height: 96 }}>
+                        <motion.div
+                          className="absolute inset-3 rounded-full border border-[#fec708]/20 shadow-[0_0_32px_rgba(254,199,8,0.15)]"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
+                        />
+                        <motion.div
+                          className="absolute inset-1 rounded-full border border-dashed border-teal-200/10"
+                          animate={{ rotate: -360 }}
+                          transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+                        />
+                        <motion.div
+                          className="absolute inset-2 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.2),rgba(255,246,204,0.08),rgba(45,212,191,0.08),transparent)] blur-md"
+                          animate={{ rotate: 360, scale: [1, 1.03, 1] }}
+                          transition={{ rotate: { duration: 6, repeat: Infinity, ease: 'linear' }, scale: { duration: 2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
+                        />
+                        <div className="relative grid place-items-center rounded-full border border-white/15 bg-[#0a0a0a] shadow-[0_0_24px_rgba(254,199,8,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] w-14 h-14 md:w-16 md:h-16">
+                          {React.cloneElement(tier.icon, { className: 'text-[#fec708]', size: 28 })}
+                        </div>
+                      </div>
+                    )}
                     
-                    {/* Glowing point on line */}
+                    {/* Glowing point on timeline */}
                     <div className={cn(
-                      "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full blur-[4px] -z-10 hidden md:block",
-                      isLocked ? 'bg-white/10' : 'bg-[#fec708] shadow-[0_0_20px_#fec708]'
+                      "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full blur-[3px] -z-10 hidden md:block transition-all duration-700",
+                      isLocked ? 'bg-white/5' : 'bg-[#fec708] shadow-[0_0_16px_#fec708]'
                     )} />
                   </div>
 
@@ -608,112 +784,7 @@ export default function Rewards() {
         </div>
       </section>
 
-      {/* Clinical Marketplace Section */}
-      <section className="mb-32 max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
-          <div className="max-w-2xl">
-            <motion.h2 
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              className="text-5xl md:text-6xl font-black text-white mb-6 uppercase tracking-tighter"
-            >
-              Clinical <span className="text-[#fec708]">Marketplace</span>
-            </motion.h2>
-            <p className="text-xl text-white/30 font-medium leading-relaxed">
-              Redeem your Paw Points for real clinical products and services. Each redemption is a step forward in your pet's health journey.
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <button className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
-              Filter: All Items
-            </button>
-            <button className="px-8 py-4 rounded-2xl bg-[#fec708] text-black font-black text-xs uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(254,199,8,0.2)]">
-              Redeem Credits
-            </button>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
-          {specialOffers.map((offer, index) => (
-            <motion.div
-              key={offer.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="p-8 rounded-[2.5rem] liquid-glass-premium border-white/5 relative group overflow-hidden"
-            >
-              <HolographicFoil />
-              <div className="absolute top-6 right-6">
-                <span className="px-4 py-1.5 rounded-full bg-[#fec708]/10 text-[#fec708] text-[10px] font-black uppercase tracking-widest border border-[#fec708]/20">
-                  {offer.tag}
-                </span>
-              </div>
-              
-              <div className="w-16 h-16 rounded-2xl bg-[#0a0a0a] border border-white/10 flex items-center justify-center text-[#fec708] mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-2xl">
-                {offer.icon}
-              </div>
-              
-              <h3 className="text-2xl font-black text-white mb-3 tracking-tight">{offer.title}</h3>
-              <p className="text-white/40 font-medium mb-8 leading-relaxed line-clamp-2">{offer.description}</p>
-              
-              <div className="flex items-center justify-between mt-auto pt-8 border-t border-white/5">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-black text-[#fec708]">{offer.points.toLocaleString()}</span>
-                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">PTS</span>
-                </div>
-                <motion.button
-                  onClick={() => handleRedeem(offer)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-[#fec708] hover:text-black transition-all group/btn"
-                >
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover/btn:translate-x-1" />
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Clinical Inventory Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {clinicalInventory.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              className="group p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-[#fec708]/30 transition-all duration-500 relative overflow-hidden"
-            >
-              <div className="aspect-square rounded-2xl overflow-hidden mb-6 relative">
-                <img 
-                  src={item.image} 
-                  alt={item.name}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              
-              <h4 className="text-lg font-black text-white mb-1 group-hover:text-[#fec708] transition-colors">{item.name}</h4>
-              <p className="text-sm text-white/30 font-medium mb-4 line-clamp-1">{item.description}</p>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Redemption Cost</span>
-                  <span className="text-lg font-black text-white">{item.points} <span className="text-[10px] text-[#fec708]">PTS</span></span>
-                </div>
-                <motion.button
-                  onClick={() => handleRedeem({ title: item.name, points: item.points })}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white hover:bg-white/10 border border-white/5"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
 
       {/* Legacy Ledger Section */}
       <section className="mb-32 max-w-4xl mx-auto px-6">
@@ -735,79 +806,62 @@ export default function Rewards() {
             </button>
           </div>
 
-          <div className="space-y-4">
-            {recentActivity.map((activity) => (
-              <div 
+          <div className="space-y-3">
+            {recentActivity.map((activity, i) => (
+              <motion.div
                 key={activity.id}
-                className="flex items-center justify-between p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group"
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
+                whileHover={{ scale: 1.01, x: 4 }}
+                className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all group cursor-pointer"
               >
                 <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
-                    activity.type === 'earned' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
-                  )}>
+                  <motion.div
+                    whileHover={{ scale: 1.15, rotate: 5 }}
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-transform",
+                      activity.type === 'earned' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+                    )}
+                  >
                     {activity.icon}
-                  </div>
+                  </motion.div>
                   <div>
                     <h4 className="font-black text-white text-sm">{activity.activity}</h4>
                     <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">{activity.date}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className={cn(
-                    "text-lg font-black tabular-nums",
-                    activity.type === 'earned' ? 'text-emerald-500' : 'text-rose-500'
-                  )}>
+                  <motion.span
+                    key={activity.points}
+                    initial={{ scale: 1.3, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    className={cn(
+                      "text-lg font-black tabular-nums inline-block",
+                      activity.type === 'earned' ? 'text-emerald-500' : 'text-rose-500'
+                    )}
+                  >
                     {activity.type === 'earned' ? '+' : ''}{activity.points}
-                  </span>
+                  </motion.span>
                   <span className="text-[10px] font-black text-white/20 uppercase tracking-widest ml-2">PTS</span>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
-          <button className="w-full mt-8 py-4 rounded-2xl border border-white/5 text-white/30 font-black text-[10px] uppercase tracking-[0.3em] hover:text-white hover:border-white/20 transition-all">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full mt-8 py-4 rounded-2xl border border-white/5 text-white/30 font-black text-[10px] uppercase tracking-[0.3em] hover:text-white hover:border-white/20 hover:bg-white/[0.02] transition-all"
+          >
             Review Full Performance Analytics
-          </button>
+          </motion.button>
         </div>
       </section>
 
-      {/* Referral Program - Premium Card */}
-      <section className="px-6 mb-32 max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="relative overflow-hidden p-12 rounded-[3rem] bg-gradient-to-br from-[#1a1a1a] to-black border border-white/10"
-        >
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#fec708]/5 blur-[100px] rounded-full -mr-64 -mt-64" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-            <div className="flex-1">
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Invite a <span className="text-[#fec708]">Friend</span></h2>
-              <p className="text-xl text-white/60 font-medium leading-relaxed mb-8">
-                Refer a fellow pet parent. When they join the Planet Animal family, you both receive <span className="text-[#fec708] font-black">2,500 Paw Points</span> instantly — enough to unlock your first bill rebate.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <button className="px-8 py-4 rounded-2xl bg-[#fec708] text-black font-black text-sm uppercase tracking-widest shadow-[0_20px_40px_rgba(254,199,8,0.3)] hover:scale-105 active:scale-95 transition-all">
-                  Copy Referral Link
-                </button>
-                <button className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-sm uppercase tracking-widest hover:bg-white/10 transition-all">
-                  Share Now
-                </button>
-              </div>
-            </div>
-            <div className="w-full md:w-auto">
-              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] flex flex-col items-center shadow-2xl">
-                <div className="w-20 h-20 rounded-full bg-[#fec708]/10 flex items-center justify-center mb-4">
-                  <Activity className="w-10 h-10 text-[#fec708]" />
-                </div>
-                <span className="text-white/40 font-bold uppercase tracking-widest text-[10px] mb-1">Your Referrals</span>
-                <span className="text-4xl font-black text-white">12</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </section>
+
 
       {/* Success Toast */}
       <AnimatePresence>

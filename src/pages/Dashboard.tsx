@@ -428,12 +428,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!isDemoMode) return;
-
     setVerifiedPoints(Number(petProfile?.pawPoints || 0));
     setCurrentPlan('prestige');
-    setUpcomingAppts([
-      { id: '1', patient: petProfile?.name || 'Onyx', reason: 'Wellness Checkup', date: 'Oct 24, 2024', time: '10:30 AM', status: 'confirmed' }
-    ]);
   }, [isDemoMode, petProfile?.name, petProfile?.pawPoints]);
 
   useEffect(() => {
@@ -442,15 +438,10 @@ export default function Dashboard() {
     }
 
     let unsubscribeDoc: (() => void) | null = null;
-    let unsubscribeRequests: (() => void) | null = null;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (unsubscribeDoc) {
         unsubscribeDoc();
         unsubscribeDoc = null;
-      }
-      if (unsubscribeRequests) {
-        unsubscribeRequests();
-        unsubscribeRequests = null;
       }
       if (user) {
         setUserId(user.uid);
@@ -464,14 +455,7 @@ export default function Dashboard() {
         }, (err) => {
            console.error('onSnapshot error in Dashboard:', err);
         });
-        
-        const requestsRef = collection(db, 'requests');
-        const q = query(requestsRef, where('userId', '==', user.uid));
-        unsubscribeRequests = onSnapshot(q, (snapshot) => {
-          const appts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
-          setUpcomingAppts(appts);
-        });
-        
+
         setIsAuthReady(true);
       } else {
         setUserId(null);
@@ -481,7 +465,6 @@ export default function Dashboard() {
     return () => {
       unsubscribe();
       if (unsubscribeDoc) unsubscribeDoc();
-      if (unsubscribeRequests) unsubscribeRequests();
     };
   }, [isDemoMode]);
 
@@ -531,7 +514,6 @@ export default function Dashboard() {
   const [selectedServices, setSelectedServices] = useState<{id: number, name: string, points: number, icon: any, desc: string}[]>([]);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
-  const [upcomingAppts, setUpcomingAppts] = useState<any[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
 
   const BOOKING_SERVICES = [
@@ -882,29 +864,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-
-      {/* Upcoming */}
-      {upcomingAppts.length > 0 && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Upcoming for {petName}</h3>
-            <button className="text-planet-yellow text-sm font-bold flex items-center font-body">View All <ChevronRight size={16}/></button>
-          </div>
-          <div className="space-y-3">
-            {upcomingAppts.map((appt, idx) => (
-              <div key={idx} className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex items-center gap-4">
-                <div className="bg-teal-100 dark:bg-teal-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-xl shrink-0">
-                  {appt.date ? String(appt.date).substring(8, 10) : 'TBD'}
-                </div>
-                <div>
-                   <h4 className="font-heading font-bold text-white text-xl tracking-tight">{appt.reason || appt.title}</h4>
-                  <p className="font-body font-medium text-slate-300 text-base leading-relaxed capitalize">{appt.status || 'pending'} • {appt.time || 'TBD'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
 {/* Paw Points Program */}
        <div className="pt-2">
