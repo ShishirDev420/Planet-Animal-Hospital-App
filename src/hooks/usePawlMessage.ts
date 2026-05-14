@@ -154,7 +154,7 @@ export function usePawlMessage(period?: TimePeriod) {
 
       if (!response.ok) {
         const errorBody = await response.text();
-        console.error('🐾 [Pawl] HTTP error:', response.status, errorBody);
+        console.info('🐾 [Pawl] HTTP fallback:', response.status, errorBody);
         throw new Error(`Pawl responded ${response.status}: ${errorBody.substring(0, 100)}`);
       }
 
@@ -164,7 +164,7 @@ export function usePawlMessage(period?: TimePeriod) {
       localStorage.setItem(cacheKey, data.message);
       setError(false);
     } catch (err: any) {
-      console.error('🐾 [Pawl] Fetch error:', err);
+      console.info('🐾 [Pawl] Fetch fallback:', err?.message || err);
       setError(true);
       // Fallback: period-aware tip based on pet info
       const fallback = getGenericDailyTip(profile, activePeriod);

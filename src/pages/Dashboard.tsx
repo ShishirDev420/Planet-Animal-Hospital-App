@@ -369,17 +369,26 @@ function generateWhatsAppPayload(serviceName: string, petProfile: any) {
   return 'https://wa.me/919004290923?text=' + encodeURIComponent(message);
 }
 
+function getBriefingPreview(message: string, loading: boolean, petName: string) {
+  if (loading) {
+    return `Preparing a brief update for ${petName}.`;
+  }
+
+  const fallback = `${petName}'s daily care summary is ready.`;
+  const firstLine = (message || fallback)
+    .split('\n')
+    .find((line) => line.trim())
+    ?.trim() || fallback;
+
+  const compact = firstLine.replace(/\s+/g, ' ');
+  return compact.length > 116 ? `${compact.slice(0, 113).trimEnd()}...` : compact;
+}
+
 export default function Dashboard() {
   const isDemoMode = window.location.search.includes('demo_mode=true');
   const { profile: realPetProfile, loading: realProfileLoading } = usePetProfile();
   
-  const petProfile = useMemo(() => isDemoMode ? {
-    name: 'Luna',
-    parentName: 'Demo Parent',
-    breed: 'Golden Retriever',
-    pawPoints: 1250,
-    healthHistory: 'History: Luna had a routine vaccination last month. We noticed she has been very active. Recommendation: Consider joint supplements as she ages. Also, she loves running in the park.'
-  } : realPetProfile, [isDemoMode, realPetProfile]);
+  const petProfile = useMemo(() => realPetProfile, [realPetProfile]);
   
   const profileLoading = useMemo(() => isDemoMode ? false : realProfileLoading, [isDemoMode, realProfileLoading]);
 
@@ -418,12 +427,17 @@ export default function Dashboard() {
   }, [petProfile]);
 
   useEffect(() => {
+    if (!isDemoMode) return;
+
+    setVerifiedPoints(Number(petProfile?.pawPoints || 0));
+    setCurrentPlan('prestige');
+    setUpcomingAppts([
+      { id: '1', patient: petProfile?.name || 'Onyx', reason: 'Wellness Checkup', date: 'Oct 24, 2024', time: '10:30 AM', status: 'confirmed' }
+    ]);
+  }, [isDemoMode, petProfile?.name, petProfile?.pawPoints]);
+
+  useEffect(() => {
     if (isDemoMode) {
-      setVerifiedPoints(1250);
-      setCurrentPlan('prestige');
-      setUpcomingAppts([
-        { id: '1', patient: 'Luna', reason: 'Wellness Checkup', date: 'Oct 24, 2024', time: '10:30 AM', status: 'confirmed' }
-      ]);
       return;
     }
 
@@ -469,7 +483,7 @@ export default function Dashboard() {
       if (unsubscribeDoc) unsubscribeDoc();
       if (unsubscribeRequests) unsubscribeRequests();
     };
-  }, []);
+  }, [isDemoMode]);
 
   const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
     if (!userId) return;
@@ -659,6 +673,7 @@ export default function Dashboard() {
 
   const parentName = petProfile?.parentName || "Pet Parent";
   const petName = petProfile?.name || 'Pet';
+  const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
   const serviceNamesText = selectedServices.length > 0 ? selectedServices.map(s => s.name).join(', ') : '';
   const whatsappMessage = `Hey Planet Animal Hospital team! I am ${parentName}, ${petName}'s parent. I would like to book an appointment for: ${serviceNamesText} on ${bookingDate} at ${bookingTime}. Please get back to me as soon as you see this message. Thank you!`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
@@ -733,56 +748,26 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        onClick={() => navigate('/briefing')}
-        className="group relative mb-7 cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.065] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/30 hover:bg-white/[0.085]"
+        onClick={() => navigate({ pathname: '/briefing', search: location.search })}
+        className="group relative mb-7 min-h-[112px] cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-black/72 via-black/60 to-black/46 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/25 hover:from-black/78 hover:to-black/52"
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#fec708]/55 to-transparent" />
-        <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#fec708]/14 blur-3xl transition-opacity duration-300 group-hover:opacity-80" />
-        
-        <div className="relative">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fec708] text-black shadow-[0_0_24px_rgba(254,199,8,0.28)]">
-                <Bot className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <div className="mb-1 flex items-center gap-2">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#fec708]">Daily Briefing</p>
-                  <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">
-                    {completedCount >= totalPeriods ? 'Done' : `${completedCount}/${totalPeriods}`}
-                  </span>
-                </div>
-                <h3 className="truncate font-heading text-xl font-black tracking-tight text-white">
-                  {completedCount >= totalPeriods ? (
-                    <span>All check-ins done ✓</span>
-                  ) : isPeriodComplete(currentPeriod) ? (
-                    <span>Next check-in</span>
-                  ) : (
-                    <span>{PERIOD_DISPLAY[currentPeriod].title} care check-in</span>
-                  )}
-                </h3>
-                <p className="mt-0.5 text-xs font-semibold text-white/58">
-                  {pawlLoading ? 'Preparing a personalized update...' : `Personalized for ${petName}`}
-                </p>
-              </div>
-            </div>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] transition-all duration-300 group-hover:border-[#fec708]/30 group-hover:bg-[#fec708]/15">
-              <ChevronRight className="h-5 w-5 text-white/44 transition-colors duration-300 group-hover:text-[#fec708]" />
-            </div>
-          </div>
+        <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#fec708]/8 blur-3xl transition-opacity duration-300 group-hover:opacity-70" />
 
-          <div className="mt-4 rounded-[1.35rem] border border-white/10 bg-black/18 px-4 py-3">
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="mb-2 flex items-center gap-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#fec708]">Daily Briefing</p>
+              <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">
+                {completedCount >= totalPeriods ? 'Done' : `${completedCount}/${totalPeriods}`}
+              </span>
+            </div>
             <p className="line-clamp-2 text-sm font-medium leading-6 text-white/72">
-              {pawlLoading ? 'Checking care reminders, upcoming visits, and reward signals.' : pawlMessage || `${petName}'s daily care summary is ready.`}
+              {briefingPreview}
             </p>
           </div>
-
-          <div className="mt-3 flex items-center justify-between gap-3 px-1">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/36">
-              <Clock className="h-3.5 w-3.5 text-[#fec708]" />
-              2 min read
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#fec708]">Open Briefing</span>
+          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] transition-all duration-300 group-hover:border-[#fec708]/30 group-hover:bg-[#fec708]/15">
+            <ChevronRight className="h-5 w-5 text-white/44 transition-colors duration-300 group-hover:text-[#fec708]" />
           </div>
         </div>
       </motion.div>

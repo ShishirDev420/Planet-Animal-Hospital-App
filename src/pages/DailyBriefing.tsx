@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { CheckCircle2, Info, Sun, Moon, SunDim, ChevronRight } from 'lucide-react';
+import { motion, type Variants } from 'framer-motion';
+import { ArrowLeft, CheckCircle2, PawPrint, Sun, Moon, SunDim, ChevronRight } from 'lucide-react';
+import { increment } from 'firebase/firestore';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { usePawlMessage } from '../hooks/usePawlMessage';
 import { useTimeOfDay, type TimePeriod, PERIOD_DISPLAY } from '../hooks/useTimeOfDay';
@@ -8,6 +10,8 @@ import { useCheckInStatus } from '../hooks/useCheckInStatus';
 import { cn } from '../lib/utils';
 
 const PERIOD_ORDER: TimePeriod[] = ['morning', 'afternoon', 'evening'];
+const POINTS_PER_BRIEFING = 5;
+const DAILY_BRIEFING_POINTS = PERIOD_ORDER.length * POINTS_PER_BRIEFING;
 
 const PERIOD_ICON_GRADIENTS: Record<TimePeriod, string> = {
   morning: 'from-amber-300 via-yellow-400 to-orange-400',
@@ -46,7 +50,7 @@ function parseMessageSections(text: string) {
   const blocks = text.split('\n\n').filter(Boolean);
   return blocks.map(block => {
     const lines = block.split('\n').filter(Boolean);
-    const hasBullets = lines.some(l => l.trim().startsWith('•') || l.trim().startsWith('-'));
+    const hasBullets = lines.some(l => /^[\s]*[-*•]\s+/.test(l.trim()));
     const isHeader = lines.length === 1 && lines[0].trim().endsWith(':');
 
     if (hasBullets) {
@@ -54,8 +58,8 @@ function parseMessageSections(text: string) {
       const bulletLines: string[] = [];
       for (const line of lines) {
         const trimmed = line.trim();
-        if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
-          bulletLines.push(trimmed.replace(/^[•\-]\s*/, ''));
+        if (/^[-*•]\s+/.test(trimmed)) {
+          bulletLines.push(trimmed.replace(/^[-*•]\s*/, ''));
         } else if (trimmed.endsWith(':') || !bulletLines.length) {
           headerLines.push(trimmed);
         } else {
@@ -73,13 +77,13 @@ function parseMessageSections(text: string) {
   });
 }
 
-const sectionVariants = {
+const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 200,
       damping: 24,
       delay: 0.08 * i,
@@ -87,13 +91,13 @@ const sectionVariants = {
   }),
 };
 
-const bulletVariants = {
+const bulletVariants: Variants = {
   hidden: { opacity: 0, x: -12 },
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 250,
       damping: 22,
       delay: 0.04 * i,
@@ -111,10 +115,10 @@ function MessageSection({ block, index }: { block: ReturnType<typeof parseMessag
         initial="hidden"
         animate="visible"
         className={cn(
-          "text-base leading-relaxed font-medium",
+          "rounded-2xl border px-4 py-3 font-semibold leading-relaxed",
           isIntro
-            ? "text-slate-800 dark:text-slate-100 text-lg"
-            : "text-slate-600 dark:text-slate-300"
+            ? "border-planet-yellow/20 bg-planet-yellow/10 text-sm text-slate-900 dark:text-white"
+            : "border-white/10 bg-white/[0.04] text-[13px] text-slate-600 dark:text-slate-300"
         )}
       >
         <p>{block.text}</p>
@@ -129,9 +133,9 @@ function MessageSection({ block, index }: { block: ReturnType<typeof parseMessag
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
-        className="relative pl-4 border-l-2 border-planet-yellow/40"
+        className="relative pl-3 border-l-2 border-planet-yellow/50"
       >
-        <p className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+        <p className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-[0.18em]">
           {block.text}
         </p>
       </motion.div>
@@ -145,14 +149,14 @@ function MessageSection({ block, index }: { block: ReturnType<typeof parseMessag
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-2"
+        className="space-y-2.5"
       >
         {block.header && (
-          <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
+          <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.18em]">
             {block.header}
           </p>
         )}
-        <div className="space-y-1.5">
+        <div className="grid gap-2">
           {block.items.map((item, i) => (
             <motion.div
               key={i}
@@ -160,12 +164,12 @@ function MessageSection({ block, index }: { block: ReturnType<typeof parseMessag
               variants={bulletVariants}
               initial="hidden"
               animate="visible"
-              className="flex items-start gap-3 group"
+              className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-2.5 shadow-sm"
             >
-              <div className="mt-0.5 w-5 h-5 rounded-full bg-planet-yellow/10 flex items-center justify-center shrink-0 group-hover:bg-planet-yellow/20 transition-colors">
-                <div className="w-1.5 h-1.5 rounded-full bg-planet-yellow" />
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-planet-yellow/15 text-planet-yellow transition-colors group-hover:bg-planet-yellow/25">
+                <CheckCircle2 size={12} />
               </div>
-              <span className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+              <span className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200">
                 {item}
               </span>
             </motion.div>
@@ -179,8 +183,11 @@ function MessageSection({ block, index }: { block: ReturnType<typeof parseMessag
 }
 
 export default function DailyBriefing() {
-  const { profile, loading: profileLoading } = usePetProfile();
-  const { currentPeriod, nextPeriod } = useTimeOfDay();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isDemoMode = location.search.includes('demo_mode=true');
+  const { profile, loading: profileLoading, updateProfile } = usePetProfile();
+  const { currentPeriod } = useTimeOfDay();
 
   const uid = profile?.uid || profile?.parentName || 'demo';
   const {
@@ -199,8 +206,12 @@ export default function DailyBriefing() {
   );
   const { message, loading: messageLoading, error: messageError } = usePawlMessage(activePeriod);
   const [justCompleted, setJustCompleted] = useState(false);
+  const [awardNotice, setAwardNotice] = useState<string | null>(null);
 
   const sections = useMemo(() => message ? parseMessageSections(message) : [], [message]);
+  const petMeta = useMemo(() => {
+    return [profile?.breed, profile?.age, profile?.weight].filter(Boolean).join(' • ');
+  }, [profile?.breed, profile?.age, profile?.weight]);
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -210,15 +221,36 @@ export default function DailyBriefing() {
 
   const display = PERIOD_DISPLAY[activePeriod];
   const isActiveComplete = completedPeriods.includes(activePeriod);
+  const nextIncompleteAfterActive = PERIOD_ORDER
+    .slice(PERIOD_ORDER.indexOf(activePeriod) + 1)
+    .find(period => !completedPeriods.includes(period));
 
-  const handleComplete = () => {
+  const handleBackHome = () => {
+    navigate({ pathname: '/', search: location.search });
+  };
+
+  const handleComplete = async () => {
+    if (isActiveComplete || justCompleted) return;
+
     setJustCompleted(true);
+    try {
+      const currentPoints = Number(profile?.pawPoints || 0);
+      await updateProfile({
+        pawPoints: isDemoMode ? currentPoints + POINTS_PER_BRIEFING : increment(POINTS_PER_BRIEFING),
+      });
+      setAwardNotice(`+${POINTS_PER_BRIEFING} Paw Points added`);
+    } catch (error) {
+      console.error('Could not award briefing Paw Points:', error);
+      setAwardNotice('Briefing completed. Points sync will retry later.');
+    }
+
     completePeriod(activePeriod);
     setTimeout(() => {
-      if (nextPeriod && !completedPeriods.includes(nextPeriod)) {
-        setActivePeriod(nextPeriod);
+      if (nextIncompleteAfterActive) {
+        setActivePeriod(nextIncompleteAfterActive);
       }
       setJustCompleted(false);
+      setAwardNotice(null);
     }, 600);
   };
 
@@ -230,6 +262,21 @@ export default function DailyBriefing() {
     <div className="min-h-full pb-20">
       {/* Header Section */}
       <header className="mb-5 px-4 pt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleBackHome}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] text-white/80 shadow-sm backdrop-blur-xl transition-all hover:border-planet-yellow/30 hover:bg-planet-yellow/15 hover:text-planet-yellow active:scale-95"
+            aria-label="Back to home"
+            title="Back to home"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div className="flex items-center gap-1.5 rounded-full border border-planet-yellow/20 bg-planet-yellow/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-planet-yellow">
+            <PawPrint size={12} />
+            {Number(profile?.pawPoints || 0).toLocaleString()} pts
+          </div>
+        </div>
         <div className="flex items-start justify-between mb-2">
           <motion.div
             initial={{ opacity: 0, y: -12 }}
@@ -322,6 +369,10 @@ export default function DailyBriefing() {
             <h2 className="font-cinematic text-3xl text-slate-900 dark:text-white mb-2">
               All Done Today
             </h2>
+            <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full border border-planet-yellow/20 bg-planet-yellow/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-planet-yellow">
+              <PawPrint size={12} />
+              +{DAILY_BRIEFING_POINTS} Paw Points earned today
+            </div>
             <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs mx-auto font-medium">
               {profile?.petName || 'Your pet'} is all set. See you tomorrow!
             </p>
@@ -344,9 +395,9 @@ export default function DailyBriefing() {
                   activePeriod === 'evening' && "bg-indigo-400",
                 )} />
 
-                <div className="liquid-glass rounded-[2rem] border border-white/20 p-6 relative z-10 shadow-xl bg-gradient-to-br from-white/40 to-white/10 dark:from-white/5 dark:to-transparent">
+                <div className="liquid-glass rounded-[2rem] border border-white/20 p-5 relative z-10 shadow-xl bg-gradient-to-br from-white/40 to-white/10 dark:from-white/5 dark:to-transparent">
                   {/* Header */}
-                  <div className="flex items-center gap-3 mb-5">
+                  <div className="flex items-center gap-3 mb-4">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -362,6 +413,20 @@ export default function DailyBriefing() {
                         AI-Powered for {profile?.petName || 'your pet'}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
+                      {profile?.petName || 'Your pet'}
+                    </span>
+                    {petMeta && (
+                      <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
+                        {petMeta}
+                      </span>
+                    )}
+                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-400">
+                      +{POINTS_PER_BRIEFING} pts on completion
+                    </span>
                   </div>
 
                   {/* Content */}
@@ -380,30 +445,19 @@ export default function DailyBriefing() {
                       ))}
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1 hide-scrollbar">
                       {sections.map((block, i) => (
                         <MessageSection key={i} block={block} index={i} />
                       ))}
                     </div>
                   )}
 
-                  {messageError && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-2 text-xs text-red-600 dark:text-red-400"
-                    >
-                      <Info size={14} />
-                      <span className="font-medium">Could not connect to Pawl. Showing general tips.</span>
-                    </motion.div>
-                  )}
-
                   {/* Footer */}
-                  <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-200/50 dark:border-white/[0.06]">
-                    <div className="flex items-center gap-2">
+                  <div className="mt-5 flex items-center justify-between gap-3 pt-4 border-t border-slate-200/50 dark:border-white/[0.06]">
+                    <div className="min-w-0 flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                        Verified by Planet Animal Vets
+                      <span className="truncate text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        {awardNotice || (messageError ? 'Local care fallback active' : 'Verified by Planet Animal Vets')}
                       </span>
                     </div>
                     {!isActiveComplete && (
@@ -413,7 +467,7 @@ export default function DailyBriefing() {
                         onClick={handleComplete}
                         disabled={justCompleted}
                         className={cn(
-                          "flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          "flex shrink-0 items-center gap-1.5 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                           "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white",
                           "shadow-lg shadow-emerald-500/25",
                           "hover:from-emerald-400 hover:to-emerald-500",
@@ -426,7 +480,7 @@ export default function DailyBriefing() {
                         >
                           <CheckCircle2 size={14} />
                         </motion.div>
-                        {justCompleted ? 'Done!' : 'Mark Complete'}
+                        {justCompleted ? 'Done!' : `Mark Complete +${POINTS_PER_BRIEFING}`}
                         <ChevronRight size={12} className="opacity-60" />
                       </motion.button>
                     )}
