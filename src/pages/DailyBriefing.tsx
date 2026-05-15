@@ -287,7 +287,7 @@ export default function DailyBriefing() {
             <span className="text-[10px] font-bold text-planet-yellow uppercase tracking-[0.25em] mb-1.5">
               {today}
             </span>
-            <h1 className="font-cinematic text-4xl leading-tight text-slate-900 dark:text-white">
+            <h1 className="font-heading text-4xl leading-tight text-slate-900 dark:text-white">
               {display.title}
             </h1>
             <p className="text-sm text-slate-400 dark:text-slate-500 font-medium mt-0.5">
@@ -366,7 +366,7 @@ export default function DailyBriefing() {
             >
               <CheckCircle2 size={48} className="text-emerald-500 icon-premium" />
             </motion.div>
-            <h2 className="font-cinematic text-3xl text-slate-900 dark:text-white mb-2">
+            <h2 className="font-heading text-3xl text-slate-900 dark:text-white mb-2">
               All Done Today
             </h2>
             <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full border border-planet-yellow/20 bg-planet-yellow/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-planet-yellow">
@@ -406,7 +406,7 @@ export default function DailyBriefing() {
                       <PremiumPeriodIcon period={activePeriod} size={16} />
                     </motion.div>
                     <div>
-                      <h3 className="font-cinematic text-lg text-slate-800 dark:text-slate-100 leading-tight">
+                      <h3 className="font-heading text-lg text-slate-800 dark:text-slate-100 leading-tight">
                         Pawl's {display.title}
                       </h3>
                       <p className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em]">

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import SplashScreen from './SplashScreen';
 import PlanetOrbLoader from './PlanetOrbLoader';
+import Logo from './Logo';
 
 const pageTransition = {
   initial: { opacity: 0, y: 8 },
@@ -82,9 +83,12 @@ export default function Layout() {
         <div className="hidden lg:flex h-screen w-full">
         {/* Desktop Sidebar */}
         <nav className="w-64 liquid-glass border-r border-white/5 flex flex-col z-10">
-          <div className="p-6 border-b border-white/8">
-            <h2 className="text-lg font-heading font-bold tracking-tight text-white">Planet Animal</h2>
-            <p className="text-[10px] font-bold text-planet-yellow uppercase tracking-[0.25em]">Hospital & Wellness</p>
+          <div className="p-8 border-b border-white/8">
+            <div className="flex items-center gap-4 mb-4">
+              <Logo className="!w-16 !h-16 drop-shadow-[0_0_20px_rgba(254,199,8,0.3)]" />
+            </div>
+            <h2 className="text-2xl font-heading font-bold tracking-tight text-white">Planet Animal</h2>
+            <p className="text-xs font-bold text-planet-yellow uppercase tracking-[0.25em] mt-1">Hospital & Wellness</p>
           </div>
           <div className="flex-1 py-6 px-4 space-y-1">
             <DesktopNavItem to={preservePreviewSearch('/')} icon={<Home size={20} />} label="Home" />
