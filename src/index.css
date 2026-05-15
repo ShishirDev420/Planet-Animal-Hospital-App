@@ -131,8 +131,12 @@
 }
    
    .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
-  }
+     padding-bottom: env(safe-area-inset-bottom, 1rem);
+   }
+
+   .pt-safe-top {
+     padding-top: max(env(safe-area-inset-top), 48px);
+   }
 
   /* Premium Paws - Golden Aura (Overdrive Mode) */
   .ascension-glow {
@@ -609,24 +613,10 @@
   100% { opacity: 0.04; transform: scale(1.24); }
 }
 
-@keyframes paw-print-breathe {
-  0%   { opacity: 0; transform: scale(0.88) rotate(-3deg); }
-  12%  { opacity: var(--paw-print-peak, 0.14); transform: scale(1) rotate(0deg); }
-  50%  { opacity: var(--paw-print-peak, 0.14); transform: scale(1.06) rotate(1deg); }
-  85%  { opacity: var(--paw-print-peak, 0.14); transform: scale(1) rotate(0deg); }
-  100% { opacity: 0; transform: scale(0.88) rotate(3deg); }
-}
-
-.animate-paw-print {
-  animation: paw-print-breathe 16s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-  transform: translateZ(0);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .planet-loader-ambient,
   .planet-orb-stage::before,
-  .planet-orb-stage::after,
-  .animate-paw-print {
+  .planet-orb-stage::after {
     animation: none !important;
   }
 }

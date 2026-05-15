@@ -174,7 +174,7 @@ export default function AgentsPanel() {
   };
 
   return (
-    <section className="relative min-h-full overflow-hidden px-4 pb-32 pt-6 text-white sm:px-6 lg:px-0 lg:pb-16">
+    <section className="relative min-h-full overflow-hidden px-4 pb-32 pt-16 text-white sm:px-6 lg:px-0 lg:pb-16">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
           key={activeAgent.id}
