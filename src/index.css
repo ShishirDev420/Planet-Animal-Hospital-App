@@ -151,14 +151,14 @@
 
   /* Liquid Glass Premium - Ultra high fidelity */
   .liquid-glass-premium {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
-    backdrop-filter: blur(50px) saturate(2.2);
-    -webkit-backdrop-filter: blur(50px) saturate(2.2);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(12, 12, 12, 0.84);
+    backdrop-filter: blur(22px) saturate(1.2);
+    -webkit-backdrop-filter: blur(22px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 
-      inset 0 1px 1px rgba(255, 255, 255, 0.2),
-      0 12px 48px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(255, 255, 255, 0.05);
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 60px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(254, 199, 8, 0.025);
     position: relative;
     overflow: hidden;
   }
@@ -199,15 +199,49 @@
     animation: foil-shimmer 8s linear infinite;
   }
 
+  .rewards-cinematic-image {
+    filter: saturate(1.08) contrast(1.05);
+    transform: translateZ(0) scale(1.02);
+  }
+
+  .rewards-smooth-veil {
+    background:
+      radial-gradient(circle at 18% 12%, rgba(254, 199, 8, 0.08), transparent 24%),
+      radial-gradient(circle at 86% 82%, rgba(45, 212, 191, 0.07), transparent 28%),
+      rgba(255, 255, 255, 0.018);
+    opacity: 0.9;
+  }
+
+  .reward-silk-card {
+    background: rgba(11, 11, 11, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 28px 90px rgba(0, 0, 0, 0.48),
+      0 0 0 1px rgba(254, 199, 8, 0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .reward-silk-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 12% 16%, rgba(254, 199, 8, 0.1), transparent 26%),
+      radial-gradient(circle at 88% 18%, rgba(45, 212, 191, 0.06), transparent 24%);
+    pointer-events: none;
+  }
+
   .bento-card-premium {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
-    backdrop-filter: blur(50px) saturate(2.2);
-    -webkit-backdrop-filter: blur(50px) saturate(2.2);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(12, 12, 12, 0.86);
+    backdrop-filter: blur(20px) saturate(1.18);
+    -webkit-backdrop-filter: blur(20px) saturate(1.18);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 
-      inset 0 1px 1px rgba(255, 255, 255, 0.2),
-      0 12px 48px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(255, 255, 255, 0.05);
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 60px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(254, 199, 8, 0.025);
     position: relative;
     overflow: hidden;
     border-radius: 2.5rem;
@@ -217,22 +251,16 @@
 
   .bento-card-premium:hover {
     transform: scale(1.02);
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(254, 199, 8, 0.24);
   }
 
   .liquid-glass-premium::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(
-      circle at 30% 30%,
-      rgba(255, 255, 255, 0.08) 0%,
-      transparent 50%
-    );
-    animation: liquid-swirl 20s linear infinite;
+    inset: 0;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(254, 199, 8, 0.08), transparent 24%),
+      radial-gradient(circle at 86% 82%, rgba(45, 212, 191, 0.06), transparent 28%);
     pointer-events: none;
   }
 
@@ -284,6 +312,13 @@
     z-index: -1;
     animation: aura-rotate 10s linear infinite;
     will-change: transform;
+  }
+
+  .paw-points-number-glow {
+    text-shadow:
+      0 0 18px rgba(254, 199, 8, 0.26),
+      0 0 46px rgba(254, 199, 8, 0.18);
+    animation: paw-points-breathe 3.4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
   }
 }
 
@@ -417,6 +452,21 @@
 @keyframes text-shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
+}
+
+@keyframes paw-points-breathe {
+  0%, 100% {
+    filter: brightness(1);
+    text-shadow:
+      0 0 18px rgba(254, 199, 8, 0.24),
+      0 0 46px rgba(254, 199, 8, 0.16);
+  }
+  50% {
+    filter: brightness(1.08);
+    text-shadow:
+      0 0 24px rgba(254, 199, 8, 0.34),
+      0 0 64px rgba(254, 199, 8, 0.24);
+  }
 }
 
 @keyframes foil-shimmer {
@@ -561,7 +611,8 @@
 @media (prefers-reduced-motion: reduce) {
   .planet-loader-ambient,
   .planet-orb-stage::before,
-  .planet-orb-stage::after {
+  .planet-orb-stage::after,
+  .paw-points-number-glow {
     animation: none !important;
   }
 }

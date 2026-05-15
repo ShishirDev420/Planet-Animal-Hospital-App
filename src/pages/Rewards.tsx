@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Lock,
   ChevronRight,
-  ArrowRight,
   Sparkles,
   ChevronLeft,
   Medal,
@@ -20,13 +19,18 @@ import {
   ArrowUpRight,
   Gift,
   Clock,
-  Crown
+  Crown,
+  CalendarCheck,
+  ClipboardCheck,
+  Users,
+  HeartHandshake
 } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { cn } from '../lib/utils';
 import planetLogo from '../assets/planet-logo.png';
+import pawPointsCinematic from '../assets/paw-points-cinematic.png';
 
 const PAW_POINT_TO_INR = 0.25; // 1 Paw Point = ₹0.25
 
@@ -106,56 +110,17 @@ const pawPointsRoadmap = [
 ];
 
 const HolographicFoil = () => (
-  <div className="absolute inset-0 holographic-foil opacity-30 pointer-events-none mix-blend-overlay" />
+  <div className="absolute inset-0 rewards-smooth-veil pointer-events-none" />
 );
-
-const BentoQuestCard = ({ item, i }: { item: any, i: number }) => {
-  return (
-    <motion.div
-      whileHover={{ y: -5, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="relative overflow-hidden bento-card-premium group cursor-pointer rounded-[2.5rem] p-6"
-    >
-      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-        {React.cloneElement(item.icon, { size: 80 })}
-      </div>
-      
-      <div className="relative z-10">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-white/5">
-          {React.cloneElement(item.icon, { size: 24 })}
-        </div>
-        
-        <h4 className="font-heading font-bold text-sm uppercase tracking-tight mb-1 group-hover:text-[#fec708] transition-colors">
-          {item.title}
-        </h4>
-        <p className="text-white/30 text-[10px] leading-tight max-w-[150px]">
-          {item.desc}
-        </p>
-        
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg font-heading font-bold text-[#fec708]">{item.points}</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-white/20">PTS</span>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#fec708] group-hover:text-black transition-all">
-            <ArrowRight size={14} />
-          </div>
-        </div>
-      </div>
-      
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[#fec708]/5 blur-[40px] rounded-full group-hover:bg-[#fec708]/10 transition-all" />
-    </motion.div>
-  );
-};
 
 export default function Rewards() {
   const navigate = useNavigate();
-  const { profile, updateProfile, loading } = usePetProfile();
+  const { profile, updateProfile } = usePetProfile();
   const [showRedeemSuccess, setShowRedeemSuccess] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [redeemedReward, setRedeemedReward] = useState<string | null>(null);
 
-  const referralCount = 12;
+  const referralCount = 0;
 
   const recentActivity = useMemo(() => [
     { id: 1, type: 'earned', activity: 'Morning Pulse Check', points: 25, date: '2 hours ago', icon: <Activity className="w-4 h-4" /> },
@@ -165,6 +130,7 @@ export default function Rewards() {
   ], []);
 
   const currentPoints = profile?.pawPoints || 0;
+  const currentRank = currentPoints >= 25000 ? 'Elite' : currentPoints >= 10000 ? 'Senior' : currentPoints >= 5000 ? 'Guardian' : currentPoints >= 1500 ? 'Care' : 'New';
   
   const handleRedeem = async (reward: any) => {
     if (currentPoints < reward.points) return;
@@ -189,13 +155,21 @@ export default function Rewards() {
     <div className="min-h-screen w-full flex flex-col pb-40 overflow-x-hidden relative bg-black text-white selection:bg-[#fec708] selection:text-black">
       {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <img
+          src={pawPointsCinematic}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover opacity-30 rewards-cinematic-image"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.58),rgba(0,0,0,0.9)_52%,#000_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(254,199,8,0.16),transparent_34%)]" />
         <motion.div 
           style={{ y: bgY }}
-          className="absolute top-[-10%] right-[-20%] w-[800px] h-[800px] bg-[#fec708]/10 rounded-full blur-[160px] opacity-50" 
+          className="absolute top-[-10%] right-[-20%] w-[800px] h-[800px] bg-[#fec708]/10 rounded-full blur-[160px] opacity-35"
         />
         <motion.div 
           style={{ y: useTransform(scrollY, [0, 1000], [0, -200]) }}
-          className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[140px] opacity-30" 
+          className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[140px] opacity-25"
         />
       </div>
 
@@ -250,7 +224,7 @@ export default function Rewards() {
             transition={{ delay: 0.1 }}
             className="text-xl text-white/40 font-medium leading-relaxed max-w-2xl mx-auto mb-16"
           >
-            Every visit, every check-in, every act of care earns Paw Points. Unlock real clinical rewards on your journey to pet longevity.
+            Every planned visit, completed health task, and verified care moment can move you toward real Planet Animal rewards.
           </motion.p>
 
           {/* Points Counter - Prestige Glow Implementation */}
@@ -265,26 +239,26 @@ export default function Rewards() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fec708]/40 to-transparent" />
 
               {/* Inline Orb — compact visual anchor */}
-              <div className="mb-3 relative grid place-items-center" style={{ width: 100, height: 100 }}>
+              <div className="mb-5 relative grid place-items-center" style={{ width: 132, height: 132 }}>
                 <motion.div
-                  className="absolute inset-2 rounded-full border border-[#fec708]/25 shadow-[0_0_48px_rgba(254,199,8,0.22)]"
+                  className="absolute inset-3 rounded-full border border-[#fec708]/30 shadow-[0_0_64px_rgba(254,199,8,0.28)]"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 3.8, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 5.8, repeat: Infinity, ease: 'linear' }}
                 />
                 <motion.div
                   className="absolute inset-0 rounded-full border border-dashed border-teal-200/15"
                   animate={{ rotate: -360 }}
-                  transition={{ duration: 5.4, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 8.4, repeat: Infinity, ease: 'linear' }}
                 />
                 <motion.div
-                  className="absolute inset-1 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.32),rgba(255,246,204,0.12),rgba(45,212,191,0.12),transparent)] blur-lg"
-                  animate={{ rotate: 360, scale: [1, 1.04, 1] }}
-                  transition={{ rotate: { duration: 6.5, repeat: Infinity, ease: 'linear' }, scale: { duration: 2.2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
+                  className="absolute inset-1 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.28),rgba(255,246,204,0.1),rgba(45,212,191,0.1),transparent)] blur-xl"
+                  animate={{ rotate: 360, scale: [1, 1.025, 1] }}
+                  transition={{ rotate: { duration: 10, repeat: Infinity, ease: 'linear' }, scale: { duration: 3.8, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
                 />
                 <motion.div
-                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_32px_rgba(254,199,8,0.45),inset_0_1px_16px_rgba(255,255,255,0.28)] h-14 w-14"
-                  animate={{ scale: [1, 1.035, 1], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] }}
-                  transition={{ duration: 1.9, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
+                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_46px_rgba(254,199,8,0.52),inset_0_1px_18px_rgba(255,255,255,0.32)] h-20 w-20"
+                  animate={{ scale: [1, 1.02, 1], filter: ['brightness(1)', 'brightness(1.1)', 'brightness(1)'] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
                 >
                   <img src={planetLogo} alt="Planet Animal" className="h-full w-full rounded-full object-cover" />
                   <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_22%,rgba(255,255,255,0.38),transparent_30%)]" />
@@ -297,7 +271,7 @@ export default function Rewards() {
                   key={currentPoints}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-7xl md:text-9xl font-black text-white tabular-nums tracking-tighter leading-none"
+                  className="paw-points-number-glow text-7xl md:text-9xl font-black text-white tabular-nums tracking-tighter leading-none"
                 >
                   {currentPoints.toLocaleString()}
                 </motion.span>
@@ -366,39 +340,26 @@ export default function Rewards() {
                       </motion.div>
                     </motion.button>
 
-                    {/* Gamification Stats Row */}
+                    {/* Honest reward signals */}
                     <div className="mt-5 grid grid-cols-3 gap-2 w-full">
                       <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.75 }}
-                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
+                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] overflow-hidden"
                       >
-                        <motion.div
-                          className="absolute inset-0 bg-orange-500/5 rounded-2xl"
-                          animate={{ opacity: [0.3, 0.8, 0.3] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                        />
-                        <motion.span
-                          className="relative text-lg font-black text-orange-400"
-                          animate={{ scale: [1, 1.08, 1] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-                        >🔥 7</motion.span>
-                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Day Streak</span>
+                        <CalendarCheck className="relative h-4 w-4 text-[#fec708]" />
+                        <span className="relative text-lg font-black text-white">{pawPointsRoadmap.filter(t => currentPoints >= t.points).length}</span>
+                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Unlocked</span>
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.85 }}
-                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
+                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] overflow-hidden"
                       >
-                        <motion.div
-                          className="absolute inset-0 bg-[#fec708]/5 rounded-2xl"
-                          animate={{ opacity: [0.2, 0.6, 0.2] }}
-                          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                        />
                         <span className="relative text-lg font-black text-[#fec708]">
-                          {currentPoints >= 25000 ? '★ Elite' : currentPoints >= 10000 ? '◆ Senior' : currentPoints >= 5000 ? '✦ Guard' : currentPoints >= 1500 ? '● Care' : '○ New'}
+                          {currentRank}
                         </span>
                         <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Your Rank</span>
                       </motion.div>
@@ -406,19 +367,10 @@ export default function Rewards() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.95 }}
-                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
+                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] overflow-hidden"
                       >
-                        <motion.div
-                          className="absolute inset-0 bg-emerald-500/5 rounded-2xl"
-                          animate={{ opacity: [0.2, 0.7, 0.2] }}
-                          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-                        />
-                        <motion.span
-                          className="relative text-lg font-black text-emerald-400"
-                          animate={{ scale: [1, 1.06, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                        >1.5×</motion.span>
-                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Boost</span>
+                        <span className="relative text-lg font-black text-emerald-300">{ptsToNext.toLocaleString()}</span>
+                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">To Next</span>
                       </motion.div>
                     </div>
                   </div>
@@ -476,53 +428,34 @@ export default function Rewards() {
             className="bento-card-premium group"
           >
             <div className="flex items-center gap-6 mb-6">
-              <motion.div
-                className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover:scale-110 transition-transform"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <motion.span
-                  className="text-2xl"
-                  animate={{ rotate: [0, -5, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                >🔥</motion.span>
-              </motion.div>
+              <div className="w-16 h-16 rounded-2xl bg-[#fec708]/10 flex items-center justify-center border border-[#fec708]/20 group-hover:scale-105 transition-transform">
+                <ClipboardCheck className="w-8 h-8 text-[#fec708]" />
+              </div>
               <div>
-                <h3 className="text-2xl font-black text-white mb-1">Health Streak</h3>
-                <p className="text-white/40 font-medium italic text-xs">Active check-in bonus</p>
+                <h3 className="text-2xl font-black text-white mb-1">Rack Paw Points</h3>
+                <p className="text-white/40 font-medium italic text-xs">Care actions that actually count</p>
               </div>
             </div>
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-sm font-bold text-white/80">Current Streak</span>
-                <motion.span
-                  className="text-2xl font-black text-orange-400"
-                  key="7"
-                  initial={{ scale: 1.3, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-                >7 Days</motion.span>
+              {[
+                { label: 'Book a verified visit', points: '+500', icon: <Stethoscope className="h-4 w-4" /> },
+                { label: 'Complete the daily briefing', points: '+25', icon: <CalendarCheck className="h-4 w-4" /> },
+                { label: 'Finish a recommended care task', points: '+100', icon: <ShieldCheck className="h-4 w-4" /> },
+              ].map((earning) => (
+                <div key={earning.label} className="flex justify-between items-center gap-4 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#fec708]/10 text-[#fec708]">
+                      {earning.icon}
+                    </span>
+                    <span className="text-sm font-bold text-white/80 truncate">{earning.label}</span>
+                  </div>
+                  <span className="text-lg font-black text-[#fec708] tabular-nums">{earning.points}</span>
+                </div>
+              ))}
+              <div className="p-4 rounded-2xl bg-[#fec708]/[0.08] border border-[#fec708]/15">
+                <p className="text-[10px] font-black text-[#fec708] uppercase tracking-widest mb-1">Parent payoff</p>
+                <p className="text-xs text-white/55 font-medium">Consistent preventive care turns into discounts, consultations, and premium wellness rewards.</p>
               </div>
-              <div className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-sm font-bold text-white/80">Streak Multiplier</span>
-                <motion.span
-                  className="text-xl font-black text-emerald-400"
-                  animate={{ scale: [1, 1.04, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                >1.5× Boost</motion.span>
-              </div>
-              <motion.div
-                className="p-4 rounded-2xl bg-[#fec708]/5 border border-[#fec708]/15 relative overflow-hidden"
-                whileHover={{ scale: 1.01 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-[#fec708]/5 to-transparent"
-                  animate={{ x: ['-100%', '100%'] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                />
-                <p className="relative text-[10px] font-black text-[#fec708] uppercase tracking-widest mb-1">Daily Challenge</p>
-                <p className="relative text-xs text-white/50 font-medium">Complete 1 Pulse Check today → <span className="text-[#fec708] font-bold">+10 bonus pts</span></p>
-              </motion.div>
             </div>
           </motion.div>
         </div>
@@ -534,7 +467,7 @@ export default function Rewards() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden p-10 md:p-14 rounded-[3rem] liquid-glass-premium border-[#fec708]/10"
+          className="relative overflow-hidden p-10 md:p-14 rounded-[3rem] reward-silk-card border-[#fec708]/10"
         >
           <HolographicFoil />
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#fec708]/5 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
@@ -548,7 +481,7 @@ export default function Rewards() {
                 Invite a <span className="text-[#fec708]">Friend</span>
               </h2>
               <p className="text-lg text-white/50 font-medium leading-relaxed max-w-xl mb-8">
-                Refer a fellow pet parent. When they join Planet Animal, <span className="text-white font-bold">you both receive <span className="text-[#fec708]">2,500 Paw Points</span></span> instantly — enough to unlock your first bill rebate.
+                You have not referred anyone yet. Share Planet Animal when it makes sense; when a new pet parent joins through you, both accounts can earn <span className="text-[#fec708] font-bold">2,500 Paw Points</span>.
               </p>
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 <motion.button
@@ -560,11 +493,6 @@ export default function Rewards() {
                   }}
                   className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#fec708] text-black font-black text-sm uppercase tracking-widest shadow-[0_20px_40px_rgba(254,199,8,0.3)] overflow-hidden"
                 >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    animate={{ x: ['-100%', '100%'] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                  />
                   <span className="relative">Copy Referral Link</span>
                   <Check className="relative w-4 h-4 group-hover:scale-110 transition-transform" />
                 </motion.button>
@@ -572,17 +500,12 @@ export default function Rewards() {
             </div>
             <div className="shrink-0">
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="relative p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 flex flex-col items-center shadow-2xl backdrop-blur-2xl overflow-hidden"
+                whileHover={{ scale: 1.03 }}
+                className="relative p-8 rounded-[2.5rem] bg-white/[0.04] border border-white/10 flex flex-col items-center shadow-2xl overflow-hidden"
               >
-                <motion.div
-                  className="absolute inset-0 rounded-[2.5rem] bg-[#fec708]/5"
-                  animate={{ opacity: [0.3, 0.7, 0.3] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                />
                 <div className="relative z-10 flex flex-col items-center">
                   <div className="w-16 h-16 rounded-full bg-[#fec708]/10 border border-[#fec708]/20 flex items-center justify-center mb-4">
-                    <Gift className="w-8 h-8 text-[#fec708]" />
+                    <Users className="w-8 h-8 text-[#fec708]" />
                   </div>
                   <span className="text-white/40 font-bold uppercase tracking-widest text-[10px] mb-1">Your Referrals</span>
                   <motion.span
@@ -593,7 +516,11 @@ export default function Rewards() {
                   >
                     {referralCount}
                   </motion.span>
-                  <span className="text-[9px] font-black text-[#fec708] uppercase tracking-[0.2em] mt-2">Papyrus sent</span>
+                  <span className="text-[9px] font-black text-[#fec708] uppercase tracking-[0.2em] mt-2">Friends joined</span>
+                  <div className="mt-5 flex items-center gap-2 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.08] px-4 py-3 text-left">
+                    <HeartHandshake className="h-4 w-4 shrink-0 text-emerald-300" />
+                    <span className="text-[10px] font-bold leading-snug text-white/45">Start at zero. Earn only when a real parent joins.</span>
+                  </div>
                 </div>
               </motion.div>
             </div>
