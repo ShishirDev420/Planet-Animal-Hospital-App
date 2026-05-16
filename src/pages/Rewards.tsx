@@ -273,50 +273,94 @@ export default function Rewards() {
             transition={{ delay: 0.2 }}
             className="inline-block relative p-[1px] rounded-[3rem] ascension-glow shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
           >
-            <div className="bg-[#0a0a08]/95 rounded-[2.9rem] px-16 py-10 backdrop-blur-3xl flex flex-col items-center relative overflow-hidden">
+            {/* Animated outer glow ring */}
+            <motion.div
+              className="absolute -inset-3 rounded-[3.5rem] border border-[#fec708]/20 pointer-events-none"
+              animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.02, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute -inset-6 rounded-[4.5rem] bg-[#fec708]/5 blur-xl pointer-events-none"
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+
+            <div className="bg-[#0a0a08]/95 rounded-[2.9rem] px-10 py-10 md:px-16 md:py-12 backdrop-blur-3xl flex flex-col items-center relative overflow-hidden">
               <HolographicFoil />
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fec708]/40 to-transparent" />
 
               {/* Inline Orb — compact visual anchor */}
-              <div className="mb-3 relative grid place-items-center" style={{ width: 100, height: 100 }}>
+              <div className="mb-4 relative grid place-items-center" style={{ width: 120, height: 120 }}>
+                {/* Outer rotating ring */}
                 <motion.div
-                  className="absolute inset-2 rounded-full border border-[#fec708]/25 shadow-[0_0_48px_rgba(254,199,8,0.22)]"
+                  className="absolute inset-0 rounded-full border border-[#fec708]/20 shadow-[0_0_60px_rgba(254,199,8,0.25)]"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 3.8, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
                 />
                 <motion.div
-                  className="absolute inset-0 rounded-full border border-dashed border-teal-200/15"
+                  className="absolute inset-2 rounded-full border border-dashed border-[#fec708]/15"
                   animate={{ rotate: -360 }}
-                  transition={{ duration: 5.4, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
                 />
+                {/* Conic glow */}
                 <motion.div
-                  className="absolute inset-1 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.32),rgba(255,246,204,0.12),rgba(45,212,191,0.18),transparent)] blur-lg"
-                  animate={{ rotate: 360, scale: [1, 1.04, 1] }}
-                  transition={{ rotate: { duration: 6.5, repeat: Infinity, ease: 'linear' }, scale: { duration: 2.2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
+                  className="absolute inset-3 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.35),rgba(255,246,204,0.15),rgba(45,212,191,0.2),transparent)] blur-md"
+                  animate={{ rotate: 360, scale: [1, 1.05, 1] }}
+                  transition={{ rotate: { duration: 8, repeat: Infinity, ease: 'linear' }, scale: { duration: 2.5, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
                 />
+                {/* Floating sparkles around orb */}
+                {[...Array(6)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 rounded-full bg-[#fec708]"
+                    style={{
+                      top: `${20 + Math.random() * 60}%`,
+                      left: `${20 + Math.random() * 60}%`,
+                    }}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [0, 1.2, 0],
+                      y: [-5, -15, -5],
+                    }}
+                    transition={{
+                      duration: 2 + Math.random() * 2,
+                      repeat: Infinity,
+                      delay: i * 0.4,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                ))}
                 <motion.div
-                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_40px_rgba(254,199,8,0.55),inset_0_1px_16px_rgba(255,255,255,0.28)] h-[72px] w-[72px]"
-                  animate={{ scale: [1, 1.035, 1], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] }}
-                  transition={{ duration: 1.9, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
+                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_50px_rgba(254,199,8,0.6),inset_0_1px_16px_rgba(255,255,255,0.3)] h-[80px] w-[80px]"
+                  animate={{ scale: [1, 1.04, 1], filter: ['brightness(1)', 'brightness(1.12)', 'brightness(1)'] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
                 >
                   <img src={planetLogo} alt="Planet Animal" className="h-full w-full rounded-full object-cover" />
-                  <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_22%,rgba(255,255,255,0.38),transparent_30%)]" />
+                  <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_22%,rgba(255,255,255,0.4),transparent_30%)]" />
                 </motion.div>
               </div>
-              
-              <span className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.5em] mb-4 opacity-60">Points Balance</span>
-              <div className="flex items-end gap-3">
-                <motion.span 
+
+              <motion.span
+                className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.5em] mb-5 opacity-80"
+                animate={{ opacity: [0.5, 0.9, 0.5] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                Points Balance
+              </motion.span>
+
+              <div className="flex items-end gap-3 mb-2">
+                <motion.span
                   key={currentPoints}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-7xl md:text-9xl font-black text-white tabular-nums tracking-tighter leading-none"
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                  className="text-7xl md:text-9xl font-black text-white tabular-nums tracking-tighter leading-none text-gradient-gold"
                 >
                   {currentPoints.toLocaleString()}
                 </motion.span>
                 <div className="flex flex-col items-start pb-2">
                   <span className="text-3xl font-black text-[#fec708] leading-none">PAW</span>
-                  <span className="text-xl font-bold text-white/20 tracking-widest leading-none">PTS</span>
+                  <span className="text-xl font-bold text-white/30 tracking-widest leading-none">PTS</span>
                 </div>
               </div>
 
@@ -331,51 +375,15 @@ export default function Rewards() {
                       <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Next: {nextTier.title}</span>
                       <span className="text-[10px] font-black text-[#fec708] uppercase tracking-widest">{Math.round(progress)}%</span>
                     </div>
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 mb-2">
-                      <motion.div 
+                    <div className="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 mb-2">
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 1.5, ease: "circOut" }}
-                        className="h-full bg-gradient-to-r from-[#fec708] to-orange-400 shadow-[0_0_18px_rgba(254,199,8,0.7)] rounded-full"
+                        className="h-full progress-gold rounded-full"
                       />
                     </div>
-                    <p className="text-[9px] font-bold text-white/25 mb-4">{ptsToNext.toLocaleString()} pts away from your next reward</p>
-                    {/* Premium Nudge — TAP FOR REWARD DETAILS */}
-                    <motion.button
-                      onClick={() => {
-                        const el = document.getElementById('roadmap-section');
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.6 }}
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.96 }}
-                      className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl overflow-hidden border border-[#fec708]/30 bg-[#fec708]/5 hover:bg-[#fec708]/12 transition-all duration-300"
-                      style={{ boxShadow: '0 0 24px rgba(254,199,8,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' }}
-                    >
-                      {/* Breathing glow layer */}
-                      <motion.div
-                        className="absolute inset-0 rounded-2xl bg-[#fec708]/10 pointer-events-none"
-                        animate={{ opacity: [0.4, 0.9, 0.4] }}
-                        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                      />
-                      <motion.div
-                        animate={{ opacity: [0.7, 1, 0.7] }}
-                        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                      >
-                        <Sparkles className="w-3 h-3 text-[#fec708]" />
-                      </motion.div>
-                      <span className="relative text-[10px] font-black uppercase tracking-[0.22em] text-[#fec708]">
-                        TAP FOR REWARD DETAILS
-                      </span>
-                      <motion.div
-                        animate={{ opacity: [0.7, 1, 0.7] }}
-                        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                      >
-                        <ChevronRight className="w-3.5 h-3.5 text-[#fec708] group-hover:translate-x-0.5 transition-transform" />
-                      </motion.div>
-                    </motion.button>
+                    <p className="text-[9px] font-bold text-white/25 mb-5">{ptsToNext.toLocaleString()} pts away from your next reward</p>
 
                     {/* Gamification Stats Row */}
                     <div className="mt-5 grid grid-cols-3 gap-2 w-full">
@@ -727,20 +735,23 @@ export default function Rewards() {
                 >
                   <div className={`flex-1 w-full ${isEven ? 'md:text-right' : 'md:text-left'}`}>
                     <div className={cn(
-                      "p-8 md:p-10 rounded-[3rem] relative overflow-hidden group transition-all duration-700",
-                      isLocked 
-                        ? 'bg-white/[0.055] border border-white/[0.12] shadow-[0_24px_60px_rgba(0,0,0,0.28)]' 
-                        : 'liquid-glass-premium border-[#fec708]/20 shadow-[0_40px_80px_rgba(0,0,0,0.4)]',
-                      isNext && !isLocked ? '' : '',
-                      isNext && isLocked ? 'ring-1 ring-[#fec708]/35 bg-[#fec708]/[0.075]' : ''
+                      "p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group transition-all duration-700 gradient-noise",
+                      isLocked
+                        ? 'bg-[#0b0b09] border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.28)]'
+                        : 'bg-[#0b0b09] border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.4)]',
+                      isNext && isLocked ? 'border-white/15 shadow-[0_0_40px_rgba(254,199,8,0.06)]' : ''
                     )}>
-                      {!isLocked && <HolographicFoil />}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${tier.color} ${isLocked ? 'opacity-[0.045] group-hover:opacity-[0.1]' : 'opacity-0 group-hover:opacity-[0.08]'} transition-opacity duration-700`} />
-                      
+                      {/* Beautiful tier color gradient wash */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${tier.color} opacity-10 group-hover:opacity-20 transition-opacity duration-700`} />
+                      {/* Extra glow layer for unlocked tiers */}
+                      {!isLocked && (
+                        <div className={`absolute inset-0 bg-gradient-to-br ${tier.color} opacity-0 group-hover:opacity-15 transition-opacity duration-700`} />
+                      )}
+
                       <div className={`flex flex-col ${isEven ? 'md:items-end' : 'md:items-start'} gap-4 relative z-10`}>
                         <div className={cn(
                           "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]",
-                          isLocked ? 'bg-white/[0.08] text-white/55 border border-white/10' : 'bg-[#fec708]/10 text-[#fec708]'
+                          isLocked ? 'bg-white/[0.06] text-white/50 border border-white/10' : 'bg-[#fec708]/10 text-[#fec708]'
                         )}>
                           {isLocked ? (
                             <><Lock className="w-3 h-3" /> {isNext ? 'Next Up' : 'Locked'} &bull; {tier.points.toLocaleString()} pts</>
@@ -748,17 +759,17 @@ export default function Rewards() {
                             <><CheckCircle2 className="w-3.5 h-3.5" /> Unlocked</>
                           )}
                         </div>
-                        
+
                         <h3 className={cn(
                           "text-3xl md:text-4xl font-black transition-all group-hover:tracking-tight duration-500",
-                          isLocked ? 'text-white/[0.72]' : 'text-white'
+                          isLocked ? 'text-white/70' : 'text-white'
                         )}>
                           {tier.title}
                         </h3>
-                        
+
                         <p className={cn(
                           "text-base md:text-lg font-medium leading-relaxed max-w-md",
-                          isLocked ? 'text-white/[0.42]' : 'text-white/40'
+                          isLocked ? 'text-white/40' : 'text-white/45'
                         )}>
                           {tier.description}
                         </p>
@@ -767,18 +778,18 @@ export default function Rewards() {
                         {isLocked && (
                           <div className="mt-4 w-full max-w-xs">
                             <div className="flex justify-between items-center mb-1.5">
-                              <span className="text-[8px] font-black text-white/45 uppercase tracking-widest">Progress</span>
-                              <span className="text-[8px] font-black text-white/45">{Math.min(100, Math.round((currentPoints / tier.points) * 100))}%</span>
+                              <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Progress</span>
+                              <span className="text-[8px] font-black text-white/40">{Math.min(100, Math.round((currentPoints / tier.points) * 100))}%</span>
                             </div>
-                            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                              <motion.div 
+                            <div className="h-1.5 w-full bg-white/[0.06] rounded-full overflow-hidden border border-white/[0.04]">
+                              <motion.div
                                 initial={{ width: 0 }}
                                 whileInView={{ width: `${Math.min(100, (currentPoints / tier.points) * 100)}%` }}
                                 transition={{ duration: 1.5, ease: 'circOut' }}
-                                className="h-full bg-gradient-to-r from-[#fec708]/45 to-[#fec708] rounded-full"
+                                className="h-full bg-[#fec708] rounded-full"
                               />
                             </div>
-                            <p className="text-[9px] font-bold text-white/[0.38] mt-2">
+                            <p className="text-[9px] font-bold text-white/30 mt-2">
                               {Math.max(0, tier.points - currentPoints).toLocaleString()} pts to unlock
                             </p>
                           </div>
@@ -799,44 +810,56 @@ export default function Rewards() {
                     </div>
                   </div>
 
-                  {/* Orb Icon — unlocked tiers get animated orb */}
+                  {/* Orb Icon — inspired by referral card, clean orb for all tiers */}
                   <div className="relative z-20 shrink-0">
-                    {isLocked ? (
+                    <div className="relative grid place-items-center" style={{ width: 100, height: 100 }}>
+                      {/* Outer pulsing ring */}
                       <motion.div
-                        whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}
                         className={cn(
-                          "relative w-20 h-20 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center border bg-[#0d0d0d] shadow-xl transition-colors",
-                          isNext ? 'border-[#fec708]/35 text-[#fec708] bg-[#fec708]/10' : 'border-white/15 text-white/45 bg-white/[0.04]'
+                          "absolute inset-1 rounded-full border shadow-lg",
+                          isLocked
+                            ? isNext ? 'border-[#fec708]/20 shadow-[0_0_30px_rgba(254,199,8,0.12)]' : 'border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.04)]'
+                            : 'border-[#fec708]/20 shadow-[0_0_30px_rgba(254,199,8,0.18)]'
                         )}
+                        animate={shouldReduceMotion ? undefined : { scale: [1, 1.03, 1], opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 3.5, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
+                      />
+                      {/* Conic gradient ring — only for unlocked to avoid locked banding */}
+                      {!isLocked && (
+                        <motion.div
+                          className="absolute inset-3 rounded-full bg-[conic-gradient(from_120deg,transparent,rgba(254,199,8,0.3),rgba(255,246,204,0.12),transparent)] blur-sm"
+                          animate={shouldReduceMotion ? undefined : { rotate: 360 }}
+                          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                        />
+                      )}
+                      {/* Inner icon container */}
+                      <motion.div
+                        className={cn(
+                          "relative grid place-items-center rounded-full border shadow-xl",
+                          isLocked
+                            ? isNext
+                              ? 'w-[52px] h-[52px] md:w-14 md:h-14 border-[#fec708]/25 bg-[#fec708]/8'
+                              : 'w-[52px] h-[52px] md:w-14 md:h-14 border-white/12 bg-white/[0.04]'
+                            : 'w-[52px] h-[52px] md:w-14 md:h-14 border-white/15 bg-[#0a0a0a] shadow-[0_0_24px_rgba(254,199,8,0.2),inset_0_1px_1px_rgba(255,255,255,0.08)]'
+                        )}
+                        animate={shouldReduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                        transition={{ duration: 2.8, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
                       >
-                        {React.cloneElement(tier.icon, { className: isNext ? 'text-[#fec708]' : 'text-white/45', size: 30 })}
-                        <span className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black text-white/55">
-                          <Lock className="h-3.5 w-3.5" />
-                        </span>
+                        {React.cloneElement(tier.icon, {
+                          className: isLocked ? (isNext ? 'text-[#fec708]' : 'text-white/40') : 'text-[#fec708]',
+                          size: 24
+                        })}
+                        {/* Gloss highlight */}
+                        <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_20%,rgba(255,255,255,0.25),transparent_35%)]" />
                       </motion.div>
-                    ) : (
-                      <div className="relative grid place-items-center" style={{ width: 96, height: 96 }}>
-                        <motion.div
-                          className="absolute inset-3 rounded-full border border-[#fec708]/20 shadow-[0_0_32px_rgba(254,199,8,0.15)]"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
-                        />
-                        <motion.div
-                          className="absolute inset-1 rounded-full border border-dashed border-teal-200/10"
-                          animate={{ rotate: -360 }}
-                          transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-                        />
-                        <motion.div
-                          className="absolute inset-2 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.2),rgba(255,246,204,0.08),rgba(45,212,191,0.08),transparent)] blur-md"
-                          animate={{ rotate: 360, scale: [1, 1.03, 1] }}
-                          transition={{ rotate: { duration: 6, repeat: Infinity, ease: 'linear' }, scale: { duration: 2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
-                        />
-                        <div className="relative grid place-items-center rounded-full border border-white/15 bg-[#0a0a0a] shadow-[0_0_24px_rgba(254,199,8,0.25),inset_0_1px_1px_rgba(255,255,255,0.1)] w-14 h-14 md:w-16 md:h-16">
-                          {React.cloneElement(tier.icon, { className: 'text-[#fec708]', size: 28 })}
-                        </div>
-                      </div>
-                    )}
-                    
+                      {/* Lock badge for locked tiers */}
+                      {isLocked && (
+                        <span className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black text-white/50">
+                          <Lock className="h-3 w-3" />
+                        </span>
+                      )}
+                    </div>
+
                     {/* Glowing point on timeline */}
                     <div className={cn(
                       "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full blur-[3px] -z-10 hidden md:block transition-all duration-700",
