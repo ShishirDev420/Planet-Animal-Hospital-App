@@ -222,7 +222,7 @@ export default function Rewards() {
           <ChevronLeft size={20} />
         </motion.button>
         <div className="flex flex-col items-center">
-          <h1 className="font-heading font-black text-xl uppercase italic tracking-tighter text-[#fec708]">PAW POINTS</h1>
+          <h1 className="font-heading text-xl font-black uppercase italic tracking-[-0.06em] text-[#fec708]">PAW POINTS</h1>
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-[#fec708] animate-pulse" />
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Health Rewards</span>
@@ -246,13 +246,13 @@ export default function Rewards() {
           >
             <HolographicFoil />
             <PawPrint className="w-4 h-4 text-[#fec708] group-hover:rotate-12 transition-transform" />
-            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-white/80">Rewards Hub &bull; <span className="text-[#fec708]">Paw Points</span></span>
+            <span className="cinematic-kicker text-[10px] text-white/80">Rewards Hub &bull; <span className="text-[#fec708]">Paw Points</span></span>
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.95]"
+            className="cinematic-title mb-8 text-6xl md:text-8xl"
           >
             YOUR <span className="text-[#fec708] italic">PAW</span><br />POINTS
           </motion.h1>
@@ -261,7 +261,7 @@ export default function Rewards() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl text-white/40 font-medium leading-relaxed max-w-2xl mx-auto mb-16"
+            className="cinematic-copy mx-auto mb-16 max-w-2xl text-xl"
           >
             Every visit, every check-in, every act of care earns Paw Points. Unlock real clinical rewards on your journey to pet longevity.
           </motion.p>
@@ -341,7 +341,7 @@ export default function Rewards() {
               </div>
 
               <motion.span
-                className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.5em] mb-5 opacity-80"
+                className="cinematic-kicker mb-5 tracking-[0.5em] opacity-80"
                 animate={{ opacity: [0.5, 0.9, 0.5] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               >
@@ -354,7 +354,7 @@ export default function Rewards() {
                   initial={{ opacity: 0, y: 20, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className="text-7xl md:text-9xl font-black text-white tabular-nums tracking-tighter leading-none text-gradient-gold"
+                  className="cinematic-price text-7xl md:text-9xl tabular-nums text-white text-gradient-gold"
                 >
                   {currentPoints.toLocaleString()}
                 </motion.span>
@@ -451,10 +451,10 @@ export default function Rewards() {
             <span className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/15 bg-[#fec708]/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#fec708]">
               <Sparkles className="h-3.5 w-3.5" /> Rewards Details
             </span>
-            <h2 id="reward-details-title" className="mt-5 text-4xl font-black tracking-tight text-white md:text-5xl">
+            <h2 id="reward-details-title" className="cinematic-section-title mt-5 text-4xl md:text-5xl">
               Clear value, next action, no guesswork.
             </h2>
-            <p className="mt-3 max-w-xl text-base font-medium leading-relaxed text-white/45">
+            <p className="cinematic-copy mt-3 max-w-xl text-base text-white/45">
               See what your points are worth today and what one more health action moves you toward next.
             </p>
           </div>
@@ -480,7 +480,7 @@ export default function Rewards() {
                   <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#fec708]/20 bg-[#fec708]/10 text-[#fec708]">
                     <Gift className="h-7 w-7" />
                   </div>
-                  <h3 className="text-3xl font-black text-white">Redeemable Value</h3>
+                  <h3 className="cinematic-card-title text-3xl">Redeemable Value</h3>
                   <p className="mt-2 max-w-md text-sm font-medium leading-relaxed text-white/45">
                     Paw Points convert directly into clinical credit for eligible Planet Animal services.
                   </p>
@@ -538,7 +538,7 @@ export default function Rewards() {
                   <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-300/20 bg-orange-400/10 text-orange-300">
                     <Activity className="h-7 w-7" />
                   </div>
-                  <h3 className="text-3xl font-black text-white">Health Streak</h3>
+                  <h3 className="cinematic-card-title text-3xl">Health Streak</h3>
                   <p className="mt-2 text-sm font-medium text-white/45">A calmer weekly view of check-in momentum.</p>
                 </div>
                 <div className="text-right">
@@ -602,12 +602,12 @@ export default function Rewards() {
             <div className="flex-1 text-center md:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fec708]/10 border border-[#fec708]/20 mb-6">
                 <Share2 className="w-3.5 h-3.5 text-[#fec708]" />
-                <span className="text-[9px] font-black text-[#fec708] uppercase tracking-[0.2em]">Referral Rewards</span>
+                <span className="cinematic-kicker text-[9px]">Referral Rewards</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+              <h2 className="cinematic-section-title mb-4 text-4xl md:text-5xl">
                 Invite a <span className="text-[#fec708]">Friend</span>
               </h2>
-              <p className="text-lg text-white/50 font-medium leading-relaxed max-w-xl mb-8">
+              <p className="cinematic-copy mb-8 max-w-xl text-lg text-white/50">
                 Refer a fellow pet parent. When they join Planet Animal, <span className="text-white font-bold">you both receive <span className="text-[#fec708]">2,500 Paw Points</span></span> instantly — enough to unlock your first bill rebate.
               </p>
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
@@ -657,7 +657,7 @@ export default function Rewards() {
                     key={referralCount}
                     initial={{ scale: 1.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="text-5xl font-black text-white tabular-nums"
+                    className="cinematic-price text-5xl tabular-nums text-white"
                   >
                     {referralCount}
                   </motion.span>
@@ -683,7 +683,7 @@ export default function Rewards() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-7xl font-black text-white mb-6 uppercase italic tracking-tighter"
+            className="cinematic-title mb-6 text-5xl uppercase italic md:text-7xl"
           >
             Reward <span className="text-[#fec708]">Milestones</span>
           </motion.h2>
@@ -691,7 +691,7 @@ export default function Rewards() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-xl text-white/30 font-medium max-w-xl leading-relaxed"
+            className="cinematic-copy max-w-xl text-xl text-white/35"
           >
             From your first visit to legendary status — every Paw Point you earn brings real clinical rewards closer.
           </motion.p>
@@ -761,7 +761,7 @@ export default function Rewards() {
                         </div>
 
                         <h3 className={cn(
-                          "text-3xl md:text-4xl font-black transition-all group-hover:tracking-tight duration-500",
+                          "cinematic-card-title text-3xl transition-all duration-500 group-hover:tracking-tight md:text-4xl",
                           isLocked ? 'text-white/70' : 'text-white'
                         )}>
                           {tier.title}
@@ -888,8 +888,8 @@ export default function Rewards() {
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-3xl font-black text-white tracking-tight uppercase">Points History</h2>
-                <p className="text-white/30 font-medium text-sm tracking-wide">A complete record of your earned and redeemed Paw Points.</p>
+                <h2 className="cinematic-card-title text-3xl uppercase">Points History</h2>
+                <p className="text-sm font-semibold tracking-[-0.01em] text-white/35">A complete record of your earned and redeemed Paw Points.</p>
               </div>
             </div>
             <button className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.2em] border-b border-[#fec708]/20 pb-1 hover:text-white hover:border-white transition-all">

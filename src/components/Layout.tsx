@@ -87,8 +87,8 @@ export default function Layout() {
             <div className="flex items-center gap-4 mb-4">
               <Logo className="!w-16 !h-16 drop-shadow-[0_0_20px_rgba(254,199,8,0.3)]" />
             </div>
-            <h2 className="text-2xl font-heading font-bold tracking-tight text-white">Planet Animal</h2>
-            <p className="text-xs font-bold text-planet-yellow uppercase tracking-[0.25em] mt-1">Hospital & Wellness</p>
+            <h2 className="cinematic-card-title text-2xl">Planet Animal</h2>
+            <p className="cinematic-kicker mt-1 text-[10px]">Hospital & Wellness</p>
           </div>
           <div className="flex-1 py-6 px-4 space-y-1">
             <DesktopNavItem to={preservePreviewSearch('/')} icon={<Home size={20} />} label="Home" />

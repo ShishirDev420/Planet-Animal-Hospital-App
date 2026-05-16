@@ -84,7 +84,7 @@ export default function PrescriptionScanner({ petName, onScanComplete, onClose }
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-xl font-bold font-heading text-slate-800 dark:text-white">
+              <h2 className="cinematic-card-title text-xl text-slate-800 dark:text-white">
                 📸 Scan Prescription
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

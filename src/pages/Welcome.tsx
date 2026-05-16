@@ -249,7 +249,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
             className="w-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 sm:p-8"
           >
             <div className="space-y-6">
-              <h3 className="font-heading font-bold tracking-tight text-white text-xl text-center">Welcome! Who are we caring for?</h3>
+              <h3 className="cinematic-card-title text-center text-xl">Welcome! Who are we caring for?</h3>
               {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
               
               <motion.div 
@@ -339,10 +339,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
 
         {/* Cinematic Tagline */}
         <div className="flex flex-col items-center justify-center text-center w-full mb-1 sm:mb-2">
-          <h1 className="font-heading font-extrabold tracking-tight drop-shadow-md text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 text-4xl sm:text-5xl mb-0">
+          <h1 className="cinematic-title mb-0 text-4xl drop-shadow-md sm:text-5xl">
             20 Years of
           </h1>
-          <div className="relative w-full flex justify-center items-center h-[1.5em] text-[#fec708] font-heading font-extrabold text-4xl sm:text-5xl drop-shadow-[0_0_20px_rgba(254,199,8,0.8)]">
+          <div className="relative flex h-[1.5em] w-full items-center justify-center font-heading text-4xl font-black tracking-[-0.055em] text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] sm:text-5xl">
             {headerWords.map((word) => (
               <span
                 key={word}
@@ -389,7 +389,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
               style={{ willChange: 'transform, opacity, filter' }}
               className="flex flex-col items-center justify-center text-center w-full"
             >
-              <h3 className="font-heading font-extrabold tracking-tight drop-shadow-md text-white text-xl sm:text-2xl mb-1">{benefits[activeBenefit].title}</h3>
+              <h3 className="cinematic-card-title mb-1 text-xl drop-shadow-md sm:text-2xl">{benefits[activeBenefit].title}</h3>
               <p className="text-white/70 font-medium text-xs sm:text-sm tracking-tight leading-relaxed max-w-[280px] mx-auto">{benefits[activeBenefit].desc}</p>
             </motion.div>
           </AnimatePresence>

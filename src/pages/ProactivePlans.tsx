@@ -202,23 +202,23 @@ export default function ProactivePlans() {
       <header className="hidden lg:block px-8 pt-10 pb-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-2 mb-6">
-            <span className="inline-flex items-center gap-2 bg-planet-yellow/15 text-planet-yellow px-3 py-1 rounded-full text-xs font-bold tracking-wide">
+            <span className="inline-flex items-center gap-2 rounded-full border border-planet-yellow/15 bg-planet-yellow/10 px-3 py-1.5 cinematic-kicker shadow-[0_0_28px_rgba(254,199,8,0.10)]">
               <Shield size={13} />
               Preventative Care
             </span>
           </div>
-          <h1 className="text-[3.25rem] leading-[1.08] font-bold tracking-tight text-white mb-5 max-w-3xl">
+          <h1 className="cinematic-title mb-5 max-w-3xl text-[3.75rem]">
             Stop emergencies<br />
             <span className="text-planet-yellow">before they start.</span>
           </h1>
-          <p className="text-base font-medium text-slate-300 leading-relaxed max-w-2xl mb-6">
+          <p className="cinematic-copy max-w-2xl mb-6 text-base">
             A skipped checkup can snowball. Our plans catch the small things before they become expensive emergencies — so your pet stays healthier, longer.
           </p>
           <div className="inline-flex items-center gap-2.5 bg-white/[0.06] border border-white/10 rounded-xl px-5 py-3">
             <Zap size={17} className="text-planet-yellow shrink-0" />
-            <p className="text-sm text-slate-200 font-medium">
-              Upgrade to unlock <span className="text-white font-semibold">Point Multipliers</span> up to 2.0× on every visit.
-            </p>
+              <p className="text-sm font-semibold tracking-[-0.01em] text-white/72">
+                Upgrade to unlock <span className="text-white font-semibold">Point Multipliers</span> up to 2.0× on every visit.
+              </p>
           </div>
         </div>
       </header>
@@ -234,10 +234,10 @@ export default function ProactivePlans() {
             </button>
           </div>
           <div className="flex flex-col items-center flex-1 text-center pointer-events-none">
-            <h1 className="text-sm font-display font-black text-white/95 tracking-tight uppercase leading-none">
+            <h1 className="font-heading text-sm font-black text-white/95 tracking-tight uppercase leading-none">
               PLANET ANIMAL
             </h1>
-            <p className="text-[7px] font-bold text-planet-yellow uppercase tracking-[0.15em] mt-0.5">
+            <p className="cinematic-kicker mt-0.5 text-[7px] tracking-[0.15em]">
               HOSPITAL & WELLNESS
             </p>
           </div>
@@ -248,19 +248,19 @@ export default function ProactivePlans() {
       {/* Mobile Hero */}
       <div className="lg:hidden px-6 pt-4 pb-8 relative z-10">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}>
-          <div className="inline-flex items-center gap-2 bg-planet-yellow/15 text-planet-yellow px-3 py-1 rounded-full text-xs font-bold mb-3 tracking-wide">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-planet-yellow/15 bg-planet-yellow/10 px-3 py-1.5 cinematic-kicker shadow-[0_0_28px_rgba(254,199,8,0.10)]">
             <Shield size={12} />
             Preventative Care
           </div>
-          <h1 className="text-3xl font-bold tracking-tight leading-tight text-white mb-3">
+          <h1 className="cinematic-title mb-4 text-4xl">
             Stop emergencies <span className="text-planet-yellow">before they start.</span>
           </h1>
-          <p className="text-sm font-medium text-slate-300 leading-relaxed mb-4">
+          <p className="cinematic-copy mb-4 text-sm">
             The 'Domino Effect' in pet health is real. Our proactive plans catch the small things before they become heartbreaking emergencies.
           </p>
           <div className="inline-flex items-center gap-2 bg-white/[0.06] border border-white/10 rounded-xl px-4 py-2.5">
             <Zap size={15} className="text-planet-yellow shrink-0" />
-            <p className="text-xs text-slate-200 font-medium">
+            <p className="text-xs font-semibold tracking-[-0.01em] text-white/72">
               Up to <span className="text-white font-semibold">2.0× Point Multipliers</span> on every visit.
             </p>
           </div>
@@ -297,7 +297,7 @@ export default function ProactivePlans() {
                 {/* Hero indicator */}
                 {isHero && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                    <span className="inline-flex items-center gap-1.5 bg-planet-yellow text-black text-[11px] font-black px-4 py-1.5 rounded-full tracking-wide shadow-lg">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-planet-yellow px-4 py-1.5 font-heading text-[10px] font-black uppercase tracking-[0.22em] text-black shadow-lg">
                       <Star size={12} />
                       MOST POPULAR
                     </span>
@@ -308,19 +308,19 @@ export default function ProactivePlans() {
                   {/* Header */}
                   <div className="mb-6">
                     <span
-                      className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] mb-2"
+                      className="mb-3 inline-block cinematic-kicker"
                       style={{ color: t.accent }}
                     >
                       {t.tag}
                     </span>
-                    <h3 className="text-xl font-semibold text-white">{t.title}</h3>
-                    <p className="text-sm font-medium text-white/82 mt-1.5 leading-relaxed">{t.desc}</p>
+                    <h3 className="cinematic-card-title text-2xl">{t.title}</h3>
+                    <p className="mt-2 text-sm font-semibold leading-relaxed tracking-[-0.01em] text-white/70">{t.desc}</p>
                   </div>
 
                   {/* Price */}
                   <div className="flex items-end gap-1.5 mb-7">
-                    <span className="text-[2.5rem] leading-none font-bold text-white">{t.price}</span>
-                    <span className="text-sm text-white/65 font-medium pb-0.5">{t.period}</span>
+                    <span className="cinematic-price text-[3rem]">{t.price}</span>
+                    <span className="pb-1 text-sm font-bold tracking-[-0.01em] text-white/50">{t.period}</span>
                   </div>
 
                   {/* Paw Points badge */}
@@ -330,12 +330,12 @@ export default function ProactivePlans() {
                   >
                     <PawPrint size={14} style={{ color: t.accent }} />
                     <span
-                      className="text-sm font-semibold text-white/80"
+                      className="font-heading text-sm font-black tracking-tight"
                       style={{ color: t.accent }}
                     >
                       {t.pawPoints}
                     </span>
-                    <span className="text-xs font-medium text-white/72">Paw Points Multiplier</span>
+                    <span className="text-xs font-bold tracking-[-0.01em] text-white/62">Paw Points Multiplier</span>
                   </div>
 
                   {/* Features */}
@@ -343,8 +343,7 @@ export default function ProactivePlans() {
                     {t.features.map((f, fi) => (
                       <li
                         key={fi}
-                        className="flex items-start gap-2.5"
-                        style={f.highlight ? { borderLeft: `2px solid ${t.accent}`, paddingLeft: '10px' } : {}}
+                        className={`flex items-start gap-2.5 rounded-xl ${f.highlight ? 'bg-white/[0.045] px-3 py-2' : ''}`}
                       >
                         <Check
                           size={15}
@@ -352,7 +351,7 @@ export default function ProactivePlans() {
                           style={{ color: f.highlight ? t.accent : '#64748b' }}
                         />
                         <span
-                          className={`text-sm leading-snug ${f.highlight ? 'text-white font-semibold' : 'text-white/86 font-medium'}`}
+                          className={`text-sm leading-snug tracking-[-0.01em] ${f.highlight ? 'text-white font-black' : 'text-white/80 font-semibold'}`}
                         >
                           {f.text}
                         </span>
@@ -364,7 +363,7 @@ export default function ProactivePlans() {
                   <button
                     onClick={() => handleSelectPlan(t.id)}
                     disabled={isUpdating || isActive}
-                    className={`w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 ${
+                    className={`w-full rounded-xl py-3 font-heading text-[11px] font-black uppercase tracking-[0.22em] transition-all duration-200 ${
                       isActive
                         ? 'bg-white/5 text-planet-yellow border border-white/10 cursor-default'
                         : isHero
@@ -387,14 +386,14 @@ export default function ProactivePlans() {
       {/* Comparison Table */}
       <div className="hidden lg:block px-8 mt-20 max-w-6xl mx-auto relative z-10">
         <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-white mb-2">Compare plans</h2>
-          <p className="text-sm font-medium text-slate-400">Every plan includes our core preventative care. Upgrade for more.</p>
+          <h2 className="cinematic-section-title mb-3 text-4xl">Compare plans</h2>
+          <p className="cinematic-copy text-sm">Every plan includes our core preventative care. Upgrade for more.</p>
         </div>
         <div className="rounded-2xl border border-white/10 overflow-hidden" style={{ backgroundColor: '#0c1410' }}>
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/8">
-                <th className="text-left p-5 pl-6 text-sm font-semibold text-slate-300 w-[200px]">Feature</th>
+                <th className="w-[200px] p-5 pl-6 text-left font-heading text-sm font-black tracking-tight text-white/74">Feature</th>
                 {(['essential', 'advanced', 'premium'] as const).map((k) => {
                   const t = tiers[k];
                   const isCenter = k === 'advanced';
@@ -406,10 +405,10 @@ export default function ProactivePlans() {
                       style={isCenter ? { backgroundColor: 'rgba(245, 166, 35, 0.06)' } : isPremium ? { backgroundColor: 'rgba(155, 111, 199, 0.04)' } : {}}
                     >
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-sm font-semibold" style={{ color: isCenter ? '#f5a623' : isPremium ? '#9b6fc7' : '#7ea892' }}>
+                        <span className="font-heading text-sm font-black tracking-tight" style={{ color: isCenter ? '#f5a623' : isPremium ? '#9b6fc7' : '#7ea892' }}>
                           {t.title}
                         </span>
-                        <span className="text-xs text-slate-500">{t.price}{t.period}</span>
+                        <span className="text-xs font-semibold text-white/35">{t.price}{t.period}</span>
                       </div>
                     </th>
                   );

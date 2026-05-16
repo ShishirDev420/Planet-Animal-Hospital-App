@@ -60,10 +60,10 @@ export default function ProfileSelection() {
       >
         <div className="flex flex-col items-center mb-12">
           <Logo size="lg" className="mb-6" />
-          <h1 className="text-3xl font-display font-black tracking-tighter text-slate-900 uppercase dark:text-white/95">
+          <h1 className="cinematic-section-title text-center text-4xl uppercase text-slate-900 dark:text-white/95">
             Who's visiting today?
           </h1>
-          <p className="text-slate-500 text-sm mt-2 dark:text-white/60">Select a profile to continue</p>
+          <p className="mt-2 text-sm font-semibold tracking-[-0.01em] text-slate-500 dark:text-white/60">Select a profile to continue</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6 w-full">

@@ -108,7 +108,7 @@ export default function ProfileSettings() {
         >
           <ArrowLeft size={20} className="text-slate-600 dark:text-white/90" />
         </button>
-        <h1 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Profile Settings</h1>
+        <h1 className="cinematic-section-title text-3xl drop-shadow-md">Profile Settings</h1>
         <div className="w-11" /> {/* Spacer */}
       </header>
 
@@ -176,7 +176,7 @@ export default function ProfileSettings() {
       >
         {/* Account Details */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm border-b border-white/10 pb-2 px-2">Account Details</h2>
+          <h2 className="cinematic-card-title mb-4 border-b border-white/10 px-2 pb-2 text-xl drop-shadow-sm">Account Details</h2>
           <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
@@ -205,7 +205,7 @@ export default function ProfileSettings() {
 
         {/* Pet's Profile */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm border-b border-white/10 pb-2 px-2">{profile?.name || "Pet"}'s Profile</h2>
+          <h2 className="cinematic-card-title mb-4 border-b border-white/10 px-2 pb-2 text-xl drop-shadow-sm">{profile?.name || "Pet"}'s Profile</h2>
           <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-5">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
@@ -321,7 +321,7 @@ export default function ProfileSettings() {
 
         {/* App Preferences */}
         <motion.section variants={itemVariants} className="space-y-4">
-          <h2 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm border-b border-white/10 pb-2 px-2">App Preferences</h2>
+          <h2 className="cinematic-card-title mb-4 border-b border-white/10 px-2 pb-2 text-xl drop-shadow-sm">App Preferences</h2>
           <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-6">
             <div className="flex items-center justify-between">
               <div>

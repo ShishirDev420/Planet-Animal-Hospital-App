@@ -121,7 +121,7 @@ export default function APISettings({ isOpen, onClose }: APISettingsProps) {
               {/* Header */}
               <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
                 <div>
-                  <h2 className="font-heading font-bold text-white text-lg">AI Settings</h2>
+                  <h2 className="cinematic-card-title text-lg">AI Settings</h2>
                   <p className="text-xs text-white/40 mt-0.5">Preview the demo now, or connect your own keys for full live AI</p>
                 </div>
                 <button
@@ -174,7 +174,7 @@ export default function APISettings({ isOpen, onClose }: APISettingsProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className={`font-heading font-bold text-sm ${provider.color}`}>
+                            <h3 className={`cinematic-card-title text-sm ${provider.color}`}>
                               {provider.name}
                             </h3>
                             {provider.isPrimary && (

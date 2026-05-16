@@ -94,15 +94,15 @@ export default function HealthJourney({ stages, onToggleTask, petName }: HealthJ
         <div className="relative z-10 space-y-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/20 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#fec708]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/20 bg-[#fec708]/10 px-3 py-1.5 cinematic-kicker">
                 <Shield className="h-3.5 w-3.5" />
                 Premium Paws Daily Program
               </div>
               <div className="space-y-2">
-                <h2 className="font-heading text-3xl font-black leading-none tracking-tight text-white sm:text-5xl">
+                <h2 className="cinematic-section-title text-3xl sm:text-5xl">
                   {petName}'s wellness launch
                 </h2>
-                <p className="max-w-xl text-sm font-medium leading-6 text-white/60 sm:text-base">
+                <p className="cinematic-copy max-w-xl text-sm sm:text-base">
                   A sequential longevity plan that turns veterinary priorities into daily, trackable care actions.
                 </p>
               </div>
@@ -122,13 +122,13 @@ export default function HealthJourney({ stages, onToggleTask, petName }: HealthJ
               </div>
               {nextAction && nextActionText ? (
                 <div className="space-y-2">
-                  <h3 className="font-heading text-xl font-black leading-tight tracking-tight text-white">{nextActionText.title}</h3>
+                  <h3 className="cinematic-card-title text-xl">{nextActionText.title}</h3>
                   {nextActionText.description && <p className="text-sm font-medium leading-6 text-white/65">{nextActionText.description}</p>}
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/38">Current phase: {nextActionStage?.title}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <h3 className="font-heading text-xl font-black tracking-tight text-white">Launch complete</h3>
+                  <h3 className="cinematic-card-title text-xl">Launch complete</h3>
                   <p className="text-sm font-medium leading-6 text-white/65">Every unlocked wellness action has been checked off.</p>
                 </div>
               )}
@@ -203,7 +203,7 @@ export default function HealthJourney({ stages, onToggleTask, petName }: HealthJ
 
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className={`font-heading text-xl font-black leading-tight tracking-tight sm:text-2xl ${stage.isUnlocked ? 'text-white' : 'text-white/35'}`}>{stage.title}</h3>
+                      <h3 className={`cinematic-card-title text-xl sm:text-2xl ${stage.isUnlocked ? 'text-white' : 'text-white/35'}`}>{stage.title}</h3>
                       {isCurrent && (
                         <span className="rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#fec708]">Active</span>
                       )}

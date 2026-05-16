@@ -483,8 +483,8 @@ function getLiveMetrics(agentId: AgentId, state: ReturnType<typeof getAgentState
     ];
   }
   return [
-    { label: 'Life-Max', value: state.pritpawlRoadmap ? `${state.pritpawlRoadmap.totalPawPoints.toLocaleString()} pts` : `${state.completedRoadmapTasks}/${state.totalRoadmapTasks}` },
-    { label: 'Focus', value: state.pritpawlRoadmap ? state.pritpawlRoadmap.primaryFocus.split('&')[0].trim() : 'Generate' },
+    { label: 'Life-Max', value: state.pritpawlRoadmap ? `${getRoadmapTotalPawPoints(state.pritpawlRoadmap).toLocaleString()} pts` : `${state.completedRoadmapTasks}/${state.totalRoadmapTasks}` },
+    { label: 'Focus', value: state.pritpawlRoadmap ? getRoadmapPrimaryFocus(state.pritpawlRoadmap).split('&')[0].trim() : 'Generate' },
   ];
 }
 
@@ -726,6 +726,10 @@ function buildPritpawlReply(
   roadmap: PritpawlRoadmap,
 ): string {
   const petName = profile?.petName || profile?.name || 'your pet';
+  const breed = profile?.breed || roadmap.species || 'mixed breed';
+  const age = profile?.age || 'adult';
+  const primaryFocus = getRoadmapPrimaryFocus(roadmap);
+  const totalPawPoints = getRoadmapTotalPawPoints(roadmap);
   const lowerPrompt = prompt.toLowerCase();
 
   if (/nutrition|diet|food|feed/i.test(lowerPrompt)) {
@@ -734,7 +738,7 @@ function buildPritpawlReply(
     );
     if (nutritionTasks.length === 0) return `${petName}'s roadmap includes nutrition optimization across all phases. Regenerate the roadmap to see full nutrition details.`;
     const lines = nutritionTasks.map((t) => `**${t.title}** (Phase: ${roadmap.phases.find((p) => p.tasks.includes(t))?.title}): ${t.description}`);
-    return `Nutrition plan for ${petName} (${roadmap.breed}):\n\n${lines.join('\n\n')}\n\nAll recommendations follow AAHA Nutritional Assessment Guidelines and Hand et al., Small Animal Clinical Nutrition.`;
+    return `Nutrition plan for ${petName} (${breed}):\n\n${lines.join('\n\n')}\n\nAll recommendations follow AAHA Nutritional Assessment Guidelines and Hand et al., Small Animal Clinical Nutrition.`;
   }
 
   if (/exercise|activity|fitness|walk/i.test(lowerPrompt)) {
@@ -743,7 +747,7 @@ function buildPritpawlReply(
     );
     if (exerciseTasks.length === 0) return `${petName}'s roadmap includes breed-specific exercise optimization. Regenerate the roadmap to see full details.`;
     const lines = exerciseTasks.map((t) => `**${t.title}** (Phase: ${roadmap.phases.find((p) => p.tasks.includes(t))?.title}): ${t.description}`);
-    return `Exercise plan for ${petName} (${roadmap.breed}):\n\n${lines.join('\n\n')}\n\nProtocol per AVMA guidelines and Canine Rehabilitation & Physical Therapy (Millis, Levine, Taylor).`;
+    return `Exercise plan for ${petName} (${breed}):\n\n${lines.join('\n\n')}\n\nProtocol per AVMA guidelines and Canine Rehabilitation & Physical Therapy (Millis, Levine, Taylor).`;
   }
 
   if (/behavior|psychological|mental|anxiety|stress|cognitive|enrich/i.test(lowerPrompt)) {
@@ -752,7 +756,7 @@ function buildPritpawlReply(
     );
     if (bhTasks.length === 0) return `${petName}'s roadmap includes behavioral and psychological wellness. Regenerate for full details.`;
     const lines = bhTasks.map((t) => `**${t.title}** (Phase: ${roadmap.phases.find((p) => p.tasks.includes(t))?.title}): ${t.description}`);
-    return `Behavioral & psychological wellness plan for ${petName} (${roadmap.breed}):\n\n${lines.join('\n\n')}\n\nBased on AAHA Canine and Feline Behavior Management Guidelines and AAFP/AAHA Environmental Needs Guidelines.`;
+    return `Behavioral & psychological wellness plan for ${petName} (${breed}):\n\n${lines.join('\n\n')}\n\nBased on AAHA Canine and Feline Behavior Management Guidelines and AAFP/AAHA Environmental Needs Guidelines.`;
   }
 
   if (/progress|track|complete/i.test(lowerPrompt)) {
@@ -762,9 +766,9 @@ function buildPritpawlReply(
     const pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     const phaseBreakdown = roadmap.phases.map((p) => {
       const done = p.tasks.filter((t) => progress[t.id]).length;
-      return `${p.title}: ${done}/${p.tasks.length} tasks done (+${p.pawPointsReward} pts on completion)`;
+      return `${p.title}: ${done}/${p.tasks.length} tasks done (+${getPhasePawPoints(p)} pts on completion)`;
     }).join('\n');
-    return `Roadmap progress for ${petName}: **${pct}%** complete (${completedTasks}/${totalTasks} tasks)\n\n${phaseBreakdown}\n\nTotal paw points from roadmap completion: **${roadmap.totalPawPoints.toLocaleString()} pts**`;
+    return `Roadmap progress for ${petName}: **${pct}%** complete (${completedTasks}/${totalTasks} tasks)\n\n${phaseBreakdown}\n\nTotal paw points from roadmap completion: **${totalPawPoints.toLocaleString()} pts**`;
   }
 
   if (/refill|med/i.test(lowerPrompt)) {
@@ -776,15 +780,27 @@ function buildPritpawlReply(
 
   const phaseList = roadmap.phases.map((p) => {
     const taskTitles = p.tasks.slice(0, 2).map((t) => `- ${t.title}`).join('\n');
-    return `**${p.title}** (${p.timeline}) — ${pawPointsToINR(p.pawPointsReward)} pts\n${taskTitles}`;
+    return `**${p.title}** (${p.timeline}) — ${pawPointsToINR(getPhasePawPoints(p))} pts\n${taskTitles}`;
   }).join('\n\n');
 
-  return `Life-maxing roadmap generated for **${roadmap.petName}** (${roadmap.breed}, age ${roadmap.age}).\n\n` +
-    `Primary focus: **${roadmap.primaryFocus}**.\n\n${roadmap.summary}\n\n` +
+  return `Life-maxing roadmap generated for **${roadmap.petName}** (${breed}, age ${age}).\n\n` +
+    `Primary focus: **${primaryFocus}**.\n\n${roadmap.summary}\n\n` +
     `${phaseList}\n\n` +
-    `Total: **${roadmap.totalPawPoints.toLocaleString()} paw points** for completing all 4 phases.\n\n` +
+    `Total: **${totalPawPoints.toLocaleString()} paw points** for completing all phases.\n\n` +
     `All recommendations are substantiated by peer-reviewed guidelines from AVMA, AAHA, WSAVA, and published veterinary literature.\n\n` +
     `Ask me about any phase, or say "show nutrition & exercise plan" or "track my roadmap progress."`;
+}
+
+function getRoadmapPrimaryFocus(roadmap: PritpawlRoadmap) {
+  return roadmap.phases[0]?.focus || roadmap.summary.split('.')[0] || 'preventive longevity';
+}
+
+function getPhasePawPoints(phase: PritpawlRoadmap['phases'][number]) {
+  return Math.max(500, phase.tasks.length * 250);
+}
+
+function getRoadmapTotalPawPoints(roadmap: PritpawlRoadmap) {
+  return roadmap.phases.reduce((sum, phase) => sum + getPhasePawPoints(phase), 0);
 }
 
 function pawPointsToINR(points: number): string {

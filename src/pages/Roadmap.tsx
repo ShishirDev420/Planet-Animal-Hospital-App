@@ -286,13 +286,13 @@ export default function Roadmap() {
           <div className="w-24 h-24 bg-[#fec708]/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(254,199,8,0.3)] border border-[#fec708]/50">
             <Lock className="w-10 h-10 text-[#fec708]" />
           </div>
-          <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mb-3">Profile Incomplete</h2>
-          <p className="font-body font-medium text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
+          <h2 className="cinematic-section-title mb-3 text-2xl text-slate-900 dark:text-white">Profile Incomplete</h2>
+          <p className="cinematic-copy mb-8 text-slate-600 dark:text-white/60">
             A complete profile is required to unlock the personalized Longevity Roadmap for your pet.
           </p>
           <button 
             onClick={() => navigate('/settings')}
-            className="w-full bg-gradient-to-r from-[#fec708] to-[#fec708] text-black py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:scale-[1.02] active:scale-95 transition-all"
+            className="w-full rounded-xl bg-gradient-to-r from-[#fec708] to-[#fec708] py-4 font-heading text-[11px] font-black uppercase tracking-[0.22em] text-black shadow-[0_0_20px_rgba(254,199,8,0.4)] transition-all hover:scale-[1.02] active:scale-95"
           >
             Update Profile
           </button>
@@ -342,8 +342,8 @@ export default function Roadmap() {
                         <Sparkles className="w-6 h-6 text-black" />
                       </div>
                       <div>
-                        <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">Longevity Roadmap</h3>
-                        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-sm leading-relaxed">Personalized health timeline</p>
+                        <h3 className="cinematic-card-title text-xl text-slate-900 dark:text-white">Longevity Roadmap</h3>
+                        <p className="font-body text-sm font-semibold leading-relaxed text-slate-500 dark:text-white/60">Personalized health timeline</p>
                       </div>
                     </div>
                     
@@ -358,7 +358,7 @@ export default function Roadmap() {
                         Ready to generate a highly personalized health and longevity roadmap for <strong>{profile?.petName || profile?.name || 'your pet'}</strong> using advanced AI based on their specific breed and medical history?
                       </p>
                       
-                      <button onClick={handleSubmit} disabled={loading} className="w-full bg-gradient-to-r from-[#fec708] to-[#fec708] text-black py-4 rounded-xl font-heading font-extrabold tracking-wide flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all">
+                      <button onClick={handleSubmit} disabled={loading} className="w-full bg-gradient-to-r from-[#fec708] to-[#fec708] text-black py-4 rounded-xl font-heading text-[11px] font-black uppercase tracking-[0.22em] flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all">
                         Generate My Roadmap <ArrowRight className="w-5 h-5" />
                       </button>
                     </div>
@@ -367,14 +367,14 @@ export default function Roadmap() {
                   <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-1 flex-col space-y-6 p-5 sm:p-8">
                     <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] pb-6">
                       <div className="space-y-3">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#fec708] shadow-sm">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 cinematic-kicker shadow-sm">
                           <Sparkles className="h-3.5 w-3.5" /> Generated{profile?.roadmapGeneratedAt ? ` ${new Date(profile.roadmapGeneratedAt).toLocaleDateString()}` : ''}
                         </div>
                         <div className="space-y-2">
-                          <h2 className="font-heading text-3xl font-black leading-none tracking-tight text-white md:text-4xl">
+                          <h2 className="cinematic-section-title text-3xl md:text-4xl">
                             {(formData?.name || profile?.petName || profile?.name || 'Your Pet')}'s Longevity Plan
                           </h2>
-                          <p className="max-w-2xl text-sm font-medium leading-6 text-white/55">
+                          <p className="cinematic-copy max-w-2xl text-sm">
                             A locked, sequential wellness launch program built around prevention, evidence, and daily follow-through.
                           </p>
                         </div>
@@ -410,13 +410,13 @@ export default function Roadmap() {
                           />
 
                           <div className="mt-10 border-t border-white/10 pt-6">
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 cinematic-kicker">
                               <Shield size={14} />
                               Evidence Base
                             </div>
 
                             <div className="rounded-[1.75rem] border border-white/8 bg-black/25 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
-                              <h3 className="mb-4 flex items-center gap-3 font-heading text-xl font-black tracking-tight text-white">
+                              <h3 className="cinematic-card-title mb-4 flex items-center gap-3 text-xl">
                                 <Stethoscope className="text-[#fec708]" /> Scientific foundation
                               </h3>
                               
@@ -425,7 +425,7 @@ export default function Roadmap() {
                                   components={{
                                     h1: ({node, ...props}) => <h1 className="hidden" {...props} />,
                                     h2: ({node, ...props}) => <h2 className="hidden" {...props} />,
-                                    h3: ({node, ...props}) => <h3 className="mb-3 mt-5 font-heading text-base font-black tracking-tight text-white/90" {...props} />,
+                                    h3: ({node, ...props}) => <h3 className="cinematic-card-title mb-3 mt-5 text-base text-white/90" {...props} />,
                                     p: ({node, ...props}) => <p className="mb-4 font-body text-sm leading-relaxed text-white/55" {...props} />,
                                     ul: ({node, ...props}) => <ul className="mb-2 space-y-3" {...props} />,
                                     li: ({node, ...props}) => (
@@ -456,9 +456,9 @@ export default function Roadmap() {
                       ) : (
                         <Markdown
                           components={{
-                            h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-3xl text-[#fec708] mt-12 mb-6 border-b border-[#fec708]/20 pb-4 tracking-tight" {...props} />,
-                            h2: ({node, ...props}) => <h2 className="mt-10 mb-5 rounded-2xl border border-[#fec708]/20 bg-[#fec708]/10 px-4 py-3 font-heading text-2xl font-bold tracking-tight text-[#fec708]" {...props} />,
-                            h3: ({node, ...props}) => <h3 className="font-heading font-semibold text-xl text-[#fec708]/90 mt-8 mb-4 tracking-tight" {...props} />,
+                            h1: ({node, ...props}) => <h1 className="cinematic-section-title mt-12 mb-6 border-b border-[#fec708]/20 pb-4 text-3xl text-[#fec708]" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="cinematic-card-title mt-10 mb-5 rounded-2xl border border-[#fec708]/20 bg-[#fec708]/10 px-4 py-3 text-2xl text-[#fec708]" {...props} />,
+                            h3: ({node, ...props}) => <h3 className="cinematic-card-title mt-8 mb-4 text-xl text-[#fec708]/90" {...props} />,
                             p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-left" {...props} />,
                             ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-4 mb-8 text-left" {...props} />,
                             li: ({node, ...props}) => <li className="font-body text-slate-300 leading-relaxed pl-2 text-left" {...props} />,

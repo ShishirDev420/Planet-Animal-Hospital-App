@@ -694,10 +694,10 @@ export default function Dashboard() {
           </button>
             
           <div className="flex min-w-0 flex-col items-center text-center">
-            <h1 className="font-heading text-[15px] font-black uppercase leading-none tracking-[-0.01em] text-white sm:text-lg">
+            <h1 className="font-heading text-[15px] font-black uppercase leading-none tracking-[-0.035em] text-white sm:text-lg">
               Planet Animal
             </h1>
-            <p className="mt-1 text-[7px] font-black uppercase tracking-[0.24em] text-[#fec708] sm:text-[9px]">
+            <p className="cinematic-kicker mt-1 text-[7px] sm:text-[9px]">
               Hospital & Wellness
             </p>
           </div>
@@ -721,8 +721,8 @@ export default function Dashboard() {
         </div>
 
         <div className="mb-5 mt-2">
-          <h2 className="text-3xl font-extrabold font-heading tracking-tight text-white drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
-          <p className="text-sm font-medium font-body text-slate-200 mt-1 leading-relaxed">Let's keep {petName} healthy today.</p>
+          <h2 className="cinematic-section-title text-3xl drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
+          <p className="cinematic-copy mt-1 text-sm">Let's keep {petName} healthy today.</p>
         </div>
       </header>
 
@@ -740,7 +740,7 @@ export default function Dashboard() {
         <div className="relative flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#fec708]">Daily Briefing</p>
+              <p className="cinematic-kicker text-[9px] tracking-[0.2em]">Daily Briefing</p>
               <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">
                 {completedCount >= totalPeriods ? 'Done' : `${completedCount}/${totalPeriods}`}
               </span>
@@ -774,10 +774,10 @@ export default function Dashboard() {
               animation: pulsate-synchronized-glow 7s infinite ease-in-out;
             }
           `}</style>
-          <h2 className="text-white/60 text-xs uppercase tracking-widest font-medium">Paw Points Balance</h2>
+          <h2 className="cinematic-kicker text-[10px] text-white/50">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2">
-             <span className="font-heading tracking-tighter text-6xl tabular-nums font-extrabold text-[#fec708] animate-pulsate-synchronized-glow">{verifiedPoints.toLocaleString()}</span>
-            <span className="font-heading text-[#fec708] font-extrabold uppercase tracking-widest text-sm mb-2 drop-shadow-[0_0_10px_rgba(254,199,8,0.6)]">pts</span>
+             <span className="cinematic-price text-6xl tabular-nums text-[#fec708] animate-pulsate-synchronized-glow">{verifiedPoints.toLocaleString()}</span>
+            <span className="font-heading text-[#fec708] font-black uppercase tracking-widest text-sm mb-2 drop-shadow-[0_0_10px_rgba(254,199,8,0.6)]">pts</span>
           </div>
           
           {pendingPoints > 0 && (
@@ -842,7 +842,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h3 className="text-xl font-bold font-heading tracking-tight text-white mb-4 drop-shadow-sm">Quick Actions</h3>
+        <h3 className="cinematic-card-title mb-4 text-xl drop-shadow-sm">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <ActionCard 
             icon={<Calendar className="text-planet-yellow" />} 
@@ -874,7 +874,7 @@ export default function Dashboard() {
 {/* Paw Points Program */}
        <div className="pt-2">
          <div className="flex items-center gap-2 mb-6 px-2">
-           <h3 className="text-xl font-bold font-heading tracking-tight text-white drop-shadow-sm">Paw Points Program</h3>
+            <h3 className="cinematic-card-title text-xl drop-shadow-sm">Paw Points Program</h3>
            <PawPrint className="w-5 h-5 text-[#fec708] fill-[#fec708]/20" />
          </div>
          
@@ -1017,14 +1017,14 @@ export default function Dashboard() {
               {activeModal === 'records' && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Medical Records</h2>
+                    <h2 className="cinematic-card-title text-2xl text-slate-900">Medical Records</h2>
                     <button onClick={closeModal} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={20}/></button>
                   </div>
                   <div className="text-center py-12 px-4">
                     <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
                       <FileText size={40} className="text-indigo-300" />
                     </div>
-                    <h3 className="text-lg font-bold mb-2">Awaiting First Visit</h3>
+                    <h3 className="cinematic-card-title mb-2 text-lg text-slate-900">Awaiting First Visit</h3>
                     <p className="text-slate-500 text-sm leading-relaxed">
                       {petName}'s medical records, vaccination history, and test results will automatically populate here as you keep visiting us.
                     </p>
@@ -1035,12 +1035,12 @@ export default function Dashboard() {
               {activeModal === 'redeem' && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Claim Free Consult</h2>
+                    <h2 className="cinematic-card-title text-2xl text-slate-900">Claim Free Consult</h2>
                     <button onClick={closeModal} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={20}/></button>
                   </div>
                   <div className="bg-[#fec708]/10 border border-[#fec708]/30 rounded-2xl p-6 text-center">
                     <Gift className="w-12 h-12 text-[#fec708] mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">You've Unlocked a Free Consultation!</h3>
+                    <h3 className="cinematic-card-title mb-2 text-xl text-slate-800">You've Unlocked a Free Consultation!</h3>
                     <p className="text-slate-600 mb-6">
                       Show this screen to our staff at checkout to claim your free consultation for {petName}.
                     </p>
@@ -1098,10 +1098,10 @@ export default function Dashboard() {
               {/* Header */}
               <div className="px-8 pt-6 pb-4 flex justify-between items-start shrink-0 z-10">
                 <div>
-                  <h2 className="text-3xl font-heading font-black text-white tracking-tight">
+                  <h2 className="cinematic-section-title text-3xl">
                     Book <span className="text-planet-yellow">Visit</span>
                   </h2>
-                  <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                  <p className="cinematic-kicker mt-2 flex items-center gap-2 text-[10px] text-white/60">
                     <span className="w-1.5 h-1.5 rounded-full bg-planet-yellow shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
                     {petProfile?.name ? `Schedule for ${petProfile.name}` : 'Pet Health Scheduler'}
                   </p>
@@ -1156,7 +1156,7 @@ export default function Dashboard() {
                 {/* 1. Services Section */}
                 <section id="services-section" className="mb-10">
                   <div className="flex justify-between items-end mb-4 px-1">
-                    <h3 className="text-xs font-black tracking-[0.25em] uppercase text-white/40">Select Services</h3>
+                    <h3 className="cinematic-kicker text-[10px] text-white/40">Select Services</h3>
                     {selectedServices.length > 0 && (
                       <button 
                         onClick={() => setSelectedServices([])} 
@@ -1199,7 +1199,7 @@ export default function Dashboard() {
                           </div>
   
                           <div className="flex-1">
-                            <p className={cn("font-bold text-lg tracking-tight", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
+                            <p className={cn("cinematic-card-title text-lg", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
                             <p className="text-white/50 text-xs font-medium mt-0.5 leading-tight">{service.desc}</p>
                           </div>
   
@@ -1225,7 +1225,7 @@ export default function Dashboard() {
                 <section id="date-section" className="mb-10">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">2</div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">Preferred Date</h3>
+                    <h3 className="cinematic-card-title text-xl">Preferred Date</h3>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
                     {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
@@ -1265,7 +1265,7 @@ export default function Dashboard() {
                 <section id="time-section" className="pb-10">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">3</div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">Preferred Time</h3>
+                    <h3 className="cinematic-card-title text-xl">Preferred Time</h3>
                   </div>
                   <div className="space-y-6">
                     {[
@@ -1439,7 +1439,7 @@ function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode,
         {icon}
       </div>
       <div>
-        <h4 className="font-heading font-bold text-slate-800 dark:text-white text-xl tracking-tight">{title}</h4>
+        <h4 className="cinematic-card-title text-xl text-slate-800 dark:text-white">{title}</h4>
         <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-base leading-relaxed">{subtitle}</p>
       </div>
     </motion.div>

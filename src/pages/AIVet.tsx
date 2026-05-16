@@ -745,7 +745,7 @@ ${knowledgeContext}`;
       <div className="relative z-10 flex flex-col items-center justify-center shrink-0 px-4 pb-2">
         {/* Large Title */}
         <div className="text-center mb-4">
-          <h1 className="font-heading font-extrabold text-white text-2xl tracking-tight leading-none">
+          <h1 className="cinematic-section-title text-3xl">
             AI Veterinarian
           </h1>
         </div>
@@ -818,14 +818,14 @@ ${knowledgeContext}`;
 
         {/* Subtitle */}
         <div className="text-center mt-4">
-          <p className="font-heading font-bold text-planet-yellow text-sm tracking-wide">
+          <p className="cinematic-kicker text-[10px] tracking-[0.22em]">
             Pawl, Primary Vet
           </p>
         </div>
 
         {!keys.gemini && !keys.openai && (
           <div className="mt-3 max-w-sm rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-center shadow-[0_12px_34px_rgba(254,199,8,0.08)]">
-            <p className="text-[11px] font-heading font-bold uppercase tracking-[0.18em] text-amber-200">
+            <p className="cinematic-kicker text-[10px] tracking-[0.18em] text-amber-200">
               Preview Demo
             </p>
             <p className="mt-1 text-xs leading-relaxed text-amber-50/75">
@@ -860,7 +860,7 @@ ${knowledgeContext}`;
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Stethoscope className="w-3.5 h-3.5 text-planet-yellow" />
-                <span className="text-[10px] font-heading font-bold uppercase tracking-widest text-white/50">Consultation</span>
+                <span className="cinematic-kicker text-[10px] text-white/50">Consultation</span>
               </div>
               {isCallActive && (
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${

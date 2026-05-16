@@ -40,11 +40,11 @@ export default function CreateProfile() {
         className="flex-1 max-w-3xl mx-auto w-full"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2 dark:text-white/95">
+          <h1 className="cinematic-section-title mb-3 text-4xl text-slate-900 dark:text-white/95">
             Welcome to the <br/>
             <span className="text-planet-yellow">Planet Family</span>
           </h1>
-          <p className="text-slate-500 text-sm leading-relaxed dark:text-white/60">
+          <p className="cinematic-copy text-sm text-slate-500 dark:text-white/60">
             Let's create a personalized health roadmap for your furry companion.
           </p>
         </div>

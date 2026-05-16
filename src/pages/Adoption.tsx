@@ -52,8 +52,8 @@ export default function Adoption() {
           
           <div className="z-10 text-center space-y-6">
             <div className="space-y-2">
-              <h2 className="text-4xl font-black font-heading tracking-tighter text-white">
-                Donate & <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">Double Up!</span>
+              <h2 className="cinematic-section-title text-4xl">
+                Donate & <span className="text-[#fec708]">Double Up!</span>
               </h2>
               <div className="h-1 w-20 bg-gradient-to-r from-transparent via-[#fec708] to-transparent mx-auto rounded-full opacity-50" />
             </div>

@@ -65,8 +65,8 @@ export default function PawPointsLayered({ currentPoints, onLayerClick }: PawPoi
   return (
     <section className="relative px-6 mb-16 z-10">
       <div className="px-8 mb-8">
-        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#fec708] mb-2">Paw Points Journey</h3>
-        <h3 className="text-4xl font-heading font-black tracking-tighter uppercase italic leading-none">Layers & Milestones</h3>
+        <h3 className="cinematic-kicker mb-2 text-sm">Paw Points Journey</h3>
+        <h3 className="cinematic-title text-4xl uppercase italic">Layers & Milestones</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {layers.map((layer, index) => (
