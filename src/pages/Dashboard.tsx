@@ -810,7 +810,12 @@ export default function Dashboard() {
             </div>
             {/* Premium Nudge — TAP FOR REWARD DETAILS */}
             <motion.button
-              onClick={() => navigate('/rewards')}
+              onClick={() => {
+                navigate('/rewards');
+                setTimeout(() => {
+                  document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl overflow-hidden border border-[#fec708]/30 bg-[#fec708]/5 hover:bg-[#fec708]/10 transition-all duration-300"
