@@ -174,17 +174,25 @@ export default function AgentsPanel() {
   };
 
   return (
-    <section className="relative min-h-full overflow-hidden px-4 pb-32 pt-16 text-white sm:px-6 lg:px-0 lg:pb-16">
+    <section className="relative min-h-full overflow-hidden px-4 pb-8 pt-6 text-white sm:px-6 lg:px-0 lg:pb-4 lg:pt-4">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
           key={activeAgent.id}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7 }}
-          className="absolute inset-x-[-20%] top-[-28%] h-[520px] blur-3xl"
+          className="absolute inset-[-40%] blur-[140px]"
           style={{ background: activeAgent.theme.mesh }}
         />
-        <div className="absolute inset-0 neural-mesh-grid opacity-[0.08]" />
+        <motion.div
+          key={`${activeAgent.id}-glow`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.6 }}
+          transition={{ duration: 0.9 }}
+          className="absolute left-1/2 top-[10%] h-[40rem] w-[60rem] -translate-x-1/2 rounded-full blur-[160px]"
+          style={{ background: `radial-gradient(circle, ${activeAgent.theme.glow} 0%, transparent 65%)` }}
+        />
+        <div className="absolute inset-0 neural-mesh-grid opacity-[0.06]" />
       </div>
 
       <motion.div variants={container} initial="hidden" animate="show" className="mx-auto max-w-6xl">
