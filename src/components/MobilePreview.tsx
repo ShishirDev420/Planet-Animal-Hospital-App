@@ -1,25 +1,32 @@
 import { useEffect, useMemo, useState } from 'react';
 
 type DeviceType = 'iphone-16-pro' | 'iphone-16-pro-max' | 'samsung-s26-ultra';
+type ViewMode = 'desktop' | 'mobile';
 
-const DEVICE_FRAMES: Record<DeviceType, { width: number; height: number; label: string }> = {
-  'iphone-16-pro': { width: 393, height: 852, label: 'iPhone 16 Pro Preview' },
-  'iphone-16-pro-max': { width: 440, height: 956, label: 'iPhone 16 Pro Max Preview' },
-  'samsung-s26-ultra': { width: 432, height: 952, label: 'Samsung S26 Ultra Preview' },
+const DEVICE_FRAMES: Record<DeviceType, { width: number; height: number; label: string; shortLabel: string }> = {
+  'iphone-16-pro': { width: 393, height: 852, label: 'iPhone 16 Pro', shortLabel: '16 Pro' },
+  'iphone-16-pro-max': { width: 440, height: 956, label: 'iPhone 16 Pro Max', shortLabel: 'Pro Max' },
+  'samsung-s26-ultra': { width: 432, height: 952, label: 'Samsung S26 Ultra', shortLabel: 'Samsung' },
 };
 
 function getDeviceFromParam(param: string): DeviceType {
   const lower = param.toLowerCase();
   if (lower.includes('samsung')) return 'samsung-s26-ultra';
   if (lower.includes('pro-max') || lower.includes('promax')) return 'iphone-16-pro-max';
-  return 'iphone-16-pro';
+  if (lower.includes('iphone') || lower.includes('pro')) return 'iphone-16-pro';
+  return 'samsung-s26-ultra';
 }
 
 export default function MobilePreview() {
   const requestedPath = new URLSearchParams(window.location.search).get('path') || '/';
-  const deviceParam = new URLSearchParams(window.location.search).get('device') || 'iphone-16-pro';
+  const deviceParam = new URLSearchParams(window.location.search).get('device');
   const isDemoMode = new URLSearchParams(window.location.search).get('demo_mode') === 'true';
-  const device = getDeviceFromParam(deviceParam);
+
+  const [device, setDevice] = useState<DeviceType>(
+    deviceParam ? getDeviceFromParam(deviceParam) : 'samsung-s26-ultra',
+  );
+  const [viewMode, setViewMode] = useState<ViewMode>('mobile');
+
   const normalizedPath = requestedPath.startsWith('/') ? requestedPath : `/${requestedPath}`;
   const frameUrl = new URL(normalizedPath, window.location.origin);
   frameUrl.searchParams.set('preview_frame', 'true');
@@ -49,47 +56,105 @@ export default function MobilePreview() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(254,199,8,0.15),transparent_34%),#050505] p-4">
-      <div
-        className="relative origin-center"
-        style={{ transform: `scale(${previewScale})` }}
-      >
-        <div className="absolute -inset-10 rounded-[5rem] bg-planet-yellow/10 blur-[90px]" />
-        {device === 'samsung-s26-ultra' && <SamsungUltraFrame url={url} />}
-        {device === 'iphone-16-pro-max' && <Iphone16ProMaxFrame url={url} />}
-        {device === 'iphone-16-pro' && <Iphone16ProFrame url={url} />}
-      </div>
-      
+      {viewMode === 'mobile' ? (
+        <div
+          className="relative origin-center"
+          style={{ transform: `scale(${previewScale})` }}
+        >
+          <div className="absolute -inset-10 rounded-[5rem] bg-planet-yellow/10 blur-[90px]" />
+          {device === 'samsung-s26-ultra' && <SamsungUltraFrame url={url} />}
+          {device === 'iphone-16-pro-max' && <Iphone16ProMaxFrame url={url} />}
+          {device === 'iphone-16-pro' && <Iphone16ProFrame url={url} />}
+        </div>
+      ) : (
+        <div className="w-full h-full rounded-2xl overflow-hidden border border-white/10">
+          <iframe
+            src={url}
+            allow="publickey-credentials-get *; identity-credentials-get *"
+            className="w-full h-full border-none"
+            title="Planet Animal App Desktop Preview"
+            id="preview-iframe"
+          />
+        </div>
+      )}
+
       <div className="fixed right-4 top-4 z-[60] flex flex-col items-end gap-3 sm:right-6 sm:top-6">
-        <div className="group flex items-center gap-2 p-1.5 bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl transition-all hover:bg-black/80">
-          <button 
-            onClick={() => window.open(url, '_blank')}
-            className="flex items-center gap-2 px-4 py-2 bg-planet-yellow text-black rounded-xl font-heading font-black text-[10px] uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all"
-            title="Open full app in a new tab"
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <p className="text-[8px] text-white/40 uppercase tracking-[0.2em] font-black">
+            {viewMode === 'desktop' ? 'Desktop View' : frame.label}
+          </p>
+        </div>
+
+        <div className="flex flex-col items-end gap-2 p-2 bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl">
+          <button
+            onClick={() => setViewMode(viewMode === 'desktop' ? 'mobile' : 'desktop')}
+            className="flex items-center gap-2 px-4 py-2 bg-planet-yellow text-black rounded-xl font-heading font-black text-[10px] uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all w-full justify-center"
+            title={viewMode === 'desktop' ? 'Switch to Mobile View' : 'Switch to Desktop View'}
           >
-            <span>Open Full App</span>
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            {viewMode === 'desktop' ? (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span>Mobile View</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>Desktop View</span>
+              </>
+            )}
           </button>
-          
-          <div className="flex items-center gap-1 px-2 border-l border-white/10">
-            <button 
+
+          <div className="flex items-center gap-1 w-full">
+            <button
+              onClick={() => window.open(url, '_blank')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-white/60 hover:text-white/90 hover:bg-white/5 rounded-lg transition-all text-[9px] uppercase tracking-wider font-black"
+              title="Open full app in a new tab"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span>Open</span>
+            </button>
+
+            <div className="w-px h-4 bg-white/10" />
+
+            <button
               onClick={() => window.location.href = '/'}
-              className="p-2 text-white/40 hover:text-white/80 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-white/40 hover:text-white/70 hover:bg-white/5 rounded-lg transition-all text-[9px] uppercase tracking-wider font-black"
               title="Exit Preview"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
               </svg>
+              <span>Exit</span>
             </button>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-          <p className="text-[8px] text-white/40 uppercase tracking-[0.2em] font-black">
-            {frame.label}
-          </p>
+
+          {viewMode === 'mobile' && (
+            <>
+              <div className="w-full h-px bg-white/5" />
+              <div className="flex items-center gap-1 w-full">
+                {(Object.keys(DEVICE_FRAMES) as DeviceType[]).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setDevice(d)}
+                    className={`flex-1 px-2 py-1.5 rounded-lg text-[8px] uppercase tracking-wider font-black transition-all ${
+                      device === d
+                        ? 'bg-planet-yellow/20 text-planet-yellow border border-planet-yellow/30'
+                        : 'text-white/30 hover:text-white/60 hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    {DEVICE_FRAMES[d].shortLabel}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
