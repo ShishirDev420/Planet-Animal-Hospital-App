@@ -129,7 +129,7 @@ export default function Layout() {
         </main>
 
         {/* Bottom Navigation - Premium Liquid Glass - Updated with 5 items */}
-        <nav className="absolute bottom-0 w-full liquid-glass-nav px-2 pt-3 pb-8 flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        <nav className="absolute bottom-0 w-full liquid-glass-nav px-2 pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <NavItem to={preservePreviewSearch('/')} icon={<Home size={22} />} label="Home" />
           <NavItem to={preservePreviewSearch('/plans')} icon={<ShieldPlus size={22} />} label="Plans" />
           <NavItem to={preservePreviewSearch('/ai')} icon={<Bot size={22} />} label="AI Vet" isCenter />
@@ -144,7 +144,7 @@ export default function Layout() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/preview?path=")}
+            onClick={() => navigate("/preview?path=&device=iphone-16-pro")}
             className="flex items-center gap-3 px-5 py-3 bg-planet-yellow text-black rounded-2xl font-heading font-black text-[10px] uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(254,199,8,0.3)] border border-white/20 backdrop-blur-xl group"
           >
             <Smartphone size={16} className="group-hover:rotate-12 transition-transform" />

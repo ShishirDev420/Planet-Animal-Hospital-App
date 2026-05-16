@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Shield, Zap, Check, Star } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Shield, Zap, Check, Star, PawPrint } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { auth, db } from '../lib/firebase';
@@ -64,29 +64,93 @@ const tiers = {
 
 const stagger = 0.12;
 
-function PawPrintOverlay({ color, className }: { color: string; className?: string }) {
+function PawSvg({ color }: { color: string }) {
   return (
-    <div className={`absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden ${className || ''}`}>
-      <svg
-        viewBox="0 0 200 200"
-        className="w-[75%] h-[75%] max-w-[280px] max-h-[280px] animate-paw-print"
-        style={{ '--paw-print-peak': '0.13' } as React.CSSProperties}
-      >
-        {/* Main pad */}
-        <path
-          d="M100 120c-18 0-32 10-32 25s14 30 32 30 32-13 32-30-14-25-32-25z"
-          fill={color}
-          opacity="0.85"
-        />
-        {/* Leftmost toe */}
-        <ellipse cx="48" cy="70" rx="16" ry="22" fill={color} opacity="0.75" transform="rotate(-30 48 70)" />
-        {/* Inner left toe */}
-        <ellipse cx="72" cy="44" rx="16" ry="24" fill={color} opacity="0.8" transform="rotate(-10 72 44)" />
-        {/* Inner right toe */}
-        <ellipse cx="128" cy="44" rx="16" ry="24" fill={color} opacity="0.8" transform="rotate(10 128 44)" />
-        {/* Rightmost toe */}
-        <ellipse cx="152" cy="70" rx="16" ry="22" fill={color} opacity="0.75" transform="rotate(30 152 70)" />
-      </svg>
+    <svg viewBox="0 0 200 200" className="w-full h-full">
+      <ellipse cx="100" cy="132" rx="34" ry="28" fill={color} />
+      <ellipse cx="56" cy="82" rx="20" ry="24" fill={color} transform="rotate(-8 56 82)" />
+      <ellipse cx="88" cy="58" rx="18" ry="22" fill={color} transform="rotate(-4 88 58)" />
+      <ellipse cx="122" cy="58" rx="18" ry="22" fill={color} transform="rotate(4 122 58)" />
+      <ellipse cx="152" cy="82" rx="20" ry="24" fill={color} transform="rotate(8 152 82)" />
+    </svg>
+  );
+}
+
+function OrganicPawTrail({ color }: { color: string }) {
+  const shouldReduceMotion = useReducedMotion();
+
+  const steps = [
+    { left: '6%', top: '86%', rotate: -22 },
+    { left: '14%', top: '78%', rotate: 20 },
+    { left: '20%', top: '68%', rotate: -18 },
+    { left: '28%', top: '60%', rotate: 18 },
+    { left: '34%', top: '52%', rotate: -16 },
+    { left: '42%', top: '44%', rotate: 16 },
+    { left: '48%', top: '36%', rotate: -14 },
+    { left: '56%', top: '28%', rotate: 14 },
+    { left: '62%', top: '20%', rotate: -12 },
+    { left: '70%', top: '12%', rotate: 12 },
+    { left: '76%', top: '6%', rotate: -10 },
+    { left: '84%', top: '2%', rotate: 10 },
+  ];
+
+  const stepInterval = 1.0;
+  const printLife = 3.6;
+
+  if (shouldReduceMotion) {
+    return (
+      <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden rounded-2xl" aria-hidden="true">
+        {steps.slice(0, 4).map((step, i) => (
+          <div
+            key={i}
+            className="absolute h-[22px] w-[22px]"
+            style={{
+              left: step.left,
+              top: step.top,
+              marginLeft: -11,
+              marginTop: -11,
+              transform: `rotate(${step.rotate}deg)`,
+              opacity: 0.14,
+            }}
+          >
+            <PawSvg color={color} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="absolute inset-0 z-[1] pointer-events-none overflow-hidden rounded-2xl"
+      aria-hidden="true"
+    >
+      {steps.map((step, i) => (
+        <motion.div
+          key={i}
+          className="absolute h-[22px] w-[22px]"
+          style={{
+            left: step.left,
+            top: step.top,
+            marginLeft: -11,
+            marginTop: -11,
+          }}
+          animate={{
+            opacity: [0, 0.20, 0.14, 0],
+            scale: [0.88, 1.0, 0.96, 0.82],
+          }}
+          transition={{
+            duration: printLife,
+            delay: i * stepInterval,
+            repeat: Infinity,
+            ease: [0.4, 0, 0.2, 1],
+          }}
+        >
+          <div style={{ transform: `rotate(${step.rotate}deg)` }}>
+            <PawSvg color={color} />
+          </div>
+        </motion.div>
+      ))}
     </div>
   );
 }
@@ -123,17 +187,13 @@ export default function ProactivePlans() {
   return (
     <div className="pb-16 text-white/95 relative min-h-screen">
 
-      {/* Synchronized Ambient Orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        {/* Essential — warm sage */}
-        <div className="absolute top-[6%] left-[3%] w-[300px] h-[300px] rounded-full blur-[120px] opacity-40 animate-blob" style={{ backgroundColor: '#6d947a' }} />
-        <div className="absolute top-[55%] left-[5%] w-[240px] h-[240px] rounded-full blur-[100px] opacity-25 animate-blob" style={{ backgroundColor: '#5a8066' }} />
-        {/* Advanced — amber */}
-        <div className="absolute top-[8%] left-[32%] w-[340px] h-[340px] rounded-full blur-[130px] opacity-45 animate-blob" style={{ backgroundColor: '#d48f20' }} />
-        <div className="absolute top-[50%] left-[28%] w-[260px] h-[260px] rounded-full blur-[110px] opacity-25 animate-blob" style={{ backgroundColor: '#e6a835' }} />
-        {/* Premium — deep violet */}
-        <div className="absolute top-[6%] right-[3%] w-[320px] h-[320px] rounded-full blur-[120px] opacity-40 animate-blob" style={{ backgroundColor: '#8b6fc7' }} />
-        <div className="absolute top-[52%] right-[5%] w-[250px] h-[250px] rounded-full blur-[110px] opacity-25 animate-blob" style={{ backgroundColor: '#7a5cb8' }} />
+      {/* Background Ambient Orbs — General Theme */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center isolate">
+        <div className="relative w-full max-w-5xl h-full">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob transform-gpu" />
+          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000 transform-gpu" />
+          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000 transform-gpu" />
+        </div>
       </div>
 
       {/* Desktop Header */}
@@ -145,11 +205,11 @@ export default function ProactivePlans() {
               Preventative Care
             </span>
           </div>
-          <h1 className="text-[3.25rem] leading-[1.08] font-heading font-extrabold tracking-tight text-white mb-5 max-w-3xl">
+          <h1 className="text-[3.25rem] leading-[1.08] font-bold tracking-tight text-white mb-5 max-w-3xl">
             Stop emergencies<br />
             <span className="text-planet-yellow">before they start.</span>
           </h1>
-          <p className="font-body text-base text-slate-300 leading-relaxed max-w-2xl mb-6">
+          <p className="text-base font-medium text-slate-300 leading-relaxed max-w-2xl mb-6">
             A skipped checkup can snowball. Our plans catch the small things before they become expensive emergencies — so your pet stays healthier, longer.
           </p>
           <div className="inline-flex items-center gap-2.5 bg-white/[0.06] border border-white/10 rounded-xl px-5 py-3">
@@ -190,10 +250,10 @@ export default function ProactivePlans() {
             <Shield size={12} />
             Preventative Care
           </div>
-          <h1 className="text-3xl font-heading font-extrabold tracking-tight leading-tight text-white mb-3">
+          <h1 className="text-3xl font-bold tracking-tight leading-tight text-white mb-3">
             Stop emergencies <span className="text-planet-yellow">before they start.</span>
           </h1>
-          <p className="font-body text-sm text-slate-300 leading-relaxed mb-4">
+          <p className="text-sm font-medium text-slate-300 leading-relaxed mb-4">
             The 'Domino Effect' in pet health is real. Our proactive plans catch the small things before they become heartbreaking emergencies.
           </p>
           <div className="inline-flex items-center gap-2 bg-white/[0.06] border border-white/10 rounded-xl px-4 py-2.5">
@@ -229,8 +289,8 @@ export default function ProactivePlans() {
                 whileHover={{ y: -6, transition: { duration: 0.3, ease: [0.25, 1, 0.5, 1] } }}
                 className={`relative rounded-2xl flex flex-col min-h-[480px] lg:min-h-[540px] liquid-glass-tier ${liquidClass} ${isHero ? 'md:-mt-4 md:mb-[-12px]' : ''}`}
               >
-                {/* -------- Paw Print overlay animation -------- */}
-                <PawPrintOverlay color={t.accent} className="rounded-2xl" />
+                <OrganicPawTrail color={t.accent} />
+                <div className="absolute inset-0 z-[0] rounded-2xl bg-gradient-to-b from-black/22 via-black/14 to-black/26" />
 
                 {/* Hero indicator */}
                 {isHero && (
@@ -251,41 +311,46 @@ export default function ProactivePlans() {
                     >
                       {t.tag}
                     </span>
-                    <h3 className="text-xl font-heading font-bold text-white tracking-tight">{t.title}</h3>
-                    <p className="text-sm text-slate-400 mt-1 font-body leading-relaxed">{t.desc}</p>
+                    <h3 className="text-xl font-semibold text-white">{t.title}</h3>
+                    <p className="text-sm font-medium text-white/82 mt-1.5 leading-relaxed">{t.desc}</p>
                   </div>
 
                   {/* Price */}
                   <div className="flex items-end gap-1.5 mb-7">
-                    <span className="text-[2.5rem] leading-none font-heading font-black tracking-tighter text-white">{t.price}</span>
-                    <span className="text-sm text-slate-500 font-medium pb-0.5">{t.period}</span>
+                    <span className="text-[2.5rem] leading-none font-bold text-white">{t.price}</span>
+                    <span className="text-sm text-white/65 font-medium pb-0.5">{t.period}</span>
                   </div>
 
                   {/* Paw Points badge */}
                   <div
-                    className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 mb-6"
+                    className="inline-flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 mb-6"
                     style={{ backgroundColor: t.accentDim }}
                   >
+                    <PawPrint size={14} style={{ color: t.accent }} />
                     <span
-                      className="text-xs font-black font-heading tracking-tight"
+                      className="text-sm font-semibold text-white/80"
                       style={{ color: t.accent }}
                     >
                       {t.pawPoints}
                     </span>
-                    <span className="text-xs text-slate-300 font-medium">Paw Points Multiplier</span>
+                    <span className="text-xs font-medium text-white/72">Paw Points Multiplier</span>
                   </div>
 
                   {/* Features */}
                   <ul className="space-y-2.5 mb-8 flex-grow">
                     {t.features.map((f, fi) => (
-                      <li key={fi} className="flex items-start gap-2.5">
+                      <li
+                        key={fi}
+                        className="flex items-start gap-2.5"
+                        style={f.highlight ? { borderLeft: `2px solid ${t.accent}`, paddingLeft: '10px' } : {}}
+                      >
                         <Check
                           size={15}
                           className="shrink-0 mt-0.5"
                           style={{ color: f.highlight ? t.accent : '#64748b' }}
                         />
                         <span
-                          className={`text-sm leading-snug ${f.highlight ? 'text-white font-medium' : 'text-slate-300'}`}
+                          className={`text-sm leading-snug ${f.highlight ? 'text-white font-semibold' : 'text-white/86 font-medium'}`}
                         >
                           {f.text}
                         </span>
@@ -297,14 +362,14 @@ export default function ProactivePlans() {
                   <button
                     onClick={() => handleSelectPlan(t.id)}
                     disabled={isUpdating || isActive}
-                    className={`w-full py-3 rounded-xl font-heading font-bold text-sm tracking-wide transition-all duration-200 ${
+                    className={`w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 ${
                       isActive
                         ? 'bg-white/5 text-planet-yellow border border-white/10 cursor-default'
                         : isHero
-                          ? 'bg-planet-yellow text-black hover:brightness-105 shadow-lg shadow-planet-yellow/20'
+                          ? 'bg-planet-yellow text-black hover:brightness-105 shadow-lg shadow-planet-yellow/20 hover:scale-[1.02]'
                           : isElite
-                            ? 'text-white border-2 font-bold'
-                            : 'bg-white/5 text-white border border-white/15 hover:bg-white/10'
+                            ? 'text-white border-2 hover:scale-[1.02]'
+                            : 'bg-white/5 text-white border border-white/15 hover:bg-white/10 hover:scale-[1.02]'
                     }`}
                     style={isElite && !isActive ? { borderColor: t.accent, color: t.accent } : {}}
                   >
@@ -320,8 +385,8 @@ export default function ProactivePlans() {
       {/* Comparison Table */}
       <div className="hidden lg:block px-8 mt-20 max-w-6xl mx-auto relative z-10">
         <div className="text-center mb-10">
-          <h2 className="text-2xl font-heading font-bold text-white mb-2">Compare plans</h2>
-          <p className="text-sm text-slate-400 font-body">Every plan includes our core preventative care. Upgrade for more.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Compare plans</h2>
+          <p className="text-sm font-medium text-slate-400">Every plan includes our core preventative care. Upgrade for more.</p>
         </div>
         <div className="rounded-2xl border border-white/10 overflow-hidden" style={{ backgroundColor: '#0c1410' }}>
           <table className="w-full">
