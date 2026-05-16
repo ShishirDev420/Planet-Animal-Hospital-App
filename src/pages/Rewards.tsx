@@ -273,7 +273,7 @@ export default function Rewards() {
             transition={{ delay: 0.2 }}
             className="inline-block relative p-[1px] rounded-[3rem] ascension-glow shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
           >
-            <div className="bg-[#0a0a0a]/95 rounded-[2.9rem] px-16 py-10 backdrop-blur-3xl flex flex-col items-center relative overflow-hidden">
+            <div className="bg-[#0a0a08]/95 rounded-[2.9rem] px-16 py-10 backdrop-blur-3xl flex flex-col items-center relative overflow-hidden">
               <HolographicFoil />
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fec708]/40 to-transparent" />
 
@@ -290,12 +290,12 @@ export default function Rewards() {
                   transition={{ duration: 5.4, repeat: Infinity, ease: 'linear' }}
                 />
                 <motion.div
-                  className="absolute inset-1 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.32),rgba(255,246,204,0.12),rgba(45,212,191,0.12),transparent)] blur-lg"
+                  className="absolute inset-1 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.32),rgba(255,246,204,0.12),rgba(45,212,191,0.18),transparent)] blur-lg"
                   animate={{ rotate: 360, scale: [1, 1.04, 1] }}
                   transition={{ rotate: { duration: 6.5, repeat: Infinity, ease: 'linear' }, scale: { duration: 2.2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
                 />
                 <motion.div
-                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_32px_rgba(254,199,8,0.45),inset_0_1px_16px_rgba(255,255,255,0.28)] h-14 w-14"
+                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_40px_rgba(254,199,8,0.55),inset_0_1px_16px_rgba(255,255,255,0.28)] h-[72px] w-[72px]"
                   animate={{ scale: [1, 1.035, 1], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] }}
                   transition={{ duration: 1.9, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
                 >
@@ -587,10 +587,9 @@ export default function Rewards() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden p-10 md:p-14 rounded-[3rem] liquid-glass-premium border-[#fec708]/10"
+          className="relative overflow-hidden p-10 md:p-14 rounded-[3rem] border border-[#fec708]/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.025))] shadow-[inset_0_1px_1px_rgba(255,255,255,0.14),0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-3xl"
         >
-          <HolographicFoil />
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#fec708]/5 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(254,199,8,0.07),transparent_38%,rgba(255,255,255,0.035))] pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="flex-1 text-center md:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fec708]/10 border border-[#fec708]/20 mb-6">
@@ -621,12 +620,29 @@ export default function Rewards() {
             <div className="shrink-0">
               <motion.div
                 whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
-                className="relative p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 flex flex-col items-center shadow-2xl backdrop-blur-2xl overflow-hidden"
+                className="relative p-8 rounded-[2.5rem] bg-[#0b0b09]/70 border border-[#fec708]/12 flex flex-col items-center shadow-[0_24px_60px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.08)] backdrop-blur-2xl overflow-hidden"
               >
-                <div className="absolute inset-0 rounded-[2.5rem] bg-[#fec708]/5" />
+                <div className="absolute inset-0 rounded-[2.5rem] bg-[radial-gradient(circle_at_50%_0%,rgba(254,199,8,0.12),transparent_46%)] pointer-events-none" />
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="w-16 h-16 rounded-full bg-[#fec708]/10 border border-[#fec708]/20 flex items-center justify-center mb-4">
-                    <Gift className="w-8 h-8 text-[#fec708]" />
+                  <div className="mb-5 relative grid place-items-center w-24 h-24">
+                    <motion.div
+                      className="absolute inset-1 rounded-full border border-[#fec708]/18 shadow-[0_0_34px_rgba(254,199,8,0.14)]"
+                      animate={shouldReduceMotion ? undefined : { scale: [1, 1.035, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 3.8, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
+                    />
+                    <motion.div
+                      className="absolute inset-4 rounded-full bg-[conic-gradient(from_120deg,transparent,rgba(254,199,8,0.34),rgba(255,246,204,0.14),transparent)] blur-sm"
+                      animate={shouldReduceMotion ? undefined : { rotate: 360 }}
+                      transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+                    />
+                    <motion.div
+                      className="relative grid place-items-center w-16 h-16 rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_28px_rgba(254,199,8,0.42),inset_0_1px_14px_rgba(255,255,255,0.3)]"
+                      animate={shouldReduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                      transition={{ duration: 2.6, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
+                    >
+                      <Gift className="w-7 h-7 text-black" strokeWidth={2.4} />
+                      <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_20%,rgba(255,255,255,0.42),transparent_32%)]" />
+                    </motion.div>
                   </div>
                   <span className="text-white/40 font-bold uppercase tracking-widest text-[10px] mb-1">Your Referrals</span>
                   <motion.span
