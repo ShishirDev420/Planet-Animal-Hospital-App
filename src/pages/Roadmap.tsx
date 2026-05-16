@@ -97,15 +97,17 @@ const parseRoadmap = (text: string, progressData: any = {}): Stage[] => {
     const title = phaseIndices[i].title;
     
     const tasks: Task[] = [];
-    // Robust task extraction: bullet point followed by **Name**: Desc | Rationale
-    const taskRegex = /\*\s+\*\*([^*]+)\*\*\s*:\s*([^|]+)(?:\|\s*(?:Scientific Rationale:\s*)?([^|*\n]+))?/gi;
-    let tMatch;
-    let taskIdx = 0;
-    
-    while ((tMatch = taskRegex.exec(phaseContent)) !== null) {
-      const taskName = tMatch[1].trim();
-      const taskDesc = tMatch[2].trim();
-      const rationale = tMatch[3]?.trim() || '';
+    const actionableContent = phaseContent.split(/###\s*Verifiable Sources/i)[0];
+    const taskLines = actionableContent.split('\n').filter((line) => /^\s*[-*]\s+/.test(line));
+
+    taskLines.forEach((line, taskIdx) => {
+      const cleanedLine = line.replace(/^\s*[-*]\s+/, '').trim();
+      const formattedMatch = cleanedLine.match(/^\*\*([^*]+)\*\*\s*:?\s*(.*)$/);
+      const taskName = (formattedMatch?.[1] || cleanedLine.split(':')[0] || `Care Action ${taskIdx + 1}`).trim();
+      const remainder = (formattedMatch?.[2] || cleanedLine.slice(taskName.length).replace(/^\s*:?\s*/, '')).trim();
+      const rationaleSplit = remainder.split(/\s*\|\s*(?:Scientific Rationale:\s*)?/i);
+      const taskDesc = (rationaleSplit[0] || '').trim();
+      const rationale = (rationaleSplit.slice(1).join(' | ') || '').trim();
       
       const taskId = `${title}-${taskIdx}`;
       const isCompleted = progressData[taskId] || false;
@@ -116,8 +118,7 @@ const parseRoadmap = (text: string, progressData: any = {}): Stage[] => {
         rationale: rationale,
         completed: isCompleted
       });
-      taskIdx++;
-    }
+    });
 
     if (tasks.length > 0) {
       stages.push({
@@ -301,15 +302,15 @@ export default function Roadmap() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col pb-32">
-      <div className="relative flex items-center justify-center pt-8 pb-4 w-full">
-        {/* Outer Aura */}
-        <div className="absolute w-64 h-64 bg-[#fec708]/15 rounded-full blur-[100px] mix-blend-screen transform-gpu" style={{ animation: 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
-        {/* Inner Core */}
-        <div className="absolute w-40 h-40 bg-white/10 rounded-full blur-[70px] mix-blend-screen transform-gpu" style={{ animation: 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite', animationDelay: '1s' }}></div>
-        {/* The Logo Container */}
-        <div className="relative z-10 p-6 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(255,255,255,0.05)] flex items-center justify-center">
-          <Logo className="!w-24 !h-24 z-20 relative transform transition-transform duration-700 hover:scale-105" />
+    <div className="h-full w-full flex flex-col pb-28">
+      <div className="relative w-full px-5 pt-6 pb-2">
+        <div className="absolute left-1/2 top-0 h-40 w-72 -translate-x-1/2 rounded-full bg-[#fec708]/10 blur-[90px]" />
+        <div className="relative z-10 mx-auto flex max-w-2xl items-center gap-3 rounded-full border border-white/8 bg-black/20 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
+          <Logo className="!h-11 !w-11 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#fec708]">Premium Paws</p>
+            <p className="truncate text-sm font-bold text-white/70">Daily wellness roadmap</p>
+          </div>
         </div>
       </div>
       <AnimatePresence>
@@ -330,9 +331,9 @@ export default function Roadmap() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="relative z-10 max-w-2xl md:max-w-4xl mx-auto w-full p-6"
+            className="relative z-10 mx-auto w-full max-w-2xl px-4 py-5 md:max-w-4xl md:px-6"
           >
-            <div className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] overflow-hidden">
+            <div className="overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#071912]/80 shadow-[0_28px_90px_rgba(0,0,0,0.38)]">
               <AnimatePresence mode="wait">
                 {!roadmap ? (
                   <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8 sm:p-10 flex-1 flex flex-col">
@@ -363,18 +364,22 @@ export default function Roadmap() {
                     </div>
                   </motion.div>
                 ) : (
-                  <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 sm:p-10 flex-1 flex flex-col space-y-8">
-                    {/* Header */}
-                    <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/[0.08] pb-8">
-                      <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fec708]/20 text-[#fec708] text-xs font-bold mb-3 border border-[#fec708]/50 shadow-sm">
-                          <Sparkles className="w-3 h-3" /> Roadmap Generated{profile?.roadmapGeneratedAt ? ` on ${new Date(profile.roadmapGeneratedAt).toLocaleDateString()}` : ''}
+                  <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-1 flex-col space-y-6 p-5 sm:p-8">
+                    <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] pb-6">
+                      <div className="space-y-3">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#fec708] shadow-sm">
+                          <Sparkles className="h-3.5 w-3.5" /> Generated{profile?.roadmapGeneratedAt ? ` ${new Date(profile.roadmapGeneratedAt).toLocaleDateString()}` : ''}
                         </div>
-                        <h2 className="font-heading font-extrabold text-3xl md:text-4xl text-[#fec708] tracking-tight drop-shadow-sm">
-                          {(formData?.name || profile?.petName || profile?.name || 'Your Pet')}'s <span className="text-white dark:text-white">Longevity Plan</span>
-                        </h2>
+                        <div className="space-y-2">
+                          <h2 className="font-heading text-3xl font-black leading-none tracking-tight text-white md:text-4xl">
+                            {(formData?.name || profile?.petName || profile?.name || 'Your Pet')}'s Longevity Plan
+                          </h2>
+                          <p className="max-w-2xl text-sm font-medium leading-6 text-white/55">
+                            A locked, sequential wellness launch program built around prevention, evidence, and daily follow-through.
+                          </p>
+                        </div>
                       </div>
-                      <button onClick={handleSubmit} className="p-3 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white bg-white/50 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200 dark:border-white/[0.08] rounded-full hover:bg-white dark:hover:bg-white/[0.08] transition-all shadow-sm group active:scale-95" title="Refresh/Start Over">
+                      <button onClick={handleSubmit} className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-white/60 shadow-sm transition-all hover:bg-white/[0.08] hover:text-white active:scale-95" title="Refresh/Start Over">
                         <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500" />
                       </button>
                     </div>
@@ -404,16 +409,15 @@ export default function Roadmap() {
                             }}
                           />
 
-                          <div className="pt-16 mt-12 border-t border-white/10 relative">
-                            {/* Vault Icon Header */}
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-[#fec708] rounded-full flex items-center gap-2 shadow-[0_0_30px_rgba(254,199,8,0.4)]">
-                              <Shield size={16} className="text-black" />
-                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Evidence Vault</span>
+                          <div className="mt-10 border-t border-white/10 pt-6">
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">
+                              <Shield size={14} />
+                              Evidence Base
                             </div>
 
-                            <div className="bg-black/40 rounded-[2rem] p-8 border border-white/5 shadow-2xl">
-                              <h3 className="font-heading font-black text-2xl uppercase tracking-tighter italic text-white mb-6 flex items-center gap-3">
-                                <Stethoscope className="text-[#fec708]" /> Scientific <span className="text-[#fec708]">Foundation</span>
+                            <div className="rounded-[1.75rem] border border-white/8 bg-black/25 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
+                              <h3 className="mb-4 flex items-center gap-3 font-heading text-xl font-black tracking-tight text-white">
+                                <Stethoscope className="text-[#fec708]" /> Scientific foundation
                               </h3>
                               
                               <div className="prose prose-invert max-w-none">
@@ -421,12 +425,12 @@ export default function Roadmap() {
                                   components={{
                                     h1: ({node, ...props}) => <h1 className="hidden" {...props} />,
                                     h2: ({node, ...props}) => <h2 className="hidden" {...props} />,
-                                    h3: ({node, ...props}) => <h3 className="font-heading text-lg font-black uppercase tracking-tight text-white/90 mt-6 mb-3" {...props} />,
-                                    p: ({node, ...props}) => <p className="font-body text-white/50 text-sm leading-relaxed mb-4" {...props} />,
-                                    ul: ({node, ...props}) => <ul className="space-y-3 mb-8" {...props} />,
+                                    h3: ({node, ...props}) => <h3 className="mb-3 mt-5 font-heading text-base font-black tracking-tight text-white/90" {...props} />,
+                                    p: ({node, ...props}) => <p className="mb-4 font-body text-sm leading-relaxed text-white/55" {...props} />,
+                                    ul: ({node, ...props}) => <ul className="mb-2 space-y-3" {...props} />,
                                     li: ({node, ...props}) => (
-                                      <li className="flex items-start gap-3 text-xs text-white/70 bg-white/[0.03] p-4 rounded-xl border border-white/5 hover:border-[#fec708]/20 transition-colors">
-                                        <div className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#fec708] shadow-[0_0_8px_rgba(254,199,8,0.8)]" />
+                                      <li className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs leading-5 text-white/70 transition-colors hover:border-[#fec708]/20">
+                                        <div className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#fec708]" />
                                         <span className="flex-1">{props.children}</span>
                                       </li>
                                     ),
@@ -453,7 +457,7 @@ export default function Roadmap() {
                         <Markdown
                           components={{
                             h1: ({node, ...props}) => <h1 className="font-heading font-extrabold text-3xl text-[#fec708] mt-12 mb-6 border-b border-[#fec708]/20 pb-4 tracking-tight" {...props} />,
-                            h2: ({node, ...props}) => <h2 className="font-heading font-bold text-2xl text-[#fec708] mt-10 mb-5 tracking-tight border-l-4 border-[#fec708] pl-4" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="mt-10 mb-5 rounded-2xl border border-[#fec708]/20 bg-[#fec708]/10 px-4 py-3 font-heading text-2xl font-bold tracking-tight text-[#fec708]" {...props} />,
                             h3: ({node, ...props}) => <h3 className="font-heading font-semibold text-xl text-[#fec708]/90 mt-8 mb-4 tracking-tight" {...props} />,
                             p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-left" {...props} />,
                             ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-4 mb-8 text-left" {...props} />,

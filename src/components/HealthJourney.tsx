@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Circle, Clock, Sparkles, Shield, Heart, Zap, ChevronDown, ChevronUp, ExternalLink, Info, Lock } from 'lucide-react';
+import { CheckCircle2, Circle, Shield, Zap, ChevronDown, Info, Lock, CalendarDays } from 'lucide-react';
 
 export interface Task {
   id: string;
@@ -21,6 +21,16 @@ interface HealthJourneyProps {
   onToggleTask: (stageId: string, taskId: string) => void;
   petName: string;
 }
+
+const splitTaskText = (text: string) => {
+  const separatorIndex = text.indexOf(':');
+  if (separatorIndex === -1) return { title: text.trim(), description: '' };
+
+  return {
+    title: text.slice(0, separatorIndex).trim(),
+    description: text.slice(separatorIndex + 1).trim(),
+  };
+};
 
 const Celebration = ({ color = "#fec708" }: { color?: string }) => {
   return (
@@ -56,6 +66,12 @@ export default function HealthJourney({ stages, onToggleTask, petName }: HealthJ
   };
 
   const progress = calculateProgress();
+  const totalTasks = stages.reduce((acc, stage) => acc + stage.tasks.length, 0);
+  const completedTasks = stages.reduce((acc, stage) => acc + stage.tasks.filter(t => t.completed).length, 0);
+  const currentStage = stages.find((stage) => stage.isUnlocked && stage.tasks.some((task) => !task.completed)) || stages.find((stage) => stage.isUnlocked) || stages[0];
+  const nextActionStage = stages.find((stage) => stage.isUnlocked && stage.tasks.some((task) => !task.completed));
+  const nextAction = nextActionStage?.tasks.find((task) => !task.completed);
+  const nextActionText = nextAction ? splitTaskText(nextAction.text) : null;
 
   const handleTaskToggle = (stageId: string, taskId: string, isNowCompleted: boolean) => {
     if (isNowCompleted) {
@@ -66,110 +82,86 @@ export default function HealthJourney({ stages, onToggleTask, petName }: HealthJ
   };
 
   return (
-    <div className="w-full space-y-10 relative">
-      {/* Neural Grid Background */}
-      <div className="absolute inset-0 -z-10 pointer-events-none opacity-20 dark:opacity-30">
-        <div className="absolute inset-0 bg-[radial-gradient(#fec708_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
-      </div>
-
-      {/* Progress Header - Premium Glassmorphism */}
+    <div className="w-full space-y-6 sm:space-y-8 relative">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-10 rounded-[3rem] bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 backdrop-blur-3xl overflow-hidden group shadow-2xl shadow-black/40"
+        className="relative overflow-hidden rounded-[2rem] border border-[#fec708]/20 bg-[#0c1712]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.38)] sm:p-8"
       >
-        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity duration-1000">
-          <Sparkles className="w-32 h-32 text-[#fec708]" />
-        </div>
-        
-        {/* Animated Background Glow */}
-        <div className="absolute -top-24 -left-24 w-64 h-64 bg-[#fec708]/10 rounded-full blur-[100px] animate-pulse" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-4 h-4 text-[#fec708]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#fec708]/80">Longevity Protocol v4.7</span>
+        <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-[#fec708]/12 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-[#fec708]/40 to-transparent" />
+
+        <div className="relative z-10 space-y-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/20 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[#fec708]">
+                <Shield className="h-3.5 w-3.5" />
+                Premium Paws Daily Program
+              </div>
+              <div className="space-y-2">
+                <h2 className="font-heading text-3xl font-black leading-none tracking-tight text-white sm:text-5xl">
+                  {petName}'s wellness launch
+                </h2>
+                <p className="max-w-xl text-sm font-medium leading-6 text-white/60 sm:text-base">
+                  A sequential longevity plan that turns veterinary priorities into daily, trackable care actions.
+                </p>
+              </div>
             </div>
-            <h2 className="text-5xl md:text-6xl font-heading font-black tracking-tighter uppercase italic leading-none text-white drop-shadow-2xl">
-              {petName}'s <span className="text-[#fec708] relative">
-                Journey
-                <motion.span 
-                  className="absolute -bottom-2 left-0 h-1 bg-[#fec708]"
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                />
-              </span>
-            </h2>
+
+            <div className="rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3 sm:min-w-36 sm:text-right">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Complete</p>
+              <p className="mt-1 font-heading text-3xl font-black tabular-nums tracking-tight text-[#fec708]">{progress}%</p>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-6 bg-white/[0.03] p-6 rounded-3xl border border-white/5">
-            <div className="text-right">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Biological Edge</p>
-              <p className="text-5xl font-heading font-black text-[#fec708] tracking-tighter tabular-nums">{progress}%</p>
+
+          <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="rounded-[1.5rem] border border-[#fec708]/20 bg-[#fec708]/10 p-4 sm:p-5">
+              <div className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#fec708]">
+                <Zap className="h-3.5 w-3.5" />
+                Next Best Action
+              </div>
+              {nextAction && nextActionText ? (
+                <div className="space-y-2">
+                  <h3 className="font-heading text-xl font-black leading-tight tracking-tight text-white">{nextActionText.title}</h3>
+                  {nextActionText.description && <p className="text-sm font-medium leading-6 text-white/65">{nextActionText.description}</p>}
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/38">Current phase: {nextActionStage?.title}</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <h3 className="font-heading text-xl font-black tracking-tight text-white">Launch complete</h3>
+                  <p className="text-sm font-medium leading-6 text-white/65">Every unlocked wellness action has been checked off.</p>
+                </div>
+              )}
             </div>
-            <div className="w-24 h-24 rounded-full border-4 border-white/5 flex items-center justify-center relative shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-              <svg className="w-full h-full -rotate-90">
-                <circle
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  fill="transparent"
-                  className="text-white/5"
+
+            <div className="rounded-[1.5rem] border border-white/8 bg-black/20 p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Program Pace</p>
+                  <p className="mt-2 text-sm font-bold text-white"><span className="text-[#fec708]">{completedTasks}</span> of {totalTasks} care actions</p>
+                </div>
+                <CalendarDays className="h-8 w-8 text-[#fec708]/80" />
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/8">
+                <motion.div
+                  className="h-full rounded-full bg-[#fec708]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
                 />
-                <motion.circle
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  fill="transparent"
-                  strokeDasharray="263.9"
-                  initial={{ strokeDashoffset: 263.9 }}
-                  animate={{ strokeDashoffset: 263.9 - (263.9 * progress) / 100 }}
-                  transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-                  strokeLinecap="round"
-                  className="text-[#fec708] drop-shadow-[0_0_8px_rgba(254,199,8,0.5)]"
-                />
-              </svg>
-              <Zap className="absolute w-8 h-8 text-[#fec708] animate-pulse" />
+              </div>
+              <p className="mt-3 text-xs font-medium leading-5 text-white/45">Complete tasks in order to unlock the next phase preview.</p>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Stages List */}
-      <div className="relative space-y-6">
-        {/* Dynamic Glowing Path */}
-        <div className="absolute left-[39px] top-12 bottom-12 w-[4px] bg-white/[0.03] rounded-full overflow-hidden">
-          <motion.div 
-            className="w-full bg-gradient-to-b from-[#fec708] via-[#fec708] to-transparent shadow-[0_0_25px_rgba(254,199,8,0.8)]"
-            initial={{ height: 0 }}
-            animate={{ height: `${progress}%` }}
-            transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
-          />
-          {/* Moving Energy Pulse */}
-          <motion.div
-            className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-transparent via-white/40 to-transparent"
-            animate={{ 
-              top: ['-20%', '120%'],
-              opacity: [0, 1, 0]
-            }}
-            transition={{ 
-              duration: 3, 
-              repeat: Infinity, 
-              ease: "linear" 
-            }}
-          />
-        </div>
-
-      {/* Stage Cards */}
-      <div className="space-y-12 pb-12">
+      <div className="space-y-4 pb-6">
         {stages.map((stage, sIdx) => {
           const isCompleted = stage.tasks.length > 0 && stage.tasks.every(t => t.completed);
+          const isExpanded = expandedStage === stage.id;
+          const stageProgress = stage.tasks.length === 0 ? 0 : Math.round((stage.tasks.filter(t => t.completed).length / stage.tasks.length) * 100);
+          const isCurrent = currentStage?.id === stage.id && stage.isUnlocked && !isCompleted;
           
           return (
             <motion.div
@@ -177,90 +169,65 @@ export default function HealthJourney({ stages, onToggleTask, petName }: HealthJ
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: sIdx * 0.1 }}
-              className={`relative group ${!stage.isUnlocked ? 'opacity-40 grayscale-[0.5]' : ''}`}
+              className="relative"
             >
-              {/* Stage Marker - Planet Style */}
-              <motion.div 
-                whileHover={stage.isUnlocked ? { scale: 1.15, rotate: 0 } : {}}
-                className={`absolute left-0 top-0 w-20 h-20 rounded-2xl flex items-center justify-center z-20 transition-all duration-700 border-2 ${
-                  isCompleted
-                    ? 'bg-[#fec708] text-black border-[#fec708] shadow-[0_0_60px_rgba(254,199,8,0.8),inset_0_0_20px_rgba(255,255,255,0.4)] rotate-0'
-                    : stage.isUnlocked 
-                      ? 'bg-white/10 text-[#fec708] border-[#fec708]/50 shadow-[0_0_30px_rgba(254,199,8,0.3)] rotate-0' 
-                      : 'bg-black/40 text-white/20 border-white/10 rotate-12'
-                }`}
-              >
-                {isCompleted ? (
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <CheckCircle2 className="w-10 h-10" />
-                  </motion.div>
-                ) : stage.isUnlocked ? (
-                  <span className="text-3xl font-black italic tracking-tighter">{sIdx + 1}</span>
-                ) : (
-                  <Lock className="w-8 h-8 opacity-50" />
-                )}
-                {/* Orbital Ring for Unlocked/Active Stage */}
-                {stage.isUnlocked && !isCompleted && (
-                  <motion.div 
-                    className="absolute -inset-2 border border-[#fec708]/30 rounded-[1.5rem] pointer-events-none"
-                    animate={{ rotate: 360, opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  />
-                )}
-              </motion.div>
-
-              {/* Stage Content */}
-              <div className="ml-28">
-                <motion.div 
-                  onClick={() => stage.isUnlocked && setExpandedStage(expandedStage === stage.id ? null : stage.id)}
-                  className={`group/card p-8 rounded-[2.5rem] border transition-all duration-700 cursor-pointer overflow-hidden relative ${
+              <div
+                className={`overflow-hidden rounded-[1.75rem] border transition-all duration-500 ${
                     isCompleted
-                      ? 'bg-gradient-to-br from-[#fec708]/10 to-transparent border-[#fec708]/30 shadow-[0_0_30px_rgba(254,199,8,0.1)]'
-                      : expandedStage === stage.id 
-                        ? 'bg-white/[0.07] border-[#fec708]/40 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]' 
-                        : 'bg-white/[0.02] border-white/5 hover:border-[#fec708]/30 hover:bg-white/[0.04]'
+                      ? 'border-[#fec708]/25 bg-[#fec708]/10'
+                      : isExpanded
+                        ? 'border-[#fec708]/35 bg-white/[0.055] shadow-[0_24px_60px_rgba(0,0,0,0.25)]'
+                        : isCurrent
+                          ? 'border-[#fec708]/20 bg-white/[0.04]'
+                          : stage.isUnlocked
+                            ? 'border-white/8 bg-white/[0.025]'
+                            : 'border-white/6 bg-black/20 opacity-70'
                   }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => stage.isUnlocked && setExpandedStage(isExpanded ? null : stage.id)}
+                  disabled={!stage.isUnlocked}
+                  className="flex min-h-24 w-full items-center gap-4 p-4 text-left transition-colors sm:p-6"
+                  aria-expanded={stage.isUnlocked ? isExpanded : undefined}
                 >
-                  {/* Subtle Background Glow for Completed/Active Stage */}
-                  <AnimatePresence>
-                    {(expandedStage === stage.id || isCompleted) && (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className={`absolute top-0 right-0 w-64 h-64 blur-[80px] -mr-32 -mt-32 pointer-events-none ${
-                          isCompleted ? 'bg-[#fec708]/15' : 'bg-[#fec708]/5'
-                        }`}
-                      />
-                    )}
-                  </AnimatePresence>
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border font-heading text-lg font-black ${
+                    isCompleted
+                      ? 'border-[#fec708] bg-[#fec708] text-black'
+                      : stage.isUnlocked
+                        ? 'border-[#fec708]/35 bg-[#fec708]/10 text-[#fec708]'
+                        : 'border-white/10 bg-white/[0.03] text-white/25'
+                  }`}>
+                    {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : stage.isUnlocked ? sIdx + 1 : <Lock className="h-5 w-5" />}
+                  </div>
 
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className={`font-heading font-black text-2xl uppercase tracking-tighter italic ${stage.isUnlocked ? 'text-white' : 'text-white/30'}`}>
-                        {stage.title}
-                      </h3>
-                      {stage.tasks.every(t => t.completed) && stage.isUnlocked && (
-                        <span className="flex items-center gap-1 bg-[#fec708]/20 text-[#fec708] px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-[#fec708]/30">
-                          <CheckCircle2 size={10} /> Optimized
-                        </span>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className={`font-heading text-xl font-black leading-tight tracking-tight sm:text-2xl ${stage.isUnlocked ? 'text-white' : 'text-white/35'}`}>{stage.title}</h3>
+                      {isCurrent && (
+                        <span className="rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#fec708]">Active</span>
+                      )}
+                      {isCompleted && (
+                        <span className="rounded-full border border-[#fec708]/25 bg-[#fec708]/15 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#fec708]">Complete</span>
                       )}
                     </div>
-                    <p className="text-xs font-bold text-white/30 tracking-widest uppercase">
-                      <span className="text-[#fec708]">{stage.tasks.filter(t => t.completed).length}</span> / {stage.tasks.length} Biological Markers
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/35">
+                      {stage.isUnlocked ? `${stage.tasks.filter(t => t.completed).length} / ${stage.tasks.length} daily care actions` : 'Locked until prior phase is complete'}
                     </p>
+                    {stage.isUnlocked && (
+                      <div className="h-1.5 max-w-xs overflow-hidden rounded-full bg-white/8">
+                        <div className="h-full rounded-full bg-[#fec708] transition-all duration-700" style={{ width: `${stageProgress}%` }} />
+                      </div>
+                    )}
                   </div>
-                  <div className={`p-2 rounded-full transition-colors ${expandedStage === stage.id ? 'bg-[#fec708]/10 text-[#fec708]' : 'text-white/20'}`}>
-                    {expandedStage === stage.id ? <ChevronUp /> : <ChevronDown />}
+
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${isExpanded ? 'bg-[#fec708]/12 text-[#fec708]' : 'bg-white/[0.03] text-white/30'}`}>
+                    <ChevronDown className={`h-5 w-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>
-                </div>
+                </button>
 
                 <AnimatePresence>
-                  {expandedStage === stage.id && (
+                  {isExpanded && stage.isUnlocked && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
@@ -268,67 +235,66 @@ export default function HealthJourney({ stages, onToggleTask, petName }: HealthJ
                       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-8 space-y-5">
-                        {stage.tasks.map((task) => (
-                          <motion.div 
-                            key={task.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTaskToggle(stage.id, task.id, !task.completed);
-                            }}
-                            className={`group/task relative p-5 rounded-2xl border transition-all duration-500 overflow-hidden ${
-                              task.completed 
-                                ? 'bg-white/[0.03] border-white/5 opacity-60' 
-                                : 'bg-white/[0.08] border-white/10 hover:border-[#fec708]/40 hover:bg-white/[0.12] hover:shadow-xl'
-                            }`}
-                          >
-                            {lastCompletedTask === task.id && <Celebration />}
-                            
-                            <div className="flex gap-5">
-                              <div className={`mt-1 flex-shrink-0 transition-all duration-500 ${task.completed ? 'text-[#fec708]' : 'text-white/20 group-hover/task:text-white/40'}`}>
-                                {task.completed ? <CheckCircle2 className="w-7 h-7 drop-shadow-[0_0_8px_rgba(254,199,8,0.5)]" /> : <Circle className="w-7 h-7" />}
-                              </div>
-                              <div className="space-y-3 flex-1">
-                                <div className="flex justify-between items-start">
-                                  <h4 className={`font-black text-base tracking-tight uppercase italic ${task.completed ? 'text-white/30 line-through' : 'text-white'}`}>
-                                    {task.text}
-                                  </h4>
-                                  {!task.completed && (
-                                    <div className="bg-[#fec708]/10 p-1.5 rounded-lg opacity-0 group-hover/task:opacity-100 transition-opacity">
-                                      <Zap size={14} className="text-[#fec708]" />
+                      <div className="space-y-3 border-t border-white/8 p-4 sm:p-6">
+                        {stage.tasks.map((task) => {
+                          const taskText = splitTaskText(task.text);
+
+                          return (
+                            <motion.button 
+                              type="button"
+                              key={task.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              onClick={() => handleTaskToggle(stage.id, task.id, !task.completed)}
+                              className={`group/task relative w-full overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 sm:p-5 ${
+                                task.completed 
+                                  ? 'border-[#fec708]/20 bg-[#fec708]/10' 
+                                  : 'border-white/8 bg-black/20 hover:border-[#fec708]/30 hover:bg-white/[0.055]'
+                              }`}
+                            >
+                              {lastCompletedTask === task.id && <Celebration />}
+                              <div className="flex gap-4">
+                                <div className={`mt-0.5 shrink-0 transition-colors duration-300 ${task.completed ? 'text-[#fec708]' : 'text-white/28 group-hover/task:text-[#fec708]/80'}`}>
+                                  {task.completed ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                                </div>
+                                <div className="min-w-0 flex-1 space-y-3">
+                                  <div className="space-y-1.5">
+                                    <h4 className={`font-heading text-base font-black leading-snug tracking-tight ${task.completed ? 'text-white/55' : 'text-white'}`}>
+                                      {taskText.title}
+                                    </h4>
+                                    {taskText.description && (
+                                      <p className={`text-sm font-medium leading-6 ${task.completed ? 'text-white/42' : 'text-white/64'}`}>
+                                        {taskText.description}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {task.rationale && (
+                                    <div className="rounded-xl border border-white/8 bg-black/22 p-3">
+                                      <div className="mb-1.5 flex items-center gap-2">
+                                        <Info className="h-3.5 w-3.5 text-[#fec708]" />
+                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#fec708]">Why this matters</span>
+                                      </div>
+                                      <p className="text-xs font-medium leading-5 text-white/50">
+                                        {task.rationale}
+                                      </p>
                                     </div>
                                   )}
                                 </div>
-                                
-                                {task.rationale && (
-                                  <div className={`p-4 rounded-xl border transition-all ${task.completed ? 'bg-black/20 border-white/5' : 'bg-black/40 border-white/10'}`}>
-                                    <div className="flex items-start gap-2 mb-2">
-                                      <Info className="w-3 h-3 text-[#fec708] mt-0.5" />
-                                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#fec708]">Scientific Rationale</span>
-                                    </div>
-                                    <p className="text-xs text-white/50 leading-relaxed font-medium">
-                                      {task.rationale}
-                                    </p>
-                                  </div>
-                                )}
                               </div>
-                            </div>
-                          </motion.div>
-                        ))}
+                            </motion.button>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
-            </div>
+              </div>
           </motion.div>
         );
       })}
       </div>
     </div>
-  </div>
 );
 }
 
