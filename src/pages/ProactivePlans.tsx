@@ -20,7 +20,7 @@ const tiers = {
       { text: 'Discounted Core Vaccinations' },
       { text: 'Free Quarterly Deworming Follow-up' },
     ],
-    pawPoints: '0.5×',
+    pawPoints: '1.0×',
     accent: '#7ea892',
     accentDim: 'rgba(126, 168, 146, 0.15)',
   },
@@ -157,14 +157,15 @@ function OrganicPawTrail({ color }: { color: string }) {
 
 export default function ProactivePlans() {
   const navigate = useNavigate();
-  const [currentPlan, setCurrentPlan] = useState<string>('essential');
+  const [currentPlan, setCurrentPlan] = useState<string>('free');
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!auth.currentUser) return;
     const unsubscribe = onSnapshot(doc(db, 'users', auth.currentUser.uid), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().petProfile?.currentPlan) {
-        setCurrentPlan(docSnap.data().petProfile.currentPlan);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setCurrentPlan(data.currentPlan || data.petProfile?.currentPlan || 'free');
       }
     });
     return () => unsubscribe();
@@ -175,7 +176,8 @@ export default function ProactivePlans() {
     setIsUpdating(true);
     try {
       await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        'petProfile.currentPlan': planId
+        currentPlan: planId,
+        'petProfile.currentPlan': planId,
       });
     } catch (error) {
       console.error('Error updating plan:', error);
@@ -424,7 +426,7 @@ export default function ProactivePlans() {
                 ['Dental Exam', '—', 'Free', 'Free'],
                 ['Free Grooming', '—', '1 per 3 mo.', 'Monthly'],
                 ['Full-Body Ultrasound', '—', '—', 'Biannual'],
-                ['Paw Points Multiplier', '0.5×', '1.5×', '2.0×'],
+                ['Paw Points Multiplier', '1.0×', '1.5×', '2.0×'],
                 ['Longevity Officer', '—', '✓', '✓'],
                 ['Paw Pal Agent', '—', '—', '✓'],
                 ['Google Calendar Sync', '—', '—', '✓'],

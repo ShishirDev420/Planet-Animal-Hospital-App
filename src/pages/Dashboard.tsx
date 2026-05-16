@@ -18,6 +18,7 @@ import { useCheckInStatus } from '../hooks/useCheckInStatus';
 import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
+import { buildWhatsAppMessage, calculateBookingPoints, getPointsMultiplier } from '../lib/pawPoints';
 
 enum OperationType {
   CREATE = 'create',
@@ -365,8 +366,14 @@ function getPersonalizedIncentives(pet?: PetProfileForIncentives): IncentiveCard
 }
 
 function generateWhatsAppPayload(serviceName: string, petProfile: any) {
-  const message = `Hi Planet Animal Hospital!\nI would like to book a visit.\n👤 Parent: ${petProfile?.parentName || 'Pet Parent'}\n🐾 Pet: ${petProfile?.name || 'Pet'} (Dog - ${petProfile?.breed || 'Unknown'}, Age ${petProfile?.age || 'Unknown'})\n🏥 Requested Service: ${serviceName}`;
-  return 'https://wa.me/919004290923?text=' + encodeURIComponent(message);
+  const message = buildWhatsAppMessage(
+    petProfile?.parentName || 'Pet Parent',
+    petProfile?.name || 'Pet',
+    [serviceName],
+    'TBD',
+    'TBD',
+  );
+  return `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
 }
 
 function getBriefingPreview(message: string, loading: boolean, petName: string) {
@@ -411,14 +418,7 @@ export default function Dashboard() {
   const [incentivesOrder, setIncentivesOrder] = useState<any[]>([]);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  const getMultiplier = (plan: string) => {
-    switch (plan?.toLowerCase()) {
-      case 'essential': return 0.5;
-      case 'advanced': return 1.5;
-      case 'prestige': return 2;
-      default: return 1;
-    }
-  };
+  const getMultiplier = (plan: string) => getPointsMultiplier(plan);
 
   useEffect(() => {
     if (petProfile) {
@@ -450,7 +450,7 @@ export default function Dashboard() {
           if (docSnap.exists()) {
             const data = docSnap.data();
             setVerifiedPoints(data.pawPoints || 0);
-            setCurrentPlan(data.currentPlan || 'free');
+            setCurrentPlan(data.currentPlan || data.petProfile?.currentPlan || 'free');
           }
         }, (err) => {
            console.error('onSnapshot error in Dashboard:', err);
@@ -471,7 +471,7 @@ export default function Dashboard() {
   const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
     if (!userId) return;
     
-    const finalPoints = pointsValue * getMultiplier(currentPlan);
+    const finalPoints = calculateBookingPoints([{ id: 0, name: serviceName, points: pointsValue }], currentPlan);
 
     // Optimistic UI updates
     setPendingIncentives(prev => [...prev, incentiveId]);
@@ -495,7 +495,7 @@ export default function Dashboard() {
         createdAt: serverTimestamp()
       });
 
-      const message = `Hi Planet Animal Hospital! I'd like to book a ${serviceName} for ${petNameStr}.`;
+      const message = buildWhatsAppMessage(petProfile?.parentName || 'Pet Parent', petNameStr, [serviceName], 'TBD', 'TBD');
       const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
 
@@ -619,8 +619,7 @@ export default function Dashboard() {
   const submitBooking = async () => {
     if (selectedServices.length === 0 || !bookingDate || !bookingTime || !userId) return;
 
-    const totalPoints = selectedServices.reduce((acc, curr) => acc + curr.points, 0);
-    const finalPoints = totalPoints * getMultiplier(currentPlan);
+    const finalPoints = calculateBookingPoints(selectedServices, currentPlan);
     const serviceNames = selectedServices.map(s => s.name).join(', ');
 
     try {
@@ -655,9 +654,11 @@ export default function Dashboard() {
 
   const parentName = petProfile?.parentName || "Pet Parent";
   const petName = petProfile?.name || 'Pet';
+  const bookingBasePoints = selectedServices.reduce((acc, service) => acc + service.points, 0);
+  const bookingFinalPoints = calculateBookingPoints(selectedServices, currentPlan);
+  const bookingMultiplier = getMultiplier(currentPlan);
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
-  const serviceNamesText = selectedServices.length > 0 ? selectedServices.map(s => s.name).join(', ') : '';
-  const whatsappMessage = `Hey Planet Animal Hospital team! I am ${parentName}, ${petName}'s parent. I would like to book an appointment for: ${serviceNamesText} on ${bookingDate} at ${bookingTime}. Please get back to me as soon as you see this message. Thank you!`;
+  const whatsappMessage = buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime);
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
 
   if (profileLoading || !isAuthReady) {
@@ -1336,9 +1337,16 @@ export default function Dashboard() {
                       animate={{ y: 0, opacity: 1 }}
                       className="text-2xl font-black text-planet-yellow leading-none flex items-center justify-end gap-1.5 mt-2 drop-shadow-[0_0_15px_rgba(254,199,8,0.8)]"
                     >
-                      {selectedServices.reduce((a, s) => a + s.points, 0).toLocaleString()}
+                      {bookingFinalPoints.toLocaleString()}
                       <span className="text-xs uppercase tracking-widest text-white/50 font-bold">pts</span>
                     </motion.p>
+                    {selectedServices.length > 0 && (
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/38">
+                        {currentPlan === 'free'
+                          ? 'Free plan: General Checkup earns 500 pts'
+                          : `${bookingBasePoints.toLocaleString()} base x ${bookingMultiplier.toFixed(1)} multiplier`}
+                      </p>
+                    )}
                   </div>
                 </div>
 
