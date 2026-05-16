@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Mic, Camera, Settings, AlertCircle, Stethoscope } from 'lucide-react';
+import { ArrowLeft, Mic, Camera, Settings, Stethoscope } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { usePetProfile } from '../hooks/usePetProfile';
@@ -19,7 +19,12 @@ declare global {
 
 const SARVAM_LANGUAGES = ['hi-IN', 'ta-IN', 'te-IN', 'kn-IN', 'ml-IN', 'bn-IN', 'en-IN'];
 
-const FREE_TIER_GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const DEMO_SARVAM_KEY = import.meta.env.DEV ? import.meta.env.VITE_SARVAM_API_KEY || '' : '';
+const SARVAM_MALE_VOICE = 'shubh';
+
+function getSarvamLanguageCode(text: string) {
+  return /[\u0900-\u097F]/.test(text) ? 'hi-IN' : 'en-IN';
+}
 
 async function transcribeWithSarvam(audioBlob: Blob, apiKey: string): Promise<string> {
   const formData = new FormData();
@@ -54,12 +59,12 @@ async function transcribeWithSarvam(audioBlob: Blob, apiKey: string): Promise<st
 export default function AIVet() {
   const navigate = useNavigate();
   const { profile } = usePetProfile();
-  const { keys, status, hasAnyLLMKey, consumeFreeTier, freeTierCount, freeTierLimit } = useAPIKeys();
+  const { keys, status } = useAPIKeys();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'ai', content: string}[]>([
-    { role: 'ai', content: `Namaste! I'm Sankpawl, your primary veterinarian here at Planet Animal Hospital. I've been looking over ${profile?.petName || 'your pet'}'s health records. How is ${profile?.petName || 'your pet'} feeling today? Please share whatever is on your mind—I'm here as your friend and partner in ${profile?.petName || 'their'} care.` }
+    { role: 'ai', content: `Namaste. I'm Pawl, your AI veterinarian here at Planet Animal Hospital. I've been looking over ${profile?.petName || 'your pet'}'s health records. How is ${profile?.petName || 'your pet'} feeling today? You can speak naturally in English, Hindi, or a mix of both.` }
   ]);
   const [showScanner, setShowScanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -69,7 +74,6 @@ export default function AIVet() {
   const [volume, setVolume] = useState(0);
   const [currentProvider, setCurrentProvider] = useState<string>('');
   const [streamingText, setStreamingText] = useState('');
-  const [freeTierExhausted, setFreeTierExhausted] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const isCallActiveRef = useRef(false);
@@ -102,12 +106,6 @@ export default function AIVet() {
     }
   }, [chatHistory]);
 
-  useEffect(() => {
-    if (freeTierCount >= freeTierLimit && !keys.gemini && !keys.openai) {
-      setFreeTierExhausted(true);
-    }
-  }, [freeTierCount, freeTierLimit, keys.gemini, keys.openai]);
-
   const setIsSpeakingState = (val: boolean) => {
     setIsSpeaking(val);
     isSpeakingRef.current = val;
@@ -117,6 +115,8 @@ export default function AIVet() {
     setIsCallActive(val);
     isCallActiveRef.current = val;
   };
+
+  const getActiveSarvamKey = () => keys.sarvam || DEMO_SARVAM_KEY;
 
   const stopAllActivity = () => {
     setIsCallActiveState(false);
@@ -243,8 +243,9 @@ export default function AIVet() {
 
       try {
         let transcript = '';
-        if (keys.sarvam) {
-          transcript = await transcribeWithSarvam(blob, keys.sarvam);
+        const sarvamKey = getActiveSarvamKey();
+        if (sarvamKey) {
+          transcript = await transcribeWithSarvam(blob, sarvamKey);
         } else {
           throw new Error('No Sarvam key');
         }
@@ -294,11 +295,18 @@ export default function AIVet() {
 
   const speakTextFallback = (text: string) => {
     if (!isCallActiveRef.current) return;
+    if (!('speechSynthesis' in window)) {
+      setIsSpeakingState(false);
+      setVolume(0);
+      if (isCallActiveRef.current) startVADListening();
+      return;
+    }
+
     setIsSpeakingState(true);
 
     const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
-    const preferred = ['Google UK English Male', 'Microsoft Ravi', 'en-IN', 'en-GB', 'en-US'];
+    const preferred = ['Microsoft Ravi', 'Microsoft Heera', 'Google UK English Male', 'Google US English', 'en-IN', 'en-GB', 'en-US'];
     for (const pref of preferred) {
       const voice = voices.find(v => v.name.toLowerCase().includes(pref.toLowerCase()) || v.lang.toLowerCase().startsWith(pref.toLowerCase().substring(0, 2)));
       if (voice) { utterance.voice = voice; break; }
@@ -354,20 +362,24 @@ export default function AIVet() {
   };
 
   const speakTextSarvam = async (text: string): Promise<boolean> => {
-    if (!keys.sarvam) return false;
+    const sarvamKey = getActiveSarvamKey();
+    if (!sarvamKey) return false;
     try {
       const ttsResponse = await fetch('https://api.sarvam.ai/text-to-speech', {
         method: 'POST',
         headers: {
-          'api-subscription-key': keys.sarvam,
+          'api-subscription-key': sarvamKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          inputs: [text],
-          target_language_code: 'en-IN',
+          text,
+          target_language_code: getSarvamLanguageCode(text),
           model: 'bulbul:v3',
-          speaker: 'shubh',
-          speech_sample_rate: 24000
+          speaker: SARVAM_MALE_VOICE,
+          pace: 0.88,
+          temperature: 0.35,
+          speech_sample_rate: '24000',
+          output_audio_codec: 'wav'
         })
       });
 
@@ -457,11 +469,28 @@ export default function AIVet() {
     return fullText;
   };
 
-  const getActiveLLMKey = (): { provider: 'gemini' | 'openai' | 'free' | null; key: string } => {
+  const getActiveLLMKey = (): { provider: 'gemini' | 'openai' | null; key: string } => {
     if (keys.gemini) return { provider: 'gemini', key: keys.gemini };
     if (keys.openai) return { provider: 'openai', key: keys.openai };
-    if (FREE_TIER_GEMINI_KEY && consumeFreeTier()) return { provider: 'free', key: FREE_TIER_GEMINI_KEY };
     return { provider: null, key: '' };
+  };
+
+  const buildDemoVetResponse = (transcript: string) => {
+    const petName = profile?.petName || 'your pet';
+    const petType = profile?.petType || 'pet';
+    const petBreed = profile?.breed ? `, ${profile.breed}` : '';
+    const petAge = profile?.age ? `${profile.age}` : 'age not listed';
+    const petWeight = profile?.weight ? `${profile.weight}` : 'weight not listed';
+    const medicalHistory = profile?.additionalDetails || 'no extra medical history listed yet';
+    const lowerTranscript = transcript.toLowerCase();
+    const emergencyKeywords = ['breathing', 'collapse', 'collapsed', 'seizure', 'bleeding', 'poison', 'bloated', 'bloat', 'urinate', 'unconscious'];
+    const mayBeEmergency = emergencyKeywords.some(keyword => lowerTranscript.includes(keyword));
+
+    if (mayBeEmergency) {
+      return `Preview demo: I would treat this as urgent for ${petName}. If there is trouble breathing, collapse, seizures, severe bleeding, poisoning, bloating, or inability to urinate, please contact Planet Animal Hospital or emergency care right now. This preview is not a diagnosis or a substitute for an in-person veterinarian.`;
+    }
+
+    return `Preview demo: I hear your concern about ${petName}, your ${petType}${petBreed}. Based on the profile I can see, ${petName}'s age is ${petAge}, weight is ${petWeight}, and the medical notes say ${medicalHistory}. For a live AI answer, Pawl would use this Planet Animal Hospital context plus your question to suggest safe next steps, ask a follow-up, and respond in the same natural style you use, including Hindi-English if that is how you speak. This demo is not a diagnosis or a substitute for professional veterinary care.`;
   };
 
   const handleUserMessage = async (transcript: string) => {
@@ -487,7 +516,7 @@ export default function AIVet() {
 
       const knowledgeContext = buildKnowledgeContext(petType, petBreed, transcript);
 
-      const systemPrompt = `You are Sankpawl, the Primary AI Veterinarian at Planet Animal Hospital.
+      const systemPrompt = `You are Pawl, the Primary AI Veterinarian at Planet Animal Hospital.
 You are the heart of this hospital and a trusted partner to every pet parent.
 
 VOICE & PERSONALITY:
@@ -496,6 +525,14 @@ VOICE & PERSONALITY:
 - Engagement: Be PROACTIVE. Ask follow-up questions about ${petName}'s appetite, energy, or behavior.
 - Empathy first: Acknowledge feelings before giving advice ("I understand how worrying this can be, ji").
 - Conciseness: Keep responses short (2-3 sentences) for natural conversation flow.
+
+LANGUAGE ADAPTATION:
+- Mirror the pet parent's communication style.
+- If they use English, reply in clear English.
+- If they use Hindi, reply in natural Hindi.
+- If they mix Hindi and English, reply in natural Hinglish without sounding gimmicky.
+- Keep medical terms clear and explain them simply in the same language mix.
+- Do not force Hindi words into an English message unless the parent is already using that style.
 
 CRITICAL RULES (NON-NEGOTIABLE):
 1. NEVER diagnose conditions — always recommend in-person veterinary examination for confirmation.
@@ -515,14 +552,21 @@ ${knowledgeContext}`;
 
       const activeLLM = getActiveLLMKey();
       if (!activeLLM.provider) {
-        throw new Error("I'm unable to connect to my brain right now. Please connect an API key in settings, ji.");
+        const demoText = buildDemoVetResponse(transcript);
+        setCurrentProvider('demo');
+        setChatHistory(prev => [...prev, { role: 'ai', content: demoText }]);
+        isProcessingRef.current = false;
+        setIsProcessing(false);
+        setStreamingText('');
+        if (isCallActiveRef.current) speakText(demoText);
+        return;
       }
 
-      setCurrentProvider(activeLLM.provider === 'free' ? 'gemini' : activeLLM.provider);
+      setCurrentProvider(activeLLM.provider);
 
       let aiText = "";
 
-      if (activeLLM.provider === 'gemini' || activeLLM.provider === 'free') {
+      if (activeLLM.provider === 'gemini') {
         const ai = new GoogleGenerativeAI(activeLLM.key);
         let chatContents: any[] = [];
         let firstUserFound = false;
@@ -609,16 +653,6 @@ ${knowledgeContext}`;
       return;
     }
 
-    if (!hasAnyLLMKey && !FREE_TIER_GEMINI_KEY) {
-      setShowSettings(true);
-      return;
-    }
-
-    if (freeTierExhausted && !keys.gemini && !keys.openai) {
-      setShowSettings(true);
-      return;
-    }
-
     if (!isCallActiveRef.current) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -647,7 +681,12 @@ ${knowledgeContext}`;
         updateViz();
 
         setIsCallActiveState(true);
-        setTimeout(() => startVADListening(), 100);
+        if (!keys.gemini && !keys.openai) {
+          setCurrentProvider('demo');
+          speakText('Preview demo is ready. Tell me what is going on with your pet, and I will show you how Pawl responds.');
+        } else {
+          speakText("I'm ready. Tell me what is going on with your pet.");
+        }
       } catch {
         alert("Planet Animal Hospital needs microphone access to connect you with the AI Vet.");
         setIsCallActiveState(false);
@@ -694,7 +733,7 @@ ${knowledgeContext}`;
             <button
               onClick={() => setShowSettings(true)}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] transition-all duration-300 hover:bg-amber-500/20 hover:border-amber-500/30 cursor-pointer group"
-              title="API Settings"
+              title="AI Settings / Connect AI key"
             >
               <Settings className="w-4 h-4 text-white/80 group-hover:text-amber-300 transition-colors duration-300" />
             </button>
@@ -784,6 +823,17 @@ ${knowledgeContext}`;
           </p>
         </div>
 
+        {!keys.gemini && !keys.openai && (
+          <div className="mt-3 max-w-sm rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-center shadow-[0_12px_34px_rgba(254,199,8,0.08)]">
+            <p className="text-[11px] font-heading font-bold uppercase tracking-[0.18em] text-amber-200">
+              Preview Demo
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-amber-50/75">
+              Pawl can show a safe sample response now. Connect your own OpenAI or Gemini API key in settings for full live AI Vet answers.
+            </p>
+          </div>
+        )}
+
         {/* Provider Badges */}
         {isCallActive && (
           <div className="flex items-center justify-center gap-2 mt-3">
@@ -795,7 +845,7 @@ ${knowledgeContext}`;
             )}
             {currentProvider && (
               <span className="text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/20 animate-pulse">
-                Using {currentProvider === 'free' ? 'Gemini (Free)' : currentProvider}
+                Using {currentProvider === 'demo' ? 'Preview Demo' : currentProvider}
               </span>
             )}
           </div>
@@ -841,7 +891,7 @@ ${knowledgeContext}`;
                     {msg.role === 'ai' && (
                       <h4 className="font-heading tracking-tight text-[#fec708] text-[10px] font-bold uppercase mb-1.5 flex items-center gap-1.5">
                         <Stethoscope className="w-3 h-3" />
-                        Sankpawl
+                        Pawl
                       </h4>
                     )}
                     <p className="font-body font-medium text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
@@ -861,7 +911,7 @@ ${knowledgeContext}`;
                       <div className="w-1.5 h-1.5 bg-[#fec708] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                     <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                      {currentProvider ? `Thinking with ${currentProvider === 'free' ? 'Gemini' : currentProvider}...` : 'Thinking...'}
+                      {currentProvider ? `Thinking with ${currentProvider === 'demo' ? 'Preview Demo' : currentProvider}...` : 'Thinking...'}
                     </span>
                   </div>
                 </motion.div>
@@ -874,34 +924,13 @@ ${knowledgeContext}`;
 
       {/* Bottom Call Dock — Anchored Above Nav */}
       <div className="relative z-30 px-4 pb-2 shrink-0">
-        {/* Free Tier Warning — Stacked Above Button */}
-        <AnimatePresence>
-          {freeTierExhausted && !keys.gemini && !keys.openai && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="mb-2"
-            >
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-4 py-2.5 flex items-center gap-3">
-                <AlertCircle size={14} className="text-amber-400 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-amber-200">Free tier exhausted</p>
-                  <p className="text-[10px] text-amber-200/60">Connect your own API key for unlimited access</p>
-                </div>
-                <button
-                  onClick={() => setShowSettings(true)}
-                  className="text-[10px] font-bold text-amber-300 bg-amber-500/20 px-3 py-1.5 rounded-full hover:bg-amber-500/30 transition-colors shrink-0"
-                >
-                  Settings
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Call Button + Status */}
         <div className="flex flex-col items-center gap-1.5">
+          {!keys.gemini && !keys.openai && (
+            <p className="max-w-xs text-center text-[10px] leading-relaxed text-white/35">
+              Demo voice uses your device voice or connected Sarvam/ElevenLabs voice. Full AI answers need OpenAI or Gemini in settings.
+            </p>
+          )}
           <motion.button
             whileTap={{ scale: 0.93 }}
             onClick={handleCallToggle}

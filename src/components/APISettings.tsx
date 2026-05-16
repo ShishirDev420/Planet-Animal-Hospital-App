@@ -18,7 +18,7 @@ const PROVIDERS: {
   {
     key: 'gemini',
     name: 'Google Gemini',
-    description: 'Fast, accurate AI responses. Free tier available with generous limits.',
+    description: 'Google-powered AI Vet responses. Great for Android and Google users with a Gemini API key.',
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
@@ -30,7 +30,7 @@ const PROVIDERS: {
   {
     key: 'openai',
     name: 'OpenAI (ChatGPT)',
-    description: 'Industry-leading AI. Requires paid account with API credits.',
+    description: 'ChatGPT-powered AI Vet responses. Requires an OpenAI API key; ChatGPT Plus/Pro alone does not connect here.',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10',
     borderColor: 'border-emerald-500/30',
@@ -41,7 +41,7 @@ const PROVIDERS: {
   {
     key: 'sarvam',
     name: 'Sarvam AI',
-    description: 'Best-in-class speech recognition for Indian languages. Optional.',
+    description: 'Premium speech and soothing male voice support for Indian English, Hindi, and code-mixed conversations. Optional.',
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
@@ -68,7 +68,7 @@ interface APISettingsProps {
 }
 
 export default function APISettings({ isOpen, onClose }: APISettingsProps) {
-  const { keys, status, freeTierCount, freeTierLimit, setKey, removeKey, testKey } = useAPIKeys();
+  const { keys, status, setKey, removeKey, testKey } = useAPIKeys();
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [testResults, setTestResults] = useState<Record<string, 'success' | 'error' | null>>({});
 
@@ -122,7 +122,7 @@ export default function APISettings({ isOpen, onClose }: APISettingsProps) {
               <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
                 <div>
                   <h2 className="font-heading font-bold text-white text-lg">AI Settings</h2>
-                  <p className="text-xs text-white/40 mt-0.5">Connect your API keys for unlimited access</p>
+                  <p className="text-xs text-white/40 mt-0.5">Preview the demo now, or connect your own keys for full live AI</p>
                 </div>
                 <button
                   onClick={onClose}
@@ -139,14 +139,8 @@ export default function APISettings({ isOpen, onClose }: APISettingsProps) {
                     <Key size={14} className="text-amber-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-white/80">Free Tier</p>
-                    <p className="text-xs text-white/40">{freeTierCount} of {freeTierLimit} messages used</p>
-                  </div>
-                  <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-amber-400 rounded-full transition-all duration-300"
-                      style={{ width: `${(freeTierCount / freeTierLimit) * 100}%` }}
-                    />
+                    <p className="text-sm font-medium text-white/80">Preview Demo</p>
+                    <p className="text-xs text-white/40">No key required for the safe sample demo. Connect OpenAI or Gemini for full live AI.</p>
                   </div>
                 </div>
               </div>
@@ -270,7 +264,7 @@ export default function APISettings({ isOpen, onClose }: APISettingsProps) {
               {/* Footer */}
               <div className="px-6 py-4 border-t border-white/5">
                 <p className="text-[10px] text-white/25 text-center">
-                  Your API keys are stored locally on your device and never sent to any server.
+                  Your API keys are stored locally on this device. Use Gemini or OpenAI for live AI Vet answers; Sarvam or ElevenLabs for premium voice.
                 </p>
               </div>
             </div>
