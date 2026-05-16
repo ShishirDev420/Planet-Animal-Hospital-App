@@ -112,12 +112,16 @@
 
   /* Premium Apple-style darkened frosted glass for bottom nav */
   .liquid-glass-nav {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.08);
   }
   .dark .liquid-glass-nav {
-    background: rgba(12, 12, 14, 0.82);
+    background: rgba(12, 12, 14, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
   }
