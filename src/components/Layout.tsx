@@ -18,6 +18,7 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isInsideFrame = location.search.includes('preview_frame=true');
+  const isDesktopPreview = isInsideFrame && location.search.includes('preview_view=desktop');
   const preservedSearch = isInsideFrame || location.search.includes('demo_mode=true') ? location.search : '';
   const preservePreviewSearch = (to: string) => `${to}${preservedSearch}`;
   const previousPathRef = useRef(location.pathname);
@@ -79,7 +80,7 @@ export default function Layout() {
       </div>
 
       {/* Desktop Layout */}
-      {!isInsideFrame && (
+      {(!isInsideFrame || isDesktopPreview) && (
         <div className="hidden lg:flex h-screen w-full">
         {/* Desktop Sidebar */}
         <nav className="w-64 liquid-glass border-r border-white/5 flex flex-col z-10">
@@ -104,7 +105,7 @@ export default function Layout() {
         
         {/* Desktop Main Content */}
         <div className="flex-1 flex justify-center overflow-y-auto">
-          <div className="w-full max-w-5xl px-6 py-8">
+          <div className="w-full max-w-[96rem] px-6 py-8 xl:px-10">
             <AnimatePresence mode="wait">
               <motion.div key={location.pathname} {...pageTransition}>
                 <Outlet />
@@ -118,7 +119,7 @@ export default function Layout() {
       {/* Mobile Container */}
       <div className={cn(
         "w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10",
-        isInsideFrame ? "flex" : "lg:hidden"
+        isInsideFrame && !isDesktopPreview ? "flex" : "lg:hidden"
       )}>
         <main className="flex-1 overflow-y-auto pb-24 hide-scrollbar">
           <AnimatePresence mode="wait">

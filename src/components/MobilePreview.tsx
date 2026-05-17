@@ -31,6 +31,9 @@ export default function MobilePreview() {
   const frameUrl = new URL(normalizedPath, window.location.origin);
   frameUrl.searchParams.set('preview_frame', 'true');
   if (isDemoMode) frameUrl.searchParams.set('demo_mode', 'true');
+  if (viewMode === 'desktop') {
+    frameUrl.searchParams.set('preview_view', 'desktop');
+  }
   const url = frameUrl.toString();
   const frame = DEVICE_FRAMES[device];
   const [viewport, setViewport] = useState(() => ({

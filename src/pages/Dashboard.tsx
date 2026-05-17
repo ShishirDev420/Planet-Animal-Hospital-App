@@ -686,43 +686,86 @@ export default function Dashboard() {
       <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95">
         {/* Header with Logo */}
       <header className="pt-4 mb-2">
-        <div className="grid w-full grid-cols-[76px_minmax(0,1fr)_76px] items-center py-4 sm:grid-cols-[88px_minmax(0,1fr)_88px]">
-          <button onClick={() => navigate('/profiles')} className="group flex justify-start" aria-label="Switch profile">
-            <div className="rounded-2xl p-1 drop-shadow-[0_0_18px_rgba(245,158,11,0.28)] transition-all duration-300 group-hover:scale-105 group-active:scale-95">
-              <Logo className="!w-14 !h-14 sm:!w-16 sm:!h-16" />
-            </div>
-          </button>
-            
-          <div className="flex min-w-0 flex-col items-center text-center">
-            <h1 className="font-heading text-[15px] font-black uppercase leading-none tracking-[-0.035em] text-white sm:text-lg">
-              Planet Animal
-            </h1>
-            <p className="cinematic-kicker mt-1 text-[7px] sm:text-[9px]">
-              Hospital & Wellness
-            </p>
-          </div>
+        <div className="hidden lg:block">
+          <div className="grid min-h-[14rem] w-full grid-cols-[13rem_minmax(0,1fr)_13rem] items-center gap-6 py-5 xl:min-h-[15rem] xl:grid-cols-[15rem_minmax(0,1fr)_15rem]">
+            <button onClick={() => navigate('/profiles')} className="group flex justify-start" aria-label="Switch profile">
+              <div className="relative flex h-40 w-40 items-center justify-center rounded-full drop-shadow-[0_0_42px_rgba(254,199,8,0.38)] transition-all duration-300 group-hover:scale-[1.03] group-active:scale-95 xl:h-44 xl:w-44">
+                <Logo className="!h-40 !w-40 xl:!h-44 xl:!w-44" />
+              </div>
+            </button>
 
-          <div className="flex items-center justify-end gap-2">
-             <button 
-               onClick={() => navigate('/settings')} 
-               title="Settings" 
-               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-sm transition-all duration-300 hover:bg-white/[0.14] cursor-pointer group"
+            <div className="flex min-w-0 flex-col items-center text-center">
+              <h1 className="font-cinematic text-[4.65rem] font-black uppercase leading-[0.82] tracking-[-0.055em] text-white drop-shadow-[0_18px_44px_rgba(0,0,0,0.42)] xl:text-[5.6rem] 2xl:text-[6.15rem]">
+                Planet Animal
+              </h1>
+              <p className="mt-4 font-heading text-[1.05rem] font-black uppercase leading-none tracking-[0.44em] text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.28)] xl:text-[1.25rem]">
+                Hospital & Wellness
+              </p>
+            </div>
+
+            <div className="flex items-start justify-end gap-3 self-start pt-3">
+              <button
+                onClick={() => navigate('/settings')}
+                title="Settings"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-sm transition-all duration-300 hover:bg-white/[0.14] cursor-pointer group"
               >
                 <Settings className="w-4 h-4 text-white/80 group-hover:text-white transition-colors duration-300" />
-             </button>
-             <button 
-               onClick={() => setIsLogoutModalOpen(true)} 
-               title="Logout" 
-               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-red-400/15 bg-red-500/[0.08] shadow-sm transition-all duration-300 hover:bg-red-500/[0.14] cursor-pointer group"
+              </button>
+              <button
+                onClick={() => setIsLogoutModalOpen(true)}
+                title="Logout"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-red-400/15 bg-red-500/[0.08] shadow-sm transition-all duration-300 hover:bg-red-500/[0.14] cursor-pointer group"
               >
                 <LogOut className="w-4 h-4 text-red-400 group-hover:text-red-500 transition-colors duration-300" />
-             </button>
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-7 mt-1">
+            <h2 className="cinematic-section-title text-4xl drop-shadow-md xl:text-5xl">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
+            <p className="cinematic-copy mt-2 text-base">Let's keep {petName} healthy today.</p>
           </div>
         </div>
 
-        <div className="mb-5 mt-2">
-          <h2 className="cinematic-section-title text-3xl drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
-          <p className="cinematic-copy mt-1 text-sm">Let's keep {petName} healthy today.</p>
+        <div className="lg:hidden">
+          <div className="grid w-full grid-cols-[76px_minmax(0,1fr)_76px] items-center py-4 sm:grid-cols-[88px_minmax(0,1fr)_88px]">
+            <button onClick={() => navigate('/profiles')} className="group flex justify-start" aria-label="Switch profile">
+              <div className="rounded-2xl p-1 drop-shadow-[0_0_18px_rgba(245,158,11,0.28)] transition-all duration-300 group-hover:scale-105 group-active:scale-95">
+                <Logo className="!w-14 !h-14 sm:!w-16 sm:!h-16" />
+              </div>
+            </button>
+              
+            <div className="flex min-w-0 flex-col items-center text-center">
+              <h1 className="font-heading text-[15px] font-black uppercase leading-none tracking-[-0.035em] text-white sm:text-lg">
+                Planet Animal
+              </h1>
+              <p className="cinematic-kicker mt-1 text-[7px] sm:text-[9px]">
+                Hospital & Wellness
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+               <button 
+                 onClick={() => navigate('/settings')} 
+                 title="Settings" 
+                 className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-sm transition-all duration-300 hover:bg-white/[0.14] cursor-pointer group"
+                >
+                  <Settings className="w-4 h-4 text-white/80 group-hover:text-white transition-colors duration-300" />
+               </button>
+               <button 
+                 onClick={() => setIsLogoutModalOpen(true)} 
+                 title="Logout" 
+                 className="relative flex h-10 w-10 items-center justify-center rounded-full border border-red-400/15 bg-red-500/[0.08] shadow-sm transition-all duration-300 hover:bg-red-500/[0.14] cursor-pointer group"
+                >
+                  <LogOut className="w-4 h-4 text-red-400 group-hover:text-red-500 transition-colors duration-300" />
+               </button>
+            </div>
+          </div>
+
+          <div className="mb-5 mt-2">
+            <h2 className="cinematic-section-title text-3xl drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
+            <p className="cinematic-copy mt-1 text-sm">Let's keep {petName} healthy today.</p>
+          </div>
         </div>
       </header>
 
