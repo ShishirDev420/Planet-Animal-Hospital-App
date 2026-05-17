@@ -81,8 +81,8 @@ export function useAPIKeys() {
     setStatus(prev => ({ ...prev, [provider]: 'disconnected' }));
   }, []);
 
-  const testKey = useCallback(async (provider: keyof APIKeyConfig): Promise<boolean> => {
-    const key = keys[provider];
+  const testKey = useCallback(async (provider: keyof APIKeyConfig, overrideKey?: string): Promise<boolean> => {
+    const key = (overrideKey || keys[provider]).trim();
     if (!key) return false;
 
     setStatus(prev => ({ ...prev, [provider]: 'testing' }));
@@ -121,10 +121,24 @@ export function useAPIKeys() {
       }
 
       if (provider === 'sarvam') {
-        const res = await fetch('https://api.sarvam.ai/v1/models', {
-          headers: { 'api-subscription-key': key },
+        const res = await fetch('/api/sarvam/text-to-speech', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-sarvam-api-key': key,
+          },
+          body: JSON.stringify({
+            text: 'Sarvam voice test.',
+            target_language_code: 'en-IN',
+            model: 'bulbul:v3',
+            speaker: 'shubh',
+            pace: 0.88,
+            temperature: 0.35,
+            speech_sample_rate: '24000',
+            output_audio_codec: 'wav',
+          }),
         });
-        const success = res.status !== 401;
+        const success = res.ok;
         setStatus(prev => ({ ...prev, sarvam: success ? 'connected' : 'disconnected' }));
         return success;
       }

@@ -70,7 +70,7 @@ export default function MobilePreview() {
         <div className="w-full h-full rounded-2xl overflow-hidden border border-white/10">
           <iframe
             src={url}
-            allow="publickey-credentials-get *; identity-credentials-get *"
+            allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none"
             title="Planet Animal App Desktop Preview"
             id="preview-iframe"
@@ -183,7 +183,7 @@ function Iphone16ProFrame({ url }: { url: string }) {
         <div className="h-full w-full overflow-hidden rounded-[2.95rem] border-[2px] border-white/5 bg-slate-950">
           <iframe
             src={url}
-            allow="publickey-credentials-get *; identity-credentials-get *"
+            allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in iPhone 16 Pro"
             id="preview-iframe"
@@ -216,7 +216,7 @@ function Iphone16ProMaxFrame({ url }: { url: string }) {
         <div className="h-full w-full overflow-hidden rounded-[3.28rem] border-[2px] border-white/5 bg-slate-950">
           <iframe
             src={url}
-            allow="publickey-credentials-get *; identity-credentials-get *"
+            allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in iPhone 16 Pro Max"
             id="preview-iframe"
@@ -245,7 +245,7 @@ function SamsungUltraFrame({ url }: { url: string }) {
         <div className="h-full w-full overflow-hidden rounded-[2.75rem] border-[1px] border-white/5 bg-slate-950">
           <iframe
             src={url}
-            allow="publickey-credentials-get *; identity-credentials-get *"
+            allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in Samsung S26 Ultra"
             id="preview-iframe"

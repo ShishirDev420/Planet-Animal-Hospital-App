@@ -18,9 +18,14 @@ function getSarvamKey(env: Record<string, string>, req: Connect.IncomingMessage)
   return (
     clientKey ||
     env.SARVAM_API_KEY ||
+    env.SARVAM_API_SUBSCRIPTION_KEY ||
     env.SERUM_API_KEY ||
+    env.SERUM_API_SUBSCRIPTION_KEY ||
+    env.API_SUBSCRIPTION_KEY ||
     env.VITE_SARVAM_API_KEY ||
+    env.VITE_SARVAM_API_SUBSCRIPTION_KEY ||
     env.VITE_SERUM_API_KEY ||
+    env.VITE_SERUM_API_SUBSCRIPTION_KEY ||
     ''
   ).trim();
 }

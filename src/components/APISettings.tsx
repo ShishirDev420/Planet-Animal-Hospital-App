@@ -89,7 +89,7 @@ export default function APISettings({ isOpen, onClose }: APISettingsProps) {
     const keyToTest = inputValues[provider] || keys[provider];
     if (!keyToTest) return;
 
-    const success = await testKey(provider);
+    const success = await testKey(provider, keyToTest);
     setTestResults(prev => ({ ...prev, [provider]: success ? 'success' : 'error' }));
   }, [inputValues, keys, testKey]);
 
