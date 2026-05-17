@@ -153,12 +153,12 @@
   }
 
   .liquid-glass-modal {
-    background: linear-gradient(165deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%);
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.16) 100%);
     backdrop-filter: blur(120px) saturate(2.5);
     -webkit-backdrop-filter: blur(120px) saturate(2.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow: 
-      inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
       0 40px 100px -20px rgba(0, 0, 0, 0.6),
       0 0 80px rgba(255, 255, 255, 0.03);
   }
@@ -192,14 +192,31 @@
     position: relative;
     z-index: 10;
     border: none !important;
-    /* Corner-only glows — tight 28% stops keep glow well away from center text */
     background:
-      radial-gradient(ellipse at top left,     rgba(254, 199, 8, 0.25) 0%, transparent 28%),
-      radial-gradient(ellipse at top right,    rgba(232, 188, 75, 0.18) 0%, transparent 28%),
-      radial-gradient(ellipse at bottom left,  rgba(232, 188, 75, 0.18) 0%, transparent 28%),
-      radial-gradient(ellipse at bottom right, rgba(254, 199, 8, 0.25) 0%, transparent 28%),
+      radial-gradient(ellipse at top left, rgba(254, 199, 8, 0.24) 0%, rgba(254, 199, 8, 0.12) 18%, transparent 46%),
+      radial-gradient(ellipse at top right, rgba(232, 188, 75, 0.16) 0%, rgba(232, 188, 75, 0.08) 22%, transparent 52%),
+      radial-gradient(ellipse at bottom left, rgba(232, 188, 75, 0.14) 0%, rgba(232, 188, 75, 0.07) 24%, transparent 54%),
+      radial-gradient(ellipse at bottom right, rgba(254, 199, 8, 0.2) 0%, rgba(254, 199, 8, 0.1) 22%, transparent 52%),
       rgba(10, 10, 10, 0.94) !important;
     backdrop-filter: blur(20px);
+  }
+
+  .paw-balance-card {
+    background:
+      radial-gradient(circle at 50% 18%, rgba(254, 199, 8, 0.13) 0%, rgba(254, 199, 8, 0.06) 24%, transparent 52%),
+      radial-gradient(circle at 12% 8%, rgba(255, 246, 204, 0.06) 0%, transparent 34%),
+      linear-gradient(180deg, rgba(14, 13, 9, 0.98) 0%, rgba(8, 8, 7, 0.98) 56%, rgba(8, 7, 5, 0.96) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 246, 204, 0.05),
+      inset 0 -1px 0 rgba(254, 199, 8, 0.05);
+  }
+
+  .paw-balance-number {
+    display: inline-block;
+    line-height: 1.03;
+    padding-block: 0.08em 0.04em;
+    overflow: visible;
+    filter: drop-shadow(0 10px 20px rgba(254, 199, 8, 0.08));
   }
 
   /* Liquid Glass Premium - Ultra high fidelity */
@@ -601,12 +618,12 @@
 }
 
 .text-gradient-gold {
-  background: linear-gradient(135deg, #fec708 0%, #e8bc4b 40%, #fff4d6 70%, #fec708 100%);
-  background-size: 200% auto;
+  background: linear-gradient(135deg, #fff6d6 0%, #ffe68a 16%, #fec708 38%, #f4c84c 58%, #fff3c2 76%, #e8bc4b 92%, #fec708 100%);
+  background-size: 240% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: text-shimmer 4s linear infinite;
+  animation: text-shimmer 5.5s linear infinite;
 }
 
 .thinking-gradient {

@@ -811,7 +811,7 @@ export default function Dashboard() {
             {/* Premium Nudge — TAP FOR REWARD DETAILS */}
             <motion.button
               onClick={() => {
-                navigate('/rewards');
+                navigate({ pathname: '/rewards', search: location.search });
                 setTimeout(() => {
                   document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
@@ -925,7 +925,7 @@ export default function Dashboard() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                navigate('/rewards');
+                navigate({ pathname: '/rewards', search: location.search });
                 setTimeout(() => {
                   document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
@@ -1064,7 +1064,7 @@ export default function Dashboard() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsBookVisitOpen(false)}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
+            className="fixed inset-0 bg-slate-900/55 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
           >
             <motion.div
               key="book-visit-modal"
@@ -1101,7 +1101,7 @@ export default function Dashboard() {
                   <h2 className="cinematic-section-title text-3xl">
                     Book <span className="text-planet-yellow">Visit</span>
                   </h2>
-                  <p className="cinematic-kicker mt-2 flex items-center gap-2 text-[10px] text-white/60">
+                  <p className="cinematic-kicker mt-2 flex items-center gap-2 text-xs text-white/70">
                     <span className="w-1.5 h-1.5 rounded-full bg-planet-yellow shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
                     {petProfile?.name ? `Schedule for ${petProfile.name}` : 'Pet Health Scheduler'}
                   </p>
@@ -1110,7 +1110,7 @@ export default function Dashboard() {
                   whileHover={{ scale: 1.1, rotate: 90 }} 
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsBookVisitOpen(false)} 
-                  className="p-2.5 rounded-2xl bg-white/10 border border-white/20 text-white/60 hover:text-white transition-all shadow-xl backdrop-blur-md"
+                  className="p-2.5 rounded-[1.25rem] bg-white/10 border border-white/20 text-white/60 hover:text-white transition-all shadow-xl backdrop-blur-md"
                 >
                   <X size={20}/>
                 </motion.button>
@@ -1125,7 +1125,7 @@ export default function Dashboard() {
                 ].map((step, i) => (
                   <div key={step.n} className="flex flex-col items-center gap-2 flex-1 relative">
                     {i < 2 && (
-                      <div className="absolute left-[calc(50%+12px)] right-[calc(-50%+12px)] top-[10px] h-[1px] bg-white/10 overflow-hidden">
+                      <div className="absolute left-[calc(50%+16px)] right-[calc(-50%+16px)] top-[12px] h-[2px] bg-white/10 overflow-hidden">
                          <motion.div 
                           initial={{ x: '-100%' }}
                           animate={{ x: step.done ? '0%' : '-100%' }}
@@ -1133,17 +1133,17 @@ export default function Dashboard() {
                          />
                       </div>
                     )}
-                    <motion.div 
+                      <motion.div 
                       animate={{ 
                         backgroundColor: step.done ? '#fec708' : 'transparent',
                         borderColor: step.done ? '#fec708' : 'rgba(255,255,255,0.2)',
                         boxShadow: step.done ? '0 0 15px rgba(254,199,8,0.4)' : 'none'
                       }}
-                      className="w-[20px] h-[20px] rounded-full flex items-center justify-center border z-10 transition-colors"
+                      className="w-7 h-7 rounded-full flex items-center justify-center border z-10 transition-colors"
                     >
-                      {step.done ? <Check size={10} className="text-black" strokeWidth={4} /> : <div className="w-1 h-1 rounded-full bg-white/40" />}
+                      {step.done ? <Check size={14} className="text-black" strokeWidth={4} /> : <div className="w-1.5 h-1.5 rounded-full bg-white/40" />}
                     </motion.div>
-                    <span className={`text-[11px] font-black uppercase tracking-widest ${step.done ? 'text-planet-yellow' : 'text-white/40'}`}>
+                    <span className={`text-sm font-black uppercase tracking-widest ${step.done ? 'text-planet-yellow' : 'text-white/40'}`}>
                       {step.label}
                     </span>
                   </div>
@@ -1156,11 +1156,11 @@ export default function Dashboard() {
                 {/* 1. Services Section */}
                 <section id="services-section" className="mb-10">
                   <div className="flex justify-between items-end mb-4 px-1">
-                    <h3 className="cinematic-kicker text-[10px] text-white/40">Select Services</h3>
+                    <h3 className="cinematic-kicker text-xs text-white/50">Select Services</h3>
                     {selectedServices.length > 0 && (
                       <button 
                         onClick={() => setSelectedServices([])} 
-                        className="text-[11px] font-bold text-planet-yellow/60 hover:text-planet-yellow transition-colors uppercase tracking-widest"
+                        className="text-sm font-bold text-planet-yellow/60 hover:text-planet-yellow transition-colors uppercase tracking-widest"
                       >
                         Reset
                       </button>
@@ -1183,14 +1183,14 @@ export default function Dashboard() {
                             );
                           }}
                           className={cn(
-                            "relative w-full text-left rounded-[1.5rem] p-4 flex items-center gap-4 border transition-all duration-300",
+                            "relative w-full text-left rounded-[2rem] p-4 flex items-center gap-4 border transition-all duration-300",
                             isSelected 
                               ? 'bg-planet-yellow/20 border-planet-yellow shadow-[0_10px_30px_rgba(254,199,8,0.2)]' 
                               : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/30'
                           )}
                         >
                           <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                            "w-12 h-12 rounded-[1.25rem] flex items-center justify-center transition-all duration-500",
                             isSelected 
                               ? 'bg-planet-yellow text-black shadow-[0_0_20px_rgba(254,199,8,0.4)]' 
                               : 'bg-white/10 text-white/50'
@@ -1199,20 +1199,20 @@ export default function Dashboard() {
                           </div>
   
                           <div className="flex-1">
-                            <p className={cn("cinematic-card-title text-lg", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
-                            <p className="text-white/50 text-xs font-medium mt-0.5 leading-tight">{service.desc}</p>
+                            <p className={cn("cinematic-card-title text-xl", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
+                            <p className="text-white/50 text-sm font-medium mt-0.5 leading-tight">{service.desc}</p>
                           </div>
   
                           <div className="text-right">
                             <div className={cn("flex items-center gap-1 mb-1 justify-end", isSelected ? 'text-planet-yellow' : 'text-white/30')}>
-                               <PawPrint size={10} className={isSelected ? 'fill-planet-yellow' : ''} />
-                               <span className="text-sm font-black">+{service.points}</span>
+                               <PawPrint size={12} className={isSelected ? 'fill-planet-yellow' : ''} />
+                               <span className="text-base font-black">+{service.points}</span>
                             </div>
                             <div className={cn(
-                              "w-5 h-5 rounded-full border-2 ml-auto flex items-center justify-center transition-all duration-300",
+                              "w-6 h-6 rounded-full border-2 ml-auto flex items-center justify-center transition-all duration-300",
                               isSelected ? 'border-planet-yellow bg-planet-yellow' : 'border-white/10'
                             )}>
-                              {isSelected && <Check size={12} className="text-black" strokeWidth={4} />}
+                              {isSelected && <Check size={14} className="text-black" strokeWidth={4} />}
                             </div>
                           </div>
                         </motion.button>
@@ -1224,8 +1224,8 @@ export default function Dashboard() {
                 {/* 2. Calendar Section */}
                 <section id="date-section" className="mb-10">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">2</div>
-                    <h3 className="cinematic-card-title text-xl">Preferred Date</h3>
+                    <div className="w-10 h-10 rounded-[1rem] bg-planet-yellow flex items-center justify-center text-black font-black text-sm">2</div>
+                    <h3 className="cinematic-card-title text-2xl">Preferred Date</h3>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
                     {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
@@ -1242,17 +1242,17 @@ export default function Dashboard() {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setBookingDate(dateStr)}
                           className={cn(
-                            "flex flex-col items-center justify-center py-4 rounded-2xl border transition-all duration-300",
+                            "flex flex-col items-center justify-center py-4 rounded-[1.25rem] border transition-all duration-300",
                             isSelected
                               ? 'bg-planet-yellow text-black border-planet-yellow shadow-lg'
                               : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
                           )}
                         >
-                          <span className="text-xs font-black uppercase tracking-widest opacity-60 mb-1">
+                          <span className="text-sm font-black uppercase tracking-widest opacity-60 mb-1">
                             {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}
                           </span>
-                          <span className="text-lg font-black">{date.getDate()}</span>
-                          <span className="text-[11px] font-bold uppercase tracking-tighter opacity-40">
+                          <span className="text-xl font-black">{date.getDate()}</span>
+                          <span className="text-xs font-bold uppercase tracking-tighter opacity-40">
                             {date.toLocaleDateString('en-US', { month: 'short' })}
                           </span>
                         </motion.button>
@@ -1264,21 +1264,21 @@ export default function Dashboard() {
                 {/* 3. Time Selection */}
                 <section id="time-section" className="pb-10">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-xl bg-planet-yellow flex items-center justify-center text-black font-black text-xs">3</div>
-                    <h3 className="cinematic-card-title text-xl">Preferred Time</h3>
+                    <div className="w-10 h-10 rounded-[1rem] bg-planet-yellow flex items-center justify-center text-black font-black text-sm">3</div>
+                    <h3 className="cinematic-card-title text-2xl">Preferred Time</h3>
                   </div>
                   <div className="space-y-6">
                     {[
-                      { label: 'Morning', icon: <Clock size={12}/>, slots: ['9:00 AM', '10:00 AM', '11:00 AM'] },
-                      { label: 'Afternoon', icon: <Sparkles size={12}/>, slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
-                      { label: 'Evening', icon: <PawPrint size={12}/>, slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'] },
+                      { label: 'Morning', icon: <Clock size={14}/>, slots: ['9:00 AM', '10:00 AM', '11:00 AM'] },
+                      { label: 'Afternoon', icon: <Sparkles size={14}/>, slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
+                      { label: 'Evening', icon: <PawPrint size={14}/>, slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'] },
                     ].map((group) => (
                       <div key={group.label}>
                         <div className="flex items-center gap-2 mb-3">
                           <div className="text-planet-yellow/60">
                             {group.icon}
                           </div>
-                          <span className="text-[11px] font-black uppercase tracking-[0.15em] text-white/40">{group.label}</span>
+                          <span className="text-xs font-black uppercase tracking-[0.15em] text-white/40">{group.label}</span>
                           <div className="h-px flex-1 bg-white/10 ml-2" />
                         </div>
                         <div className="grid grid-cols-3 gap-2.5">
@@ -1291,7 +1291,7 @@ export default function Dashboard() {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setBookingTime(time)}
                                 className={cn(
-                                  "py-3.5 rounded-xl text-sm font-black transition-all border",
+                                  "py-3.5 rounded-2xl text-base font-black transition-all border",
                                   isSelected
                                     ? 'bg-planet-yellow text-black border-planet-yellow shadow-[0_10px_20px_rgba(254,199,8,0.2)]'
                                     : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
@@ -1309,7 +1309,7 @@ export default function Dashboard() {
               </div>
 
               {/* Sticky Footer - Premium & Always Visible */}
-              <div className="sticky bottom-0 shrink-0 bg-white/5 backdrop-blur-[40px] border-t border-white/10 px-8 py-7 pb-safe z-20 shadow-[0_-30px_60px_rgba(0,0,0,0.4)]">
+              <div className="sticky bottom-0 shrink-0 bg-white/[0.08] backdrop-blur-[40px] border-t border-white/10 px-8 py-7 pb-safe z-20 shadow-[0_-30px_60px_rgba(0,0,0,0.4)]">
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex -space-x-3">
                     {selectedServices.length > 0 ? (
@@ -1318,35 +1318,35 @@ export default function Dashboard() {
                           key={idx} 
                           initial={{ scale: 0, x: -20, rotate: -15 }}
                           animate={{ scale: 1, x: 0, rotate: 0 }}
-                          className="w-11 h-11 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-2xl flex items-center justify-center text-planet-yellow shadow-2xl"
+                          className="w-11 h-11 rounded-[1.25rem] bg-white/10 border border-white/20 backdrop-blur-2xl flex items-center justify-center text-planet-yellow shadow-2xl"
                         >
                           <s.icon size={18} />
                         </motion.div>
                       ))
                     ) : (
-                      <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 border-dashed flex items-center justify-center text-white/20">
+                      <div className="w-11 h-11 rounded-[1.25rem] bg-white/5 border border-white/10 border-dashed flex items-center justify-center text-white/20">
                         <Plus size={18} />
                       </div>
                     )}
                     {selectedServices.length > 3 && (
-                      <div className="w-11 h-11 rounded-2xl bg-planet-yellow border border-black/10 flex items-center justify-center text-xs font-black text-black shadow-xl ring-2 ring-black/20">
+                      <div className="w-11 h-11 rounded-[1.25rem] bg-planet-yellow border border-black/10 flex items-center justify-center text-xs font-black text-black shadow-xl ring-2 ring-black/20">
                         +{selectedServices.length - 3}
                       </div>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-white/40 uppercase tracking-[0.25em]">Reward Points</p>
+                    <p className="text-sm font-black text-white/40 uppercase tracking-[0.25em]">Reward Points</p>
                     <motion.p 
                       key={selectedServices.length}
                       initial={{ y: 5, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
-                      className="text-2xl font-black text-planet-yellow leading-none flex items-center justify-end gap-1.5 mt-2 drop-shadow-[0_0_15px_rgba(254,199,8,0.8)]"
+                      className="text-3xl font-black text-planet-yellow leading-none flex items-center justify-end gap-1.5 mt-2 drop-shadow-[0_0_15px_rgba(254,199,8,0.8)]"
                     >
                       {bookingFinalPoints.toLocaleString()}
-                      <span className="text-xs uppercase tracking-widest text-white/50 font-bold">pts</span>
+                      <span className="text-sm uppercase tracking-widest text-white/50 font-bold">pts</span>
                     </motion.p>
                     {selectedServices.length > 0 && (
-                      <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/38">
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/40">
                         {currentPlan === 'free'
                           ? 'Free plan: General Checkup earns 500 pts'
                           : `${bookingBasePoints.toLocaleString()} base x ${bookingMultiplier.toFixed(1)} multiplier`}
@@ -1378,7 +1378,7 @@ export default function Dashboard() {
                       }
                     }}
                     className={cn(
-                      "flex items-center justify-center gap-3 w-full py-5 rounded-2xl font-black text-base uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl relative overflow-hidden group",
+                      "flex items-center justify-center gap-3 w-full py-5 rounded-[1.25rem] font-black text-lg uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl relative overflow-hidden group",
                       (selectedServices.length === 0 || !bookingDate || !bookingTime)
                         ? "bg-white/10 text-white/40 border border-white/20 hover:bg-white/15"
                         : "bg-planet-yellow text-black hover:shadow-[0_0_40px_rgba(254,199,8,0.5)] active:scale-[0.98]"
