@@ -127,6 +127,9 @@ export default function AIVet() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>(0);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
+  const currentAudioResolveRef = useRef<(() => void) | null>(null);
+  const speechPlaybackIdRef = useRef(0);
   const smoothedVolumeRef = useRef<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const ttsAbortControllerRef = useRef<AbortController | null>(null);
@@ -173,6 +176,7 @@ export default function AIVet() {
   };
 
   const stopCurrentSpeech = () => {
+    speechPlaybackIdRef.current += 1;
     setIsSpeakingState(false);
     setVolume(0);
     smoothedVolumeRef.current = 0;
@@ -185,6 +189,16 @@ export default function AIVet() {
         currentAudioRef.current.load();
       } catch(e) {}
       currentAudioRef.current = null;
+    }
+
+    if (currentAudioResolveRef.current) {
+      currentAudioResolveRef.current();
+      currentAudioResolveRef.current = null;
+    }
+
+    if (currentAudioUrlRef.current) {
+      URL.revokeObjectURL(currentAudioUrlRef.current);
+      currentAudioUrlRef.current = null;
     }
 
     if (animationFrameRef.current) {
@@ -358,11 +372,17 @@ export default function AIVet() {
 
   const playAudioFromBlob = async (audioBlob: Blob, allowWithoutCall = false) => {
     if (!allowWithoutCall && !isCallActiveRef.current) return;
+    stopCurrentSpeech();
+
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
+    const playbackId = speechPlaybackIdRef.current;
     currentAudioRef.current = audio;
+    currentAudioUrlRef.current = audioUrl;
+    setIsSpeakingState(true);
 
     const animateSpeak = () => {
+      if (playbackId !== speechPlaybackIdRef.current) return;
       if (!isSpeakingRef.current) { setVolume(0); return; }
       const analyser = analyserRef.current;
       let raw = Math.random() * 0.35;
@@ -391,25 +411,41 @@ export default function AIVet() {
       animationFrameRef.current = requestAnimationFrame(animateSpeak);
     };
 
-    audio.onended = () => {
-      currentAudioRef.current = null;
-      setIsSpeakingState(false);
-      setVolume(0);
-      bargeInFramesRef.current = 0;
-      URL.revokeObjectURL(audioUrl);
-      if (isCallActiveRef.current) startVADListening();
-    };
-    audio.onerror = () => {
-      currentAudioRef.current = null;
-      setIsSpeakingState(false);
-      setVolume(0);
-      bargeInFramesRef.current = 0;
-      URL.revokeObjectURL(audioUrl);
-      if (isCallActiveRef.current) startVADListening();
-    };
+    await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
 
-    await audio.play();
-    animateSpeak();
+        if (playbackId !== speechPlaybackIdRef.current) {
+          resolve();
+          return;
+        }
+
+        currentAudioRef.current = null;
+        currentAudioUrlRef.current = null;
+        currentAudioResolveRef.current = null;
+        setIsSpeakingState(false);
+        setVolume(0);
+        bargeInFramesRef.current = 0;
+        URL.revokeObjectURL(audioUrl);
+        if (isCallActiveRef.current) startVADListening();
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      };
+
+      currentAudioResolveRef.current = () => finish();
+
+      audio.onended = () => finish();
+      audio.onerror = () => finish(new Error('Audio playback failed'));
+
+      audio.play().then(() => {
+        if (playbackId === speechPlaybackIdRef.current) animateSpeak();
+      }).catch(error => finish(error));
+    });
   };
 
   const speakTextSarvam = async (text: string, allowWithoutCall = false): Promise<boolean> => {
@@ -467,7 +503,6 @@ export default function AIVet() {
 
   const speakText = async (text: string, allowWithoutCall = false) => {
     try {
-      setIsSpeakingState(true);
       const sarvamSuccess = await speakTextSarvam(text, allowWithoutCall);
       if (sarvamSuccess) return;
       setIsSpeakingState(false);
