@@ -19,8 +19,15 @@ declare global {
 
 const SARVAM_LANGUAGES = ['hi-IN', 'ta-IN', 'te-IN', 'kn-IN', 'ml-IN', 'bn-IN', 'en-IN'];
 
-const DEMO_SARVAM_KEY = import.meta.env.DEV ? import.meta.env.VITE_SARVAM_API_KEY || '' : '';
+const ENV_SARVAM_KEY = import.meta.env.VITE_SARVAM_API_KEY || '';
 const SARVAM_MALE_VOICE = 'shubh';
+const BARGE_IN_THRESHOLD = 62;
+const BARGE_IN_FRAMES_REQUIRED = 6;
+
+function isUsableAPIKey(value: string) {
+  const trimmed = value.trim();
+  return Boolean(trimmed) && !trimmed.toLowerCase().includes('your_') && !trimmed.toLowerCase().includes('paste_');
+}
 
 function getSarvamLanguageCode(text: string) {
   return /[\u0900-\u097F]/.test(text) ? 'hi-IN' : 'en-IN';
@@ -28,8 +35,8 @@ function getSarvamLanguageCode(text: string) {
 
 async function transcribeWithSarvam(audioBlob: Blob, apiKey: string): Promise<string> {
   const formData = new FormData();
-  const fileToUpload = new Blob([audioBlob], { type: 'audio/wav' });
-  formData.append('file', fileToUpload, 'audio.wav');
+  const extension = audioBlob.type.includes('webm') ? 'webm' : audioBlob.type.includes('wav') ? 'wav' : 'audio';
+  formData.append('file', audioBlob, `audio.${extension}`);
   formData.append('model', 'saaras:v3');
   formData.append('mode', 'transcribe');
   formData.append('language_code', 'en-IN');
@@ -68,12 +75,12 @@ export default function AIVet() {
   ]);
   const [showScanner, setShowScanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
   const [volume, setVolume] = useState(0);
   const [currentProvider, setCurrentProvider] = useState<string>('');
   const [streamingText, setStreamingText] = useState('');
+  const [voiceIssue, setVoiceIssue] = useState('');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const isCallActiveRef = useRef(false);
@@ -88,22 +95,18 @@ export default function AIVet() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const smoothedVolumeRef = useRef<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const ttsAbortControllerRef = useRef<AbortController | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const vadAnalyserRef = useRef<AnalyserNode | null>(null);
   const lastVoiceActivityRef = useRef<number>(0);
+  const bargeInFramesRef = useRef(0);
 
   useEffect(() => {
     chatHistoryRef.current = chatHistory;
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-      };
-    }
   }, [chatHistory]);
 
   const setIsSpeakingState = (val: boolean) => {
@@ -116,7 +119,36 @@ export default function AIVet() {
     isCallActiveRef.current = val;
   };
 
-  const getActiveSarvamKey = () => keys.sarvam || DEMO_SARVAM_KEY;
+  const getActiveSarvamKey = () => {
+    if (isUsableAPIKey(keys.sarvam)) return keys.sarvam.trim();
+    if (isUsableAPIKey(ENV_SARVAM_KEY)) return ENV_SARVAM_KEY.trim();
+    return '';
+  };
+
+  const stopCurrentSpeech = () => {
+    setIsSpeakingState(false);
+    setVolume(0);
+    smoothedVolumeRef.current = 0;
+    bargeInFramesRef.current = 0;
+
+    if (currentAudioRef.current) {
+      try {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.src = '';
+        currentAudioRef.current.load();
+      } catch(e) {}
+      currentAudioRef.current = null;
+    }
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    if (ttsAbortControllerRef.current) {
+      ttsAbortControllerRef.current.abort();
+      ttsAbortControllerRef.current = null;
+    }
+  };
 
   const stopAllActivity = () => {
     setIsCallActiveState(false);
@@ -142,22 +174,7 @@ export default function AIVet() {
       } catch(e){}
     }
 
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-
-    if (currentAudioRef.current) {
-      try {
-        currentAudioRef.current.pause();
-        currentAudioRef.current.src = "";
-        currentAudioRef.current.load();
-        currentAudioRef.current = null;
-      } catch(e){}
-    }
-
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
+    stopCurrentSpeech();
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try { mediaRecorderRef.current.stop(); } catch(e){}
@@ -179,6 +196,11 @@ export default function AIVet() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+
+    if (ttsAbortControllerRef.current) {
+      ttsAbortControllerRef.current.abort();
+      ttsAbortControllerRef.current = null;
+    }
   };
 
   useEffect(() => {
@@ -189,7 +211,6 @@ export default function AIVet() {
       rec.interimResults = false;
       rec.lang = 'en-IN';
       recRef.current = rec;
-      setRecognition(rec);
     }
     return () => { stopAllActivity(); };
   }, []);
@@ -293,43 +314,6 @@ export default function AIVet() {
     (mr as any)._maxTimeout = maxTimeout;
   }, [keys.sarvam, detectSilence]);
 
-  const speakTextFallback = (text: string) => {
-    if (!isCallActiveRef.current) return;
-    if (!('speechSynthesis' in window)) {
-      setIsSpeakingState(false);
-      setVolume(0);
-      if (isCallActiveRef.current) startVADListening();
-      return;
-    }
-
-    setIsSpeakingState(true);
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = ['Microsoft Ravi', 'Microsoft Heera', 'Google UK English Male', 'Google US English', 'en-IN', 'en-GB', 'en-US'];
-    for (const pref of preferred) {
-      const voice = voices.find(v => v.name.toLowerCase().includes(pref.toLowerCase()) || v.lang.toLowerCase().startsWith(pref.toLowerCase().substring(0, 2)));
-      if (voice) { utterance.voice = voice; break; }
-    }
-
-    utterance.pitch = 0.85;
-    utterance.rate = 0.95;
-    utterance.volume = 1.0;
-
-    utterance.onend = () => {
-      setIsSpeakingState(false);
-      setVolume(0);
-      if (isCallActiveRef.current) startVADListening();
-    };
-    utterance.onerror = () => {
-      setIsSpeakingState(false);
-      setVolume(0);
-      if (isCallActiveRef.current) startVADListening();
-    };
-
-    window.speechSynthesis.speak(utterance);
-  };
-
   const playAudioFromBlob = async (audioBlob: Blob) => {
     if (!isCallActiveRef.current) return;
     const audioUrl = URL.createObjectURL(audioBlob);
@@ -338,7 +322,28 @@ export default function AIVet() {
 
     const animateSpeak = () => {
       if (!isSpeakingRef.current) { setVolume(0); return; }
-      const raw = Math.random();
+      const analyser = analyserRef.current;
+      let raw = Math.random() * 0.35;
+
+      if (analyser && isCallActiveRef.current) {
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+        const micAvg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        raw = Math.max(raw, micAvg / 255);
+
+        if (micAvg > BARGE_IN_THRESHOLD) {
+          bargeInFramesRef.current += 1;
+        } else {
+          bargeInFramesRef.current = Math.max(0, bargeInFramesRef.current - 1);
+        }
+
+        if (bargeInFramesRef.current >= BARGE_IN_FRAMES_REQUIRED) {
+          stopCurrentSpeech();
+          if (isCallActiveRef.current) startVADListening();
+          return;
+        }
+      }
+
       smoothedVolumeRef.current = smoothedVolumeRef.current * 0.85 + raw * 0.15;
       setVolume(smoothedVolumeRef.current);
       animationFrameRef.current = requestAnimationFrame(animateSpeak);
@@ -348,12 +353,16 @@ export default function AIVet() {
       currentAudioRef.current = null;
       setIsSpeakingState(false);
       setVolume(0);
+      bargeInFramesRef.current = 0;
+      URL.revokeObjectURL(audioUrl);
       if (isCallActiveRef.current) startVADListening();
     };
     audio.onerror = () => {
       currentAudioRef.current = null;
       setIsSpeakingState(false);
       setVolume(0);
+      bargeInFramesRef.current = 0;
+      URL.revokeObjectURL(audioUrl);
       if (isCallActiveRef.current) startVADListening();
     };
 
@@ -363,8 +372,14 @@ export default function AIVet() {
 
   const speakTextSarvam = async (text: string): Promise<boolean> => {
     const sarvamKey = getActiveSarvamKey();
-    if (!sarvamKey) return false;
+    if (!sarvamKey) {
+      setVoiceIssue('Sarvam voice key is not loaded. Add VITE_SARVAM_API_KEY to .env.local and restart the dev server.');
+      return false;
+    }
     try {
+      if (ttsAbortControllerRef.current) ttsAbortControllerRef.current.abort();
+      ttsAbortControllerRef.current = new AbortController();
+
       const ttsResponse = await fetch('https://api.sarvam.ai/text-to-speech', {
         method: 'POST',
         headers: {
@@ -380,44 +395,33 @@ export default function AIVet() {
           temperature: 0.35,
           speech_sample_rate: '24000',
           output_audio_codec: 'wav'
-        })
+        }),
+        signal: ttsAbortControllerRef.current.signal
       });
 
-      if (!ttsResponse.ok) return false;
+      if (!ttsResponse.ok) {
+        ttsAbortControllerRef.current = null;
+        setVoiceIssue(`Sarvam voice request failed with status ${ttsResponse.status}. Check the key and credits.`);
+        return false;
+      }
       const ttsData = await ttsResponse.json();
-      if (!ttsData.audios || ttsData.audios.length === 0) return false;
+      if (!ttsData.audios || ttsData.audios.length === 0) {
+        ttsAbortControllerRef.current = null;
+        setVoiceIssue('Sarvam returned no voice audio for this response.');
+        return false;
+      }
 
       const audioBase64 = ttsData.audios[0];
       const audioByteArray = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
       const audioBlob = new Blob([audioByteArray], { type: 'audio/wav' });
       await playAudioFromBlob(audioBlob);
+      ttsAbortControllerRef.current = null;
+      setVoiceIssue('');
       return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const speakTextElevenLabs = async (text: string): Promise<boolean> => {
-    if (!keys.elevenlabs) return false;
-    try {
-      const ttsResponse = await fetch('https://api.elevenlabs.io/v1/text-to-speech/pNInz6obpgDQGcFmaJgB', {
-        method: 'POST',
-        headers: {
-          'xi-api-key': keys.elevenlabs,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-        })
-      });
-
-      if (!ttsResponse.ok) return false;
-      const audioBlob = await ttsResponse.blob();
-      await playAudioFromBlob(audioBlob);
-      return true;
-    } catch {
+    } catch (e: any) {
+      ttsAbortControllerRef.current = null;
+      if (e?.name === 'AbortError') return false;
+      setVoiceIssue('Sarvam voice could not play. Check network access and restart the dev server after editing .env.local.');
       return false;
     }
   };
@@ -427,13 +431,14 @@ export default function AIVet() {
       setIsSpeakingState(true);
       const sarvamSuccess = await speakTextSarvam(text);
       if (sarvamSuccess) return;
-      const elevenLabsSuccess = await speakTextElevenLabs(text);
-      if (elevenLabsSuccess) return;
-      speakTextFallback(text);
+      setIsSpeakingState(false);
+      setVolume(0);
+      if (isCallActiveRef.current) startVADListening();
     } catch {
       if (!isCallActiveRef.current) return;
       setIsSpeakingState(false);
-      speakTextFallback(text);
+      setVolume(0);
+      startVADListening();
     }
   };
 
@@ -487,10 +492,10 @@ export default function AIVet() {
     const mayBeEmergency = emergencyKeywords.some(keyword => lowerTranscript.includes(keyword));
 
     if (mayBeEmergency) {
-      return `Preview demo: I would treat this as urgent for ${petName}. If there is trouble breathing, collapse, seizures, severe bleeding, poisoning, bloating, or inability to urinate, please contact Planet Animal Hospital or emergency care right now. This preview is not a diagnosis or a substitute for an in-person veterinarian.`;
+      return `Preview demo: I would treat this as urgent for ${petName}. If this is happening right now, please contact Planet Animal Hospital or emergency care immediately. I cannot diagnose from a call, but I can help you decide what details to tell the team.`;
     }
 
-    return `Preview demo: I hear your concern about ${petName}, your ${petType}${petBreed}. Based on the profile I can see, ${petName}'s age is ${petAge}, weight is ${petWeight}, and the medical notes say ${medicalHistory}. For a live AI answer, Pawl would use this Planet Animal Hospital context plus your question to suggest safe next steps, ask a follow-up, and respond in the same natural style you use, including Hindi-English if that is how you speak. This demo is not a diagnosis or a substitute for professional veterinary care.`;
+    return `Preview demo: I hear you. For ${petName}, your ${petType}${petBreed}, I can already see age as ${petAge}, weight as ${petWeight}, and medical notes as ${medicalHistory}. Tell me what changed first: appetite, energy, breathing, stool, vomiting, pain, or behavior? I can respond in your natural English, Hindi, or Hinglish style, but this does not replace an in-person veterinary exam.`;
   };
 
   const handleUserMessage = async (transcript: string) => {
@@ -522,9 +527,11 @@ You are the heart of this hospital and a trusted partner to every pet parent.
 VOICE & PERSONALITY:
 - Tone: Genuinely warm, deeply empathetic, approachable. Like a close friend who is a world-class vet.
 - Style: Professional yet kind. Use gentle Indian English cadence ("ji", "Namaste") naturally.
+- Always speak in first person as Pawl. Never refer to yourself as "Pawl" in third person.
+- Sound present in the conversation. Acknowledge interruptions, corrections, and new details naturally.
 - Engagement: Be PROACTIVE. Ask follow-up questions about ${petName}'s appetite, energy, or behavior.
 - Empathy first: Acknowledge feelings before giving advice ("I understand how worrying this can be, ji").
-- Conciseness: Keep responses short (2-3 sentences) for natural conversation flow.
+- Conciseness: Keep responses very short (1-3 sentences) for natural conversation flow and low voice latency.
 
 LANGUAGE ADAPTATION:
 - Mirror the pet parent's communication style.
@@ -648,8 +655,16 @@ ${knowledgeContext}`;
   };
 
   const handleCallToggle = async () => {
-    if (!recognition) {
-      alert("Microphone access is not available in this browser.");
+    if (isCallActiveRef.current && isSpeakingRef.current) {
+      stopCurrentSpeech();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      setStreamingText('');
+      startVADListening();
       return;
     }
 
@@ -683,7 +698,7 @@ ${knowledgeContext}`;
         setIsCallActiveState(true);
         if (!keys.gemini && !keys.openai) {
           setCurrentProvider('demo');
-          speakText('Preview demo is ready. Tell me what is going on with your pet, and I will show you how Pawl responds.');
+          speakText('I am ready. Tell me what is going on with your pet. You can interrupt me any time.');
         } else {
           speakText("I'm ready. Tell me what is going on with your pet.");
         }
@@ -701,6 +716,7 @@ ${knowledgeContext}`;
   const middleScale = 1 + volume * 0.55;
   const outerOpacity = volume > 0.05 ? 0.3 + volume * 0.5 : 0.15;
   const isActive = isSpeaking || isListening;
+  const hasSarvamVoice = Boolean(getActiveSarvamKey());
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
@@ -928,7 +944,12 @@ ${knowledgeContext}`;
         <div className="flex flex-col items-center gap-1.5">
           {!keys.gemini && !keys.openai && (
             <p className="max-w-xs text-center text-[10px] leading-relaxed text-white/35">
-              Demo voice uses your device voice or connected Sarvam/ElevenLabs voice. Full AI answers need OpenAI or Gemini in settings.
+              {hasSarvamVoice ? 'Voice is powered by Sarvam. Full live AI answers need OpenAI or Gemini in settings.' : 'Sarvam voice key is not loaded yet. Add it to .env.local, then restart the dev server.'}
+            </p>
+          )}
+          {voiceIssue && (
+            <p className="max-w-xs text-center text-[10px] leading-relaxed text-amber-200/70">
+              {voiceIssue}
             </p>
           )}
           <motion.button
@@ -942,7 +963,7 @@ ${knowledgeContext}`;
           >
             <Mic className={`w-5 h-5 ${isCallActive ? 'text-red-400' : ''}`} />
             <span className="font-heading font-bold text-sm">
-              {isCallActive ? 'End Call' : 'Start Call'}
+              {isSpeaking ? 'Interrupt' : isCallActive ? 'End Call' : 'Start Call'}
             </span>
             {isCallActive && (
               <motion.span
