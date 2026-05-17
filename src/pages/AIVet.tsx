@@ -47,6 +47,10 @@ function valueOrFallback(value: unknown, fallback: string) {
 function buildOnboardingContext(profile: any) {
   const petName = valueOrFallback(profile?.petName || profile?.name, 'your pet');
   const petType = resolvePetSpecies(profile);
+  const rawRoadmap = valueOrFallback(profile?.cachedRoadmap, '');
+  const roadmapSummary = rawRoadmap && rawRoadmap !== 'No roadmap generated yet'
+    ? rawRoadmap.replace(/###\s*Verifiable Sources[\s\S]*$/i, '').trim()
+    : '';
 
   return {
     petName,
@@ -57,9 +61,10 @@ function buildOnboardingContext(profile: any) {
     petGender: valueOrFallback(profile?.gender, 'gender not provided'),
     petWeight: valueOrFallback(profile?.weight || profile?.petWeight, 'weight not provided'),
     diet: valueOrFallback(profile?.dietaryPreferences || profile?.diet, 'diet not provided'),
-    medicalHistory: valueOrFallback(profile?.medicalHistory || profile?.additionalDetails, 'no medical history provided'),
+    medicalHistory: valueOrFallback(profile?.medicalHistory, 'no medical history provided'),
     surgicalHistory: valueOrFallback(profile?.surgicalHistory, 'no surgical history provided'),
     additionalDetails: valueOrFallback(profile?.additionalDetails, 'no additional details provided'),
+    roadmap: roadmapSummary,
   };
 }
 
@@ -560,7 +565,7 @@ export default function AIVet() {
   };
 
   const buildDemoVetResponse = (transcript: string) => {
-    const { petName, petType, petBreed, petAge, petWeight, medicalHistory, surgicalHistory } = buildOnboardingContext(profile);
+    const { petName, petType, petBreed, petAge, petWeight, medicalHistory, surgicalHistory, roadmap } = buildOnboardingContext(profile);
     const breedText = petBreed !== 'breed not provided' ? `, ${petBreed}` : '';
     const lowerTranscript = transcript.toLowerCase();
     const emergencyKeywords = ['breathing', 'collapse', 'collapsed', 'seizure', 'bleeding', 'poison', 'bloated', 'bloat', 'urinate', 'unconscious'];
@@ -570,7 +575,7 @@ export default function AIVet() {
       return `I would treat this as urgent for ${petName}. If this is happening right now, please contact Planet Animal Hospital or emergency care immediately. I cannot diagnose from a call, but I can help you decide what details to tell the team.`;
     }
 
-    return `I hear you. For ${petName}, your ${petType}${breedText}, I can already see age as ${petAge}, weight as ${petWeight}, medical notes as ${medicalHistory}, and surgical history as ${surgicalHistory}. Tell me what changed first: appetite, energy, breathing, stool, vomiting, pain, or behavior? This does not replace an in-person veterinary exam.`;
+    return `I hear you. For ${petName}, your ${petType}${breedText}, I can already see age as ${petAge}, weight as ${petWeight}, medical notes as ${medicalHistory}, surgical history as ${surgicalHistory}, and I have ${roadmap ? 'the full longevity roadmap on file' : 'no roadmap on file yet. You can generate one from the Roadmap tab to give me more context'}. Tell me what changed first: appetite, energy, breathing, stool, vomiting, pain, or behavior? This does not replace an in-person veterinary exam.`;
   };
 
   const handleUserMessage = async (transcript: string) => {
@@ -597,6 +602,7 @@ export default function AIVet() {
         medicalHistory,
         surgicalHistory,
         additionalDetails,
+        roadmap,
       } = buildOnboardingContext(profile);
 
       const knowledgeContext = buildKnowledgeContext(petType, petBreed, transcript);
@@ -642,6 +648,7 @@ PET CONTEXT:
 - Medical History: ${medicalHistory}
 - Surgical History: ${surgicalHistory}
 - Parent Notes: ${additionalDetails}
+${roadmap ? `\nLONGEVITY ROADMAP (current care plan for ${petName}):\n${roadmap}` : '\nNo longevity roadmap generated yet.'}
 
 REFERENCE VETERINARY KNOWLEDGE (use this to ground your responses):
 ${knowledgeContext}`;
