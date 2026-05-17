@@ -19,7 +19,6 @@ declare global {
 
 const SARVAM_LANGUAGES = ['hi-IN', 'ta-IN', 'te-IN', 'kn-IN', 'ml-IN', 'bn-IN', 'en-IN'];
 
-const ENV_SARVAM_KEY = import.meta.env.VITE_SARVAM_API_KEY || import.meta.env.VITE_SERUM_API_KEY || '';
 const SARVAM_MALE_VOICE = 'shubh';
 const BARGE_IN_THRESHOLD = 62;
 const BARGE_IN_FRAMES_REQUIRED = 6;
@@ -64,7 +63,7 @@ function buildOnboardingContext(profile: any) {
   };
 }
 
-async function transcribeWithSarvam(audioBlob: Blob, apiKey: string): Promise<string> {
+async function transcribeWithSarvam(audioBlob: Blob, apiKey?: string): Promise<string> {
   const formData = new FormData();
   const extension = audioBlob.type.includes('webm') ? 'webm' : audioBlob.type.includes('wav') ? 'wav' : 'audio';
   formData.append('file', audioBlob, `audio.${extension}`);
@@ -72,9 +71,12 @@ async function transcribeWithSarvam(audioBlob: Blob, apiKey: string): Promise<st
   formData.append('mode', 'transcribe');
   formData.append('language_code', 'en-IN');
 
-  const res = await fetch('https://api.sarvam.ai/v1/speech-to-text', {
+  const headers: Record<string, string> = {};
+  if (apiKey) headers['x-sarvam-api-key'] = apiKey;
+
+  const res = await fetch('/api/sarvam/speech-to-text', {
     method: 'POST',
-    headers: { 'api-subscription-key': apiKey },
+    headers,
     body: formData,
   });
 
@@ -112,6 +114,7 @@ export default function AIVet() {
   const [currentProvider, setCurrentProvider] = useState<string>('');
   const [streamingText, setStreamingText] = useState('');
   const [voiceIssue, setVoiceIssue] = useState('');
+  const [serverSarvamConfigured, setServerSarvamConfigured] = useState<boolean | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const isCallActiveRef = useRef(false);
@@ -140,6 +143,20 @@ export default function AIVet() {
 
   }, [chatHistory]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/sarvam/status')
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled) setServerSarvamConfigured(Boolean(data.configured));
+      })
+      .catch(() => {
+        if (!cancelled) setServerSarvamConfigured(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
   const setIsSpeakingState = (val: boolean) => {
     setIsSpeaking(val);
     isSpeakingRef.current = val;
@@ -152,7 +169,6 @@ export default function AIVet() {
 
   const getActiveSarvamKey = () => {
     if (isUsableAPIKey(keys.sarvam)) return keys.sarvam.trim();
-    if (isUsableAPIKey(ENV_SARVAM_KEY)) return ENV_SARVAM_KEY.trim();
     return '';
   };
 
@@ -295,12 +311,7 @@ export default function AIVet() {
 
       try {
         let transcript = '';
-        const sarvamKey = getActiveSarvamKey();
-        if (sarvamKey) {
-          transcript = await transcribeWithSarvam(blob, sarvamKey);
-        } else {
-          throw new Error('No Sarvam key');
-        }
+        transcript = await transcribeWithSarvam(blob, getActiveSarvamKey());
         setIsProcessing(true);
         await handleUserMessage(transcript);
       } catch {
@@ -403,20 +414,16 @@ export default function AIVet() {
 
   const speakTextSarvam = async (text: string, allowWithoutCall = false): Promise<boolean> => {
     const sarvamKey = getActiveSarvamKey();
-    if (!sarvamKey) {
-      setVoiceIssue('Sarvam voice key is not loaded. Add VITE_SARVAM_API_KEY to .env.local and restart the dev server.');
-      return false;
-    }
     try {
       if (ttsAbortControllerRef.current) ttsAbortControllerRef.current.abort();
       ttsAbortControllerRef.current = new AbortController();
 
-      const ttsResponse = await fetch('https://api.sarvam.ai/text-to-speech', {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sarvamKey) headers['x-sarvam-api-key'] = sarvamKey;
+
+      const ttsResponse = await fetch('/api/sarvam/text-to-speech', {
         method: 'POST',
-        headers: {
-          'api-subscription-key': sarvamKey,
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({
           text,
           target_language_code: getSarvamLanguageCode(text),
@@ -432,7 +439,8 @@ export default function AIVet() {
 
       if (!ttsResponse.ok) {
         ttsAbortControllerRef.current = null;
-        setVoiceIssue(`Sarvam voice request failed with status ${ttsResponse.status}. Check the key and credits.`);
+        const detail = await ttsResponse.text().catch(() => '');
+        setVoiceIssue(`Sarvam voice request failed with status ${ttsResponse.status}. Check the local .env key and credits.${detail ? ` ${detail.slice(0, 120)}` : ''}`);
         return false;
       }
       const ttsData = await ttsResponse.json();
@@ -762,7 +770,7 @@ ${knowledgeContext}`;
   const middleScale = 1 + volume * 0.55;
   const outerOpacity = volume > 0.05 ? 0.3 + volume * 0.5 : 0.15;
   const isActive = isSpeaking || isListening;
-  const hasSarvamVoice = Boolean(getActiveSarvamKey());
+  const hasSarvamVoice = Boolean(getActiveSarvamKey()) || serverSarvamConfigured === true;
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
@@ -990,7 +998,7 @@ ${knowledgeContext}`;
         <div className="flex flex-col items-center gap-1.5">
           {!keys.gemini && !keys.openai && (
             <p className="max-w-xs text-center text-[10px] leading-relaxed text-white/35">
-              {hasSarvamVoice ? 'Voice is powered by Sarvam. Full live AI answers need OpenAI or Gemini in settings.' : 'Sarvam voice key is not loaded yet. Add it to .env.local, then restart the dev server.'}
+              {hasSarvamVoice ? 'Voice is powered by Sarvam through the local server. Full live AI answers need OpenAI or Gemini in settings.' : 'Sarvam voice key is not loaded on the local server yet. Add SARVAM_API_KEY or VITE_SARVAM_API_KEY to .env.local, then restart.'}
             </p>
           )}
           {voiceIssue && (
