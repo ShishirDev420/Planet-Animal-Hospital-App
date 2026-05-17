@@ -105,7 +105,7 @@ const pawPointsRoadmap = [
 ];
 
 const HolographicFoil = () => (
-  <div className="absolute inset-0 holographic-foil opacity-30 pointer-events-none mix-blend-overlay" />
+  <div className="absolute inset-0 holographic-foil opacity-30 pointer-events-none mix-blend-overlay rounded-[inherit]" />
 );
 
 const BentoQuestCard = ({ item, i }: { item: any, i: number }) => {
@@ -266,101 +266,61 @@ export default function Rewards() {
             Every visit, every check-in, every act of care earns Paw Points. Unlock real clinical rewards on your journey to pet longevity.
           </motion.p>
 
-          {/* Points Counter - Prestige Glow Implementation */}
+          {/* Points Counter - warm medallion treatment */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="inline-block relative p-[1px] rounded-[3rem] ascension-glow shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
+            className="relative inline-block w-full max-w-[392px] rounded-[2.65rem] p-[1px] shadow-[0_40px_100px_rgba(0,0,0,0.72)]"
           >
-            {/* Animated outer glow ring */}
             <motion.div
-              className="absolute -inset-3 rounded-[3.5rem] border border-[#fec708]/20 pointer-events-none"
-              animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.02, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -inset-3 rounded-[3rem] border border-[#fec708]/15 pointer-events-none"
+              animate={shouldReduceMotion ? undefined : { opacity: [0.28, 0.6, 0.28], scale: [1, 1.015, 1] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
-              className="absolute -inset-6 rounded-[4.5rem] bg-[#fec708]/5 blur-xl pointer-events-none"
-              animate={{ opacity: [0.2, 0.5, 0.2] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -inset-6 rounded-[3.6rem] bg-[#fec708]/8 blur-2xl pointer-events-none"
+              animate={shouldReduceMotion ? undefined : { opacity: [0.22, 0.44, 0.22] }}
+              transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut' }}
             />
 
-            <div className="bg-[#0a0a08]/95 rounded-[2.9rem] px-10 py-10 md:px-16 md:py-12 backdrop-blur-3xl flex flex-col items-center relative overflow-hidden">
-              <HolographicFoil />
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fec708]/40 to-transparent" />
-
-              {/* Inline Orb — compact visual anchor */}
-              <div className="mb-4 relative grid place-items-center" style={{ width: 120, height: 120 }}>
-                {/* Outer rotating ring */}
+            <div className="paw-balance-card rounded-[2.55rem] px-6 py-8 sm:px-8 sm:py-9 flex flex-col items-center relative overflow-hidden">
+              <div className="paw-balance-logo-stage mb-4">
                 <motion.div
-                  className="absolute inset-0 rounded-full border border-[#fec708]/20 shadow-[0_0_60px_rgba(254,199,8,0.25)]"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                  className="paw-balance-logo-halo"
+                  animate={shouldReduceMotion ? undefined : { opacity: [0.55, 0.9, 0.55], scale: [0.98, 1.04, 0.98] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
                 />
                 <motion.div
-                  className="absolute inset-2 rounded-full border border-dashed border-[#fec708]/15"
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-                />
-                {/* Conic glow */}
-                <motion.div
-                  className="absolute inset-3 rounded-full bg-[conic-gradient(from_90deg,transparent,rgba(254,199,8,0.35),rgba(255,246,204,0.15),rgba(45,212,191,0.2),transparent)] blur-md"
-                  animate={{ rotate: 360, scale: [1, 1.05, 1] }}
-                  transition={{ rotate: { duration: 8, repeat: Infinity, ease: 'linear' }, scale: { duration: 2.5, repeat: Infinity, ease: [0.25, 1, 0.5, 1] } }}
-                />
-                {/* Floating sparkles around orb */}
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 rounded-full bg-[#fec708]"
-                    style={{
-                      top: `${20 + Math.random() * 60}%`,
-                      left: `${20 + Math.random() * 60}%`,
-                    }}
-                    animate={{
-                      opacity: [0, 1, 0],
-                      scale: [0, 1.2, 0],
-                      y: [-5, -15, -5],
-                    }}
-                    transition={{
-                      duration: 2 + Math.random() * 2,
-                      repeat: Infinity,
-                      delay: i * 0.4,
-                      ease: 'easeInOut',
-                    }}
-                  />
-                ))}
-                <motion.div
-                  className="relative grid place-items-center rounded-full border border-white/15 bg-[#fec708] shadow-[0_0_50px_rgba(254,199,8,0.6),inset_0_1px_16px_rgba(255,255,255,0.3)] h-[80px] w-[80px]"
-                  animate={{ scale: [1, 1.04, 1], filter: ['brightness(1)', 'brightness(1.12)', 'brightness(1)'] }}
+                  className="paw-balance-logo relative grid place-items-center rounded-full"
+                  animate={shouldReduceMotion ? undefined : { scale: [1, 1.025, 1], filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] }}
                   transition={{ duration: 2.2, repeat: Infinity, ease: [0.25, 1, 0.5, 1] }}
                 >
                   <img src={planetLogo} alt="Planet Animal" className="h-full w-full rounded-full object-cover" />
-                  <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_22%,rgba(255,255,255,0.4),transparent_30%)]" />
                 </motion.div>
               </div>
 
               <motion.span
-                className="cinematic-kicker mb-5 tracking-[0.5em] opacity-80"
-                animate={{ opacity: [0.5, 0.9, 0.5] }}
+                className="cinematic-kicker mb-7 tracking-[0.48em] opacity-85"
+                animate={shouldReduceMotion ? undefined : { opacity: [0.68, 0.94, 0.68] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               >
                 Points Balance
               </motion.span>
 
-              <div className="flex items-end gap-3 mb-2">
+              <div className="flex items-end justify-center gap-2.5 mb-2 overflow-visible py-1 w-full">
                 <motion.span
                   key={currentPoints}
                   initial={{ opacity: 0, y: 20, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className="cinematic-price text-7xl md:text-9xl tabular-nums text-white text-gradient-gold"
+                  className="paw-balance-number cinematic-price text-[4.7rem] sm:text-[5.6rem] tabular-nums"
                 >
                   {currentPoints.toLocaleString()}
                 </motion.span>
-                <div className="flex flex-col items-start pb-2">
-                  <span className="text-3xl font-black text-[#fec708] leading-none">PAW</span>
-                  <span className="text-xl font-bold text-white/30 tracking-widest leading-none">PTS</span>
+                <div className="flex flex-col items-start pb-[0.95rem] shrink-0">
+                  <span className="text-[1.7rem] sm:text-[2rem] font-black text-[#fec708] leading-none tracking-[-0.035em]">PAW</span>
+                  <span className="text-lg sm:text-xl font-black text-white/30 tracking-[0.02em] leading-none">PTS</span>
                 </div>
               </div>
 
@@ -370,72 +330,20 @@ export default function Rewards() {
                 const ptsToNext = pointsToNextTier;
 
                 return (
-                  <div className="mt-10 w-full max-w-[320px]">
+                  <div className="mt-8 w-full max-w-[320px]">
                     <div className="flex justify-between items-end mb-2">
                       <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Next: {nextTier.title}</span>
                       <span className="text-[10px] font-black text-[#fec708] uppercase tracking-widest">{Math.round(progress)}%</span>
                     </div>
-                    <div className="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 mb-2">
+                    <div className="paw-progress-track h-2.5 w-full rounded-full overflow-hidden mb-2 relative">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 1.5, ease: "circOut" }}
-                        className="h-full progress-gold rounded-full"
+                        className="paw-progress-fill h-full rounded-full"
                       />
                     </div>
-                    <p className="text-[9px] font-bold text-white/25 mb-5">{ptsToNext.toLocaleString()} pts away from your next reward</p>
-
-                    {/* Gamification Stats Row */}
-                    <div className="mt-5 grid grid-cols-3 gap-2 w-full">
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.75 }}
-                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
-                      >
-                        <motion.div
-                          className="absolute inset-0 bg-orange-500/5 rounded-2xl"
-                          animate={{ opacity: [0.3, 0.8, 0.3] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                        />
-                        <span className="relative text-lg font-black text-orange-400 tabular-nums">
-                          {healthStreakDays}d
-                        </span>
-                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Day Streak</span>
-                      </motion.div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.85 }}
-                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
-                      >
-                        <motion.div
-                          className="absolute inset-0 bg-[#fec708]/5 rounded-2xl"
-                          animate={{ opacity: [0.2, 0.6, 0.2] }}
-                          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                        />
-                        <span className="relative text-lg font-black text-[#fec708]">
-                          {currentPoints >= 25000 ? '★ Elite' : currentPoints >= 10000 ? '◆ Senior' : currentPoints >= 5000 ? '✦ Guard' : currentPoints >= 1500 ? '● Care' : '○ New'}
-                        </span>
-                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Your Rank</span>
-                      </motion.div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.95 }}
-                        className="relative flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden"
-                      >
-                        <motion.div
-                          className="absolute inset-0 bg-emerald-500/5 rounded-2xl"
-                          animate={{ opacity: [0.2, 0.7, 0.2] }}
-                          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-                        />
-                        <span className="relative text-lg font-black text-emerald-400 tabular-nums">
-                          {streakMultiplier.toFixed(streakMultiplier % 1 === 0 ? 0 : 2).replace(/0$/, '')}x
-                        </span>
-                        <span className="relative text-[8px] font-black text-white/30 uppercase tracking-widest">Boost</span>
-                      </motion.div>
-                    </div>
+                    <p className="text-[9px] font-bold text-white/28">{ptsToNext.toLocaleString()} pts away from your next reward</p>
                   </div>
                 );
               })()}
@@ -487,27 +395,27 @@ export default function Rewards() {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/30">Balance</p>
-                  <p className="mt-1 text-2xl font-black text-white tabular-nums">{currentPoints.toLocaleString()}</p>
+                  <p className="reward-card-balance mt-1 tabular-nums">{currentPoints.toLocaleString()}</p>
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-5">
+                <div className="reward-metric-card rounded-3xl p-5">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Cash value</p>
                   <motion.p
                     key={Math.round(currentPoints * PAW_POINT_TO_INR * 100)}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-3 text-4xl font-black text-[#fec708] tabular-nums"
+                    className="reward-metric-value mt-3 tabular-nums"
                   >
                     ₹{(currentPoints * PAW_POINT_TO_INR).toFixed(2)}
                   </motion.p>
-                  <p className="mt-1 text-xs font-semibold text-white/35">1 point = ₹0.25</p>
+                  <p className="reward-rate mt-1 tabular-nums">1 point = ₹0.25</p>
                 </div>
-                <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-5">
+                <div className="reward-metric-card rounded-3xl p-5">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Progress</p>
                   <div className="mt-4 flex items-end justify-between gap-4">
-                    <p className="text-4xl font-black text-white tabular-nums">{Math.round(nextTierProgress)}%</p>
+                    <p className="reward-progress-number tabular-nums">{Math.round(nextTierProgress)}%</p>
                     <p className="max-w-[8rem] text-right text-xs font-semibold leading-snug text-white/35">toward {nextTier.title}</p>
                   </div>
                   <div className="mt-4 h-2 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
