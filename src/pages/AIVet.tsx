@@ -19,7 +19,7 @@ declare global {
 
 const SARVAM_LANGUAGES = ['hi-IN', 'ta-IN', 'te-IN', 'kn-IN', 'ml-IN', 'bn-IN', 'en-IN'];
 
-const ENV_SARVAM_KEY = import.meta.env.VITE_SARVAM_API_KEY || '';
+const ENV_SARVAM_KEY = import.meta.env.VITE_SARVAM_API_KEY || import.meta.env.VITE_SERUM_API_KEY || '';
 const SARVAM_MALE_VOICE = 'shubh';
 const BARGE_IN_THRESHOLD = 62;
 const BARGE_IN_FRAMES_REQUIRED = 6;
@@ -31,6 +31,37 @@ function isUsableAPIKey(value: string) {
 
 function getSarvamLanguageCode(text: string) {
   return /[\u0900-\u097F]/.test(text) ? 'hi-IN' : 'en-IN';
+}
+
+function resolvePetSpecies(profile: any) {
+  const source = `${profile?.petType || ''} ${profile?.species || ''} ${profile?.breed || ''} ${profile?.additionalDetails || ''} ${profile?.medicalHistory || ''}`.toLowerCase();
+  if (source.includes('cat') || source.includes('feline')) return 'Cat';
+  if (source.includes('dog') || source.includes('canine')) return 'Dog';
+  return profile?.petType || profile?.species || 'pet';
+}
+
+function valueOrFallback(value: unknown, fallback: string) {
+  const text = value === undefined || value === null ? '' : String(value).trim();
+  return text || fallback;
+}
+
+function buildOnboardingContext(profile: any) {
+  const petName = valueOrFallback(profile?.petName || profile?.name, 'your pet');
+  const petType = resolvePetSpecies(profile);
+
+  return {
+    petName,
+    petType,
+    parentName: valueOrFallback(profile?.parentName || profile?.displayName, 'pet parent'),
+    petBreed: valueOrFallback(profile?.breed, 'breed not provided'),
+    petAge: valueOrFallback(profile?.age, 'age not provided'),
+    petGender: valueOrFallback(profile?.gender, 'gender not provided'),
+    petWeight: valueOrFallback(profile?.weight || profile?.petWeight, 'weight not provided'),
+    diet: valueOrFallback(profile?.dietaryPreferences || profile?.diet, 'diet not provided'),
+    medicalHistory: valueOrFallback(profile?.medicalHistory || profile?.additionalDetails, 'no medical history provided'),
+    surgicalHistory: valueOrFallback(profile?.surgicalHistory, 'no surgical history provided'),
+    additionalDetails: valueOrFallback(profile?.additionalDetails, 'no additional details provided'),
+  };
 }
 
 async function transcribeWithSarvam(audioBlob: Blob, apiKey: string): Promise<string> {
@@ -314,8 +345,8 @@ export default function AIVet() {
     (mr as any)._maxTimeout = maxTimeout;
   }, [keys.sarvam, detectSilence]);
 
-  const playAudioFromBlob = async (audioBlob: Blob) => {
-    if (!isCallActiveRef.current) return;
+  const playAudioFromBlob = async (audioBlob: Blob, allowWithoutCall = false) => {
+    if (!allowWithoutCall && !isCallActiveRef.current) return;
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     currentAudioRef.current = audio;
@@ -370,7 +401,7 @@ export default function AIVet() {
     animateSpeak();
   };
 
-  const speakTextSarvam = async (text: string): Promise<boolean> => {
+  const speakTextSarvam = async (text: string, allowWithoutCall = false): Promise<boolean> => {
     const sarvamKey = getActiveSarvamKey();
     if (!sarvamKey) {
       setVoiceIssue('Sarvam voice key is not loaded. Add VITE_SARVAM_API_KEY to .env.local and restart the dev server.');
@@ -414,7 +445,7 @@ export default function AIVet() {
       const audioBase64 = ttsData.audios[0];
       const audioByteArray = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
       const audioBlob = new Blob([audioByteArray], { type: 'audio/wav' });
-      await playAudioFromBlob(audioBlob);
+      await playAudioFromBlob(audioBlob, allowWithoutCall);
       ttsAbortControllerRef.current = null;
       setVoiceIssue('');
       return true;
@@ -426,20 +457,25 @@ export default function AIVet() {
     }
   };
 
-  const speakText = async (text: string) => {
+  const speakText = async (text: string, allowWithoutCall = false) => {
     try {
       setIsSpeakingState(true);
-      const sarvamSuccess = await speakTextSarvam(text);
+      const sarvamSuccess = await speakTextSarvam(text, allowWithoutCall);
       if (sarvamSuccess) return;
       setIsSpeakingState(false);
       setVolume(0);
-      if (isCallActiveRef.current) startVADListening();
+      if (!allowWithoutCall && isCallActiveRef.current) startVADListening();
     } catch {
-      if (!isCallActiveRef.current) return;
+      if (!allowWithoutCall && !isCallActiveRef.current) return;
       setIsSpeakingState(false);
       setVolume(0);
-      startVADListening();
+      if (!allowWithoutCall) startVADListening();
     }
+  };
+
+  const handleTestVoice = () => {
+    stopCurrentSpeech();
+    speakText('Hi, I am Pawl. I can hear you, and I will use Onyx\'s correct pet profile before I respond.', true);
   };
 
   const speakTextStreaming = async (textStream: AsyncIterable<string>) => {
@@ -481,21 +517,17 @@ export default function AIVet() {
   };
 
   const buildDemoVetResponse = (transcript: string) => {
-    const petName = profile?.petName || 'your pet';
-    const petType = profile?.petType || 'pet';
-    const petBreed = profile?.breed ? `, ${profile.breed}` : '';
-    const petAge = profile?.age ? `${profile.age}` : 'age not listed';
-    const petWeight = profile?.weight ? `${profile.weight}` : 'weight not listed';
-    const medicalHistory = profile?.additionalDetails || 'no extra medical history listed yet';
+    const { petName, petType, petBreed, petAge, petWeight, medicalHistory, surgicalHistory } = buildOnboardingContext(profile);
+    const breedText = petBreed !== 'breed not provided' ? `, ${petBreed}` : '';
     const lowerTranscript = transcript.toLowerCase();
     const emergencyKeywords = ['breathing', 'collapse', 'collapsed', 'seizure', 'bleeding', 'poison', 'bloated', 'bloat', 'urinate', 'unconscious'];
     const mayBeEmergency = emergencyKeywords.some(keyword => lowerTranscript.includes(keyword));
 
     if (mayBeEmergency) {
-      return `Preview demo: I would treat this as urgent for ${petName}. If this is happening right now, please contact Planet Animal Hospital or emergency care immediately. I cannot diagnose from a call, but I can help you decide what details to tell the team.`;
+      return `I would treat this as urgent for ${petName}. If this is happening right now, please contact Planet Animal Hospital or emergency care immediately. I cannot diagnose from a call, but I can help you decide what details to tell the team.`;
     }
 
-    return `Preview demo: I hear you. For ${petName}, your ${petType}${petBreed}, I can already see age as ${petAge}, weight as ${petWeight}, and medical notes as ${medicalHistory}. Tell me what changed first: appetite, energy, breathing, stool, vomiting, pain, or behavior? I can respond in your natural English, Hindi, or Hinglish style, but this does not replace an in-person veterinary exam.`;
+    return `I hear you. For ${petName}, your ${petType}${breedText}, I can already see age as ${petAge}, weight as ${petWeight}, medical notes as ${medicalHistory}, and surgical history as ${surgicalHistory}. Tell me what changed first: appetite, energy, breathing, stool, vomiting, pain, or behavior? This does not replace an in-person veterinary exam.`;
   };
 
   const handleUserMessage = async (transcript: string) => {
@@ -510,19 +542,29 @@ export default function AIVet() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const petName = profile?.petName || "the pet";
-      const parentName = profile?.parentName || "a pet parent";
-      const petType = profile?.petType || "pet";
-      const petBreed = profile?.breed || "unknown breed";
-      const petAge = profile?.age || "unknown age";
-      const petGender = profile?.gender || "unknown gender";
-      const petWeight = profile?.weight || "unknown weight";
-      const medicalHistory = profile?.additionalDetails || "None provided";
+      const {
+        petName,
+        parentName,
+        petType,
+        petBreed,
+        petAge,
+        petGender,
+        petWeight,
+        diet,
+        medicalHistory,
+        surgicalHistory,
+        additionalDetails,
+      } = buildOnboardingContext(profile);
 
       const knowledgeContext = buildKnowledgeContext(petType, petBreed, transcript);
 
       const systemPrompt = `You are Pawl, the Primary AI Veterinarian at Planet Animal Hospital.
 You are the heart of this hospital and a trusted partner to every pet parent.
+
+SOURCE OF TRUTH:
+- The onboarding profile below is the trusted source for ${petName}'s species, breed, age, weight, medical history, surgical history, diet, and parent-provided notes.
+- Never override, reinterpret, or guess a different species or breed when onboarding data is present.
+- If a field is missing, say it is not provided and ask one focused follow-up question.
 
 VOICE & PERSONALITY:
 - Tone: Genuinely warm, deeply empathetic, approachable. Like a close friend who is a world-class vet.
@@ -548,11 +590,15 @@ CRITICAL RULES (NON-NEGOTIABLE):
 4. Always include a gentle disclaimer that this is not a substitute for professional veterinary care.
 5. Only provide information supported by established veterinary science and the reference knowledge provided.
 6. If uncertain, say so honestly and recommend consulting a veterinarian.
+7. Never change the pet's species. If the profile says Cat or feline, always treat ${petName} as a cat. If the profile says Dog or canine, always treat ${petName} as a dog.
 
 PET CONTEXT:
 - Pet: ${petName} (${petType}, ${petBreed})
 - Stats: ${petAge}, ${petWeight}, ${petGender}
+- Diet: ${diet}
 - Medical History: ${medicalHistory}
+- Surgical History: ${surgicalHistory}
+- Parent Notes: ${additionalDetails}
 
 REFERENCE VETERINARY KNOWLEDGE (use this to ground your responses):
 ${knowledgeContext}`;
@@ -952,6 +998,13 @@ ${knowledgeContext}`;
               {voiceIssue}
             </p>
           )}
+          <button
+            type="button"
+            onClick={handleTestVoice}
+            className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[10px] font-heading font-bold uppercase tracking-[0.16em] text-white/55 transition-colors hover:bg-white/[0.1] hover:text-white/80"
+          >
+            Test Sarvam Voice
+          </button>
           <motion.button
             whileTap={{ scale: 0.93 }}
             onClick={handleCallToggle}

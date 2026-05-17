@@ -8,25 +8,32 @@ const DEMO_PROFILE_KEY = 'planet_animal_demo_profile';
 
 function normalizeProfile(data: any) {
   if (!data) return data;
+  const petName = data.petName || data.name || '';
+  const typeBreedDetails = `${data.petType || ''} ${data.breed || ''} ${data.additionalDetails || ''} ${data.medicalHistory || ''}`.toLowerCase();
+  const isCat = typeBreedDetails.includes('cat') || typeBreedDetails.includes('feline') || petName.toLowerCase() === 'onyx';
+
   return {
     ...data,
-    name: data.petName || data.name || '',
+    petType: isCat ? 'Cat' : data.petType,
+    breed: petName.toLowerCase() === 'onyx' && (!data.breed || /lab|dog/i.test(data.breed)) ? 'Black Cat' : data.breed,
+    cachedRoadmap: petName.toLowerCase() === 'onyx' && /lab|dog|canine/i.test(data.cachedRoadmap || '') ? DEMO_ROADMAP_TEXT : data.cachedRoadmap,
+    name: petName,
   };
 }
 
 export const DEMO_ROADMAP_TEXT = `### Phase: 1-3 Months
 * **Baseline Wellness Exam**: Complete a full nose-to-tail veterinary exam | Scientific Rationale: Establishes clinical baselines for early detection.
-* **Joint Mobility Check**: Screen hips, elbows, and gait because Labs are active, larger dogs | Scientific Rationale: Early mobility care preserves long-term comfort.
-* **Nutrition Calibration**: Review body condition and protein intake | Scientific Rationale: Weight control reduces orthopedic and metabolic risk.
+* **Feline Body Condition Review**: Check weight, coat, hydration, and muscle tone for a healthy black cat | Scientific Rationale: Cats hide illness well, so subtle baseline changes matter.
+* **Nutrition Calibration**: Review protein intake, hydration, and feeding routine | Scientific Rationale: Species-appropriate nutrition supports urinary, kidney, and metabolic health.
 
 ### Phase: 3-6 Months
 * **Dental Assessment**: Check plaque, gums, and chewing patterns | Scientific Rationale: Oral inflammation can affect systemic health.
-* **Skin and Ear Review**: Monitor ears and coat after grooming or monsoon exposure | Scientific Rationale: Moisture and allergies can trigger recurrent infections.
+* **Skin, Coat, and Ear Review**: Monitor coat quality, itching, ears, and grooming changes | Scientific Rationale: Cats often show discomfort through grooming and behavior shifts.
 * **Vaccination Audit**: Confirm core and lifestyle vaccines are current | Scientific Rationale: Preventive immunity lowers avoidable disease burden.
 
 ### Phase: 6-12 Months
 * **Annual Lab Panel**: Run bloodwork and organ screening | Scientific Rationale: Labs reveal trends before symptoms appear.
-* **Exercise Plan Refresh**: Adjust activity to age, joints, and body condition | Scientific Rationale: Consistent movement supports cardiac and muscle health.
+* **Environmental Enrichment Plan**: Review play, scratching, climbing, hiding, and litter box setup | Scientific Rationale: Environmental health strongly affects feline stress and behavior.
 * **Parasite Prevention Check**: Confirm tick, flea, and deworming schedule | Scientific Rationale: Parasite prevention protects both pet and household health.
 
 ### Phase: Long-term
@@ -46,10 +53,10 @@ export function usePetProfile() {
     parentName: 'Shishir',
     petName: 'Onyx',
     name: 'Onyx',
-    petType: 'Dog',
-    breed: 'Black Lab',
-    weight: '32kg',
-    dietaryPreferences: 'High-Protein Kibble',
+    petType: 'Cat',
+    breed: 'Black Cat',
+    weight: '5kg',
+    dietaryPreferences: 'High-protein wet and dry cat food',
     age: '3 years',
     gender: 'Male',
     medicalHistory: 'No known issues',
