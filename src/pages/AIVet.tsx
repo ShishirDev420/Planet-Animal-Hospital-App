@@ -109,7 +109,7 @@ export default function AIVet() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'ai', content: string}[]>([
-    { role: 'ai', content: `Namaste. I'm Pawl, your AI veterinarian here at Planet Animal Hospital. I've been looking over ${profile?.petName || 'your pet'}'s health records. How is ${profile?.petName || 'your pet'} feeling today? You can speak naturally in English, Hindi, or a mix of both.` }
+    { role: 'ai', content: `Namaste. I'm Pawl, your AI veterinarian here at Planet Animal Hospital. I have ${profile?.petName || 'your pet'}'s profile ready. What can I help with today?` }
   ]);
   const [showScanner, setShowScanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -565,8 +565,7 @@ export default function AIVet() {
   };
 
   const buildDemoVetResponse = (transcript: string) => {
-    const { petName, petType, petBreed, petAge, petWeight, medicalHistory, surgicalHistory, roadmap } = buildOnboardingContext(profile);
-    const breedText = petBreed !== 'breed not provided' ? `, ${petBreed}` : '';
+    const { petName } = buildOnboardingContext(profile);
     const lowerTranscript = transcript.toLowerCase();
     const emergencyKeywords = ['breathing', 'collapse', 'collapsed', 'seizure', 'bleeding', 'poison', 'bloated', 'bloat', 'urinate', 'unconscious'];
     const mayBeEmergency = emergencyKeywords.some(keyword => lowerTranscript.includes(keyword));
@@ -575,7 +574,7 @@ export default function AIVet() {
       return `I would treat this as urgent for ${petName}. If this is happening right now, please contact Planet Animal Hospital or emergency care immediately. I cannot diagnose from a call, but I can help you decide what details to tell the team.`;
     }
 
-    return `I hear you. For ${petName}, your ${petType}${breedText}, I can already see age as ${petAge}, weight as ${petWeight}, medical notes as ${medicalHistory}, surgical history as ${surgicalHistory}, and I have ${roadmap ? 'the full longevity roadmap on file' : 'no roadmap on file yet. You can generate one from the Roadmap tab to give me more context'}. Tell me what changed first: appetite, energy, breathing, stool, vomiting, pain, or behavior? This does not replace an in-person veterinary exam.`;
+    return `I hear you. I have ${petName}'s profile ready, so let's focus on what's changed. What is the biggest concern right now: appetite, energy, breathing, stool, vomiting, pain, or behavior? This does not replace an in-person veterinary exam.`;
   };
 
   const handleUserMessage = async (transcript: string) => {
@@ -623,6 +622,8 @@ VOICE & PERSONALITY:
 - Engagement: Be PROACTIVE. Ask follow-up questions about ${petName}'s appetite, energy, or behavior.
 - Empathy first: Acknowledge feelings before giving advice ("I understand how worrying this can be, ji").
 - Conciseness: Keep responses very short (1-3 sentences) for natural conversation flow and low voice latency.
+- Do not recap ${petName}'s full profile, age, weight, medical history, surgical history, or roadmap unless that specific detail directly changes the guidance.
+- Acknowledge that the profile is available in one short phrase, then focus on the pet parent's current concern.
 
 LANGUAGE ADAPTATION:
 - Mirror the pet parent's communication style.
