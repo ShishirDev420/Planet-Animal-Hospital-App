@@ -10,6 +10,8 @@ import PlanetOrbLoader from '../components/PlanetOrbLoader';
 
 const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
+const ROADMAP_STAGE_REWARD_POINTS = 50;
+
 const generateRoadmapText = async (formData: any) => {
   if (!apiKey) {
     throw new Error('Groq API Key missing');
@@ -81,13 +83,15 @@ Surgical History: ${formData.surgicalHistory || 'None'}`
 const parseRoadmap = (text: string, progressData: any = {}): Stage[] => {
   const stages: Stage[] = [];
   
-  // More robust regex to split by any header that looks like a Phase
-  const phaseRegex = /### Phase:\s*([^\n]+)/gi;
+  const phaseRegex = /###\s*(?:Phase:\s*)?([^\n]+)/gi;
   let match;
   const phaseIndices: { start: number; title: string }[] = [];
   
   while ((match = phaseRegex.exec(text)) !== null) {
-    phaseIndices.push({ start: match.index, title: match[1].trim() });
+    const title = match[1].trim();
+    if (/^\d/.test(title) || /month|long.term/i.test(title)) {
+      phaseIndices.push({ start: match.index, title });
+    }
   }
   
   for (let i = 0; i < phaseIndices.length; i++) {
@@ -125,18 +129,8 @@ const parseRoadmap = (text: string, progressData: any = {}): Stage[] => {
         id: title,
         title: title,
         tasks: tasks,
-        isUnlocked: false // Will be set in the next pass
+        isUnlocked: true
       });
-    }
-  }
-
-  // Ensure stages are unlocked sequentially based on completion
-  for (let i = 0; i < stages.length; i++) {
-    if (i === 0) {
-      stages[i].isUnlocked = true;
-    } else {
-      const prevStage = stages[i-1];
-      stages[i].isUnlocked = prevStage.tasks.length > 0 && prevStage.tasks.every(t => t.completed);
     }
   }
   
@@ -385,29 +379,80 @@ export default function Roadmap() {
                     </div>
                     
                     <div className="font-body text-slate-300 text-base leading-relaxed tracking-wide space-y-12">
-                      {parseRoadmap(roadmap, profile?.roadmapProgress || {}).length > 0 ? (
-                        <>
-                          <HealthJourney 
-                            petName={profile?.petName || profile?.name || 'Your Pet'}
-                            stages={parseRoadmap(roadmap, profile?.roadmapProgress || {})}
-                            onToggleTask={async (stageId, taskId) => {
-                              const currentProgress = profile?.roadmapProgress || {};
-                              const newProgress = {
-                                ...currentProgress,
-                                [taskId]: !currentProgress[taskId]
-                              };
-                              
-                              if (updateProfile) {
-                                try {
-                                  await updateProfile({
-                                    roadmapProgress: newProgress
-                                  });
-                                } catch (err) {
-                                  console.error('Failed to update roadmap progress:', err);
+                      {(() => {
+                        const parsedStages = parseRoadmap(roadmap, profile?.roadmapProgress || {});
+                        if (parsedStages.length === 0) return null;
+
+                        const stageClaims = profile?.roadmapStageClaims || {};
+                        const stages = parsedStages.map((stage, index) => {
+                          const isUnlocked = index === 0 || Boolean(stageClaims[parsedStages[index - 1]?.id]);
+                          return { ...stage, isUnlocked };
+                        });
+
+                        const handleCompleteStage = async (stageId: string) => {
+                          const stage = stages.find((s) => s.id === stageId);
+                          const alreadyClaimed = Boolean(stageClaims[stageId]);
+                          const allTasksComplete = stage?.tasks.every((task) => task.completed);
+
+                          if (!stage || alreadyClaimed || !allTasksComplete) return;
+
+                          if (updateProfile) {
+                            try {
+                              await updateProfile({
+                                pawPoints: Number(profile?.pawPoints || 0) + ROADMAP_STAGE_REWARD_POINTS,
+                                roadmapStageClaims: {
+                                  ...stageClaims,
+                                  [stageId]: true,
+                                },
+                              });
+                            } catch (err) {
+                              console.error('Failed to complete roadmap stage:', err);
+                            }
+                          }
+                        };
+
+                        return (
+                          <>
+                            <div className="rounded-[1.75rem] border border-white/8 bg-black/25 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6 mb-6">
+                              <div className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 cinematic-kicker mb-4">
+                                <Sparkles size={14} />
+                                Longevity Roadmap
+                              </div>
+                              <h3 className="cinematic-card-title mb-3 text-xl sm:text-2xl">
+                                Life-Max {profile?.petName || profile?.name || 'Your Pet'}'s Health
+                              </h3>
+                              <p className="cinematic-copy text-sm sm:text-base max-w-2xl">
+                                This is your step-by-step care plan to maximize your pet's lifespan and quality of life. 
+                                Each stage contains specific, actionable steps backed by veterinary science. 
+                                Complete the current stage, notify Planet Animal, and earn Paw Points as you unlock the next phase. 
+                                Works for every pet parent — no plan required.
+                              </p>
+                            </div>
+
+                            <HealthJourney
+                              petName={profile?.petName || profile?.name || 'Your Pet'}
+                              stages={stages}
+                              stageClaims={stageClaims}
+                              onCompleteStage={handleCompleteStage}
+                              stageRewardPoints={ROADMAP_STAGE_REWARD_POINTS}
+                              onToggleTask={async (stageId, taskId) => {
+                                const currentProgress = profile?.roadmapProgress || {};
+                                const newProgress = {
+                                  ...currentProgress,
+                                  [taskId]: !currentProgress[taskId]
+                                };
+
+                                if (updateProfile) {
+                                  try {
+                                    await updateProfile({
+                                      roadmapProgress: newProgress
+                                    });
+                                  } catch (err) {
+                                    console.error('Failed to update roadmap progress:', err);
+                                  }
                                 }
-                              }
-                            }}
-                          />
+                              }}
+                            />
 
                           <div className="mt-10 border-t border-white/10 pt-6">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#fec708]/25 bg-[#fec708]/10 px-3 py-1.5 cinematic-kicker">
@@ -452,23 +497,9 @@ export default function Roadmap() {
                               </div>
                             </div>
                           </div>
-                        </>
-                      ) : (
-                        <Markdown
-                          components={{
-                            h1: ({node, ...props}) => <h1 className="cinematic-section-title mt-12 mb-6 border-b border-[#fec708]/20 pb-4 text-3xl text-[#fec708]" {...props} />,
-                            h2: ({node, ...props}) => <h2 className="cinematic-card-title mt-10 mb-5 rounded-2xl border border-[#fec708]/20 bg-[#fec708]/10 px-4 py-3 text-2xl text-[#fec708]" {...props} />,
-                            h3: ({node, ...props}) => <h3 className="cinematic-card-title mt-8 mb-4 text-xl text-[#fec708]/90" {...props} />,
-                            p: ({node, ...props}) => <p className="font-body text-slate-300 leading-relaxed mb-6 text-left" {...props} />,
-                            ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-4 mb-8 text-left" {...props} />,
-                            li: ({node, ...props}) => <li className="font-body text-slate-300 leading-relaxed pl-2 text-left" {...props} />,
-                            strong: ({node, ...props}) => <strong className="font-bold text-[#fec708]" {...props} />,
-                            a: ({node, ...props}) => <a className="text-[#fec708] hover:text-white underline underline-offset-4 decoration-[#fec708]/30 hover:decoration-white transition-all" target="_blank" rel="noopener noreferrer" {...props} />
-                          }}
-                        >
-                          {roadmap}
-                        </Markdown>
-                      )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </motion.div>
                 )}

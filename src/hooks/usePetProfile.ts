@@ -67,6 +67,7 @@ export function usePetProfile() {
     roadmapProgress: {
       '1-3 Months-0': true,
     },
+    roadmapStageClaims: {},
   };
 
   const readDemoProfile = () => {
@@ -83,6 +84,11 @@ export function usePetProfile() {
           ...demoProfile.roadmapProgress,
           ...(parsed.roadmapProgress || {}),
         },
+        roadmapStageClaims: {
+          ...demoProfile.roadmapStageClaims,
+          ...(parsed.roadmapStageClaims || {}),
+        },
+        pawPoints: parsed.pawPoints ?? demoProfile.pawPoints,
       });
     } catch {
       return normalizeProfile(demoProfile);
