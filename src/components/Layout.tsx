@@ -88,7 +88,7 @@ export default function Layout() {
             <div className="flex items-center gap-4 mb-4">
               <Logo className="!w-16 !h-16 drop-shadow-[0_0_20px_rgba(254,199,8,0.3)]" />
             </div>
-            <h2 className="cinematic-card-title text-2xl">Planet Animal</h2>
+            <h2 className="cinematic-card-title text-2xl" style={{ wordSpacing: '0.15em' }}>Planet Animal</h2>
             <p className="cinematic-kicker mt-1 text-[10px]">Hospital & Wellness</p>
           </div>
           <div className="flex-1 py-6 px-4 space-y-1">

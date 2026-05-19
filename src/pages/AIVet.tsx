@@ -9,6 +9,7 @@ import { buildKnowledgeContext } from '../lib/vet-knowledge';
 import PrescriptionScanner from '../components/PrescriptionScanner';
 import APISettings from '../components/APISettings';
 import Logo from '../components/Logo';
+import { CLINIC_TEL_URL } from '../lib/pawPoints';
 
 declare global {
   interface Window {
@@ -22,6 +23,32 @@ const SARVAM_LANGUAGES = ['hi-IN', 'ta-IN', 'te-IN', 'kn-IN', 'ml-IN', 'bn-IN', 
 const SARVAM_MALE_VOICE = 'shubh';
 const BARGE_IN_THRESHOLD = 62;
 const BARGE_IN_FRAMES_REQUIRED = 6;
+const THANE_EMERGENCY_DESTINATION = 'the configured 24/7 emergency veterinary line near Thane';
+
+const SEVERE_EMERGENCY_PATTERN = /\b(difficulty breathing|can't breathe|cannot breathe|not breathing|collapse|collapsed|unconscious|seizure|seizing|severe bleeding|bleeding a lot|bloated|bloat|gdv|can't pee|cannot pee|unable to urinate|rat poison|poison|xylitol|grapes?|raisins?|lily|lilies|hit by car|accident|trauma)\b/i;
+const CHOCOLATE_PATTERN = /\b(chocolate|cocoa|cacao|brownie|brownies|theobromine|methylxanthine)\b/i;
+const HIGH_RISK_CHOCOLATE_PATTERN = /\b(dark|baker'?s|baking|cocoa powder|unsweetened|cacao|whole|entire|bar|box|packet|pack|a lot|lots|large|big|many|vomit|vomiting|diarrhea|panting|restless|tremor|trembling|shaking|seizure|heart|hyper|weak|collapse|xylitol|raisin|macadamia|coffee|espresso)\b/i;
+
+function shouldAutoCallEmergency(transcript: string) {
+  if (SEVERE_EMERGENCY_PATTERN.test(transcript)) return true;
+  return CHOCOLATE_PATTERN.test(transcript) && HIGH_RISK_CHOCOLATE_PATTERN.test(transcript);
+}
+
+function isChocolateConcern(transcript: string) {
+  return CHOCOLATE_PATTERN.test(transcript);
+}
+
+function buildChocolateTriageResponse(petName: string) {
+  return `I have ${petName}'s profile ready. Please tell me the chocolate type, approximate amount, ${petName}'s weight, when it was eaten, and any symptoms; I will estimate the risk from veterinary toxicology thresholds, but ${petName} still needs veterinarian review. Do not induce vomiting or give home remedies unless a vet tells you to.`;
+}
+
+function buildEmergencyResponse(transcript: string, petName: string) {
+  if (isChocolateConcern(transcript)) {
+    return `This sounds potentially urgent for ${petName}, especially with dark chocolate, cocoa, a large amount, symptoms, or added toxins. I am calling the nearest configured 24/7 emergency veterinary line from Thane now; keep the wrapper and do not induce vomiting unless the vet instructs you.`;
+  }
+
+  return `This sounds like an emergency for ${petName}. I am calling the nearest configured 24/7 emergency veterinary line from Thane now; please keep ${petName} safely positioned and do not give medicines unless a veterinarian instructs you.`;
+}
 
 function isUsableAPIKey(value: string) {
   const trimmed = value.trim();
@@ -571,10 +598,18 @@ export default function AIVet() {
     const mayBeEmergency = emergencyKeywords.some(keyword => lowerTranscript.includes(keyword));
 
     if (mayBeEmergency) {
-      return `I would treat this as urgent for ${petName}. If this is happening right now, please contact Planet Animal Hospital or emergency care immediately. I cannot diagnose from a call, but I can help you decide what details to tell the team.`;
+      return buildEmergencyResponse(transcript, petName);
+    }
+
+    if (isChocolateConcern(transcript)) {
+      return buildChocolateTriageResponse(petName);
     }
 
     return `I hear you. I have ${petName}'s profile ready, so let's focus on what's changed. What is the biggest concern right now: appetite, energy, breathing, stool, vomiting, pain, or behavior? This does not replace an in-person veterinary exam.`;
+  };
+
+  const callEmergencyVetNearThane = () => {
+    window.location.href = CLINIC_TEL_URL;
   };
 
   const handleUserMessage = async (transcript: string) => {
@@ -604,6 +639,18 @@ export default function AIVet() {
         roadmap,
       } = buildOnboardingContext(profile);
 
+      if (shouldAutoCallEmergency(transcript)) {
+        const emergencyText = buildEmergencyResponse(transcript, petName);
+        setCurrentProvider('emergency');
+        setChatHistory(prev => [...prev, { role: 'ai', content: emergencyText }]);
+        isProcessingRef.current = false;
+        setIsProcessing(false);
+        setStreamingText('');
+        if (isCallActiveRef.current) await speakText(emergencyText);
+        callEmergencyVetNearThane();
+        return;
+      }
+
       const knowledgeContext = buildKnowledgeContext(petType, petBreed, transcript);
 
       const systemPrompt = `You are Pawl, the Primary AI Veterinarian at Planet Animal Hospital.
@@ -622,6 +669,7 @@ VOICE & PERSONALITY:
 - Engagement: Be PROACTIVE. Ask follow-up questions about ${petName}'s appetite, energy, or behavior.
 - Empathy first: Acknowledge feelings before giving advice ("I understand how worrying this can be, ji").
 - Conciseness: Keep responses very short (1-3 sentences) for natural conversation flow and low voice latency.
+- Dynamic verbosity: read the room. Use one direct sentence in emergencies, 2-3 sentences for triage, and only go longer when the parent asks for a calculation or explanation.
 - Do not recap ${petName}'s full profile, age, weight, medical history, surgical history, or roadmap unless that specific detail directly changes the guidance.
 - Acknowledge that the profile is available in one short phrase, then focus on the pet parent's current concern.
 
@@ -636,11 +684,19 @@ LANGUAGE ADAPTATION:
 CRITICAL RULES (NON-NEGOTIABLE):
 1. NEVER diagnose conditions — always recommend in-person veterinary examination for confirmation.
 2. NEVER prescribe medications or dosages — only suggest discussing options with a vet.
-3. For emergency symptoms (difficulty breathing, collapse, severe bleeding, bloating, inability to urinate, seizures): ALWAYS say "Please come in to the hospital immediately, ji—I'll alert the team."
+3. For emergency symptoms (difficulty breathing, collapse, severe bleeding, bloating, inability to urinate, seizures, high-risk poisoning): be directive and tell the parent to seek emergency veterinary care now. The app may already be calling ${THANE_EMERGENCY_DESTINATION}; do not claim you alerted the team unless the app explicitly confirms it.
 4. Always include a gentle disclaimer that this is not a substitute for professional veterinary care.
 5. Only provide information supported by established veterinary science and the reference knowledge provided.
 6. If uncertain, say so honestly and recommend consulting a veterinarian.
 7. Never change the pet's species. If the profile says Cat or feline, always treat ${petName} as a cat. If the profile says Dog or canine, always treat ${petName} as a dog.
+
+CHOCOLATE INGESTION PROTOCOL:
+- If the parent mentions chocolate, immediately ask for or use: chocolate type, approximate amount, ${petName}'s weight, time since ingestion, symptoms, and whether the product contained xylitol, raisins, macadamia nuts, coffee/espresso beans, caffeine, or wrappers.
+- Do not hallucinate an exposure estimate. If type, amount, or weight is missing, say what is missing and ask for it.
+- Ground any estimate in the reference knowledge: darker/bitter chocolate has more methylxanthines; Merck reports mild signs in dogs around 20 mg/kg methylxanthines, cardiotoxic effects around 40-50 mg/kg, and seizures at 60 mg/kg or higher.
+- Give a rough risk category only when enough data exists, and say a veterinarian or veterinary poison-control service should confirm the calculation.
+- Remind the parent that ${petName} should be shown to a veterinarian regardless of amount, while the AI vet can help triage in the meantime.
+- Never tell the parent to induce vomiting, give activated charcoal, or try home remedies unless a veterinarian specifically instructs it.
 
 PET CONTEXT:
 - Pet: ${petName} (${petType}, ${petBreed})

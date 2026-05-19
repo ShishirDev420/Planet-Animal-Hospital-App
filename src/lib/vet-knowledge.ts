@@ -40,10 +40,19 @@ export const VET_KNOWLEDGE_BASE: VetKnowledgeEntry[] = [
     id: 'toxin-1',
     category: 'toxin',
     title: 'Common Toxic Foods for Dogs',
-    content: 'NEVER feed dogs: chocolate (theobromine — dark chocolate is most dangerous), xylitol/artificial sweetener (causes rapid insulin release and liver failure), grapes/raisins (kidney failure), onions/garlic (hemolytic anemia), macadamia nuts, alcohol, caffeine, raw yeast dough, avocado (persin in skin/pit). If ingestion suspected, contact Pet Poison Helpline (1-855-426-7435) or your vet immediately.',
+    content: 'NEVER feed dogs: chocolate (theobromine — dark chocolate is most dangerous), xylitol/artificial sweetener (causes rapid insulin release and liver failure), grapes/raisins (kidney failure), onions/garlic (hemolytic anemia), macadamia nuts, alcohol, caffeine, raw yeast dough, avocado (persin in skin/pit). If ingestion is suspected, contact Pet Poison Helpline (855-764-7661), ASPCA Animal Poison Control (888-426-4435), or your vet immediately.',
     source: 'ASPCA Animal Poison Control Center, Merck Veterinary Manual',
     severity: 'high',
     species: ['dog'],
+  },
+  {
+    id: 'toxin-1a',
+    category: 'toxin',
+    title: 'Chocolate Toxicosis Triage',
+    content: 'Chocolate toxicity depends on pet weight, chocolate type, amount eaten, time since ingestion, and symptoms. Merck Veterinary Manual lists approximate methylxanthine concentrations: cocoa powder 28.5 mg/g (807 mg/oz), unsweetened baking chocolate 15.5 mg/g (440 mg/oz), semisweet/dark chocolate 5.3-5.6 mg/g (150-160 mg/oz), milk chocolate 2.3 mg/g (64 mg/oz), and white chocolate 0.04 mg/g (1.1 mg/oz). In dogs, mild signs can occur around 20 mg/kg methylxanthines, cardiotoxic effects around 40-50 mg/kg, and seizures at 60 mg/kg or higher. Pet Poison Helpline notes a few chocolate chips are unlikely to be a concern for most pets, but wrappers and added toxins such as xylitol, raisins, macadamia nuts, coffee/espresso beans, or caffeine change the risk. Symptoms may include vomiting, diarrhea, restlessness, increased thirst, panting, fast heart rate, tremors, seizures, and hyperthermia. Do not induce vomiting or give home treatment unless a veterinarian or poison-control veterinarian instructs it. The pet should be shown to a veterinarian regardless; urgent care is needed for dark/baking/cocoa products, large or unknown amounts, small pets, symptoms, or recent ingestion where decontamination may still be possible.',
+    source: 'Merck Veterinary Manual Chocolate Toxicosis in Animals; VCA Animal Hospitals/Pet Poison Helpline Chocolate Poisoning in Dogs; Pet Poison Helpline Chocolate toxin page',
+    severity: 'critical',
+    species: ['dog', 'cat'],
   },
   {
     id: 'toxin-2',
@@ -276,14 +285,18 @@ export function buildKnowledgeContext(
   const species = petType.toLowerCase().includes('cat') ? 'cat' :
                   petType.toLowerCase().includes('dog') ? 'dog' : null;
 
-  if (species) {
-    relevantEntries.push(...getKnowledgeBySpecies(species));
-  }
-
   const searchResults = searchKnowledge(userMessage);
   for (const result of searchResults) {
     if (!relevantEntries.find(e => e.id === result.id)) {
       relevantEntries.push(result);
+    }
+  }
+
+  if (species) {
+    for (const entry of getKnowledgeBySpecies(species)) {
+      if (!relevantEntries.find(e => e.id === entry.id)) {
+        relevantEntries.push(entry);
+      }
     }
   }
 

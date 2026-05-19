@@ -234,7 +234,7 @@ export default function ProactivePlans() {
             </button>
           </div>
           <div className="flex flex-col items-center flex-1 text-center pointer-events-none">
-            <h1 className="font-heading text-sm font-black text-white/95 tracking-tight uppercase leading-none">
+            <h1 className="font-heading text-sm font-black text-white/95 tracking-tight uppercase leading-none" style={{ wordSpacing: '0.15em' }}>
               PLANET ANIMAL
             </h1>
             <p className="cinematic-kicker mt-0.5 text-[7px] tracking-[0.15em]">
