@@ -897,7 +897,7 @@ export default function Dashboard() {
             icon={<FileText className="text-planet-yellow" />} 
             title="Medical Records" 
             subtitle="Vaccines & History" 
-            onClick={() => setActiveModal('records')}
+            onClick={() => navigate('/records')}
           />
           <ActionCard 
             icon={<Bot className="text-planet-yellow" />} 
@@ -1056,24 +1056,6 @@ export default function Dashboard() {
             className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-2xl rounded-t-3xl z-[70] p-6 pb-12 border-t border-white/50 shadow-2xl max-h-[85vh] overflow-y-auto hide-scrollbar flex flex-col"
           >
               <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-6 shrink-0" />
-              
-              {activeModal === 'records' && (
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="cinematic-card-title text-2xl text-slate-900">Medical Records</h2>
-                    <button onClick={closeModal} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={20}/></button>
-                  </div>
-                  <div className="text-center py-12 px-4">
-                    <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <FileText size={40} className="text-indigo-300" />
-                    </div>
-                    <h3 className="cinematic-card-title mb-2 text-lg text-slate-900">Awaiting First Visit</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">
-                      {petName}'s medical records, vaccination history, and test results will automatically populate here as you keep visiting us.
-                    </p>
-                  </div>
-                </div>
-              )}
 
               {activeModal === 'redeem' && (
                 <div>

@@ -21,6 +21,7 @@ import Welcome from './pages/Welcome';
 import Adoption from './pages/Adoption';
 import Rewards from './pages/Rewards';
 import DailyBriefing from './pages/DailyBriefing';
+import MedicalRecords from './pages/MedicalRecords';
 import MobilePreview from './components/MobilePreview';
 import ErrorBoundary from './components/ErrorBoundary';
 import PlanetOrbLoader from './components/PlanetOrbLoader';
@@ -75,11 +76,10 @@ export default function App() {
 
     startupRedirectHandledRef.current = true;
 
-    const startupSearch = isDemoMode ? '?demo_mode=true' : '';
-    if (location.pathname !== '/' || location.search !== startupSearch) {
-      navigate({ pathname: '/', search: startupSearch }, { replace: true });
+    if (isDemoMode && !location.search.includes('demo_mode=true')) {
+      navigate({ pathname: location.pathname, search: '?demo_mode=true' }, { replace: true });
     }
-  }, [authStatus, isDemoMode, isInsideFrame, isPreviewRoute, location.pathname, location.search, navigate]);
+  }, [authStatus, isPreviewRoute, isInsideFrame]);
 
   if (authStatus === 'loading') {
     return (
@@ -121,6 +121,7 @@ export default function App() {
                     <Route path="adoption" element={<Adoption />} />
                     <Route path="rewards" element={<Rewards />} />
                     <Route path="briefing" element={<DailyBriefing />} />
+                    <Route path="records" element={<MedicalRecords />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </>
