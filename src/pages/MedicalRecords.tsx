@@ -88,33 +88,35 @@ export default function MedicalRecords() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)] pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/30 dark:border-slate-700/30 hover:bg-white dark:hover:bg-slate-800 transition-colors"
-          >
-            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-300" />
-          </button>
-          <div>
-            <h1 className="cinematic-card-title text-2xl text-slate-900 dark:text-white">
-              Medical Records
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {petName}'s complete health history
-            </p>
+    <div className="max-w-2xl mx-auto px-4 pb-6">
+      {/* Header — safe-area padding guaranteed via max() */}
+      <header className="pt-[max(env(safe-area-inset-top),60px)] pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/30 dark:border-slate-700/30 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+            >
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-300" />
+            </button>
+            <div>
+              <h1 className="cinematic-card-title text-2xl text-slate-900 dark:text-white">
+                Medical Records
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {petName}'s complete health history
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-planet-yellow/20"
+          >
+            <Plus size={18} />
+            Add Record
+          </button>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-planet-yellow/20"
-        >
-          <Plus size={18} />
-          Add Record
-        </button>
-      </div>
+      </header>
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-2">
