@@ -683,9 +683,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95">
+      <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95 mobile-dashboard">
         {/* Header with Logo */}
-      <header className="pt-4 mb-2">
+      <header className="pt-4 mb-2 mobile-header-row">
         <div className="hidden lg:block">
           <div className="grid min-h-[14rem] w-full grid-cols-[13rem_minmax(0,1fr)_13rem] items-center gap-6 py-5 xl:min-h-[15rem] xl:grid-cols-[15rem_minmax(0,1fr)_15rem]">
             <button onClick={() => navigate('/profiles')} className="group flex justify-start" aria-label="Switch profile">
@@ -695,10 +695,10 @@ export default function Dashboard() {
             </button>
 
             <div className="flex min-w-0 flex-col items-center text-center">
-              <h1 className="font-cinematic text-[4.65rem] font-black uppercase leading-[0.82] tracking-[-0.055em] text-white drop-shadow-[0_18px_44px_rgba(0,0,0,0.42)] xl:text-[5.6rem] 2xl:text-[6.15rem]">
+              <h1 className="font-cinematic text-[4.65rem] font-black uppercase leading-[0.82] tracking-[0.1em] text-white drop-shadow-[0_18px_44px_rgba(0,0,0,0.42)] xl:text-[5.6rem] 2xl:text-[6.15rem]">
                 Planet Animal
               </h1>
-              <p className="mt-4 font-heading text-[1.05rem] font-black uppercase leading-none tracking-[0.44em] text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.28)] xl:text-[1.25rem]">
+              <p className="mt-4 font-heading text-[1.05rem] font-black uppercase leading-none tracking-[0.52em] text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.28)] xl:text-[1.25rem]">
                 Hospital & Wellness
               </p>
             </div>
@@ -762,7 +762,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="mb-5 mt-2">
+          <div className="mb-5 mt-2 mobile-header-greeting">
             <h2 className="cinematic-section-title text-3xl drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
             <p className="cinematic-copy mt-1 text-sm">Let's keep {petName} healthy today.</p>
           </div>
@@ -775,7 +775,7 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         onClick={() => navigate({ pathname: '/briefing', search: location.search })}
-        className="group relative mb-7 min-h-[112px] cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-black/72 via-black/60 to-black/46 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/25 hover:from-black/78 hover:to-black/52"
+        className="group relative mb-7 min-h-[112px] cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-black/72 via-black/60 to-black/46 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/25 hover:from-black/78 hover:to-black/52 mobile-briefing-card"
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#fec708]/55 to-transparent" />
         <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#fec708]/8 blur-3xl transition-opacity duration-300 group-hover:opacity-70" />
@@ -792,7 +792,7 @@ export default function Dashboard() {
               {briefingPreview}
             </p>
           </div>
-          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] transition-all duration-300 group-hover:border-[#fec708]/30 group-hover:bg-[#fec708]/15">
+          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] transition-all duration-300 group-hover:border-[#fec708]/30 group-hover:bg-[#fec708]/15 mobile-briefing-chevron">
             <ChevronRight className="h-5 w-5 text-white/44 transition-colors duration-300 group-hover:text-[#fec708]" />
           </div>
         </div>
@@ -803,10 +803,10 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ease: "easeOut", duration: 0.5 }}
-        className="mt-8 mb-4 relative"
+        className="mt-8 mb-4 relative mobile-paw-points"
       >
         {/* Asymmetric Floating Layout */}
-        <div className="flex flex-col items-start gap-1 pt-4">
+        <div className="flex flex-col items-start gap-1 pt-4 points-section">
           <style>{`
             @keyframes pulsate-synchronized-glow {
               0%, 100% { filter: drop-shadow(0 0 15px rgba(254,199,8,0.7)); opacity: 1; }
@@ -819,7 +819,7 @@ export default function Dashboard() {
           `}</style>
           <h2 className="cinematic-kicker text-[10px] text-white/50">Paw Points Balance</h2>
           <div className="flex items-baseline gap-2">
-             <span className="cinematic-price text-6xl tabular-nums text-[#fec708] animate-pulsate-synchronized-glow">{verifiedPoints.toLocaleString()}</span>
+              <span className="cinematic-price text-6xl tabular-nums text-[#fec708] animate-pulsate-synchronized-glow points-number">{verifiedPoints.toLocaleString()}</span>
             <span className="font-heading text-[#fec708] font-black uppercase tracking-widest text-sm mb-2 drop-shadow-[0_0_10px_rgba(254,199,8,0.6)]">pts</span>
           </div>
           
@@ -834,8 +834,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="mt-8 w-full">
-            <div className="flex items-center justify-between mb-2">
+          <div className="mt-8 w-full progress-section">
+            <div className="flex items-center justify-between mb-2 progress-label-row">
               <p className="text-[10px] text-white/60 font-medium uppercase tracking-widest">
                 {Math.max(0, 5000 - verifiedPoints).toLocaleString()} PTS TO LIFE-MAXING
               </p>
@@ -843,7 +843,7 @@ export default function Dashboard() {
                 ₹{(verifiedPoints * 0.25).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="relative h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm mb-3">
+            <div className="relative h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm mb-3 progress-bar-container">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
@@ -861,7 +861,7 @@ export default function Dashboard() {
               }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl overflow-hidden border border-[#fec708]/30 bg-[#fec708]/5 hover:bg-[#fec708]/10 transition-all duration-300"
+              className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl overflow-hidden border border-[#fec708]/30 bg-[#fec708]/5 hover:bg-[#fec708]/10 transition-all duration-300 reward-btn"
               style={{ boxShadow: '0 0 20px rgba(254,199,8,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' }}
             >
               <motion.div
@@ -885,31 +885,35 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h3 className="cinematic-card-title mb-4 text-xl drop-shadow-sm">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <h3 className="cinematic-card-title mb-4 text-xl drop-shadow-sm mobile-quick-actions-title">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mobile-quick-actions-grid">
           <ActionCard 
             icon={<Calendar className="text-planet-yellow" />} 
             title="Book Visit" 
             subtitle="Checkups & Grooming" 
             onClick={() => setIsBookVisitOpen(true)}
+            className="mobile-action-card"
           />
           <ActionCard 
             icon={<FileText className="text-planet-yellow" />} 
             title="Medical Records" 
             subtitle="Vaccines & History" 
             onClick={() => navigate('/records')}
+            className="mobile-action-card"
           />
           <ActionCard 
             icon={<Bot className="text-planet-yellow" />} 
             title="AI Vet" 
             subtitle="Instant Health Advice" 
             onClick={() => navigate('/ai')}
+            className="mobile-action-card"
           />
           <ActionCard 
             icon={<Map className="text-planet-yellow" />} 
             title="Roadmap" 
             subtitle="Longevity Plan" 
             onClick={() => navigate('/roadmap')}
+            className="mobile-action-card"
           />
         </div>
       </div>
@@ -1451,21 +1455,24 @@ export default function Dashboard() {
   );
 }
 
-function ActionCard({ icon, title, subtitle, onClick }: { icon: React.ReactNode, title: string, subtitle: string, onClick: () => void }) {
+function ActionCard({ icon, title, subtitle, onClick, className }: { icon: React.ReactNode, title: string, subtitle: string, onClick: () => void, className?: string }) {
   return (
     <motion.div 
       onClick={onClick}
       whileHover={{ y: -4, scale: 1.03, boxShadow: '0 12px 32px rgba(254,199,8,0.15)' }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className="bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex flex-col items-start gap-3 cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08]"
+      className={cn(
+        "bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex flex-col items-start gap-3 cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08] mobile-action-card",
+        className
+      )}
     >
-      <div className="bg-white p-2 rounded-xl shadow-sm dark:bg-white/10 dark:border dark:border-white/10">
+      <div className="bg-white p-2 rounded-xl shadow-sm dark:bg-white/10 dark:border dark:border-white/10 card-icon-container">
         {icon}
       </div>
       <div>
-        <h4 className="cinematic-card-title text-xl text-slate-800 dark:text-white">{title}</h4>
-        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-base leading-relaxed">{subtitle}</p>
+        <h4 className="cinematic-card-title text-xl text-slate-800 dark:text-white card-title">{title}</h4>
+        <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-base leading-relaxed card-subtitle">{subtitle}</p>
       </div>
     </motion.div>
   );

@@ -848,3 +848,79 @@
     animation: none !important;
   }
 }
+
+/* iPhone 16 Pro (393x852) compact dashboard spacing */
+@media (max-width: 400px) and (max-height: 860px) {
+  .mobile-dashboard {
+    padding: 1rem !important;
+    gap: 1.25rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  .mobile-dashboard .mobile-header-greeting {
+    margin-bottom: 0.75rem !important;
+    margin-top: 0.25rem !important;
+  }
+  .mobile-dashboard .mobile-header-greeting h2 {
+    font-size: 1.5rem !important;
+  }
+  .mobile-dashboard .mobile-header-greeting p {
+    font-size: 0.75rem !important;
+  }
+  .mobile-dashboard .mobile-header-row {
+    margin-bottom: 0.25rem !important;
+  }
+  .mobile-dashboard .mobile-briefing-card {
+    margin-bottom: 1rem !important;
+    min-height: 96px !important;
+    padding: 0.75rem !important;
+    border-radius: 1.5rem !important;
+  }
+  .mobile-dashboard .mobile-briefing-chevron {
+    height: 2rem !important;
+    width: 2rem !important;
+    margin-top: 0 !important;
+  }
+  .mobile-dashboard .mobile-paw-points {
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .mobile-dashboard .mobile-paw-points .points-section {
+    padding-top: 0.5rem !important;
+  }
+  .mobile-dashboard .mobile-paw-points .points-number {
+    font-size: 3rem !important;
+  }
+  .mobile-dashboard .mobile-paw-points .progress-section {
+    margin-top: 1rem !important;
+  }
+  .mobile-dashboard .mobile-paw-points .progress-label-row {
+    margin-bottom: 0.25rem !important;
+  }
+  .mobile-dashboard .mobile-paw-points .progress-bar-container {
+    margin-bottom: 0.5rem !important;
+  }
+  .mobile-dashboard .mobile-paw-points .reward-btn {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  .mobile-dashboard .mobile-quick-actions-title {
+    margin-bottom: 0.75rem !important;
+  }
+  .mobile-dashboard .mobile-quick-actions-grid {
+    gap: 0.75rem !important;
+  }
+  .mobile-dashboard .mobile-action-card {
+    padding: 1rem !important;
+    border-radius: 1.5rem !important;
+    gap: 0.5rem !important;
+  }
+  .mobile-dashboard .mobile-action-card .card-icon-container {
+    padding: 0.375rem !important;
+  }
+  .mobile-dashboard .mobile-action-card .card-title {
+    font-size: 1.125rem !important;
+  }
+  .mobile-dashboard .mobile-action-card .card-subtitle {
+    font-size: 0.875rem !important;
+  }
+}
