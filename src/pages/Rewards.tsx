@@ -29,6 +29,23 @@ import planetLogo from '../assets/planet-logo.png';
 
 const PAW_POINT_TO_INR = 0.25; // 1 Paw Point = ₹0.25
 
+interface PawPointActivity {
+  id: string;
+  type: 'earned' | 'redeemed';
+  activity: string;
+  points: number;
+  date: string;
+  source?: string;
+}
+
+function getActivityIcon(activity: PawPointActivity) {
+  if (activity.type === 'redeemed') return <ShoppingBag className="w-4 h-4" />;
+  if (activity.source === 'briefing') return <Activity className="w-4 h-4" />;
+  if (activity.source === 'referral') return <Share2 className="w-4 h-4" />;
+  if (activity.source === 'roadmap') return <ShieldCheck className="w-4 h-4" />;
+  return <Activity className="w-4 h-4" />;
+}
+
 const pawPointsRoadmap = [
   {
     id: 'tier1',
@@ -155,14 +172,40 @@ export default function Rewards() {
   const [redeemedReward, setRedeemedReward] = useState<string | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
-  const recentActivity = useMemo(() => [
-    { id: 1, type: 'earned', activity: 'Morning Pulse Check', points: 25, date: '2 hours ago', icon: <Activity className="w-4 h-4" /> },
-    { id: 2, type: 'earned', activity: 'Completed Annual Labs', points: 500, date: 'Yesterday', icon: <ShieldCheck className="w-4 h-4" /> },
-    { id: 3, type: 'redeemed', activity: 'Nutrition Program Activation', points: -1000, date: '2 days ago', icon: <ShoppingBag className="w-4 h-4" /> },
-    { id: 4, type: 'earned', activity: 'Weekly Social Share', points: 100, date: '3 days ago', icon: <Share2 className="w-4 h-4" /> },
-  ], []);
-
   const currentPoints = Number(profile?.pawPoints || 0);
+
+  const recentActivity = useMemo<PawPointActivity[]>(() => {
+    const rawHistory =
+      profile?.pawPointHistory ??
+      profile?.pointsHistory ??
+      profile?.rewardsHistory;
+
+    if (Array.isArray(rawHistory) && rawHistory.length > 0) {
+      return rawHistory.map((item: any, index: number) => ({
+        id: String(item?.id ?? `activity-${index}`),
+        type: item?.type === 'redeemed' ? 'redeemed' : 'earned',
+        activity: String(item?.activity ?? item?.description ?? item?.title ?? 'Paw Points Activity'),
+        points: Number(item?.points ?? item?.amount ?? 0),
+        date: String(item?.date ?? item?.timestamp ?? item?.createdAt ?? ''),
+        source: item?.source ? String(item.source) : undefined,
+      }));
+    }
+
+    if (currentPoints > 0) {
+      return [
+        {
+          id: 'current-balance',
+          type: 'earned',
+          activity: 'Paw Points Balance Verified',
+          points: currentPoints,
+          date: 'Current balance',
+          source: 'balance',
+        },
+      ];
+    }
+
+    return [];
+  }, [profile, currentPoints]);
   const referralCount = useMemo(() => {
     const rawReferrals = profile?.referralCount ?? profile?.successfulReferrals ?? profile?.referrals;
 
@@ -789,15 +832,15 @@ export default function Rewards() {
       <section className="mb-32 max-w-4xl mx-auto px-6">
         <div className="p-12 rounded-[3rem] bg-[#0a0a0a] border border-white/5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#fec708]/5 blur-[100px] -z-10" />
-          
+
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#fec708]/10 flex items-center justify-center text-[#fec708]">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center text-[#fec708] shadow-[0_0_20px_rgba(254,199,8,0.15)]">
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="cinematic-card-title text-3xl uppercase">Points History</h2>
-                <p className="text-sm font-semibold tracking-[-0.01em] text-white/35">A complete record of your earned and redeemed Paw Points.</p>
+                <h2 className="cinematic-card-title text-3xl uppercase text-white">Paw Points Ledger</h2>
+                <p className="cinematic-kicker text-sm font-semibold tracking-[-0.01em] text-white/35">Every point has a trail.</p>
               </div>
             </div>
             <button className="text-[10px] font-black text-[#fec708] uppercase tracking-[0.2em] border-b border-[#fec708]/20 pb-1 hover:text-white hover:border-white transition-all">
@@ -805,50 +848,72 @@ export default function Rewards() {
             </button>
           </div>
 
-          <div className="space-y-3">
-            {recentActivity.map((activity, i) => (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.4 }}
-                whileHover={{ scale: 1.01, x: 4 }}
-                className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all group cursor-pointer"
-              >
-                <div className="flex items-center gap-4">
-                  <motion.div
-                    whileHover={{ scale: 1.15, rotate: 5 }}
+          {recentActivity.length === 0 ? (
+            <div className="py-20 text-center">
+              <p className="text-white/30 text-sm cinematic-copy">
+                Your Paw Points trail will appear here after visits, check-ins, referrals, or redemptions.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentActivity.map((activity, i) => (
+                <motion.div
+                  key={activity.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.06, duration: 0.4 }}
+                  whileHover={{ scale: 1.01, y: -2 }}
+                  className="relative flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all group cursor-pointer overflow-hidden"
+                >
+                  <div
                     className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center transition-transform",
-                      activity.type === 'earned' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+                      "absolute -bottom-6 -right-6 w-24 h-24 rounded-full blur-[30px] pointer-events-none",
+                      activity.type === 'earned' ? 'bg-emerald-500/5' : 'bg-rose-500/5'
                     )}
-                  >
-                    {activity.icon}
-                  </motion.div>
-                  <div>
-                    <h4 className="font-black text-white text-sm">{activity.activity}</h4>
-                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">{activity.date}</span>
+                  />
+
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center",
+                        activity.type === 'earned'
+                          ? 'bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.2)]'
+                          : 'bg-rose-500/10 text-rose-400 shadow-[0_0_12px_rgba(251,113,133,0.2)]'
+                      )}
+                    >
+                      {getActivityIcon(activity)}
+                    </div>
+                    <div>
+                      <h4 className="cinematic-card-title text-sm text-white/95">{activity.activity}</h4>
+                      <span className="text-[10px] font-black text-white/25 uppercase tracking-widest">{activity.date}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <motion.span
-                    key={activity.points}
-                    initial={{ scale: 1.3, opacity: 0 }}
-                    whileInView={{ scale: 1, opacity: 1 }}
-                    viewport={{ once: true }}
-                    className={cn(
-                      "text-lg font-black tabular-nums inline-block",
-                      activity.type === 'earned' ? 'text-emerald-500' : 'text-rose-500'
-                    )}
-                  >
-                    {activity.type === 'earned' ? '+' : ''}{activity.points}
-                  </motion.span>
-                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest ml-2">PTS</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+
+                  <div className="text-right relative z-10">
+                    <motion.span
+                      key={activity.id}
+                      initial={{ scale: 1.2, opacity: 0, filter: 'blur(4px)' }}
+                      whileInView={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                      className={cn(
+                        "text-lg font-black tabular-nums inline-block",
+                        activity.type === 'earned'
+                          ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.4)]'
+                          : 'text-rose-400 drop-shadow-[0_0_10px_rgba(251,113,133,0.4)]',
+                        !shouldReduceMotion && activity.type === 'earned' && 'animate-point-glow-earned',
+                        !shouldReduceMotion && activity.type === 'redeemed' && 'animate-point-glow-redeemed'
+                      )}
+                    >
+                      {activity.type === 'earned' ? '+' : ''}{activity.points}
+                    </motion.span>
+                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1.5">PTS</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           <motion.button
             whileHover={{ scale: 1.02 }}

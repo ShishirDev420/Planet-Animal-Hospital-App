@@ -924,3 +924,47 @@
     font-size: 0.875rem !important;
   }
 }
+
+/* ============================================================
+   POINT GLOW ANIMATIONS
+   Soft breathing glows for earned (+) and redeemed (–) points
+   ============================================================ */
+
+@keyframes point-glow-earned {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.40))
+            drop-shadow(0 0 14px rgba(232, 188, 75, 0.30));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.70))
+            drop-shadow(0 0 28px rgba(232, 188, 75, 0.50));
+  }
+}
+
+@keyframes point-glow-redeemed {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.40))
+            drop-shadow(0 0 14px rgba(225, 29, 72, 0.30));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(244, 63, 94, 0.70))
+            drop-shadow(0 0 28px rgba(225, 29, 72, 0.50));
+  }
+}
+
+@layer utilities {
+  .animate-point-glow-earned {
+    animation: point-glow-earned 3.5s ease-in-out infinite;
+  }
+
+  .animate-point-glow-redeemed {
+    animation: point-glow-redeemed 3.5s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-point-glow-earned,
+  .animate-point-glow-redeemed {
+    animation: none !important;
+  }
+}
