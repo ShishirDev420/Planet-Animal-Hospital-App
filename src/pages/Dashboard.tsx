@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate, animate, useScroll, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  QrCode, Calendar, FileText, Award, ChevronRight, Gift, X, Dog, 
-  CheckCircle2, Syringe, Sparkles, Stethoscope, ChevronDown, ChevronUp, LogOut, Info, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ChevronLeft, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
+import {
+  Calendar, FileText, Award, ChevronRight, Gift, X, Dog,
+  Syringe, Sparkles, Stethoscope, LogOut, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, Ear, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Logo from '../components/Logo';
@@ -409,7 +409,16 @@ export default function Dashboard() {
   const [userId, setUserId] = useState<string | null>(isDemoMode ? 'demo-user' : null);
   const navigate = useNavigate();
   const location = useLocation();
+  const shouldReduceMotion = useReducedMotion();
   const { userImage: harshalImage, petImage: johnnyImage } = useProfileImages();
+  const rewardsCarouselRef = useRef<HTMLDivElement>(null);
+  const rewardSlideRefs = useRef<(HTMLElement | null)[]>([]);
+  const { scrollXProgress: rewardsScrollProgress } = useScroll({ container: rewardsCarouselRef });
+  const rewardsRailProgress = useSpring(rewardsScrollProgress, {
+    stiffness: shouldReduceMotion ? 1000 : 180,
+    damping: shouldReduceMotion ? 100 : 28,
+    mass: 0.8,
+  });
   
   const [verifiedPoints, setVerifiedPoints] = useState(0);
   const [pendingPoints, setPendingPoints] = useState(0);
@@ -542,80 +551,6 @@ export default function Dashboard() {
     if (time) setBookingTime(time);
   }, [location.search]);
 
-  // Drag-to-Scroll State
-  const carouselRef = useRef<any>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-
-  useEffect(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY;
-      }
-    };
-
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
-  }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!carouselRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - carouselRef.current.offsetLeft);
-    setScrollLeft(carouselRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !carouselRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    carouselRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  // Wheel-to-Horizontal-Scroll Logic
-  useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-
-    let isThrottled = false;
-
-    const handleWheel = (e: WheelEvent) => {
-      // Prevent vertical scrolling of the page
-      e.preventDefault();
-      
-      if (isThrottled) return;
-      isThrottled = true;
-      
-      // Translate vertical wheel movement to horizontal scrolling
-      carousel.scrollBy({ left: e.deltaY > 0 ? 400 : -400, behavior: 'smooth' });
-      
-      setTimeout(() => {
-        isThrottled = false;
-      }, 400);
-    };
-
-    // Attach non-passive event listener to allow preventDefault()
-    carousel.addEventListener('wheel', handleWheel, { passive: false });
-
-    return () => {
-      carousel.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
-
   const submitBooking = async () => {
     if (selectedServices.length === 0 || !bookingDate || !bookingTime || !userId) return;
 
@@ -660,6 +595,101 @@ export default function Dashboard() {
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
   const whatsappMessage = buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime);
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
+  const premiumEase = [0.22, 1, 0.36, 1] as const;
+  const homePawMilestones = [
+    {
+      points: 500,
+      title: 'Health Starter',
+      badge: 'Entry',
+      subtitle: 'Program entry reward',
+      detail: 'Your first care milestone opens the rewards journey.',
+      note: 'First milestone',
+      icon: TrendingUp,
+      surface: 'from-emerald-200/18 via-cyan-100/8 to-transparent',
+      ring: 'border-emerald-200/30 bg-emerald-300/10 text-emerald-100',
+      fill: 'from-emerald-300 to-cyan-200',
+      glow: 'shadow-[0_0_28px_rgba(52,211,153,0.13)]',
+    },
+    {
+      points: 1500,
+      title: '15% Bill Rebate',
+      badge: 'Savings',
+      subtitle: 'Next bill rebate',
+      detail: 'Instant 15% off your next Planet Animal bill.',
+      note: 'Valid next visit',
+      hero: '15%',
+      icon: FileText,
+      surface: 'from-sky-200/18 via-[#fec708]/8 to-transparent',
+      ring: 'border-sky-100/30 bg-sky-200/10 text-sky-100',
+      fill: 'from-sky-200 via-[#ffe08a] to-[#fec708]',
+      glow: 'shadow-[0_0_30px_rgba(125,211,252,0.13)]',
+    },
+    {
+      points: 2500,
+      title: '20% Bill Rebate',
+      badge: 'Deep Savings',
+      subtitle: 'Deep savings tier',
+      detail: 'A stronger bill reward for consistent preventive care.',
+      note: 'Care pays back',
+      icon: Zap,
+      surface: 'from-[#fec708]/20 via-orange-200/10 to-transparent',
+      ring: 'border-[#fec708]/35 bg-[#fec708]/10 text-[#fec708]',
+      fill: 'from-[#fec708] to-orange-300',
+      glow: 'shadow-[0_0_30px_rgba(254,199,8,0.14)]',
+    },
+    {
+      points: 5000,
+      title: 'Life-Maxing Consultation',
+      badge: 'Signature',
+      subtitle: 'Breed-specific longevity plan',
+      detail: 'A focused doctor-led roadmap for longer, healthier years.',
+      note: 'Doctor guided',
+      icon: Award,
+      surface: 'from-violet-200/18 via-pink-200/8 to-transparent',
+      ring: 'border-violet-200/30 bg-violet-300/10 text-violet-100',
+      fill: 'from-violet-300 to-pink-200',
+      glow: 'shadow-[0_0_30px_rgba(196,181,253,0.13)]',
+    },
+    {
+      points: 7500,
+      title: 'Premium Spa & Therapy',
+      badge: 'Comfort',
+      subtitle: 'Grooming plus medicated baths',
+      detail: 'A restorative comfort reward for coat and skin health.',
+      note: 'Full reset',
+      icon: Sparkles,
+      surface: 'from-rose-200/18 via-orange-200/8 to-transparent',
+      ring: 'border-rose-200/30 bg-rose-300/10 text-rose-100',
+      fill: 'from-rose-300 to-orange-200',
+      glow: 'shadow-[0_0_30px_rgba(251,113,133,0.13)]',
+    },
+    {
+      points: 10000,
+      title: 'Full Hematology Panel',
+      badge: 'Clinical',
+      subtitle: 'Comprehensive blood examination',
+      detail: 'A deeper clinical screen for internal health signals.',
+      note: 'Internal health',
+      icon: Trophy,
+      surface: 'from-amber-200/18 via-yellow-100/8 to-transparent',
+      ring: 'border-amber-200/30 bg-amber-300/10 text-amber-100',
+      fill: 'from-amber-300 to-yellow-100',
+      glow: 'shadow-[0_0_30px_rgba(251,191,36,0.13)]',
+    },
+  ];
+  const activeMilestoneIndex = homePawMilestones.findIndex((milestone) => verifiedPoints < milestone.points);
+  const activeJourneyIndex = activeMilestoneIndex === -1 ? homePawMilestones.length - 1 : activeMilestoneIndex;
+  const activeJourneyMilestone = homePawMilestones[activeJourneyIndex];
+  const previousMilestonePoints = activeJourneyIndex > 0 ? homePawMilestones[activeJourneyIndex - 1].points : 0;
+  const activeJourneyRange = Math.max(1, activeJourneyMilestone.points - previousMilestonePoints);
+  const activeJourneyProgress = activeMilestoneIndex === -1
+    ? 100
+    : Math.min(100, Math.max(0, ((verifiedPoints - previousMilestonePoints) / activeJourneyRange) * 100));
+  const pointsToActiveMilestone = Math.max(0, activeJourneyMilestone.points - verifiedPoints);
+  const unlockedMilestoneCount = homePawMilestones.filter((milestone) => verifiedPoints >= milestone.points).length;
+  const journeyProgressTotal = Math.min(100, ((unlockedMilestoneCount + activeJourneyProgress / 100) / homePawMilestones.length) * 100);
+  const isNearNextTier = activeJourneyProgress >= 82 && activeJourneyProgress < 100;
+  const isVeryNearNextTier = activeJourneyProgress >= 94 && activeJourneyProgress < 100;
 
   if (profileLoading || !isAuthReady) {
     return (
@@ -798,91 +828,6 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Points Wallet - Typographic Layout */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ease: "easeOut", duration: 0.5 }}
-        className="mt-8 mb-4 relative mobile-paw-points"
-      >
-        {/* Asymmetric Floating Layout */}
-        <div className="flex flex-col items-start gap-1 pt-4 points-section">
-          <style>{`
-            @keyframes pulsate-synchronized-glow {
-              0%, 100% { filter: drop-shadow(0 0 15px rgba(254,199,8,0.7)); opacity: 1; }
-              33% { filter: drop-shadow(0 0 25px rgba(254,199,8,0.9)); opacity: 0.8; }
-              66% { filter: drop-shadow(0 0 10px rgba(254,199,8,0.5)); opacity: 0.9; }
-            }
-            .animate-pulsate-synchronized-glow {
-              animation: pulsate-synchronized-glow 7s infinite ease-in-out;
-            }
-          `}</style>
-          <h2 className="cinematic-kicker text-[10px] text-white/50">Paw Points Balance</h2>
-          <div className="flex items-baseline gap-2">
-              <span className="cinematic-price text-6xl tabular-nums text-[#fec708] animate-pulsate-synchronized-glow points-number">{verifiedPoints.toLocaleString()}</span>
-            <span className="font-heading text-[#fec708] font-black uppercase tracking-widest text-sm mb-2 drop-shadow-[0_0_10px_rgba(254,199,8,0.6)]">pts</span>
-          </div>
-          
-          {pendingPoints > 0 && (
-            <div className="mt-1 mb-2 flex items-center gap-2">
-              <span className="text-white/70 font-bold tracking-wide text-xs">
-                + {pendingPoints.toLocaleString()} Pending
-              </span>
-              <span className="text-[10px] text-white/60 font-medium max-w-[150px] leading-tight">
-                Verified after clinic confirmation.
-              </span>
-            </div>
-          )}
-
-          <div className="mt-8 w-full progress-section">
-            <div className="flex items-center justify-between mb-2 progress-label-row">
-              <p className="text-[10px] text-white/60 font-medium uppercase tracking-widest">
-                {Math.max(0, 5000 - verifiedPoints).toLocaleString()} PTS TO LIFE-MAXING
-              </p>
-              <p className="text-[10px] text-[#fec708] font-black uppercase tracking-widest">
-                ₹{(verifiedPoints * 0.25).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="relative h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm mb-3 progress-bar-container">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                className="h-full bg-gradient-to-r from-planet-yellow to-yellow-300 shadow-[0_0_15px_rgba(254,199,8,0.7)] animate-pulsate-synchronized-glow rounded-full"
-              />
-            </div>
-            {/* Premium Nudge — TAP FOR REWARD DETAILS */}
-            <motion.button
-              onClick={() => {
-                navigate({ pathname: '/rewards', search: location.search });
-                setTimeout(() => {
-                  document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl overflow-hidden border border-[#fec708]/30 bg-[#fec708]/5 hover:bg-[#fec708]/10 transition-all duration-300 reward-btn"
-              style={{ boxShadow: '0 0 20px rgba(254,199,8,0.15), inset 0 1px 0 rgba(255,255,255,0.05)' }}
-            >
-              <motion.div
-                className="absolute inset-0 rounded-2xl bg-[#fec708]/8 pointer-events-none"
-                animate={{ opacity: [0.3, 0.8, 0.3] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-              />
-              <motion.span animate={{ opacity: [0.7, 1, 0.7] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}>
-                <Sparkles className="w-3 h-3 text-[#fec708]" />
-              </motion.span>
-              <span className="relative text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">
-                TAP FOR REWARD DETAILS
-              </span>
-              <motion.span animate={{ opacity: [0.7, 1, 0.7] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}>
-                <ChevronRight className="w-3.5 h-3.5 text-[#fec708] group-hover:translate-x-0.5 transition-transform" />
-              </motion.span>
-            </motion.button>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Quick Actions */}
       <div>
         <h3 className="cinematic-card-title mb-4 text-xl drop-shadow-sm mobile-quick-actions-title">Quick Actions</h3>
@@ -918,125 +863,282 @@ export default function Dashboard() {
         </div>
       </div>
 
-{/* Paw Points Program */}
-       <div className="pt-2">
-         <div className="flex items-center gap-2 mb-6 px-2">
-            <h3 className="cinematic-card-title text-xl drop-shadow-sm">Paw Points Program</h3>
-           <PawPrint className="w-5 h-5 text-[#fec708] fill-[#fec708]/20" />
-         </div>
-         
-         {/* Tier Progress Bar */}
-         <div className="glass-card bg-white/5 dark:bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 mb-8">
-           <div className="flex items-center justify-between mb-4">
-             <span className="text-xs font-bold text-white/60 uppercase tracking-widest">Current Tier</span>
-             <span className="text-xs font-bold text-white/40">{verifiedPoints.toLocaleString()} / 5,000 PTS</span>
-           </div>
-           
-           {/* Tier Indicators */}
-           <div className="flex items-center justify-between mb-3 px-2">
-             {['Bronze', 'Silver', 'Gold', 'Platinum', 'Founder'].map((tier, idx) => {
-               const tierThresholds = [500, 1500, 3000, 5000, 100000];
-               const isActive = verifiedPoints >= tierThresholds[idx];
-               const isCurrent = verifiedPoints >= tierThresholds[idx] && (idx === tierThresholds.length - 1 || verifiedPoints < tierThresholds[idx + 1]);
-               
-               return (
-                 <div key={tier} className="flex flex-col items-center gap-1">
-                   <div className={cn(
-                     "w-3 h-3 rounded-full transition-all duration-500",
-                     isCurrent ? "bg-[#fec708] shadow-[0_0_20px_rgba(254,199,8,0.6)] animate-pulse" : 
-                     isActive ? "bg-[#fec708]/60" : "bg-white/20"
-                   )} />
-                   <span className={cn(
-                     "text-[9px] font-bold uppercase tracking-wider",
-                     isCurrent ? "text-[#fec708]" : isActive ? "text-white/60" : "text-white/30"
-                   )}>
-                     {tier}
-                   </span>
-                 </div>
-               );
-             })}
-           </div>
-           
-           {/* Progress Bar */}
-           <div className="h-2 w-full bg-slate-900/50 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm">
-             <motion.div 
-               initial={{ width: 0 }}
-               animate={{ width: `${Math.min(100, (verifiedPoints / 5000) * 100)}%` }}
-               transition={{ duration: 0.8, ease: "easeOut" }}
-               className="h-full bg-gradient-to-r from-[#fec708] to-amber-300 rounded-full shadow-[0_0_15px_rgba(254,199,8,0.5)]"
-             />
-           </div>
-           
-           {/* View My Journey Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                navigate({ pathname: '/rewards', search: location.search });
-                setTimeout(() => {
-                  document.getElementById('roadmap-section')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              }}
-              className="mt-5 w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/80 font-bold text-xs uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
-            >
-             View My Journey
-             <ChevronDown className="w-4 h-4" />
-           </motion.button>
-         </div>
+      {/* Paw Points Program */}
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.5, ease: premiumEase }}
+        className="pt-2"
+      >
+        <div className="relative overflow-hidden rounded-[2.6rem] border border-[#fec708]/14 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.025)_44%,rgba(254,199,8,0.045))] p-4 shadow-[0_26px_80px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl sm:p-5">
+          <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#fec708]/10 blur-[90px]" />
+          <div className="pointer-events-none absolute -left-28 bottom-0 h-64 w-64 rounded-full bg-emerald-200/5 blur-[92px]" />
+          <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[#fff0b8]/38 to-transparent" />
 
-         {/* Milestone Grid — synced with Rewards roadmap */}
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           {[
-             { points: 500,   title: 'Health Starter',         subtitle: 'Program entry reward', icon: <TrendingUp className="w-5 h-5" />, unlocked: verifiedPoints >= 500 },
-             { points: 1500,  title: '15% Bill Rebate',         subtitle: 'Instant discount unlock', icon: <Star className="w-5 h-5" />, unlocked: verifiedPoints >= 1500 },
-             { points: 2500,  title: '20% Bill Rebate',         subtitle: 'Deep savings tier', icon: <Zap className="w-5 h-5" />, unlocked: verifiedPoints >= 2500 },
-             { points: 5000,  title: 'Life-Maxing Consultation', subtitle: 'Breed-specific longevity plan', icon: <Award className="w-5 h-5" />, unlocked: verifiedPoints >= 5000 },
-             { points: 7500,  title: 'Premium Spa & Therapy',   subtitle: 'Full grooming & medicated baths', icon: <Sparkles className="w-5 h-5" />, unlocked: verifiedPoints >= 7500 },
-             { points: 10000, title: 'Full Hematology Panel',   subtitle: 'Comprehensive blood examination', icon: <Trophy className="w-5 h-5" />, unlocked: verifiedPoints >= 10000 },
-           ].map((milestone) => (
-             <motion.div
-               key={milestone.title}
-               whileHover={{ y: -2 }}
-               className={cn(
-                 "relative rounded-[1.5rem] p-5 flex items-center gap-4 transition-all duration-500 overflow-hidden",
-                 milestone.unlocked 
-                   ? "bg-gradient-to-br from-[#fec708]/20 to-amber-500/10 border border-[#fec708]/40 shadow-[0_0_30px_rgba(254,199,8,0.2)]" 
-                   : "bg-white/5 border border-white/10 opacity-60"
-               )}
-             >
-               {milestone.unlocked && (
-                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#fec708]/30 rounded-full blur-3xl animate-pulse" />
-                 </div>
-               )}
-               
-               <div className={cn(
-                 "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0",
-                 milestone.unlocked 
-                   ? "bg-gradient-to-br from-[#fec708] to-amber-500 text-black shadow-[0_0_20px_rgba(254,199,8,0.4)]" 
-                   : "bg-white/10 text-white/30 border border-white/10"
-               )}>
-                 {milestone.icon}
-               </div>
-               
-               <div className="flex-1 min-w-0">
-                 <h4 className={cn(
-                   "font-bold text-sm tracking-tight leading-tight",
-                   milestone.unlocked ? "text-white" : "text-white/50"
-                 )}>{milestone.title}</h4>
-                 <p className="text-[10px] text-white/35 font-medium mt-0.5">{milestone.subtitle}</p>
-                 <p className="text-[10px] text-white/25 font-medium">{milestone.points.toLocaleString()} PTS</p>
-               </div>
-               
-               {milestone.unlocked ? (
-                 <Check className="w-5 h-5 text-[#fec708] shrink-0" />
-               ) : (
-                 <Lock className="w-5 h-5 text-white/30 shrink-0" />
-               )}
-             </motion.div>
-           ))}
-         </div>
-       </div>
+          <div className="relative mb-4 flex items-start justify-between gap-4 px-1">
+            <div className="min-w-0">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#fec708]/18 bg-[#fec708]/7 px-3 py-1.5">
+                <PawPrint className="h-3.5 w-3.5 fill-[#fec708]/20 text-[#fec708]" />
+                <span className="cinematic-kicker text-[9px] text-[#fec708]">Paw Points Program</span>
+              </div>
+              <h3 className="cinematic-section-title text-3xl leading-[0.94]">One reward path</h3>
+              <p className="mt-2 max-w-[18rem] text-sm font-semibold leading-relaxed text-white/48">
+                {pointsToActiveMilestone > 0
+                  ? `${pointsToActiveMilestone.toLocaleString()} pts to ${activeJourneyMilestone.title}.`
+                  : 'All homepage rewards shown here are unlocked.'}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-3xl border border-white/10 bg-black/[0.18] px-4 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/34">Reached</p>
+              <p className="mt-1 font-heading text-2xl font-black leading-none tabular-nums text-[#fec708]">
+                {unlockedMilestoneCount}/{homePawMilestones.length}
+              </p>
+            </div>
+          </div>
+
+          <div className="relative mb-5 px-1">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/36">
+                Journey progress
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">
+                milestone {Math.min(activeJourneyIndex + 1, homePawMilestones.length)} of {homePawMilestones.length}
+              </span>
+            </div>
+            <div className="relative h-2 overflow-hidden rounded-full border border-white/10 bg-[#17120a] shadow-[inset_0_1px_5px_rgba(0,0,0,0.45)]">
+              <motion.div
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: journeyProgressTotal / 100 }}
+                viewport={{ once: true }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.95, ease: premiumEase }}
+                className="absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r from-[#fec708] via-[#ffe08a] to-[#d89b00]"
+              />
+              <div className="absolute inset-x-0 top-0 h-px bg-white/22" />
+            </div>
+            <div className="mt-3 grid" style={{ gridTemplateColumns: `repeat(${homePawMilestones.length}, minmax(0, 1fr))` }}>
+              {homePawMilestones.map((milestone, index) => {
+                const tickUnlocked = verifiedPoints >= milestone.points;
+                const tickCurrent = index === activeJourneyIndex;
+                return (
+                  <button
+                    key={milestone.title}
+                    type="button"
+                    onClick={() => {
+                      rewardSlideRefs.current[index + 1]?.scrollIntoView({
+                        behavior: shouldReduceMotion ? 'auto' : 'smooth',
+                        inline: 'center',
+                        block: 'nearest',
+                      });
+                    }}
+                    className="group flex min-h-9 flex-col items-center justify-start gap-1"
+                    aria-label={`View ${milestone.title}`}
+                  >
+                    <span className={cn(
+                      "h-2.5 w-2.5 rounded-full border transition-all duration-300",
+                      tickCurrent
+                        ? "border-[#fec708] bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
+                        : tickUnlocked
+                          ? "border-[#fec708]/40 bg-[#fec708]/55"
+                          : "border-white/14 bg-white/[0.08] group-hover:border-white/28"
+                    )} />
+                    <span className={cn(
+                      "hidden text-[8px] font-black uppercase tracking-[0.16em] sm:block",
+                      tickCurrent ? "text-[#fec708]" : tickUnlocked ? "text-white/42" : "text-white/24"
+                    )}>
+                      {milestone.points >= 1000 ? `${milestone.points / 1000}k` : milestone.points}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div ref={rewardsCarouselRef} className="relative -mx-4 overflow-x-auto px-4 pb-2 hide-scrollbar [scroll-snap-type:x_mandatory] sm:-mx-5 sm:px-5">
+            <div className="flex gap-4">
+              <motion.article
+                ref={(node) => { rewardSlideRefs.current[0] = node; }}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: premiumEase }}
+                className="relative min-h-[248px] w-[84vw] max-w-[360px] shrink-0 overflow-hidden rounded-[2.1rem] border border-[#fec708]/18 bg-[linear-gradient(150deg,rgba(254,199,8,0.10),rgba(255,255,255,0.055)_42%,rgba(255,255,255,0.025))] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.09)] backdrop-blur-xl [scroll-snap-align:start] sm:w-[322px]"
+              >
+                <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#fec708]/12 blur-[70px]" />
+                <div className="relative flex h-full flex-col">
+                  <div className="mb-5 flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">Current balance</p>
+                      <div className="mt-3 flex items-end gap-2">
+                        <span className="cinematic-price text-[3.75rem] tabular-nums text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
+                        <span className="pb-2 text-xs font-black uppercase tracking-[0.2em] text-[#fec708]/60">pts</span>
+                      </div>
+                      {pendingPoints > 0 && (
+                        <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/54">
+                          +{pendingPoints.toLocaleString()} pending clinic verification
+                        </p>
+                      )}
+                    </div>
+                    <div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-2xl border", activeJourneyMilestone.ring, activeJourneyMilestone.glow)}>
+                      {(() => {
+                        const ActiveIcon = activeJourneyMilestone.icon;
+                        return <ActiveIcon className="h-7 w-7" strokeWidth={2.35} />;
+                      })()}
+                    </div>
+                  </div>
+
+                  <div className="mt-auto">
+                    <div className="mb-3 flex items-end justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/36">Next unlock</p>
+                        <h4 className="cinematic-card-title mt-1 text-2xl text-white">{activeJourneyMilestone.title}</h4>
+                      </div>
+                      <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-[#fec708]">
+                        {Math.round(activeJourneyProgress)}%
+                      </span>
+                    </div>
+                    <div className="relative h-2.5 overflow-hidden rounded-full border border-white/10 bg-[#17120a] shadow-[inset_0_1px_5px_rgba(0,0,0,0.45)]">
+                      <motion.div
+                        initial={{ scaleX: 0 }}
+                        whileInView={{ scaleX: activeJourneyProgress / 100 }}
+                        viewport={{ once: true }}
+                        animate={isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.18)', '0 0 26px rgba(254,199,8,0.30)', '0 0 14px rgba(254,199,8,0.18)'] } : undefined}
+                        transition={{ duration: isNearNextTier ? 3.2 : shouldReduceMotion ? 0 : 0.9, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: isNearNextTier ? 'easeInOut' : premiumEase }}
+                        className={cn("absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r", activeJourneyMilestone.fill)}
+                      />
+                      <div className="absolute inset-x-0 top-0 h-px bg-white/25" />
+                      {isVeryNearNextTier && !shouldReduceMotion && (
+                        <motion.span
+                          className="absolute inset-y-0 w-12 rounded-full bg-white/14 blur-sm"
+                          initial={{ x: '-120%' }}
+                          animate={{ x: '260%' }}
+                          transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 3.5, ease: premiumEase }}
+                        />
+                      )}
+                    </div>
+                    <p className={cn("mt-3 text-sm font-bold leading-snug", isNearNextTier ? "text-[#fec708]" : "text-white/48")}>
+                      {pointsToActiveMilestone > 0 ? `${pointsToActiveMilestone.toLocaleString()} pts left. ${isNearNextTier ? 'Almost there.' : activeJourneyMilestone.note}` : 'Ready to claim your unlocked rewards.'}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigate({ pathname: '/rewards', search: location.search });
+                        setTimeout(() => {
+                          document.getElementById('roadmap-section')?.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth' });
+                        }, 100);
+                      }}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#fec708]/24 bg-[#fec708]/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708] transition-colors duration-300 hover:border-[#fec708]/38 hover:bg-[#fec708]/14"
+                    >
+                      View Rewards Hub
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </motion.article>
+
+              {homePawMilestones.map((milestone, index) => {
+                const isUnlocked = verifiedPoints >= milestone.points;
+                const isCurrent = index === activeJourneyIndex;
+                const isLocked = !isUnlocked;
+                const isNearCard = isCurrent && isNearNextTier;
+                const cardProgress = isUnlocked
+                  ? 100
+                  : isCurrent
+                    ? activeJourneyProgress
+                    : Math.min(100, Math.max(0, (verifiedPoints / milestone.points) * 100));
+                const MilestoneIcon = milestone.icon;
+
+                return (
+                  <motion.article
+                    key={milestone.title}
+                    ref={(node) => { rewardSlideRefs.current[index + 1] = node; }}
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-60px" }}
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: shouldReduceMotion ? 0 : index * 0.035, ease: premiumEase }}
+                    whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.012, transition: { type: 'spring', stiffness: 260, damping: 30, mass: 0.85 } }}
+                    whileTap={{ scale: 0.985 }}
+                    className={cn(
+                      "relative min-h-[248px] w-[84vw] max-w-[360px] shrink-0 overflow-hidden rounded-[2.1rem] border p-5 shadow-[0_18px_55px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl [scroll-snap-align:start] sm:w-[322px]",
+                      isCurrent
+                        ? "border-[#fec708]/34 bg-[linear-gradient(150deg,rgba(254,199,8,0.09),rgba(255,255,255,0.055)_45%,rgba(255,255,255,0.025))]"
+                        : isUnlocked
+                          ? "border-white/12 bg-[linear-gradient(150deg,rgba(255,255,255,0.07),rgba(255,255,255,0.028))]"
+                          : "border-white/9 bg-[linear-gradient(150deg,rgba(255,255,255,0.045),rgba(255,255,255,0.018))]"
+                    )}
+                  >
+                    <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br", milestone.surface, isCurrent ? "opacity-[0.82]" : isUnlocked ? "opacity-[0.46]" : "opacity-[0.26] saturate-50")} />
+                    <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/18 to-transparent" />
+
+                    <div className="relative flex h-full flex-col">
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <motion.div
+                          animate={isNearCard && !shouldReduceMotion ? { scale: [1, 1.035, 1] } : undefined}
+                          transition={{ duration: 2.8, repeat: isNearCard && !shouldReduceMotion ? Infinity : 0, ease: [0.45, 0, 0.2, 1] }}
+                          className={cn(
+                            "grid h-14 w-14 place-items-center rounded-2xl border transition-colors duration-500",
+                            isUnlocked || isCurrent ? cn(milestone.ring, milestone.glow) : "border-white/10 bg-white/[0.035] text-white/32"
+                          )}
+                        >
+                          <MilestoneIcon className="h-7 w-7" strokeWidth={2.35} />
+                        </motion.div>
+
+                        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/[0.16] px-3 py-1.5 backdrop-blur-md">
+                          {isUnlocked ? <Check className="h-3.5 w-3.5 text-[#fec708]" /> : <Lock className="h-3.5 w-3.5 text-white/38" />}
+                          <span className={cn("text-[9px] font-black uppercase tracking-[0.18em]", isUnlocked ? "text-[#fec708]" : isCurrent ? "text-white/68" : "text-white/34")}>
+                            {isUnlocked ? 'Unlocked' : isCurrent ? (isNearCard ? 'Almost' : 'Next') : 'Upcoming'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="min-h-[6.8rem]">
+                        {milestone.hero ? (
+                          <div className="mb-3 flex items-end gap-3">
+                            <span className={cn("font-heading text-[3.2rem] font-black leading-none tracking-[-0.08em]", isLocked && !isCurrent ? "text-white/38" : "text-[#fec708]")}>{milestone.hero}</span>
+                            <span className="pb-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/38">rebate</span>
+                          </div>
+                        ) : null}
+                        <p className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isCurrent ? "text-[#fec708]" : "text-white/34")}>{milestone.badge}</p>
+                        <h4 className={cn("cinematic-card-title mt-2 text-[1.38rem] leading-[0.98]", isLocked && !isCurrent ? "text-white/52" : "text-white")}>{milestone.title}</h4>
+                        <p className={cn("mt-2 text-sm font-bold leading-snug", isLocked && !isCurrent ? "text-white/36" : "text-white/58")}>{milestone.subtitle}</p>
+                        <p className={cn("mt-3 text-xs font-semibold leading-relaxed", isLocked && !isCurrent ? "text-white/30" : "text-white/45")}>{milestone.detail}</p>
+                      </div>
+
+                      <div className="mt-auto pt-5">
+                        <div className="mb-2 flex items-end justify-between gap-3">
+                          <span className={cn("font-heading text-2xl font-black leading-none tabular-nums tracking-[-0.055em]", isLocked && !isCurrent ? "text-white/34" : "text-[#fec708]")}>{milestone.points.toLocaleString()}</span>
+                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">PTS</span>
+                        </div>
+                        <div className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+                          <motion.div
+                            initial={{ scaleX: 0 }}
+                            whileInView={{ scaleX: cardProgress / 100 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: shouldReduceMotion ? 0 : 0.75, delay: shouldReduceMotion ? 0 : index * 0.035, ease: premiumEase }}
+                            className={cn("absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r", isLocked && !isCurrent ? "from-white/22 to-white/10" : milestone.fill)}
+                          />
+                          {isNearCard && !shouldReduceMotion && (
+                            <motion.span
+                              className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.52)]"
+                              animate={{ opacity: [0.72, 1, 0.72], scale: [0.9, 1.08, 0.9] }}
+                              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="relative mt-3 px-1">
+            <div className="h-1 overflow-hidden rounded-full bg-white/[0.07]">
+              <motion.div style={{ scaleX: rewardsRailProgress }} className="h-full origin-left rounded-full bg-white/34" />
+            </div>
+          </div>
+        </div>
+      </motion.section>
 
       {/* Modals / Bottom Sheets */}
       <AnimatePresence>
