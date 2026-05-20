@@ -1093,7 +1093,7 @@ export default function Dashboard() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsBookVisitOpen(false)}
-            className="fixed inset-0 bg-slate-900/55 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
+            className="fixed inset-0 bg-slate-900/55 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 pb-24 sm:p-4 sm:pb-4"
           >
             <motion.div
               key="book-visit-modal"
@@ -1113,7 +1113,7 @@ export default function Dashboard() {
                 e.currentTarget.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg)`;
               }}
               style={{ perspective: '1200px', transition: 'transform 0.2s ease-out' }}
-              className="relative w-full max-w-2xl liquid-glass-modal rounded-t-[2.5rem] sm:rounded-[3rem] h-[92dvh] sm:h-[85vh] flex flex-col overflow-hidden"
+              className="relative w-full max-w-2xl liquid-glass-modal rounded-t-[2.5rem] sm:rounded-[3rem] h-[calc(100dvh-6.75rem)] sm:h-[85vh] flex flex-col overflow-hidden"
             >
               {/* Premium Glass Highlights */}
               <div className="absolute -top-[20%] -left-[20%] w-[140%] h-[50%] bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
@@ -1180,7 +1180,7 @@ export default function Dashboard() {
               </div>
 
               {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto px-8 pb-8 hide-scrollbar scroll-smooth">
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-8 pb-6 sm:pb-8 hide-scrollbar scroll-smooth">
                 
                 {/* 1. Services Section */}
                 <section id="services-section" className="mb-10">
@@ -1337,28 +1337,80 @@ export default function Dashboard() {
                 </section>
               </div>
 
-              {/* Sticky Footer - Premium & Always Visible */}
-              <div className="sticky bottom-0 shrink-0 bg-white/[0.08] backdrop-blur-[40px] border-t border-white/10 px-8 py-7 pb-safe z-20 shadow-[0_-30px_60px_rgba(0,0,0,0.4)]">
-                <div className="flex justify-between items-center mb-6">
+              {/* Confirmation Footer - Premium & Always Visible */}
+              <div className="shrink-0 bg-white/[0.08] backdrop-blur-[40px] border-t border-white/10 px-5 sm:px-8 py-4 sm:py-7 z-20 shadow-[0_-30px_60px_rgba(0,0,0,0.4)]">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <a
+                    href={(selectedServices.length === 0 || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      if (selectedServices.length === 0 || !bookingDate || !bookingTime) {
+                        e.preventDefault();
+                        if (selectedServices.length === 0) {
+                          document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' });
+                        } else if (!bookingDate) {
+                          document.getElementById('date-section')?.scrollIntoView({ behavior: 'smooth' });
+                        } else if (!bookingTime) {
+                          document.getElementById('time-section')?.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      } else {
+                        submitBooking();
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center justify-center gap-3 w-full py-4 sm:py-5 rounded-[1.25rem] font-black text-lg uppercase tracking-[0.04em] sm:tracking-[0.2em] transition-all duration-500 relative overflow-hidden group",
+                      (selectedServices.length === 0 || !bookingDate || !bookingTime)
+                        ? "bg-white/[0.14] text-white/90 border border-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-white/[0.18]"
+                        : "bg-planet-yellow text-black ring-1 ring-planet-yellow/40 shadow-[0_0_36px_rgba(254,199,8,0.38)] hover:shadow-[0_0_48px_rgba(254,199,8,0.55)] active:scale-[0.98]"
+                    )}
+                  >
+                    {(selectedServices.length > 0 && bookingDate && bookingTime) && (
+                      <div className="absolute inset-[-2px] rounded-[1.25rem] bg-planet-yellow/30 blur-xl opacity-70" />
+                    )}
+
+                    {/* Glossy Button Shine */}
+                    {(selectedServices.length > 0 && bookingDate && bookingTime) && (
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                    )}
+
+                    <span className="relative z-10 flex w-full items-center justify-between gap-3">
+                      {selectedServices.length === 0
+                        ? 'Select Services'
+                        : !bookingDate
+                          ? 'Select Date'
+                          : !bookingTime
+                            ? 'Select Time'
+                            : 'Confirm Appointment'
+                      }
+                      <ArrowRight size={18} className="shrink-0 group-hover:translate-x-1.5 transition-transform duration-300" />
+                    </span>
+                  </a>
+                </motion.div>
+
+                <div className="flex justify-between items-center mt-3 sm:mt-6">
                   <div className="flex -space-x-3">
                     {selectedServices.length > 0 ? (
                       selectedServices.slice(0, 3).map((s, idx) => (
-                        <motion.div 
-                          key={idx} 
+                        <motion.div
+                          key={idx}
                           initial={{ scale: 0, x: -20, rotate: -15 }}
                           animate={{ scale: 1, x: 0, rotate: 0 }}
-                          className="w-11 h-11 rounded-[1.25rem] bg-white/10 border border-white/20 backdrop-blur-2xl flex items-center justify-center text-planet-yellow shadow-2xl"
+                          className="w-9 h-9 sm:w-11 sm:h-11 rounded-[1rem] sm:rounded-[1.25rem] bg-white/10 border border-white/20 backdrop-blur-2xl flex items-center justify-center text-planet-yellow shadow-2xl"
                         >
                           <s.icon size={18} />
                         </motion.div>
                       ))
                     ) : (
-                      <div className="w-11 h-11 rounded-[1.25rem] bg-white/5 border border-white/10 border-dashed flex items-center justify-center text-white/20">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-[1rem] sm:rounded-[1.25rem] bg-white/5 border border-white/10 border-dashed flex items-center justify-center text-white/20">
                         <Plus size={18} />
                       </div>
                     )}
                     {selectedServices.length > 3 && (
-                      <div className="w-11 h-11 rounded-[1.25rem] bg-planet-yellow border border-black/10 flex items-center justify-center text-xs font-black text-black shadow-xl ring-2 ring-black/20">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-[1rem] sm:rounded-[1.25rem] bg-planet-yellow border border-black/10 flex items-center justify-center text-xs font-black text-black shadow-xl ring-2 ring-black/20">
                         +{selectedServices.length - 3}
                       </div>
                     )}
@@ -1384,53 +1436,6 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <a
-                    href={(selectedServices.length === 0 || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => {
-                      if (selectedServices.length === 0 || !bookingDate || !bookingTime) {
-                        e.preventDefault();
-                        if (selectedServices.length === 0) {
-                          document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' });
-                        } else if (!bookingDate) {
-                          document.getElementById('date-section')?.scrollIntoView({ behavior: 'smooth' });
-                        } else if (!bookingTime) {
-                          document.getElementById('time-section')?.scrollIntoView({ behavior: 'smooth' });
-                        }
-                      } else {
-                        submitBooking();
-                      }
-                    }}
-                    className={cn(
-                      "flex items-center justify-center gap-3 w-full py-5 rounded-[1.25rem] font-black text-lg uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl relative overflow-hidden group",
-                      (selectedServices.length === 0 || !bookingDate || !bookingTime)
-                        ? "bg-white/10 text-white/40 border border-white/20 hover:bg-white/15"
-                        : "bg-planet-yellow text-black hover:shadow-[0_0_40px_rgba(254,199,8,0.5)] active:scale-[0.98]"
-                    )}
-                  >
-                    {/* Glossy Button Shine */}
-                    {(selectedServices.length > 0 && bookingDate && bookingTime) && (
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                    )}
-                    
-                    <span className="flex items-center gap-2">
-                      {selectedServices.length === 0 
-                        ? 'Select Services to Continue' 
-                        : !bookingDate 
-                          ? 'Select Date to Continue'
-                          : !bookingTime 
-                            ? 'Select Time to Continue' 
-                            : 'Confirm Appointment'
-                      }
-                      <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform duration-300" />
-                    </span>
-                  </a>
-                </motion.div>
               </div>
             </motion.div>
           </motion.div>
