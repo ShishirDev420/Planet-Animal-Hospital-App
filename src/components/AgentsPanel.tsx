@@ -4,10 +4,7 @@ import type { ElementType, ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { usePetProfile } from '../hooks/usePetProfile';
-import {
-  generatePritpawlRoadmap,
-  type PritpawlRoadmap,
-} from '../lib/pritpawlRoadmap';
+import type { PritpawlRoadmap } from '../lib/pritpawlRoadmap';
 import {
   PAWLINA_SERVICES,
   buildWhatsAppMessage,
@@ -110,7 +107,7 @@ const agents: Agent[] = [
     cta: 'Generate Roadmap',
     Icon: Pill,
     Avatar: PritpawlAvatar,
-    quickPrompts: ['Life-max my pet\'s health', 'Show nutrition & exercise plan', 'Track my roadmap progress', 'Check refill timing'],
+    quickPrompts: ['Life-max my pet\'s health', 'Show nutrition & exercise plan', 'Track my roadmap progress'],
     theme: {
       accent: '#2dd4bf',
       glow: 'rgba(45, 212, 191, 0.30)',
@@ -171,12 +168,7 @@ export default function AgentsPanel() {
         const reply = await handlePawlinaPrompt(cleanPrompt, profile, pushMessage);
         pushMessage(agent.id, { from: 'agent', text: reply });
       } else if (agent.id === 'pritpawl' && shouldGenerateRoadmap(cleanPrompt)) {
-        const roadmap = await generatePritpawlRoadmap(profile, updateProfile);
-        pushMessage(agent.id, {
-          from: 'agent',
-          text: buildPritpawlReply(cleanPrompt, profile, agentState, roadmap),
-          roadmap,
-        });
+        pushMessage(agent.id, { from: 'agent', text: buildPritpawlCachedRoadmapReply(cleanPrompt, profile, agentState) });
       } else {
         pushMessage(agent.id, { from: 'agent', text: buildAgentReply(agent.id, cleanPrompt, profile, agentState) });
       }
@@ -483,8 +475,8 @@ function getLiveMetrics(agentId: AgentId, state: ReturnType<typeof getAgentState
     ];
   }
   return [
-    { label: 'Life-Max', value: state.pritpawlRoadmap ? `${getRoadmapTotalPawPoints(state.pritpawlRoadmap).toLocaleString()} pts` : `${state.completedRoadmapTasks}/${state.totalRoadmapTasks}` },
-    { label: 'Focus', value: state.pritpawlRoadmap ? getRoadmapPrimaryFocus(state.pritpawlRoadmap).split('&')[0].trim() : 'Generate' },
+    { label: 'Life-Max', value: `${state.completedRoadmapTasks}/${state.totalRoadmapTasks}` },
+    { label: 'Focus', value: state.totalRoadmapTasks > 0 ? 'Generated' : 'Generate' },
   ];
 }
 
@@ -516,25 +508,50 @@ function getAgentState(profile: any) {
   };
 }
 
-function extractRoadmapTasks(roadmapText: string) {
-  const tasks: Array<{ id: string; label: string }> = [];
-  const phaseRegex = /### Phase:\s*([^\n]+)/gi;
+type CachedRoadmapTask = {
+  id: string;
+  label: string;
+  title: string;
+  description: string;
+  rationale: string;
+  phaseTitle: string;
+};
+
+function extractRoadmapTasks(roadmapText: string): CachedRoadmapTask[] {
+  const tasks: CachedRoadmapTask[] = [];
+  const phaseRegex = /###\s*(?:Phase:\s*)?([^\n]+)/gi;
   const phases: Array<{ start: number; title: string }> = [];
   let phaseMatch;
 
-  while ((phaseMatch = phaseRegex.exec(roadmapText)) !== null) phases.push({ start: phaseMatch.index, title: phaseMatch[1].trim() });
+  while ((phaseMatch = phaseRegex.exec(roadmapText)) !== null) {
+    const title = phaseMatch[1].trim();
+    if (/^\d/.test(title) || /month|long.term/i.test(title)) phases.push({ start: phaseMatch.index, title });
+  }
 
   for (let phaseIndex = 0; phaseIndex < phases.length; phaseIndex++) {
     const phase = phases[phaseIndex];
     const phaseContent = roadmapText.substring(phase.start, phases[phaseIndex + 1]?.start || roadmapText.length);
-    const taskRegex = /\*\s+\*\*([^*]+)\*\*\s*:\s*([^|]+)/gi;
-    let taskMatch;
-    let taskIndex = 0;
+    const actionableContent = phaseContent.split(/###\s*Verifiable Sources/i)[0];
+    const taskLines = actionableContent.split('\n').filter((line) => /^\s*[-*]\s+/.test(line));
 
-    while ((taskMatch = taskRegex.exec(phaseContent)) !== null) {
-      tasks.push({ id: `${phase.title}-${taskIndex}`, label: `${taskMatch[1].trim()}: ${taskMatch[2].trim()}` });
-      taskIndex++;
-    }
+    taskLines.forEach((line, taskIndex) => {
+      const cleanedLine = line.replace(/^\s*[-*]\s+/, '').trim();
+      const formattedMatch = cleanedLine.match(/^\*\*([^*]+)\*\*\s*:?\s*(.*)$/);
+      const title = (formattedMatch?.[1] || cleanedLine.split(':')[0] || `Care Action ${taskIndex + 1}`).trim();
+      const remainder = (formattedMatch?.[2] || cleanedLine.slice(title.length).replace(/^\s*:?\s*/, '')).trim();
+      const rationaleSplit = remainder.split(/\s*\|\s*(?:Scientific Rationale:\s*)?/i);
+      const description = (rationaleSplit[0] || '').trim();
+      const rationale = (rationaleSplit.slice(1).join(' | ') || '').trim();
+
+      tasks.push({
+        id: `${phase.title}-${taskIndex}`,
+        label: `${title}: ${description}`,
+        title,
+        description,
+        rationale,
+        phaseTitle: phase.title,
+      });
+    });
   }
   return tasks;
 }
@@ -550,6 +567,70 @@ function createInitialMessages(profile: any): Record<AgentId, ChatMessage[]> {
 
 function shouldGenerateRoadmap(prompt: string) {
   return /generate|roadmap|life-max|life max|health plan|care plan|nutrition|exercise|behavior|psychological|prescription/i.test(prompt);
+}
+
+function buildPritpawlCachedRoadmapReply(prompt: string, profile: any, state: ReturnType<typeof getAgentState>) {
+  const petName = profile?.petName || profile?.name || 'your pet';
+  const roadmapText = profile?.cachedRoadmap || '';
+  const tasks = extractRoadmapTasks(roadmapText);
+  const progress = profile?.roadmapProgress || {};
+  const lowerPrompt = prompt.toLowerCase();
+
+  if (!roadmapText || tasks.length === 0) {
+    return `I do not see a generated roadmap for ${petName} yet. Open the Roadmap section first so I can read the plan, nutrition, exercise, and progress from the same source of truth.`;
+  }
+
+  if (/progress|track|complete/i.test(lowerPrompt)) {
+    return buildCachedRoadmapProgressReply(petName, tasks, progress);
+  }
+
+  const wantsNutrition = /nutrition|diet|food|feed|weight|hydration|protein/i.test(lowerPrompt);
+  const wantsExercise = /exercise|activity|fitness|walk|movement|play|enrich|environment|behavior|mental|scratch|climb/i.test(lowerPrompt);
+
+  if (wantsNutrition || wantsExercise) {
+    const sections: string[] = [];
+
+    if (wantsNutrition) {
+      const nutritionTasks = tasks.filter((task) => /nutrition|diet|food|feed|weight|hydration|protein/i.test(`${task.title} ${task.description} ${task.rationale}`));
+      sections.push(formatRoadmapTaskSection('Nutrition plan', nutritionTasks));
+    }
+
+    if (wantsExercise) {
+      const exerciseTasks = tasks.filter((task) => /exercise|activity|fitness|walk|movement|play|enrich|environment|behavior|mental|scratch|climb/i.test(`${task.title} ${task.description} ${task.rationale}`));
+      sections.push(formatRoadmapTaskSection('Exercise and enrichment plan', exerciseTasks));
+    }
+
+    return `${petName}'s roadmap has already been generated in the Roadmap section. Here is the relevant plan from that roadmap:\n\n${sections.join('\n\n')}`;
+  }
+
+  const generatedDate = profile?.roadmapGeneratedAt ? ` on ${new Date(profile.roadmapGeneratedAt).toLocaleDateString()}` : '';
+  const phaseSummary = formatPhaseProgress(tasks, progress);
+
+  return `${petName}'s life-maxing roadmap has already been generated in the Roadmap section${generatedDate}.\n\nCurrent progress: ${state.completedRoadmapTasks}/${state.totalRoadmapTasks} tasks complete.\n\n${phaseSummary}\n\nUse the Roadmap section to check off tasks, unlock the next stage, and keep progress synced.`;
+}
+
+function buildCachedRoadmapProgressReply(petName: string, tasks: CachedRoadmapTask[], progress: Record<string, boolean>) {
+  const completedTasks = tasks.filter((task) => progress[task.id]).length;
+  const pct = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+
+  return `Roadmap progress for ${petName}: ${pct}% complete (${completedTasks}/${tasks.length} tasks).\n\n${formatPhaseProgress(tasks, progress)}\n\nThis is reading from the same Roadmap section progress, so checked-off tasks stay synced.`;
+}
+
+function formatPhaseProgress(tasks: CachedRoadmapTask[], progress: Record<string, boolean>) {
+  const phaseTitles = [...new Set(tasks.map((task) => task.phaseTitle))];
+
+  return phaseTitles.map((phaseTitle) => {
+    const phaseTasks = tasks.filter((task) => task.phaseTitle === phaseTitle);
+    const done = phaseTasks.filter((task) => progress[task.id]).length;
+    const nextTask = phaseTasks.find((task) => !progress[task.id]);
+    return `${phaseTitle}: ${done}/${phaseTasks.length} complete${nextTask ? `; next: ${nextTask.title}` : '; complete'}`;
+  }).join('\n');
+}
+
+function formatRoadmapTaskSection(title: string, tasks: CachedRoadmapTask[]) {
+  if (tasks.length === 0) return `${title}: No dedicated task is listed yet, but the full roadmap still contains preventive care steps to follow.`;
+
+  return `${title}:\n${tasks.map((task) => `- ${task.title} (${task.phaseTitle}): ${task.description}`).join('\n')}`;
 }
 
 // ─── Pawlina: Full booking/cancel/move/call backend ──────────────────────
