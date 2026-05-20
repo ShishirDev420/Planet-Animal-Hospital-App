@@ -76,6 +76,17 @@ function getCurrentSeason(): 'summer' | 'monsoon' | 'winter' {
   return getIndianSeason(month);
 }
 
+function getDailyVariantIndex(profile: any, period: TimePeriod, count: number): number {
+  const key = `${new Date().toDateString()}-${profile?.uid || profile?.parentName || 'demo'}-${profile?.petName || 'pet'}-${period}`;
+  const seed = key.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return count > 0 ? seed % count : 0;
+}
+
+function pickDailyVariant(variants: Record<'summer' | 'monsoon' | 'winter', string[]>, season: 'summer' | 'monsoon' | 'winter', profile: any, period: TimePeriod) {
+  const pool = variants[season] || variants.summer;
+  return pool[getDailyVariantIndex(profile, period, pool.length)] || pool[0];
+}
+
 export function usePawlMessage(period?: TimePeriod) {
   const { profile, loading: profileLoading } = usePetProfile();
   const { currentPeriod } = useTimeOfDay();
@@ -268,18 +279,42 @@ function getGenericDailyTip(profile: any, period: TimePeriod): string {
 
   // Evening
   if (species === 'dog') {
-    const tips: Record<string, string> = {
-      summer: `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Routine:\n• Evening walk after 7 PM (cool ground)\n• Dinner portion — don't overfeed\n• Last potty break before bed\n• Bedtime medication if scheduled\n• Wind-down time — calm environment`,
-      monsoon: `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Routine:\n• Evening walk (if rain has stopped)\n• Dry thoroughly — paws, ears, belly\n• Dinner as usual\n• Check for ticks after walk\n• Cozy bed away from drafts`,
-      winter: `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Routine:\n• Early evening walk before it gets too cold\n• Warm dinner\n• Extra blanket for sleeping\n• Joint comfort check for older dogs\n• Bedtime medication if scheduled`
+    const tips: Record<'summer' | 'monsoon' | 'winter', string[]> = {
+      summer: [
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Recovery Ritual:\n• Evening walk after 7 PM when the ground is cool\n• Dinner portion — keep it measured, no table scraps\n• Last potty break before sleep\n• Refill overnight water bowl\n• Calm wind-down: dim lights, low noise, predictable bedtime`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Heat-Safe Night Routine:\n• Touch-check pavement before the final walk\n• Offer fresh water before dinner and again before bed\n• Keep play gentle after meals to protect digestion\n• Brush or wipe coat if there was outdoor dust\n• Check breathing: heavy panting at rest needs attention`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Longevity Close-Out:\n• Short sniff walk for mental decompression\n• Dinner at the usual time to protect routine\n• Quick paw-pad check for heat irritation\n• Bedtime medication if scheduled\n• Quiet recovery spot with airflow, not direct AC blast`,
+      ],
+      monsoon: [
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Monsoon Night Ritual:\n• Walk only if rain has eased and visibility is safe\n• Dry paws, belly, tail base, and ears thoroughly\n• Check between toes for redness or damp debris\n• Dinner as usual — avoid wet outdoor treats\n• Keep bedding dry and away from drafts`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Rainy-Day Recovery:\n• Replace outdoor play with 10 minutes of indoor scent games\n• Towel-dry coat even after a short walk\n• Check ears for moisture buildup or odor\n• Fresh water before bed\n• Inspect for ticks after any grass exposure`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Humidity Defense:\n• Final potty break in the driest safe window\n• Wipe paws with a clean dry cloth\n• Keep dinner steady — no rich monsoon snacks\n• Scan belly and armpits for fungal hot spots\n• Set a clean, dry sleep surface tonight`,
+      ],
+      winter: [
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Warmth & Recovery Ritual:\n• Early evening walk before the temperature drops\n• Warm dinner if your vet-approved diet allows it\n• Joint comfort check after activity\n• Extra blanket or insulated bed layer\n• Bedtime medication if scheduled`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Cold-Weather Close-Out:\n• Keep the final walk short but mentally enriching\n• Dry paws after dew or damp ground\n• Watch stiffness when getting up from rest\n• Offer water — winter pets can still dehydrate\n• Set sleeping spot away from cold floor drafts`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Senior-Safe Night Check:\n• Gentle movement before sleep to prevent stiffness\n• Dinner on schedule; avoid heavy late feeding\n• Check coat or sweater fit if used\n• Warm bedding, easy access to water\n• Quiet wind-down with predictable lights-out`,
+      ],
     };
-    return (tips[season] || tips.summer) + breedNote;
+    return pickDailyVariant(tips, season, profile, period) + breedNote;
   } else {
-    const tips: Record<string, string> = {
-      summer: `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Routine:\n• Dinner time\n• Play before bedtime\n• Clean litter box\n• Fresh water for overnight\n• Calm wind-down environment`,
-      monsoon: `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Routine:\n• Dinner time\n• Interactive play (rainy day energy)\n• Litter box check\n• Grooming session\n• Cozy sleeping spot`,
-      winter: `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Routine:\n• Warm dinner\n• Play session\n• Litter box check\n• Extra warm bedding\n• Cuddle time for warmth`
+    const tips: Record<'summer' | 'monsoon' | 'winter', string[]> = {
+      summer: [
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Evening Recovery Ritual:\n• Dinner at the usual time\n• Short play burst before bedtime\n• Clean litter box for overnight comfort\n• Fresh water in a cool, shaded spot\n• Calm wind-down environment`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Heat-Safe Cat Routine:\n• Refresh water bowl or fountain before sleep\n• Offer a cool resting surface away from direct sun\n• Gentle wand play, then let breathing settle\n• Quick coat brush to reduce shed load\n• Check window screens and balcony access`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Feline Longevity Close-Out:\n• Clean litter box and note stool/urine changes\n• Dinner portion on schedule\n• Five minutes of hunting-style play\n• Keep hiding and climbing spaces accessible\n• Quiet, predictable bedtime routine`,
+      ],
+      monsoon: [
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Monsoon Indoor Ritual:\n• Dinner time\n• Interactive play to release rainy-day energy\n• Litter box check before sleep\n• Groom coat to prevent damp mats and hairballs\n• Cozy sleeping spot away from window drafts`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Humidity Defense:\n• Check bedding for dampness\n• Refresh water and clean food area\n• Inspect ears and coat for odor or irritation\n• Puzzle feeder or scent game for indoor enrichment\n• Keep litter box extra dry tonight`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Rainy Night Reset:\n• Close unsafe window gaps but preserve airflow\n• Brush coat lightly if humidity is high\n• Clean litter box and surrounding floor\n• Short chase-play session, then calm lights\n• Check favorite hiding spot is dry`,
+      ],
+      winter: [
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Warmth & Recovery Ritual:\n• Warm dinner if appropriate for their diet\n• Short play session to keep joints moving\n• Litter box check\n• Extra warm bedding away from cold tiles\n• Cuddle time if they seek contact`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Cold-Weather Cat Close-Out:\n• Refresh water before bed\n• Keep sleeping spot insulated from the floor\n• Gentle climbing or wand play before rest\n• Watch stiffness after naps\n• Keep the litter route easy and warm`,
+        `🌙 Good evening! Here's your ${period} briefing for ${petName}:\n\n🌙 Quiet Night Routine:\n• Dinner on schedule\n• Clean litter box and note any changes\n• Warm blanket in the preferred sleep zone\n• Five minutes of enrichment, then reduce stimulation\n• Keep drafts away from resting areas`,
+      ],
     };
-    return (tips[season] || tips.summer) + breedNote;
+    return pickDailyVariant(tips, season, profile, period) + breedNote;
   }
 }
