@@ -20,21 +20,35 @@ function getDeviceFromParam(param: string): DeviceType {
 export default function MobilePreview() {
   const requestedPath = new URLSearchParams(window.location.search).get('path') || '/';
   const deviceParam = new URLSearchParams(window.location.search).get('device');
-  const isDemoMode = new URLSearchParams(window.location.search).get('demo_mode') === 'true';
+  const urlDemoMode = new URLSearchParams(window.location.search).get('demo_mode') === 'true';
 
+  // Default to demo mode so the preview works without auth
+  const [demoMode, setDemoMode] = useState<boolean>(urlDemoMode);
   const [device, setDevice] = useState<DeviceType>(
     deviceParam ? getDeviceFromParam(deviceParam) : 'samsung-s26-ultra',
   );
   const [viewMode, setViewMode] = useState<ViewMode>('mobile');
 
   const normalizedPath = requestedPath.startsWith('/') ? requestedPath : `/${requestedPath}`;
-  const frameUrl = new URL(normalizedPath, window.location.origin);
-  frameUrl.searchParams.set('preview_frame', 'true');
-  if (isDemoMode) frameUrl.searchParams.set('demo_mode', 'true');
-  if (viewMode === 'desktop') {
-    frameUrl.searchParams.set('preview_view', 'desktop');
-  }
-  const url = frameUrl.toString();
+
+  // Build the iframe URL (used by the preview frame)
+  const iframeUrl = useMemo(() => {
+    const frameUrl = new URL(normalizedPath, window.location.origin);
+    frameUrl.searchParams.set('preview_frame', 'true');
+    if (demoMode) frameUrl.searchParams.set('demo_mode', 'true');
+    if (viewMode === 'desktop') {
+      frameUrl.searchParams.set('preview_view', 'desktop');
+    }
+    return frameUrl.toString();
+  }, [normalizedPath, demoMode, viewMode]);
+
+  // Build a clean "Open" URL (no preview_frame / preview_view params)
+  const openUrl = useMemo(() => {
+    const clean = new URL(normalizedPath, window.location.origin);
+    if (demoMode) clean.searchParams.set('demo_mode', 'true');
+    return clean.toString();
+  }, [normalizedPath, demoMode]);
+
   const frame = DEVICE_FRAMES[device];
   const [viewport, setViewport] = useState(() => ({
     width: window.innerWidth,
@@ -65,18 +79,19 @@ export default function MobilePreview() {
           style={{ transform: `scale(${previewScale})` }}
         >
           <div className="absolute -inset-10 rounded-[5rem] bg-planet-yellow/10 blur-[90px]" />
-          {device === 'samsung-s26-ultra' && <SamsungUltraFrame url={url} />}
-          {device === 'iphone-16-pro-max' && <Iphone16ProMaxFrame url={url} />}
-          {device === 'iphone-16-pro' && <Iphone16ProFrame url={url} />}
+          {device === 'samsung-s26-ultra' && <SamsungUltraFrame url={iframeUrl} />}
+          {device === 'iphone-16-pro-max' && <Iphone16ProMaxFrame url={iframeUrl} />}
+          {device === 'iphone-16-pro' && <Iphone16ProFrame url={iframeUrl} />}
         </div>
       ) : (
         <div className="w-full h-full rounded-2xl overflow-hidden border border-white/10">
           <iframe
-            src={url}
+            key={iframeUrl}
+            src={iframeUrl}
             allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none"
             title="Planet Animal App Desktop Preview"
-            id="preview-iframe"
+            id="preview-iframe-desktop"
           />
         </div>
       )}
@@ -90,6 +105,7 @@ export default function MobilePreview() {
         </div>
 
         <div className="flex flex-col items-end gap-2 p-2 bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl">
+          {/* View Mode Toggle */}
           <button
             onClick={() => setViewMode(viewMode === 'desktop' ? 'mobile' : 'desktop')}
             className="flex items-center gap-2 px-4 py-2 bg-planet-yellow text-black rounded-xl font-heading font-black text-[10px] uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all w-full justify-center"
@@ -112,9 +128,25 @@ export default function MobilePreview() {
             )}
           </button>
 
+          {/* Demo Mode Toggle */}
+          <button
+            onClick={() => setDemoMode((prev) => !prev)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-heading font-black text-[10px] uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all w-full justify-center ${
+              demoMode
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                : 'bg-white/10 text-white/60 border border-white/10'
+            }`}
+            title={demoMode ? 'Demo Mode is ON (bypasses auth)' : 'Demo Mode is OFF (requires login)'}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>{demoMode ? 'Demo: ON' : 'Demo: OFF'}</span>
+          </button>
+
           <div className="flex items-center gap-1 w-full">
             <button
-              onClick={() => window.open(url, '_blank')}
+              onClick={() => window.open(openUrl, '_blank')}
               className="flex items-center gap-1.5 px-3 py-1.5 text-white/60 hover:text-white/90 hover:bg-white/5 rounded-lg transition-all text-[9px] uppercase tracking-wider font-black"
               title="Open full app in a new tab"
             >
@@ -127,7 +159,7 @@ export default function MobilePreview() {
             <div className="w-px h-4 bg-white/10" />
 
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => { window.location.href = '/'; }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-white/40 hover:text-white/70 hover:bg-white/5 rounded-lg transition-all text-[9px] uppercase tracking-wider font-black"
               title="Exit Preview"
             >
@@ -185,11 +217,12 @@ function Iphone16ProFrame({ url }: { url: string }) {
 
         <div className="h-full w-full overflow-hidden rounded-[2.95rem] border-[2px] border-white/5 bg-slate-950">
           <iframe
+            key={url}
             src={url}
             allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in iPhone 16 Pro"
-            id="preview-iframe"
+            id="preview-iframe-iphone-pro"
           />
         </div>
       </div>
@@ -218,11 +251,12 @@ function Iphone16ProMaxFrame({ url }: { url: string }) {
 
         <div className="h-full w-full overflow-hidden rounded-[3.28rem] border-[2px] border-white/5 bg-slate-950">
           <iframe
+            key={url}
             src={url}
             allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in iPhone 16 Pro Max"
-            id="preview-iframe"
+            id="preview-iframe-iphone-promax"
           />
         </div>
       </div>
@@ -247,11 +281,12 @@ function SamsungUltraFrame({ url }: { url: string }) {
 
         <div className="h-full w-full overflow-hidden rounded-[2.75rem] border-[1px] border-white/5 bg-slate-950">
           <iframe
+            key={url}
             src={url}
             allow="microphone *; autoplay *; publickey-credentials-get *; identity-credentials-get *"
             className="w-full h-full border-none select-none"
             title="Planet Animal App Preview in Samsung S26 Ultra"
-            id="preview-iframe"
+            id="preview-iframe-samsung"
           />
         </div>
       </div>

@@ -289,7 +289,7 @@ export default function ProactivePlans() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * stagger, duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
                 whileHover={{ y: -6, transition: { duration: 0.3, ease: [0.25, 1, 0.5, 1] } }}
-                className={`relative rounded-2xl flex flex-col min-h-[480px] lg:min-h-[540px] liquid-glass-tier ${liquidClass} ${isHero ? 'md:-mt-4 md:mb-[-12px]' : ''}`}
+                className={`relative rounded-2xl flex flex-col min-h-[480px] lg:min-h-[540px] liquid-glass-tier ${liquidClass} ${isHero ? 'md:-mt-4 md:mb-[-12px]' : ''} ${isActive ? 'ring-2 ring-planet-yellow/55 shadow-[0_0_36px_rgba(254,199,8,0.20)]' : ''}`}
               >
                 <OrganicPawTrail color={t.accent} />
                 <div className="absolute inset-0 z-[0] rounded-2xl bg-gradient-to-b from-black/22 via-black/14 to-black/26" />
@@ -319,7 +319,7 @@ export default function ProactivePlans() {
 
                   {/* Price */}
                   <div className="flex items-end gap-1.5 mb-7">
-                    <span className="cinematic-price text-[3rem]">{t.price}</span>
+                    <span className="cinematic-price text-[3rem] text-planet-yellow">{t.price}</span>
                     <span className="pb-1 text-sm font-bold tracking-[-0.01em] text-white/50">{t.period}</span>
                   </div>
 

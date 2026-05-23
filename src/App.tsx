@@ -75,10 +75,6 @@ export default function App() {
     }
 
     startupRedirectHandledRef.current = true;
-
-    if (isDemoMode && !location.search.includes('demo_mode=true')) {
-      navigate({ pathname: location.pathname, search: '?demo_mode=true' }, { replace: true });
-    }
   }, [authStatus, isPreviewRoute, isInsideFrame]);
 
   if (authStatus === 'loading') {
