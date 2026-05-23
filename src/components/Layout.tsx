@@ -28,6 +28,16 @@ export default function Layout() {
     detail: string;
   }>(null);
 
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    setIsDesktop(mq.matches);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   useEffect(() => {
     const previousPath = previousPathRef.current;
     const nextPath = location.pathname;
@@ -80,16 +90,16 @@ export default function Layout() {
       </div>
 
       {/* Desktop Layout */}
-      {(!isInsideFrame || isDesktopPreview) && (
-        <div className="hidden lg:flex h-screen w-full">
+      {isDesktop && (!isInsideFrame || isDesktopPreview) && (
+        <div className="flex h-screen w-full">
         {/* Desktop Sidebar */}
         <nav className="w-64 liquid-glass border-r border-white/5 flex flex-col z-10">
           <div className="p-8 border-b border-white/8">
             <div className="flex items-center gap-4 mb-4">
               <Logo className="!w-16 !h-16 drop-shadow-[0_0_20px_rgba(254,199,8,0.3)]" />
             </div>
-            <h2 className="cinematic-card-title text-2xl" style={{ wordSpacing: '0.15em' }}>Planet Animal</h2>
-            <p className="cinematic-kicker mt-1 text-[10px]">Hospital & Wellness</p>
+            <h2 className="cinematic-card-title text-2xl" style={{ wordSpacing: '0.15em', letterSpacing: '0.04em' }}>Planet Animal</h2>
+            <p className="cinematic-kicker mt-1 text-[10px]" style={{ letterSpacing: '0.32em' }}>Hospital & Wellness</p>
           </div>
           <div className="flex-1 py-6 px-4 space-y-1">
             <DesktopNavItem to={preservePreviewSearch('/')} icon={<Home size={20} />} label="Home" />
@@ -116,11 +126,9 @@ export default function Layout() {
         </div>
       )}
 
-      {/* Mobile Container */}
-      <div className={cn(
-        "w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10",
-        isInsideFrame && !isDesktopPreview ? "flex" : "lg:hidden"
-      )}>
+      {/* Mobile Container (only renders when not showing desktop layout) */}
+      {(!isDesktop || (isInsideFrame && !isDesktopPreview)) && (
+      <div className="w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
         <main className="flex-1 overflow-y-auto pb-24 hide-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div key={location.pathname} {...pageTransition}>
@@ -138,6 +146,7 @@ export default function Layout() {
           <NavItem to={preservePreviewSearch('/roadmap')} icon={<Map size={22} />} label="Roadmap" />
         </nav>
       </div>
+      )}
 
       {/* Floating Vibe Toggle (Desktop Only) */}
       {!isInsideFrame && (

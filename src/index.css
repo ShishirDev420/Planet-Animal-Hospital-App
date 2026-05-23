@@ -47,6 +47,14 @@
     will-change: transform, opacity;
     transform: translateZ(0);
   }
+
+  .transform-gpu {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
 }
 
 @theme {
@@ -570,6 +578,9 @@
 }
 
 @keyframes shimmer {
+  0% {
+    transform: translateX(-200%);
+  }
   100% {
     transform: translateX(200%);
   }
