@@ -1363,9 +1363,15 @@ function RewardsCarousel({
     : Math.min(100, Math.max(0, ((verifiedPoints - previousMilestonePoints) / activeJourneyRange) * 100));
   const pointsToActiveMilestone = Math.max(0, activeJourneyMilestone.points - verifiedPoints);
   const unlockedMilestoneCount = homePawMilestones.filter((milestone) => verifiedPoints >= milestone.points).length;
-  const journeyProgressTotal = Math.min(100, ((unlockedMilestoneCount + activeJourneyProgress / 100) / homePawMilestones.length) * 100);
   const isNearNextTier = activeJourneyProgress >= 82 && activeJourneyProgress < 100;
-  const isVeryNearNextTier = activeJourneyProgress >= 94 && activeJourneyProgress < 100;
+  const hasUnlockedAllHomeRewards = activeMilestoneIndex === -1;
+  const journeySegmentCount = Math.max(1, homePawMilestones.length - 1);
+  const journeyProgressTotal = hasUnlockedAllHomeRewards
+    ? 100
+    : Math.min(100, Math.max(0, ((activeJourneyIndex + activeJourneyProgress / 100) / journeySegmentCount) * 100));
+  const livingMotion = !shouldReduceMotion;
+  const standardEase = [0.2, 0, 0, 1] as const;
+  const emphasizedOut = [0.05, 0.7, 0.1, 1] as const;
 
   return (
     <motion.section
@@ -1410,17 +1416,37 @@ function RewardsCarousel({
               milestone {Math.min(activeJourneyIndex + 1, homePawMilestones.length)} of {homePawMilestones.length}
             </span>
           </div>
-          <div className="relative h-2 overflow-hidden rounded-full border border-white/10 bg-[#17120a] shadow-[inset_0_1px_5px_rgba(0,0,0,0.45)]">
-            <motion.div
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: journeyProgressTotal / 100 }}
-              viewport={{ once: true }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.95, ease: premiumEase }}
-              className="absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r from-[#fec708] via-[#ffe08a] to-[#d89b00]"
-            />
-            <div className="absolute inset-x-0 top-0 h-px bg-white/22" />
+          <div className="relative px-[18px]">
+            <div
+              role="progressbar"
+              aria-label="Paw Points journey progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(journeyProgressTotal)}
+              className="relative h-3 overflow-hidden rounded-full border border-[#fff1b8]/12 bg-[linear-gradient(180deg,rgba(11,9,4,0.96),rgba(35,24,5,0.98))] shadow-[inset_0_1px_5px_rgba(0,0,0,0.72),0_0_0_1px_rgba(254,199,8,0.06),0_10px_26px_rgba(0,0,0,0.22)]"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_50%,rgba(254,199,8,0.18),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.16),transparent_46%,rgba(0,0,0,0.22))]" />
+              <motion.div
+                initial={false}
+                animate={{ scaleX: journeyProgressTotal / 100 }}
+                transition={{ duration: livingMotion ? 0.72 : 0, ease: standardEase }}
+                className="absolute inset-y-[2px] left-[2px] w-[calc(100%-4px)] origin-left overflow-hidden rounded-full bg-[linear-gradient(90deg,#a86502_0%,#fec708_48%,#fff2ad_78%,#d89b00_100%)] shadow-[0_0_18px_rgba(254,199,8,0.28),0_0_34px_rgba(254,199,8,0.12)]"
+              >
+                <div className="absolute inset-x-0 top-0 h-px bg-white/55" />
+                <div className="absolute inset-y-0 right-0 w-12 bg-[radial-gradient(circle_at_right,rgba(255,247,203,0.82),rgba(254,199,8,0.18)_38%,transparent_70%)]" />
+                {livingMotion && (
+                  <motion.span
+                    className="absolute inset-y-[-40%] w-10 rounded-full bg-white/16 blur-sm"
+                    initial={{ x: '-130%' }}
+                    animate={{ x: '320%' }}
+                    transition={{ duration: 3.1, repeat: Infinity, repeatDelay: 3.8, ease: premiumEase }}
+                  />
+                )}
+              </motion.div>
+              <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-white/34 to-transparent" />
+            </div>
           </div>
-          <div className="mt-3 grid" style={{ gridTemplateColumns: `repeat(${homePawMilestones.length}, minmax(0, 1fr))` }}>
+          <div className="mt-3 flex justify-between px-0.5">
             {homePawMilestones.map((milestone, index) => {
               const tickUnlocked = verifiedPoints >= milestone.points;
               const tickCurrent = index === activeJourneyIndex;
@@ -1435,17 +1461,26 @@ function RewardsCarousel({
                       block: 'nearest',
                     });
                   }}
-                  className="group flex min-h-9 flex-col items-center justify-start gap-1"
+                  className="group flex min-h-9 min-w-9 flex-col items-center justify-start gap-1"
                   aria-label={`View ${milestone.title}`}
                 >
-                  <span className={cn(
-                    "h-2.5 w-2.5 rounded-full border transition-all duration-300",
-                    tickCurrent
-                      ? "border-[#fec708] bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
-                      : tickUnlocked
-                        ? "border-[#fec708]/40 bg-[#fec708]/55"
-                        : "border-white/14 bg-white/[0.08] group-hover:border-white/28"
-                  )} />
+                  <span className="relative grid h-5 w-5 place-items-center">
+                    {tickCurrent && livingMotion && (
+                      <motion.span
+                        className="absolute h-4 w-4 rounded-full border border-[#fec708]/34 bg-[#fec708]/8"
+                        animate={{ opacity: [0.28, 0.68, 0.28], scale: [0.84, 1.12, 0.84] }}
+                        transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 0.45, ease: 'easeInOut' }}
+                      />
+                    )}
+                    <span className={cn(
+                      "relative h-2.5 w-2.5 rounded-full border shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-all duration-300",
+                      tickCurrent
+                        ? "border-[#fff0a8] bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.62),inset_0_1px_0_rgba(255,255,255,0.42)]"
+                        : tickUnlocked
+                          ? "border-[#fec708]/42 bg-[#fec708]/54 shadow-[0_0_10px_rgba(254,199,8,0.18),inset_0_1px_0_rgba(255,255,255,0.26)]"
+                          : "border-white/14 bg-white/[0.075] group-hover:border-[#fec708]/28 group-hover:bg-[#fec708]/10"
+                    )} />
+                  </span>
                   <span className={cn(
                     "hidden text-[8px] font-black uppercase tracking-[0.16em] sm:block",
                     tickCurrent ? "text-[#fec708]" : tickUnlocked ? "text-white/42" : "text-white/24"
@@ -1470,55 +1505,55 @@ function RewardsCarousel({
             >
               <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#fec708]/12 blur-[70px]" />
               <div className="relative flex h-full flex-col">
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">Current balance</p>
-                    <div className="mt-3 flex items-end gap-2">
-                      <span className="cinematic-price text-[3.75rem] tabular-nums text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
-                      <span className="pb-2 text-xs font-black uppercase tracking-[0.2em] text-[#fec708]/60">pts</span>
-                    </div>
-                    {pendingPoints > 0 && (
-                      <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/54">
-                        +{pendingPoints.toLocaleString()} pending clinic verification
-                      </p>
-                    )}
+                <div className="mb-5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">Current balance</p>
+                  <div className="mt-3 flex items-end gap-2">
+                    <span className="cinematic-price text-[3.75rem] tabular-nums text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
+                    <span className="pb-2 text-xs font-black uppercase tracking-[0.2em] text-[#fec708]/60">pts</span>
                   </div>
-                  <div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-2xl border", activeJourneyMilestone.ring, activeJourneyMilestone.glow)}>
-                    {(() => {
-                      const ActiveIcon = activeJourneyMilestone.icon;
-                      return <ActiveIcon className="h-7 w-7" strokeWidth={2.35} />;
-                    })()}
-                  </div>
+                  {pendingPoints > 0 && (
+                    <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/54">
+                      +{pendingPoints.toLocaleString()} pending clinic verification
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-auto">
                   <div className="mb-3 flex items-end justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/36">Next unlock</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/36">{hasUnlockedAllHomeRewards ? 'Top reward unlocked' : 'Next unlock'}</p>
                       <h4 className="cinematic-card-title mt-1 text-2xl text-white">{activeJourneyMilestone.title}</h4>
                     </div>
                     <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-[#fec708]">
                       {Math.round(activeJourneyProgress)}%
                     </span>
                   </div>
-                  <div className="relative h-2.5 overflow-hidden rounded-full border border-white/10 bg-[#17120a] shadow-[inset_0_1px_5px_rgba(0,0,0,0.45)]">
+                  <div
+                    role="progressbar"
+                    aria-label={`Progress to ${activeJourneyMilestone.title}`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(activeJourneyProgress)}
+                    className="relative h-3 overflow-hidden rounded-full border border-[#fff1b8]/12 bg-[linear-gradient(180deg,rgba(12,10,5,0.98),rgba(34,24,7,0.98))] shadow-[inset_0_1px_6px_rgba(0,0,0,0.72),0_0_0_1px_rgba(254,199,8,0.06),0_10px_24px_rgba(0,0,0,0.22)]"
+                  >
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_50%,rgba(254,199,8,0.16),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.14),transparent_48%,rgba(0,0,0,0.22))]" />
                     <motion.div
-                      initial={{ scaleX: 0 }}
-                      whileInView={{ scaleX: activeJourneyProgress / 100 }}
-                      viewport={{ once: true }}
-                      animate={isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.18)', '0 0 26px rgba(254,199,8,0.30)', '0 0 14px rgba(254,199,8,0.18)'] } : undefined}
-                      transition={{ duration: isNearNextTier ? 3.2 : shouldReduceMotion ? 0 : 0.9, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: isNearNextTier ? 'easeInOut' : premiumEase }}
-                      className={cn("absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r", activeJourneyMilestone.fill)}
-                    />
-                    <div className="absolute inset-x-0 top-0 h-px bg-white/25" />
-                    {isVeryNearNextTier && !shouldReduceMotion && (
-                      <motion.span
-                        className="absolute inset-y-0 w-12 rounded-full bg-white/14 blur-sm"
-                        initial={{ x: '-120%' }}
-                        animate={{ x: '260%' }}
-                        transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 3.5, ease: premiumEase }}
-                      />
-                    )}
+                      initial={false}
+                      animate={{ scaleX: activeJourneyProgress / 100 }}
+                      transition={{ duration: livingMotion ? 0.58 : 0, ease: emphasizedOut }}
+                      className="absolute inset-y-[2px] left-[2px] w-[calc(100%-4px)] origin-left overflow-hidden rounded-full bg-[linear-gradient(90deg,#9f6203_0%,#fec708_50%,#fff3b5_78%,#d99b00_100%)] shadow-[0_0_18px_rgba(254,199,8,0.3),0_0_32px_rgba(254,199,8,0.14)]"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-px bg-white/55" />
+                      <div className="absolute inset-y-0 right-0 w-10 bg-[radial-gradient(circle_at_right,rgba(255,248,210,0.9),rgba(254,199,8,0.18)_40%,transparent_72%)]" />
+                      {livingMotion && (
+                        <motion.span
+                          className="absolute right-0 top-1/2 h-3.5 w-1 -translate-y-1/2 rounded-full bg-[#fff3b5] shadow-[0_0_12px_rgba(254,199,8,0.6)]"
+                          animate={{ opacity: [0.52, 0.92, 0.52], scaleY: [0.78, 1, 0.78] }}
+                          transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 0.65, ease: 'easeInOut' }}
+                        />
+                      )}
+                    </motion.div>
+                    <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-white/34 to-transparent" />
                   </div>
                   <p className={cn("mt-3 text-sm font-bold leading-snug", isNearNextTier ? "text-[#fec708]" : "text-white/48")}>
                     {pointsToActiveMilestone > 0 ? `${pointsToActiveMilestone.toLocaleString()} pts left. ${isNearNextTier ? 'Almost there.' : activeJourneyMilestone.note}` : 'Ready to claim your unlocked rewards.'}
