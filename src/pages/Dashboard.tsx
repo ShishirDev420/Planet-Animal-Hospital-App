@@ -1410,15 +1410,44 @@ function RewardsCarousel({
               milestone {Math.min(activeJourneyIndex + 1, homePawMilestones.length)} of {homePawMilestones.length}
             </span>
           </div>
-          <div className="relative h-2 overflow-hidden rounded-full border border-white/10 bg-[#17120a] shadow-[inset_0_1px_5px_rgba(0,0,0,0.45)]">
+          <div
+            className="relative h-2.5 overflow-hidden rounded-full border border-[#fec708]/12 bg-[#130f08] shadow-[inset_0_1px_7px_rgba(0,0,0,0.58),0_1px_0_rgba(254,199,8,0.08)]"
+            role="progressbar"
+            aria-label="Paw Points journey progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(journeyProgressTotal)}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(254,199,8,0.08),transparent_34%,rgba(255,255,255,0.04)_52%,transparent_72%)]" />
             <motion.div
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: journeyProgressTotal / 100 }}
               viewport={{ once: true }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.95, ease: premiumEase }}
-              className="absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r from-[#fec708] via-[#ffe08a] to-[#d89b00]"
-            />
-            <div className="absolute inset-x-0 top-0 h-px bg-white/22" />
+              transition={{ duration: shouldReduceMotion ? 0 : 1.05, ease: premiumEase }}
+              className="absolute inset-y-0 left-0 w-full origin-left overflow-hidden rounded-full bg-[linear-gradient(90deg,#fec708,#ffe28f_48%,#d89b00)] shadow-[0_0_18px_rgba(254,199,8,0.28)]"
+            >
+              <div className="absolute inset-x-0 top-0 h-px bg-white/48" />
+              {!shouldReduceMotion && (
+                <motion.span
+                  className="absolute inset-y-0 w-16 -skew-x-12 bg-white/22 blur-[1px]"
+                  initial={{ x: '-140%', opacity: 0 }}
+                  whileInView={{ x: '210%', opacity: [0, 0.72, 0] }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.65, delay: 0.42, ease: premiumEase }}
+                />
+              )}
+            </motion.div>
+            {journeyProgressTotal > 3 && (
+              <motion.span
+                className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border border-[#fff0b8]/70 bg-[#ffe28f] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
+                style={{ left: `calc(${journeyProgressTotal}% - 7px)` }}
+                initial={{ opacity: 0, scale: 0.72 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.38, delay: shouldReduceMotion ? 0 : 0.78, ease: premiumEase }}
+              />
+            )}
+            <div className="absolute inset-x-0 top-0 h-px bg-white/18" />
           </div>
           <div className="mt-3 grid" style={{ gridTemplateColumns: `repeat(${homePawMilestones.length}, minmax(0, 1fr))` }}>
             {homePawMilestones.map((milestone, index) => {
@@ -1438,14 +1467,20 @@ function RewardsCarousel({
                   className="group flex min-h-9 flex-col items-center justify-start gap-1"
                   aria-label={`View ${milestone.title}`}
                 >
-                  <span className={cn(
-                    "h-2.5 w-2.5 rounded-full border transition-all duration-300",
-                    tickCurrent
-                      ? "border-[#fec708] bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
-                      : tickUnlocked
-                        ? "border-[#fec708]/40 bg-[#fec708]/55"
-                        : "border-white/14 bg-white/[0.08] group-hover:border-white/28"
-                  )} />
+                  <motion.span
+                    animate={tickCurrent && !shouldReduceMotion ? {
+                      scale: [1, 1.16, 1],
+                      boxShadow: ['0 0 12px rgba(254,199,8,0.30)', '0 0 22px rgba(254,199,8,0.46)', '0 0 12px rgba(254,199,8,0.30)'],
+                    } : undefined}
+                    transition={{ duration: 2.8, repeat: tickCurrent && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' }}
+                    className={cn(
+                      "h-2.5 w-2.5 rounded-full border transition-all duration-300",
+                      tickCurrent
+                        ? "border-[#fec708] bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
+                        : tickUnlocked
+                          ? "border-[#fec708]/40 bg-[#fec708]/55"
+                          : "border-white/14 bg-white/[0.08] group-hover:border-white/28"
+                    )} />
                   <span className={cn(
                     "hidden text-[8px] font-black uppercase tracking-[0.16em] sm:block",
                     tickCurrent ? "text-[#fec708]" : tickUnlocked ? "text-white/42" : "text-white/24"
@@ -1470,7 +1505,7 @@ function RewardsCarousel({
             >
               <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#fec708]/12 blur-[70px]" />
               <div className="relative flex h-full flex-col">
-                <div className="mb-5 flex items-start justify-between gap-4">
+                <div className="mb-5">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">Current balance</p>
                     <div className="mt-3 flex items-end gap-2">
@@ -1482,12 +1517,6 @@ function RewardsCarousel({
                         +{pendingPoints.toLocaleString()} pending clinic verification
                       </p>
                     )}
-                  </div>
-                  <div className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-2xl border", activeJourneyMilestone.ring, activeJourneyMilestone.glow)}>
-                    {(() => {
-                      const ActiveIcon = activeJourneyMilestone.icon;
-                      return <ActiveIcon className="h-7 w-7" strokeWidth={2.35} />;
-                    })()}
                   </div>
                 </div>
 
@@ -1501,19 +1530,56 @@ function RewardsCarousel({
                       {Math.round(activeJourneyProgress)}%
                     </span>
                   </div>
-                  <div className="relative h-2.5 overflow-hidden rounded-full border border-white/10 bg-[#17120a] shadow-[inset_0_1px_5px_rgba(0,0,0,0.45)]">
+                  <div
+                    className="relative h-2.5 overflow-hidden rounded-full border border-[#fec708]/12 bg-[#130f08] shadow-[inset_0_1px_7px_rgba(0,0,0,0.58),0_1px_0_rgba(254,199,8,0.08)]"
+                    role="progressbar"
+                    aria-label={`${activeJourneyMilestone.title} progress`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(activeJourneyProgress)}
+                  >
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(254,199,8,0.07),transparent_36%,rgba(255,255,255,0.035)_55%,transparent_78%)]" />
                     <motion.div
                       initial={{ scaleX: 0 }}
                       whileInView={{ scaleX: activeJourneyProgress / 100 }}
                       viewport={{ once: true }}
-                      animate={isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.18)', '0 0 26px rgba(254,199,8,0.30)', '0 0 14px rgba(254,199,8,0.18)'] } : undefined}
-                      transition={{ duration: isNearNextTier ? 3.2 : shouldReduceMotion ? 0 : 0.9, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: isNearNextTier ? 'easeInOut' : premiumEase }}
-                      className={cn("absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r", activeJourneyMilestone.fill)}
-                    />
-                    <div className="absolute inset-x-0 top-0 h-px bg-white/25" />
+                      animate={isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.18)', '0 0 28px rgba(254,199,8,0.34)', '0 0 14px rgba(254,199,8,0.18)'] } : undefined}
+                      transition={{
+                        scaleX: { duration: shouldReduceMotion ? 0 : 0.95, ease: premiumEase },
+                        boxShadow: { duration: 3.2, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' },
+                      }}
+                      className={cn("absolute inset-y-0 left-0 w-full origin-left overflow-hidden rounded-full bg-gradient-to-r shadow-[0_0_18px_rgba(254,199,8,0.23)]", activeJourneyMilestone.fill)}
+                    >
+                      <div className="absolute inset-x-0 top-0 h-px bg-white/46" />
+                      {!shouldReduceMotion && (
+                        <motion.span
+                          className="absolute inset-y-0 w-14 -skew-x-12 bg-white/20 blur-[1px]"
+                          initial={{ x: '-135%', opacity: 0 }}
+                          whileInView={{ x: '215%', opacity: [0, 0.7, 0] }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.55, delay: 0.36, ease: premiumEase }}
+                        />
+                      )}
+                    </motion.div>
+                    {activeJourneyProgress > 4 && (
+                      <motion.span
+                        className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border border-white/60 bg-[#fff0b8] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
+                        style={{ left: `calc(${activeJourneyProgress}% - 7px)` }}
+                        initial={{ opacity: 0, scale: 0.72 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        animate={isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.30)', '0 0 24px rgba(254,199,8,0.48)', '0 0 14px rgba(254,199,8,0.30)'] } : undefined}
+                        transition={{
+                          opacity: { duration: shouldReduceMotion ? 0 : 0.38, delay: shouldReduceMotion ? 0 : 0.68, ease: premiumEase },
+                          scale: { duration: shouldReduceMotion ? 0 : 0.38, delay: shouldReduceMotion ? 0 : 0.68, ease: premiumEase },
+                          boxShadow: { duration: 2.8, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' },
+                        }}
+                      />
+                    )}
+                    <div className="absolute inset-x-0 top-0 h-px bg-white/18" />
                     {isVeryNearNextTier && !shouldReduceMotion && (
                       <motion.span
-                        className="absolute inset-y-0 w-12 rounded-full bg-white/14 blur-sm"
+                        className="absolute inset-y-0 w-12 rounded-full bg-white/12 blur-sm"
                         initial={{ x: '-120%' }}
                         animate={{ x: '260%' }}
                         transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 3.5, ease: premiumEase }}
