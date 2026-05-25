@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShieldPlus, Bot, Map, HeartHandshake, Smartphone, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,14 +14,24 @@ const pageTransition = {
   transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as any }
 };
 
+const mobilePageTransition = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] as any }
+};
+
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isInsideFrame = location.search.includes('preview_frame=true');
   const isDesktopPreview = isInsideFrame && location.search.includes('preview_view=desktop');
+  const previewDevice = new URLSearchParams(location.search).get('preview_device') || '';
   const preservedSearch = isInsideFrame || location.search.includes('demo_mode=true') ? location.search : '';
   const preservePreviewSearch = (to: string) => `${to}${preservedSearch}`;
   const previousPathRef = useRef(location.pathname);
+  const desktopMainRef = useRef<HTMLDivElement | null>(null);
+  const mobileMainRef = useRef<HTMLElement | null>(null);
   const [routeLoader, setRouteLoader] = useState<null | {
     key: number;
     label: string;
@@ -29,6 +39,12 @@ export default function Layout() {
   }>(null);
 
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024);
+  const isMobileShell = !isDesktop || (isInsideFrame && !isDesktopPreview);
+  const activePageTransition = isMobileShell ? mobilePageTransition : pageTransition;
+  const previewSafeAreaStyle = isInsideFrame && !isDesktopPreview ? ({
+    '--preview-safe-area-top': previewDevice.includes('iphone') ? '52px' : previewDevice.includes('samsung') ? '44px' : '0px',
+    '--preview-safe-area-bottom': previewDevice.includes('iphone') ? '34px' : previewDevice.includes('samsung') ? '28px' : '0px',
+  } as CSSProperties) : undefined;
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -39,11 +55,16 @@ export default function Layout() {
   }, []);
 
   useEffect(() => {
+    desktopMainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    mobileMainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
+  useEffect(() => {
     const previousPath = previousPathRef.current;
     const nextPath = location.pathname;
     previousPathRef.current = nextPath;
 
-    if (previousPath === nextPath) return;
+    if (previousPath === nextPath || isInsideFrame) return;
 
     const cameFromAgents = previousPath === '/agents' || previousPath.startsWith('/agents/');
     const isMainDashboard = nextPath === '/';
@@ -63,10 +84,10 @@ export default function Layout() {
     }, 920);
 
     return () => window.clearTimeout(timer);
-  }, [location.pathname]);
+  }, [isInsideFrame, location.pathname]);
 
   return (
-    <div className="h-screen w-full bg-slate-50 text-black/90 font-sans relative overflow-x-hidden dark:bg-[#071912] dark:text-white/90">
+    <div style={previewSafeAreaStyle} className="h-screen w-full bg-slate-50 text-black/90 font-sans relative overflow-x-hidden dark:bg-[#071912] dark:text-white/90">
       {/* Noise Overlay for Anti-Banding */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
       
@@ -82,12 +103,14 @@ export default function Layout() {
           />
         )}
       </AnimatePresence>
-      {/* Background Blobs for Glassmorphism - Fixed to prevent scroll flickering */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[5%] w-96 h-96 bg-planet-yellow/40 rounded-full blur-[120px] opacity-60 animate-blob transform-gpu" style={{ animationDuration: '4s', animationTimingFunction: 'ease-in-out' }}></div>
-        <div className="absolute top-[20%] right-[5%] w-96 h-96 bg-teal-300/40 rounded-full blur-[120px] opacity-60 animate-blob transform-gpu" style={{ animationDelay: '2s', animationDuration: '4s', animationTimingFunction: 'ease-in-out' }}></div>
-        <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-amber-200/40 rounded-full blur-[120px] opacity-60 animate-blob transform-gpu" style={{ animationDelay: '4s', animationDuration: '4s', animationTimingFunction: 'ease-in-out' }}></div>
-      </div>
+      {/* Desktop ambient field stays outside routed content so it never remounts. */}
+      {isDesktop && (!isInsideFrame || isDesktopPreview) && (
+        <div className="ambient-orb-field fixed inset-x-0 bottom-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute top-[-8%] left-[5%] w-96 h-96 bg-planet-yellow/34 rounded-full blur-[120px] opacity-50 animate-blob" style={{ animationDuration: '18s', animationTimingFunction: 'ease-in-out' }}></div>
+          <div className="absolute top-[22%] right-[5%] w-96 h-96 bg-teal-300/28 rounded-full blur-[120px] opacity-45 animate-blob" style={{ animationDelay: '4s', animationDuration: '22s', animationTimingFunction: 'ease-in-out' }}></div>
+          <div className="absolute bottom-[-18%] left-[20%] w-96 h-96 bg-amber-200/30 rounded-full blur-[120px] opacity-45 animate-blob" style={{ animationDelay: '8s', animationDuration: '26s', animationTimingFunction: 'ease-in-out' }}></div>
+        </div>
+      )}
 
       {/* Desktop Layout */}
       {isDesktop && (!isInsideFrame || isDesktopPreview) && (
@@ -114,10 +137,10 @@ export default function Layout() {
         </nav>
         
         {/* Desktop Main Content */}
-        <div className="flex-1 flex justify-center overflow-y-auto">
+        <div ref={desktopMainRef} className="flex-1 flex justify-center overflow-y-auto">
           <div className="w-full max-w-[96rem] px-6 py-8 xl:px-10">
             <AnimatePresence mode="wait">
-              <motion.div key={location.pathname} {...pageTransition}>
+              <motion.div key={location.pathname} {...activePageTransition}>
                 <Outlet />
               </motion.div>
             </AnimatePresence>
@@ -128,17 +151,23 @@ export default function Layout() {
 
       {/* Mobile Container (only renders when not showing desktop layout) */}
       {(!isDesktop || (isInsideFrame && !isDesktopPreview)) && (
-      <div className="w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
-        <main className="flex-1 overflow-y-auto pb-24 hide-scrollbar">
+      <div className="mobile-shell w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
+        <div aria-hidden="true" className="mobile-shell-orb-field">
+          <div className="mobile-shell-orb mobile-shell-orb-yellow" />
+          <div className="mobile-shell-orb mobile-shell-orb-green" />
+          <div className="mobile-shell-orb mobile-shell-orb-amber" />
+        </div>
+
+        <main ref={mobileMainRef} className="relative z-10 flex-1 overflow-y-auto pt-[var(--preview-safe-area-top,0px)] pb-[calc(6rem+var(--preview-safe-area-bottom,0px))] hide-scrollbar">
           <AnimatePresence mode="wait">
-            <motion.div key={location.pathname} {...pageTransition}>
+            <motion.div key={location.pathname} {...activePageTransition}>
               <Outlet />
             </motion.div>
           </AnimatePresence>
         </main>
 
         {/* Bottom Navigation - Premium Liquid Glass - Updated with 5 items */}
-        <nav className="absolute bottom-0 w-full liquid-glass-nav px-2 pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        <nav className="absolute bottom-0 w-full liquid-glass-nav px-2 pt-3 pb-[calc(env(safe-area-inset-bottom)+var(--preview-safe-area-bottom,0px)+2rem)] flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <NavItem to={preservePreviewSearch('/')} icon={<Home size={22} />} label="Home" />
           <NavItem to={preservePreviewSearch('/plans')} icon={<ShieldPlus size={22} />} label="Plans" />
           <NavItem to={preservePreviewSearch('/ai')} icon={<Bot size={22} />} label="AI Vet" isCenter />

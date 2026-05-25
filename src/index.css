@@ -243,8 +243,8 @@
     position: relative;
     display: grid;
     place-items: center;
-    width: 10rem;
-    height: 10rem;
+    width: clamp(5.75rem, 24vw, 10rem);
+    height: clamp(5.75rem, 24vw, 10rem);
   }
 
   .paw-balance-logo-halo {
@@ -258,8 +258,8 @@
   }
 
   .paw-balance-logo {
-    width: 7.85rem;
-    height: 7.85rem;
+    width: clamp(4.65rem, 18.5vw, 7.85rem);
+    height: clamp(4.65rem, 18.5vw, 7.85rem);
     background: #fec708;
     border: 1px solid oklch(0.98 0.04 96 / 0.25);
     box-shadow:
@@ -330,10 +330,10 @@
 
   .reward-rate {
     font-family: var(--font-heading);
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     font-weight: 900;
-    letter-spacing: -0.035em;
-    color: oklch(0.82 0.035 92 / 0.56);
+    letter-spacing: -0.02em;
+    color: oklch(0.84 0.04 92 / 0.68);
   }
 
   .reward-progress-number {
@@ -536,8 +536,63 @@
 }
 
 @layer components {
+  .ambient-orb-field {
+    top: max(env(safe-area-inset-top, 0px), var(--preview-safe-area-top, 0px));
+    contain: layout paint style;
+    transform: translateZ(0);
+  }
+
+  .mobile-shell {
+    isolation: isolate;
+  }
+
+  .mobile-shell-orb-field {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    contain: layout paint style;
+    transform: translateZ(0);
+  }
+
+  .mobile-shell-orb {
+    position: absolute;
+    width: 24rem;
+    height: 24rem;
+    border-radius: 9999px;
+    filter: blur(110px);
+    opacity: 0.42;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    animation: mobile-shell-orb-drift 38s infinite ease-in-out;
+  }
+
+  .mobile-shell-orb-yellow {
+    top: 10rem;
+    left: -10rem;
+    background: rgb(254 199 8 / 0.36);
+    animation-duration: 42s;
+  }
+
+  .mobile-shell-orb-green {
+    top: 34%;
+    right: -11rem;
+    background: rgb(45 212 191 / 0.28);
+    animation-delay: -12s;
+    animation-duration: 48s;
+  }
+
+  .mobile-shell-orb-amber {
+    bottom: -10rem;
+    left: 18%;
+    background: rgb(251 191 36 / 0.24);
+    animation-delay: -24s;
+    animation-duration: 56s;
+  }
+
   .animate-blob {
-    animation: blob 7s infinite ease-in-out;
+    animation: blob 16s infinite ease-in-out;
     will-change: transform, opacity;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
@@ -559,9 +614,24 @@
 
 @keyframes blob {
   0% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
+  33% { transform: translate(14px, -18px) scale(1.035); }
+  66% { transform: translate(-12px, 12px) scale(0.975); }
   100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes mobile-shell-orb-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.38;
+  }
+  35% {
+    transform: translate3d(10px, -8px, 0) scale(1.025);
+    opacity: 0.46;
+  }
+  70% {
+    transform: translate3d(-8px, 10px, 0) scale(0.99);
+    opacity: 0.4;
+  }
 }
 
 @keyframes sync-heartbeat {

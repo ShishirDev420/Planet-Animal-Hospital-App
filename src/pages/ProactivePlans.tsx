@@ -189,15 +189,6 @@ export default function ProactivePlans() {
   return (
     <div className="pb-16 text-white/95 relative min-h-screen">
 
-      {/* Background Ambient Orbs — General Theme */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center isolate">
-        <div className="relative w-full max-w-5xl h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob transform-gpu" />
-          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000 transform-gpu" />
-          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000 transform-gpu" />
-        </div>
-      </div>
-
       {/* Desktop Header */}
       <header className="hidden lg:block px-8 pt-10 pb-6 relative z-10">
         <div className="max-w-6xl mx-auto">

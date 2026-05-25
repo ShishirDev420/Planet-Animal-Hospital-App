@@ -598,15 +598,6 @@ export default function Dashboard() {
   return (
     <>
     <div className="relative w-full h-full">
-      {/* Background Ambient Orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center isolate">
-        <div className="relative w-full max-w-5xl h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob transform-gpu"></div>
-          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000 transform-gpu"></div>
-          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000 transform-gpu"></div>
-        </div>
-      </div>
-
       <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95 mobile-dashboard">
         {/* Header with Logo */}
       <header className="pt-4 mb-2 mobile-header-row">
@@ -1384,17 +1375,17 @@ function RewardsCarousel({
           <div className="min-w-0">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#fec708]/18 bg-[#fec708]/7 px-3 py-1.5">
               <PawPrint className="h-3.5 w-3.5 fill-[#fec708]/20 text-[#fec708]" />
-              <span className="cinematic-kicker text-[9px] text-[#fec708]">Paw Points Program</span>
+              <span className="cinematic-kicker text-[10px] tracking-[0.2em] text-[#fec708]">Paw Points Program</span>
             </div>
-            <h3 className="cinematic-section-title text-3xl leading-[0.94]">One reward path</h3>
-            <p className="mt-2 max-w-[18rem] text-sm font-semibold leading-relaxed text-white/48">
+            <h3 className="cinematic-section-title text-3xl leading-[1.02] tracking-[-0.035em]">One reward path</h3>
+            <p className="mt-2 max-w-[18rem] text-[0.95rem] font-bold leading-6 text-white/62">
               {pointsToActiveMilestone > 0
                 ? `${pointsToActiveMilestone.toLocaleString()} pts to ${activeJourneyMilestone.title}.`
                 : 'All homepage rewards shown here are unlocked.'}
             </p>
           </div>
           <div className="shrink-0 rounded-3xl border border-white/10 bg-black/[0.18] px-4 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/34">Reached</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/48">Reached</p>
             <p className="mt-1 font-heading text-2xl font-black leading-none tabular-nums text-[#fec708]">
               {unlockedMilestoneCount}/{homePawMilestones.length}
             </p>
@@ -1403,10 +1394,10 @@ function RewardsCarousel({
 
         <div className="relative mb-5 px-1">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/36">
+            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-white/50">
               Journey progress
             </span>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">
+            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">
               milestone {Math.min(activeJourneyIndex + 1, homePawMilestones.length)} of {homePawMilestones.length}
             </span>
           </div>
@@ -1482,7 +1473,7 @@ function RewardsCarousel({
                           : "border-white/14 bg-white/[0.08] group-hover:border-white/28"
                     )} />
                   <span className={cn(
-                    "hidden text-[8px] font-black uppercase tracking-[0.16em] sm:block",
+                    "hidden text-[10px] font-black uppercase tracking-[0.14em] sm:block",
                     tickCurrent ? "text-[#fec708]" : tickUnlocked ? "text-white/42" : "text-white/24"
                   )}>
                     {milestone.points >= 1000 ? `${milestone.points / 1000}k` : milestone.points}
@@ -1507,13 +1498,13 @@ function RewardsCarousel({
               <div className="relative flex h-full flex-col">
                 <div className="mb-5">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708]">Current balance</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">Current balance</p>
                     <div className="mt-3 flex items-end gap-2">
                       <span className="cinematic-price text-[3.75rem] tabular-nums text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
                       <span className="pb-2 text-xs font-black uppercase tracking-[0.2em] text-[#fec708]/60">pts</span>
                     </div>
                     {pendingPoints > 0 && (
-                      <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/54">
+                      <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white/64">
                         +{pendingPoints.toLocaleString()} pending clinic verification
                       </p>
                     )}
@@ -1523,10 +1514,10 @@ function RewardsCarousel({
                 <div className="mt-auto">
                   <div className="mb-3 flex items-end justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/36">Next unlock</p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/52">Next unlock</p>
                       <h4 className="cinematic-card-title mt-1 text-2xl text-white">{activeJourneyMilestone.title}</h4>
                     </div>
-                    <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-[#fec708]">
+                    <span className="shrink-0 text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">
                       {Math.round(activeJourneyProgress)}%
                     </span>
                   </div>
@@ -1586,17 +1577,12 @@ function RewardsCarousel({
                       />
                     )}
                   </div>
-                  <p className={cn("mt-3 text-sm font-bold leading-snug", isNearNextTier ? "text-[#fec708]" : "text-white/48")}>
+                  <p className={cn("mt-3 text-[0.95rem] font-bold leading-6", isNearNextTier ? "text-[#fec708]" : "text-white/62")}>
                     {pointsToActiveMilestone > 0 ? `${pointsToActiveMilestone.toLocaleString()} pts left. ${isNearNextTier ? 'Almost there.' : activeJourneyMilestone.note}` : 'Ready to claim your unlocked rewards.'}
                   </p>
                   <button
-                    onClick={() => {
-                      navigate({ pathname: '/rewards', search: locationSearch });
-                      setTimeout(() => {
-                        document.getElementById('roadmap-section')?.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth' });
-                      }, 100);
-                    }}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#fec708]/24 bg-[#fec708]/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[#fec708] transition-colors duration-300 hover:border-[#fec708]/38 hover:bg-[#fec708]/14"
+                    onClick={() => navigate({ pathname: '/rewards', search: locationSearch })}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#fec708]/24 bg-[#fec708]/10 px-4 py-3 text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708] transition-colors duration-300 hover:border-[#fec708]/38 hover:bg-[#fec708]/14"
                   >
                     View Rewards Hub
                     <ChevronRight className="h-3.5 w-3.5" />
@@ -1654,7 +1640,7 @@ function RewardsCarousel({
 
                       <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/[0.16] px-3 py-1.5 backdrop-blur-md">
                         {isUnlocked ? <Check className="h-3.5 w-3.5 text-[#fec708]" /> : <Lock className="h-3.5 w-3.5 text-white/38" />}
-                        <span className={cn("text-[9px] font-black uppercase tracking-[0.18em]", isUnlocked ? "text-[#fec708]" : isCurrent ? "text-white/68" : "text-white/34")}>
+                        <span className={cn("text-[10px] font-black uppercase tracking-[0.16em]", isUnlocked ? "text-[#fec708]" : isCurrent ? "text-white/72" : "text-white/42")}>
                           {isUnlocked ? 'Unlocked' : isCurrent ? (isNearCard ? 'Almost' : 'Next') : 'Upcoming'}
                         </span>
                       </div>
@@ -1664,19 +1650,19 @@ function RewardsCarousel({
                       {milestone.hero ? (
                         <div className="mb-3 flex items-end gap-3">
                           <span className={cn("font-heading text-[3.2rem] font-black leading-none tracking-[-0.08em]", isLocked && !isCurrent ? "text-white/38" : "text-[#fec708]")}>{milestone.hero}</span>
-                          <span className="pb-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/38">rebate</span>
+                          <span className="pb-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white/52">rebate</span>
                         </div>
                       ) : null}
-                      <p className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isCurrent ? "text-[#fec708]" : "text-white/34")}>{milestone.badge}</p>
-                      <h4 className={cn("cinematic-card-title mt-2 text-[1.38rem] leading-[0.98]", isLocked && !isCurrent ? "text-white/52" : "text-white")}>{milestone.title}</h4>
-                      <p className={cn("mt-2 text-sm font-bold leading-snug", isLocked && !isCurrent ? "text-white/36" : "text-white/58")}>{milestone.subtitle}</p>
-                      <p className={cn("mt-3 text-xs font-semibold leading-relaxed", isLocked && !isCurrent ? "text-white/30" : "text-white/45")}>{milestone.detail}</p>
+                      <p className={cn("text-[11px] font-black uppercase tracking-[0.16em]", isCurrent ? "text-[#fec708]" : "text-white/46")}>{milestone.badge}</p>
+                      <h4 className={cn("cinematic-card-title mt-2 text-[1.38rem] leading-[1.06]", isLocked && !isCurrent ? "text-white/62" : "text-white")}>{milestone.title}</h4>
+                      <p className={cn("mt-2 text-[0.95rem] font-bold leading-6", isLocked && !isCurrent ? "text-white/46" : "text-white/66")}>{milestone.subtitle}</p>
+                      <p className={cn("mt-3 text-[0.82rem] font-semibold leading-relaxed", isLocked && !isCurrent ? "text-white/38" : "text-white/54")}>{milestone.detail}</p>
                     </div>
 
                     <div className="mt-auto pt-5">
                       <div className="mb-2 flex items-end justify-between gap-3">
                         <span className={cn("font-heading text-2xl font-black leading-none tabular-nums tracking-[-0.055em]", isLocked && !isCurrent ? "text-white/34" : "text-[#fec708]")}>{milestone.points.toLocaleString()}</span>
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">PTS</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-white/44">PTS</span>
                       </div>
                       <div className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
                         <motion.div

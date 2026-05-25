@@ -35,12 +35,13 @@ export default function MobilePreview() {
   const iframeUrl = useMemo(() => {
     const frameUrl = new URL(normalizedPath, window.location.origin);
     frameUrl.searchParams.set('preview_frame', 'true');
+    frameUrl.searchParams.set('preview_device', device);
     if (demoMode) frameUrl.searchParams.set('demo_mode', 'true');
     if (viewMode === 'desktop') {
       frameUrl.searchParams.set('preview_view', 'desktop');
     }
     return frameUrl.toString();
-  }, [normalizedPath, demoMode, viewMode]);
+  }, [normalizedPath, demoMode, viewMode, device]);
 
   // Build a clean "Open" URL (no preview_frame / preview_view params)
   const openUrl = useMemo(() => {

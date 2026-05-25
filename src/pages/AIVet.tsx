@@ -873,15 +873,6 @@ ${knowledgeContext}`;
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
-      {/* Background Ambient Orbs — Matching Dashboard/Plans */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex justify-center isolate">
-        <div className="relative w-full max-w-5xl h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob transform-gpu" />
-          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000 transform-gpu" />
-          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000 transform-gpu" />
-        </div>
-      </div>
-
       {/* Header Row — Under Notch */}
       <header className="lg:hidden px-5 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] relative z-20 shrink-0">
         <div className="flex items-center justify-between w-full py-2">

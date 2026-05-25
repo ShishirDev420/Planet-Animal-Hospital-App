@@ -255,47 +255,47 @@ export default function Rewards() {
         />
       </div>
 
-      <header className="px-6 pt-10 pb-6 flex items-center justify-between relative z-50">
+      <header className="px-5 pt-5 pb-3 flex items-center justify-between relative z-50 sm:px-6 sm:pt-10 sm:pb-6">
         <motion.button 
           whileHover={{ scale: 1.1, x: -5 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)} 
-          className="w-12 h-12 rounded-xl bg-white/5 backdrop-blur-2xl border border-white/10 flex items-center justify-center"
+          className="w-10 h-10 rounded-xl bg-white/5 backdrop-blur-2xl border border-white/10 flex items-center justify-center sm:h-12 sm:w-12"
         >
           <ChevronLeft size={20} />
         </motion.button>
         <div className="flex flex-col items-center">
-          <h1 className="font-heading text-xl font-black uppercase italic tracking-[-0.06em] text-[#fec708]">PAW POINTS</h1>
+          <h1 className="font-heading text-lg font-black uppercase italic tracking-[-0.06em] text-[#fec708] sm:text-xl">PAW POINTS</h1>
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-[#fec708] animate-pulse" />
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Health Rewards</span>
+            <span className="text-[11px] font-bold text-white/52 uppercase tracking-[0.18em]">Health Rewards</span>
           </div>
         </div>
         <motion.button 
           whileHover={{ scale: 1.1, rotate: 15 }}
-          className="w-12 h-12 rounded-xl bg-[#fec708]/10 border border-[#fec708]/20 flex items-center justify-center text-[#fec708]"
+          className="w-10 h-10 rounded-xl bg-[#fec708]/10 border border-[#fec708]/20 flex items-center justify-center text-[#fec708] sm:h-12 sm:w-12"
         >
           <Medal size={20} />
         </motion.button>
       </header>
 
       {/* Header Section */}
-      <div className="relative pt-12 pb-20 px-6">
+      <div className="relative px-5 pt-1 pb-10 sm:px-6 sm:pt-12 sm:pb-20">
         <div className="relative z-10 text-center max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl mb-8 shadow-2xl overflow-hidden group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl mb-4 shadow-2xl overflow-hidden group sm:mb-8 sm:px-6 sm:py-2.5"
           >
             <HolographicFoil />
             <PawPrint className="w-4 h-4 text-[#fec708] group-hover:rotate-12 transition-transform" />
-            <span className="cinematic-kicker text-[10px] text-white/80">Rewards Hub &bull; <span className="text-[#fec708]">Paw Points</span></span>
+            <span className="cinematic-kicker text-[10px] tracking-[0.18em] text-white/84">Rewards Hub &bull; <span className="text-[#fec708]">Paw Points</span></span>
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="cinematic-title mb-8 text-6xl md:text-8xl"
+            className="cinematic-title mb-4 text-[2.85rem] leading-[0.96] tracking-[-0.045em] sm:mb-8 sm:text-6xl md:text-8xl"
           >
             YOUR <span className="text-[#fec708] italic">PAW</span><br />POINTS
           </motion.h1>
@@ -304,7 +304,7 @@ export default function Rewards() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="cinematic-copy mx-auto mb-16 max-w-2xl text-xl"
+            className="cinematic-copy mx-auto mb-7 max-w-[21rem] text-[0.95rem] leading-7 text-white/68 sm:mb-16 sm:max-w-2xl sm:text-xl"
           >
             Every visit, every check-in, every act of care earns Paw Points. Unlock real clinical rewards on your journey to pet longevity.
           </motion.p>
@@ -314,21 +314,21 @@ export default function Rewards() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="relative inline-block w-full max-w-[392px] rounded-[2.65rem] p-[1px] shadow-[0_40px_100px_rgba(0,0,0,0.72)]"
+            className="relative inline-block w-full max-w-[392px] rounded-[2.35rem] p-[1px] shadow-[0_40px_100px_rgba(0,0,0,0.72)] sm:rounded-[2.65rem]"
           >
             <motion.div
-              className="absolute -inset-3 rounded-[3rem] border border-[#fec708]/15 pointer-events-none"
+              className="absolute -inset-2 rounded-[2.75rem] border border-[#fec708]/15 pointer-events-none sm:-inset-3 sm:rounded-[3rem]"
               animate={shouldReduceMotion ? undefined : { opacity: [0.28, 0.6, 0.28], scale: [1, 1.015, 1] }}
               transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
-              className="absolute -inset-6 rounded-[3.6rem] bg-[#fec708]/8 blur-2xl pointer-events-none"
+              className="absolute -inset-4 rounded-[3rem] bg-[#fec708]/8 blur-2xl pointer-events-none sm:-inset-6 sm:rounded-[3.6rem]"
               animate={shouldReduceMotion ? undefined : { opacity: [0.22, 0.44, 0.22] }}
               transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut' }}
             />
 
-            <div className="paw-balance-card rounded-[2.55rem] px-6 py-8 sm:px-8 sm:py-9 flex flex-col items-center relative overflow-hidden">
-              <div className="paw-balance-logo-stage mb-4">
+            <div className="paw-balance-card rounded-[2.25rem] px-5 py-5 sm:rounded-[2.55rem] sm:px-8 sm:py-9 flex flex-col items-center relative overflow-hidden">
+              <div className="paw-balance-logo-stage mb-2 sm:mb-4">
                 <motion.div
                   className="paw-balance-logo-halo"
                   animate={shouldReduceMotion ? undefined : { opacity: [0.55, 0.9, 0.55], scale: [0.98, 1.04, 0.98] }}
@@ -344,7 +344,7 @@ export default function Rewards() {
               </div>
 
               <motion.span
-                className="cinematic-kicker mb-7 tracking-[0.48em] opacity-85"
+                className="cinematic-kicker mb-4 tracking-[0.48em] opacity-85 sm:mb-7"
                 animate={shouldReduceMotion ? undefined : { opacity: [0.68, 0.94, 0.68] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               >
@@ -357,13 +357,13 @@ export default function Rewards() {
                   initial={{ opacity: 0, y: 20, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className="paw-balance-number cinematic-price text-[4.7rem] sm:text-[5.6rem] tabular-nums"
+                  className="paw-balance-number cinematic-price text-[3.65rem] sm:text-[5.6rem] tabular-nums"
                 >
                   {currentPoints.toLocaleString()}
                 </motion.span>
-                <div className="flex flex-col items-start pb-[0.95rem] shrink-0">
-                  <span className="text-[1.7rem] sm:text-[2rem] font-black text-[#fec708] leading-none tracking-[-0.035em]">PAW</span>
-                  <span className="text-lg sm:text-xl font-black text-white/30 tracking-[0.02em] leading-none">PTS</span>
+                <div className="flex flex-col items-start pb-[0.62rem] shrink-0 sm:pb-[0.95rem]">
+                  <span className="text-[1.3rem] sm:text-[2rem] font-black text-[#fec708] leading-none tracking-[-0.035em]">PAW</span>
+                  <span className="text-sm sm:text-xl font-black text-white/30 tracking-[0.02em] leading-none">PTS</span>
                 </div>
               </div>
 
@@ -373,9 +373,9 @@ export default function Rewards() {
                 const ptsToNext = pointsToNextTier;
 
                 return (
-                  <div className="mt-8 w-full max-w-[320px]">
+                  <div className="mt-5 w-full max-w-[320px] sm:mt-8">
                     <div className="flex justify-between items-end mb-2">
-                      <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Next: {nextTier.title}</span>
+                      <span className="text-[10px] font-black text-white/52 uppercase tracking-[0.16em]">Next: {nextTier.title}</span>
                       <span className="text-[10px] font-black text-[#fec708] uppercase tracking-widest">{Math.round(progress)}%</span>
                     </div>
                     <div className="paw-progress-track h-2.5 w-full rounded-full overflow-hidden mb-2 relative">
@@ -386,7 +386,7 @@ export default function Rewards() {
                         className="paw-progress-fill h-full rounded-full"
                       />
                     </div>
-                    <p className="text-[9px] font-bold text-white/28">{ptsToNext.toLocaleString()} pts away from your next reward</p>
+                    <p className="text-[10px] font-extrabold leading-snug text-white/44">{ptsToNext.toLocaleString()} pts away from your next reward</p>
                   </div>
                 );
               })()}
@@ -405,7 +405,7 @@ export default function Rewards() {
             <h2 id="reward-details-title" className="cinematic-section-title mt-5 text-4xl md:text-5xl">
               Clear value, next action, no guesswork.
             </h2>
-            <p className="cinematic-copy mt-3 max-w-xl text-base text-white/45">
+            <p className="cinematic-copy mt-3 max-w-xl text-[0.95rem] leading-7 text-white/62">
               See what your points are worth today and what one more health action moves you toward next.
             </p>
           </div>
@@ -432,7 +432,7 @@ export default function Rewards() {
                     <Gift className="h-7 w-7" />
                   </div>
                   <h3 className="cinematic-card-title text-3xl">Redeemable Value</h3>
-                  <p className="mt-2 max-w-md text-sm font-medium leading-relaxed text-white/45">
+                  <p className="mt-2 max-w-md text-[0.95rem] font-semibold leading-7 text-white/62">
                     Paw Points convert directly into clinical credit for eligible Planet Animal services.
                   </p>
                 </div>
@@ -459,7 +459,7 @@ export default function Rewards() {
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">Progress</p>
                   <div className="mt-4 flex items-end justify-between gap-4">
                     <p className="reward-progress-number tabular-nums">{Math.round(nextTierProgress)}%</p>
-                    <p className="max-w-[8rem] text-right text-xs font-semibold leading-snug text-white/35">toward {nextTier.title}</p>
+                    <p className="max-w-[8rem] text-right text-[0.82rem] font-bold leading-snug text-white/50">toward {nextTier.title}</p>
                   </div>
                   <div className="mt-4 h-2 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
                     <motion.div

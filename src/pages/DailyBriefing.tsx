@@ -36,8 +36,8 @@ const periodVisuals: Record<TimePeriod, {
     Icon: Sunrise,
     orbClass: 'bg-[#fec708] text-black shadow-[0_0_42px_rgba(254,199,8,0.48)]',
     ringClass: 'border-[#fec708]/28 bg-[#fec708]/10',
-    panelGlow: 'from-[#fec708]/18 via-[#11180d]/96 to-[#071912]',
-    activeTab: 'bg-[#fec708] text-black shadow-[0_18px_36px_rgba(254,199,8,0.22)]',
+    panelGlow: 'from-[#fec708]/10 via-[#10170d]/98 to-[#06130d]',
+    activeTab: 'border border-[#fec708]/28 bg-[#fec708] text-black shadow-[0_14px_30px_rgba(254,199,8,0.18)]',
     copy: 'Prime the body, routine, hydration, and mood before the day gets noisy.',
   },
   afternoon: {
@@ -46,18 +46,18 @@ const periodVisuals: Record<TimePeriod, {
     Icon: SunMedium,
     orbClass: 'bg-[#f0a11a] text-black shadow-[0_0_42px_rgba(240,161,26,0.40)]',
     ringClass: 'border-[#f0a11a]/28 bg-[#f0a11a]/10',
-    panelGlow: 'from-[#f0a11a]/16 via-[#15170d]/96 to-[#071912]',
-    activeTab: 'bg-[#f0a11a] text-black shadow-[0_18px_36px_rgba(240,161,26,0.20)]',
+    panelGlow: 'from-[#fec708]/10 via-[#12170d]/98 to-[#06130d]',
+    activeTab: 'border border-[#fec708]/28 bg-[#fec708] text-black shadow-[0_14px_30px_rgba(254,199,8,0.18)]',
     copy: 'Keep energy steady, heat risk low, and care momentum intact.',
   },
   evening: {
     eyebrow: 'Close The Loop',
     actionLabel: 'Evening wind-down',
     Icon: Moon,
-    orbClass: 'bg-[#b08cff] text-black shadow-[0_0_42px_rgba(176,140,255,0.34)]',
-    ringClass: 'border-[#b08cff]/28 bg-[#b08cff]/10',
-    panelGlow: 'from-[#b08cff]/15 via-[#111421]/96 to-[#071912]',
-    activeTab: 'bg-[#b08cff] text-black shadow-[0_18px_36px_rgba(176,140,255,0.18)]',
+    orbClass: 'bg-[#d8b36a] text-black shadow-[0_0_34px_rgba(216,179,106,0.28)]',
+    ringClass: 'border-[#d8b36a]/24 bg-[#d8b36a]/10',
+    panelGlow: 'from-[#d8b36a]/10 via-[#10150f]/98 to-[#06130d]',
+    activeTab: 'border border-[#fec708]/28 bg-[#fec708] text-black shadow-[0_14px_30px_rgba(254,199,8,0.18)]',
     copy: 'Settle digestion, safety, comfort, and recovery before sleep.',
   },
 };
@@ -143,13 +143,13 @@ function parseBriefing(text: string, period: TimePeriod, petName: string): Parse
 function PeriodGlyph({ period, complete = false, large = false }: { period: TimePeriod; complete?: boolean; large?: boolean }) {
   const visual = periodVisuals[period];
   const Icon = visual.Icon;
-  const size = large ? 'h-16 w-16' : 'h-8 w-8';
+  const size = large ? 'h-16 w-16' : 'h-7 w-7';
   const iconSize = large ? 28 : 15;
 
   return (
     <div className={cn('relative grid shrink-0 place-items-center rounded-full', size, visual.orbClass)}>
       <motion.span
-        className={cn('absolute inset-[-7px] rounded-full border', visual.ringClass)}
+        className={cn('absolute rounded-full border', large ? 'inset-[-7px]' : 'inset-[-5px]', visual.ringClass)}
         animate={complete ? { scale: [1, 1.1, 1], opacity: [0.5, 0.9, 0.5] } : { scale: [1, 1.06, 1], opacity: [0.34, 0.64, 0.34] }}
         transition={{ duration: complete ? 1.4 : 3.8, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -216,8 +216,8 @@ function CareActionCard({ item, index, period }: { item: string; index: number; 
 
 function PeriodSelector({ activePeriod, completedPeriods, onPeriodClick }: { activePeriod: TimePeriod; completedPeriods: TimePeriod[]; onPeriodClick: (period: TimePeriod) => void }) {
   return (
-    <motion.div variants={riseIn} className="rounded-[1.6rem] border border-white/[0.07] bg-black/28 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-      <div className="grid grid-cols-3 gap-2">
+    <motion.div variants={riseIn} className="rounded-[1.35rem] border border-white/[0.08] bg-black/34 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.055),0_16px_42px_rgba(0,0,0,0.22)]">
+      <div className="grid grid-cols-3 gap-1.5">
         {PERIOD_ORDER.map((period) => {
           const complete = completedPeriods.includes(period);
           const active = period === activePeriod;
@@ -230,21 +230,21 @@ function PeriodSelector({ activePeriod, completedPeriods, onPeriodClick }: { act
               onClick={() => onPeriodClick(period)}
               whileTap={{ scale: 0.96 }}
               className={cn(
-                'relative overflow-hidden rounded-[1.15rem] px-2.5 py-3 text-left transition-colors duration-300',
+                'relative min-h-[4.35rem] overflow-hidden rounded-[1rem] px-2 py-2.5 text-center transition-colors duration-300',
                 active ? visual.activeTab : 'border border-white/[0.06] bg-white/[0.035] text-white/46 hover:bg-white/[0.06] hover:text-white/76',
               )}
             >
               {active && (
                 <motion.div
                   layoutId="active-briefing-period"
-                  className="absolute inset-0 rounded-[1.15rem] bg-white/12"
+                  className="absolute inset-0 rounded-[1rem] bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.26),transparent_52%)]"
                   transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
                 />
               )}
-              <div className="relative flex items-center gap-2">
+              <div className="relative flex flex-col items-center gap-1.5">
                 <PeriodGlyph period={period} complete={complete} />
-                <div className="min-w-0">
-                  <p className="truncate text-[9px] font-black uppercase tracking-[0.18em]">{period}</p>
+                <div className="min-w-0 max-w-full">
+                  <p className="truncate text-[9px] font-black uppercase tracking-[0.11em]">{period}</p>
                   <p className={cn('mt-0.5 hidden text-[10px] font-bold leading-none sm:block', active ? 'text-black/58' : 'text-white/28')}>
                     {complete ? 'Banked' : active ? 'Open now' : 'Preview'}
                   </p>
@@ -325,16 +325,17 @@ export default function DailyBriefing() {
       variants={pageStagger}
       initial="hidden"
       animate="visible"
-      className="relative min-h-full overflow-hidden bg-[#071912] px-4 pb-32 pt-4 text-white"
+      className="relative -mt-[var(--preview-safe-area-top,0px)] min-h-full overflow-hidden bg-[#071912] px-4 pb-32 pt-[calc(var(--preview-safe-area-top,0px)+1rem)] text-white"
     >
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-10%,rgba(254,199,8,0.16),transparent_34%),radial-gradient(circle_at_15%_22%,rgba(254,199,8,0.08),transparent_28%),linear-gradient(180deg,#0b170c_0%,#071912_48%,#040806_100%)]" />
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_74%_4%,rgba(254,199,8,0.055),transparent_34%),radial-gradient(circle_at_12%_24%,rgba(44,128,90,0.10),transparent_30%),linear-gradient(180deg,#08140e_0%,#071912_44%,#040806_100%)]" />
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.035] mix-blend-soft-light" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 180 180%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.65%22/%3E%3C/svg%3E")' }} />
       <motion.div
-        className="pointer-events-none absolute right-[-34%] top-[-15%] h-[430px] w-[430px] rounded-full bg-[#fec708] opacity-[0.08] blur-sm"
-        animate={shouldReduceMotion ? undefined : { scale: [1, 1.035, 1], opacity: [0.065, 0.105, 0.065] }}
-        transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
+        className="pointer-events-none absolute right-[-46%] top-[4rem] z-0 h-[380px] w-[380px] rounded-full bg-[#fec708]/10 blur-3xl"
+        animate={shouldReduceMotion ? undefined : { scale: [1, 1.02, 1], opacity: [0.14, 0.2, 0.14] }}
+        transition={{ duration: 9.5, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      <div className="mx-auto max-w-2xl">
+      <div className="relative z-10 mx-auto max-w-2xl">
         <motion.header variants={riseIn} className="mb-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <motion.button
@@ -354,18 +355,18 @@ export default function DailyBriefing() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-[2.2rem] border border-[#fec708]/12 bg-[linear-gradient(145deg,rgba(254,199,8,0.10),rgba(0,0,0,0.32)_38%,rgba(0,0,0,0.58))] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="relative overflow-hidden rounded-[2.2rem] border border-[#fec708]/12 bg-[linear-gradient(145deg,rgba(254,199,8,0.055),rgba(0,0,0,0.34)_40%,rgba(0,0,0,0.62))] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.06)]">
             <motion.div
-              className="absolute right-[-92px] top-[-116px] h-64 w-64 rounded-full bg-[#fec708]"
-              animate={shouldReduceMotion ? undefined : { scale: [1, 1.05, 1], rotate: [0, 2, 0] }}
-              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+              className="pointer-events-none absolute right-[-128px] top-[-142px] h-72 w-72 rounded-full bg-[#fec708]/24 blur-xl"
+              animate={shouldReduceMotion ? undefined : { scale: [1, 1.025, 1], opacity: [0.7, 0.86, 0.7] }}
+              transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <div className="absolute right-5 top-5 h-16 w-16 overflow-hidden rounded-full border border-black/20 bg-[#fec708] p-1 shadow-[0_0_34px_rgba(254,199,8,0.32)]">
+            <div className="absolute right-5 top-5 h-14 w-14 overflow-hidden rounded-full border border-black/25 bg-[#f4c40a] p-1 shadow-[0_0_22px_rgba(254,199,8,0.18)]">
               <img src={planetLogo} alt="Planet Animal Hospital" className="h-full w-full rounded-full object-cover" />
             </div>
 
-            <div className="relative max-w-[74%]">
-              <p className="cinematic-kicker mb-3 text-[9px] tracking-[0.3em]">{today}</p>
+            <div className="relative max-w-[78%]">
+              <p className="cinematic-kicker mb-3 text-[9px] tracking-[0.24em]">{today}</p>
               <h1 className="cinematic-section-title text-[2.8rem] leading-[0.88] tracking-[-0.065em] text-white">
                 {display.title}
               </h1>
@@ -421,9 +422,9 @@ export default function DailyBriefing() {
               className={cn('relative overflow-hidden rounded-[2.35rem] border border-white/[0.08] bg-gradient-to-br p-5 shadow-[0_32px_90px_rgba(0,0,0,0.46),inset_0_1px_0_rgba(255,255,255,0.07)]', visual.panelGlow)}
             >
               <motion.div
-                className="pointer-events-none absolute right-[-100px] top-[-110px] h-64 w-64 rounded-full bg-[#fec708]/10 blur-2xl"
-                animate={shouldReduceMotion ? undefined : { opacity: [0.28, 0.58, 0.28], scale: [1, 1.08, 1] }}
-                transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+                className="pointer-events-none absolute right-[-110px] top-[-120px] h-64 w-64 rounded-full bg-[#fec708]/8 blur-3xl"
+                animate={shouldReduceMotion ? undefined : { opacity: [0.24, 0.4, 0.24], scale: [1, 1.035, 1] }}
+                transition={{ duration: 7.8, repeat: Infinity, ease: 'easeInOut' }}
               />
 
               <div className="relative mb-5 flex items-start gap-4">
