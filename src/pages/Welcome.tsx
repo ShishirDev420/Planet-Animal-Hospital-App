@@ -6,11 +6,6 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { Loader2 } from 'lucide-react';
 
-const isLikelyUnauthorizedDomain = () => {
-  const hostname = window.location.hostname;
-  return hostname !== 'localhost' && hostname !== '127.0.0.1';
-};
-
 const getAuthErrorMessage = (error: any): string => {
   const code = error?.code || '';
   switch (code) {
@@ -26,7 +21,8 @@ const getAuthErrorMessage = (error: any): string => {
       return 'Use at least 6 characters for your password.';
     case 'auth/popup-blocked':
     case 'auth/cancelled-popup-request':
-      return "Google sign-in needs the popup to stay open. Please allow popups for this site and try again.";
+    case 'auth/popup-closed-by-user':
+      return 'Please allow popups for this site and try again.';
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a moment and try again.';
     case 'auth/user-disabled':
@@ -49,7 +45,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
-  const [domainWarning, setDomainWarning] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -72,12 +67,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
     setNeedsOnboarding(true);
   }, [initialOnboarding, parentName]);
-
-  useEffect(() => {
-    if (isLikelyUnauthorizedDomain()) {
-      setDomainWarning(`Domain ${window.location.hostname} may need Firebase authorization. If sign-in fails, contact support.`);
-    }
-  }, []);
 
   const headerWords = ['Love', 'Care', 'Trust', 'Healing'];
 
@@ -432,7 +421,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
             <>
               <div className="space-y-3">
                 {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md leading-relaxed">{authError}</p>}
-                {domainWarning && <p className="text-amber-400 font-body font-bold text-xs text-center mb-4 drop-shadow-md leading-relaxed">{domainWarning}</p>}
                 <button
                   onClick={handleGoogleAuth}
                   disabled={isGoogleLoading || isEmailLoading}
@@ -460,11 +448,11 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                   <button type="button" onClick={() => { setIsSignUp(true); setAuthError(''); }} className={`rounded-xl px-3 py-2.5 text-xs font-heading font-black uppercase tracking-[0.18em] transition-all ${isSignUp ? 'bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.25)]' : 'text-white/45 hover:text-white'}`}>Create Account</button>
                 </div>
                 <div className="relative group">
-                  <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
+                  <input type="email" id="email" value={email} onChange={(e) => { setEmail(e.target.value); setAuthError(''); }} autoComplete="email" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
                   <label htmlFor="email" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Email</label>
                 </div>
                 <div className="relative group">
-                  <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isSignUp ? 'new-password' : 'current-password'} data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Password" />
+                  <input type="password" id="password" value={password} onChange={(e) => { setPassword(e.target.value); setAuthError(''); }} autoComplete={isSignUp ? 'new-password' : 'current-password'} data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Password" />
                   <label htmlFor="password" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Password</label>
                 </div>
               </div>
