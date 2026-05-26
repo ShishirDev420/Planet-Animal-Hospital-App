@@ -113,6 +113,96 @@ const SERVICE_MENU = [
   }
 ];
 
+const BOOKING_SERVICES = [
+  { id: 1, name: 'General Checkup', points: 1000, icon: Stethoscope, desc: 'Full health assessment' },
+  { id: 2, name: 'Full Grooming', points: 800, icon: Sparkles, desc: 'Bath, trim & nail care' },
+  { id: 3, name: 'Vaccinations', points: 750, icon: Syringe, desc: 'Core & booster shots' },
+  { id: 4, name: 'Ear Cleaning', points: 200, icon: Ear, desc: 'Deep clean & inspection' },
+  { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' }
+];
+
+const HOME_PAW_MILESTONES = [
+  {
+    points: 500,
+    title: 'Health Starter',
+    badge: 'Entry',
+    subtitle: 'Program entry reward',
+    detail: 'Your first care milestone opens the rewards journey.',
+    note: 'First milestone',
+    icon: TrendingUp,
+    surface: 'from-emerald-200/18 via-cyan-100/8 to-transparent',
+    ring: 'border-emerald-200/30 bg-emerald-300/10 text-emerald-100',
+    fill: 'from-emerald-300 to-cyan-200',
+    glow: 'shadow-[0_0_28px_rgba(52,211,153,0.13)]',
+  },
+  {
+    points: 1500,
+    title: '15% Bill Rebate',
+    badge: 'Savings',
+    subtitle: 'Next bill rebate',
+    detail: 'Instant 15% off your next Planet Animal bill.',
+    note: 'Valid next visit',
+    hero: '15%',
+    icon: FileText,
+    surface: 'from-sky-200/18 via-[#fec708]/8 to-transparent',
+    ring: 'border-sky-100/30 bg-sky-200/10 text-sky-100',
+    fill: 'from-sky-200 via-[#ffe08a] to-[#fec708]',
+    glow: 'shadow-[0_0_30px_rgba(125,211,252,0.13)]',
+  },
+  {
+    points: 2500,
+    title: '20% Bill Rebate',
+    badge: 'Deep Savings',
+    subtitle: 'Deep savings tier',
+    detail: 'A stronger bill reward for consistent preventive care.',
+    note: 'Care pays back',
+    icon: Zap,
+    surface: 'from-[#fec708]/20 via-orange-200/10 to-transparent',
+    ring: 'border-[#fec708]/35 bg-[#fec708]/10 text-[#fec708]',
+    fill: 'from-[#fec708] to-orange-300',
+    glow: 'shadow-[0_0_30px_rgba(254,199,8,0.14)]',
+  },
+  {
+    points: 5000,
+    title: 'Life-Maxing Consultation',
+    badge: 'Signature',
+    subtitle: 'Breed-specific longevity plan',
+    detail: 'A focused doctor-led roadmap for longer, healthier years.',
+    note: 'Doctor guided',
+    icon: Award,
+    surface: 'from-violet-200/18 via-pink-200/8 to-transparent',
+    ring: 'border-violet-200/30 bg-violet-300/10 text-violet-100',
+    fill: 'from-violet-300 to-pink-200',
+    glow: 'shadow-[0_0_30px_rgba(196,181,253,0.13)]',
+  },
+  {
+    points: 7500,
+    title: 'Premium Spa & Therapy',
+    badge: 'Comfort',
+    subtitle: 'Grooming plus medicated baths',
+    detail: 'A restorative comfort reward for coat and skin health.',
+    note: 'Full reset',
+    icon: Sparkles,
+    surface: 'from-rose-200/18 via-orange-200/8 to-transparent',
+    ring: 'border-rose-200/30 bg-rose-300/10 text-rose-100',
+    fill: 'from-rose-300 to-orange-200',
+    glow: 'shadow-[0_0_30px_rgba(251,113,133,0.13)]',
+  },
+  {
+    points: 10000,
+    title: 'Full Hematology Panel',
+    badge: 'Clinical',
+    subtitle: 'Comprehensive blood examination',
+    detail: 'A deeper clinical screen for internal health signals.',
+    note: 'Internal health',
+    icon: Trophy,
+    surface: 'from-amber-200/18 via-yellow-100/8 to-transparent',
+    ring: 'border-amber-200/30 bg-amber-300/10 text-amber-100',
+    fill: 'from-amber-300 to-yellow-100',
+    glow: 'shadow-[0_0_30px_rgba(251,191,36,0.13)]',
+  },
+];
+
 
 
 interface PetProfileForIncentives {
@@ -514,14 +604,6 @@ export default function Dashboard() {
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
-
-  const BOOKING_SERVICES = [
-    { id: 1, name: 'General Checkup', points: 1000, icon: Stethoscope, desc: 'Full health assessment' },
-    { id: 2, name: 'Full Grooming', points: 800, icon: Sparkles, desc: 'Bath, trim & nail care' },
-    { id: 3, name: 'Vaccinations', points: 750, icon: Syringe, desc: 'Core & booster shots' },
-    { id: 4, name: 'Ear Cleaning', points: 200, icon: Ear, desc: 'Deep clean & inspection' },
-    { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' }
-  ];
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1263,87 +1345,7 @@ function RewardsCarousel({
   });
 
   const premiumEase = [0.22, 1, 0.36, 1] as const;
-  const homePawMilestones = [
-    {
-      points: 500,
-      title: 'Health Starter',
-      badge: 'Entry',
-      subtitle: 'Program entry reward',
-      detail: 'Your first care milestone opens the rewards journey.',
-      note: 'First milestone',
-      icon: TrendingUp,
-      surface: 'from-emerald-200/18 via-cyan-100/8 to-transparent',
-      ring: 'border-emerald-200/30 bg-emerald-300/10 text-emerald-100',
-      fill: 'from-emerald-300 to-cyan-200',
-      glow: 'shadow-[0_0_28px_rgba(52,211,153,0.13)]',
-    },
-    {
-      points: 1500,
-      title: '15% Bill Rebate',
-      badge: 'Savings',
-      subtitle: 'Next bill rebate',
-      detail: 'Instant 15% off your next Planet Animal bill.',
-      note: 'Valid next visit',
-      hero: '15%',
-      icon: FileText,
-      surface: 'from-sky-200/18 via-[#fec708]/8 to-transparent',
-      ring: 'border-sky-100/30 bg-sky-200/10 text-sky-100',
-      fill: 'from-sky-200 via-[#ffe08a] to-[#fec708]',
-      glow: 'shadow-[0_0_30px_rgba(125,211,252,0.13)]',
-    },
-    {
-      points: 2500,
-      title: '20% Bill Rebate',
-      badge: 'Deep Savings',
-      subtitle: 'Deep savings tier',
-      detail: 'A stronger bill reward for consistent preventive care.',
-      note: 'Care pays back',
-      icon: Zap,
-      surface: 'from-[#fec708]/20 via-orange-200/10 to-transparent',
-      ring: 'border-[#fec708]/35 bg-[#fec708]/10 text-[#fec708]',
-      fill: 'from-[#fec708] to-orange-300',
-      glow: 'shadow-[0_0_30px_rgba(254,199,8,0.14)]',
-    },
-    {
-      points: 5000,
-      title: 'Life-Maxing Consultation',
-      badge: 'Signature',
-      subtitle: 'Breed-specific longevity plan',
-      detail: 'A focused doctor-led roadmap for longer, healthier years.',
-      note: 'Doctor guided',
-      icon: Award,
-      surface: 'from-violet-200/18 via-pink-200/8 to-transparent',
-      ring: 'border-violet-200/30 bg-violet-300/10 text-violet-100',
-      fill: 'from-violet-300 to-pink-200',
-      glow: 'shadow-[0_0_30px_rgba(196,181,253,0.13)]',
-    },
-    {
-      points: 7500,
-      title: 'Premium Spa & Therapy',
-      badge: 'Comfort',
-      subtitle: 'Grooming plus medicated baths',
-      detail: 'A restorative comfort reward for coat and skin health.',
-      note: 'Full reset',
-      icon: Sparkles,
-      surface: 'from-rose-200/18 via-orange-200/8 to-transparent',
-      ring: 'border-rose-200/30 bg-rose-300/10 text-rose-100',
-      fill: 'from-rose-300 to-orange-200',
-      glow: 'shadow-[0_0_30px_rgba(251,113,133,0.13)]',
-    },
-    {
-      points: 10000,
-      title: 'Full Hematology Panel',
-      badge: 'Clinical',
-      subtitle: 'Comprehensive blood examination',
-      detail: 'A deeper clinical screen for internal health signals.',
-      note: 'Internal health',
-      icon: Trophy,
-      surface: 'from-amber-200/18 via-yellow-100/8 to-transparent',
-      ring: 'border-amber-200/30 bg-amber-300/10 text-amber-100',
-      fill: 'from-amber-300 to-yellow-100',
-      glow: 'shadow-[0_0_30px_rgba(251,191,36,0.13)]',
-    },
-  ];
+  const homePawMilestones = HOME_PAW_MILESTONES;
   const activeMilestoneIndex = homePawMilestones.findIndex((milestone) => verifiedPoints < milestone.points);
   const activeJourneyIndex = activeMilestoneIndex === -1 ? homePawMilestones.length - 1 : activeMilestoneIndex;
   const activeJourneyMilestone = homePawMilestones[activeJourneyIndex];

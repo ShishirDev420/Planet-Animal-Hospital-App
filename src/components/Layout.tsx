@@ -87,7 +87,7 @@ export default function Layout() {
   }, [isInsideFrame, location.pathname]);
 
   return (
-    <div style={previewSafeAreaStyle} className="h-screen w-full bg-slate-50 text-black/90 font-sans relative overflow-x-hidden dark:bg-[#071912] dark:text-white/90">
+    <div style={previewSafeAreaStyle} className="fixed inset-0 h-[100dvh] w-full bg-slate-50 text-black/90 font-sans overflow-hidden dark:bg-[#071912] dark:text-white/90">
       {/* Noise Overlay for Anti-Banding */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
       
@@ -151,14 +151,14 @@ export default function Layout() {
 
       {/* Mobile Container (only renders when not showing desktop layout) */}
       {(!isDesktop || (isInsideFrame && !isDesktopPreview)) && (
-      <div className="mobile-shell w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
+      <div className="mobile-shell w-full mx-auto bg-white/40 backdrop-blur-2xl relative z-10 flex min-h-0 flex-col h-[100dvh] shadow-2xl overflow-hidden border-x border-white/20 dark:bg-neutral-900/40 dark:border-white/10">
         <div aria-hidden="true" className="mobile-shell-orb-field">
           <div className="mobile-shell-orb mobile-shell-orb-yellow" />
           <div className="mobile-shell-orb mobile-shell-orb-green" />
           <div className="mobile-shell-orb mobile-shell-orb-amber" />
         </div>
 
-        <main ref={mobileMainRef} className="relative z-10 flex-1 overflow-y-auto pt-[var(--preview-safe-area-top,0px)] pb-[calc(6rem+var(--preview-safe-area-bottom,0px))] hide-scrollbar">
+        <main ref={mobileMainRef} className="mobile-scroll-pane relative z-10 min-h-0 flex-1 overflow-y-auto pt-[var(--preview-safe-area-top,0px)] pb-[calc(6rem+var(--preview-safe-area-bottom,0px))] hide-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div key={location.pathname} {...activePageTransition}>
               <Outlet />
@@ -167,7 +167,7 @@ export default function Layout() {
         </main>
 
         {/* Bottom Navigation - Premium Liquid Glass - Updated with 5 items */}
-        <nav className="absolute bottom-0 w-full liquid-glass-nav px-2 pt-3 pb-[calc(env(safe-area-inset-bottom)+var(--preview-safe-area-bottom,0px)+2rem)] flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        <nav className="mobile-bottom-nav fixed inset-x-0 bottom-0 w-full liquid-glass-nav px-2 pt-3 pb-[calc(env(safe-area-inset-bottom)+var(--preview-safe-area-bottom,0px)+2rem)] flex justify-around items-center z-50 rounded-t-3xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <NavItem to={preservePreviewSearch('/')} icon={<Home size={22} />} label="Home" />
           <NavItem to={preservePreviewSearch('/plans')} icon={<ShieldPlus size={22} />} label="Plans" />
           <NavItem to={preservePreviewSearch('/ai')} icon={<Bot size={22} />} label="AI Vet" isCenter />

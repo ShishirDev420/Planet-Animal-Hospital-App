@@ -536,6 +536,20 @@
 }
 
 @layer components {
+  .mobile-scroll-pane {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    contain: layout style;
+  }
+
+  .mobile-bottom-nav {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform;
+    contain: layout style;
+  }
+
   .ambient-orb-field {
     top: max(env(safe-area-inset-top, 0px), var(--preview-safe-area-top, 0px));
     contain: layout paint style;
