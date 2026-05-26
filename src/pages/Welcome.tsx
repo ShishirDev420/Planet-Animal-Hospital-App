@@ -6,11 +6,50 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { Loader2 } from 'lucide-react';
 
+const isLikelyUnauthorizedDomain = () => {
+  const hostname = window.location.hostname;
+  return hostname !== 'localhost' && hostname !== '127.0.0.1';
+};
+
+const getAuthErrorMessage = (error: any): string => {
+  const code = error?.code || '';
+  switch (code) {
+    case 'auth/unauthorized-domain':
+      return 'This app domain needs Firebase authorization. Contact support.';
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your connection and try again.';
+    case 'auth/invalid-credential':
+      return "That email and password didn't match. Check them or create an account.";
+    case 'auth/email-already-in-use':
+      return "That email already has an account. Sign in with your password or use Google.";
+    case 'auth/weak-password':
+      return 'Use at least 6 characters for your password.';
+    case 'auth/popup-blocked':
+    case 'auth/cancelled-popup-request':
+      return "Google sign-in needs the popup to stay open. Please allow popups for this site and try again.";
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a moment and try again.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Contact support.';
+    case 'auth/user-not-found':
+      return 'No account found with this email. Create one first.';
+    case 'auth/wrong-password':
+      return 'Incorrect password. Try again or reset it.';
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/requires-recent-login':
+      return 'Please sign in again to complete this action.';
+    default:
+      return error?.message || `Authentication failed (${code || 'unknown'})`;
+  }
+};
+
 export default function Welcome({ initialOnboarding = false, onComplete }: { initialOnboarding?: boolean, onComplete?: () => void }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [domainWarning, setDomainWarning] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -33,6 +72,12 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
     setNeedsOnboarding(true);
   }, [initialOnboarding, parentName]);
+
+  useEffect(() => {
+    if (isLikelyUnauthorizedDomain()) {
+      setDomainWarning(`Domain ${window.location.hostname} may need Firebase authorization. If sign-in fails, contact support.`);
+    }
+  }, []);
 
   const headerWords = ['Love', 'Care', 'Trust', 'Healing'];
 
@@ -135,19 +180,11 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       }
     } catch (e: any) {
       console.error('Auth failed', e);
-      if (e.code === 'auth/network-request-failed') {
-        import('firebase/auth').then(({ signOut }) => signOut(auth));
-        setAuthError("Network error. Please try again.");
-      } else if (e.code === 'auth/invalid-credential') {
-        setAuthError("That email and password didn't match. Check them or create an account.");
-      } else if (e.code === 'auth/email-already-in-use') {
+      const message = getAuthErrorMessage(e);
+      if (e.code === 'auth/email-already-in-use') {
         setIsSignUp(false);
-        setAuthError("That email already has an account. Sign in with your password or use Google.");
-      } else if (e.code === 'auth/weak-password') {
-        setAuthError('Use at least 6 characters for your password.');
-      } else {
-        setAuthError(e.message || 'Authentication failed');
       }
+      setAuthError(message);
     } finally {
       setIsEmailLoading(false);
     }
@@ -164,14 +201,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       continueToClinic(hasCompletedProfile);
     } catch (e: any) {
       console.error('Google Login failed', e);
-      if (e.code === 'auth/network-request-failed') {
-        import('firebase/auth').then(({ signOut }) => signOut(auth));
-      }
-      if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.message?.includes('cross-origin')) {
-        setAuthError("Google sign-in needs the popup to stay open. Please allow popups for this site and try again.");
-      } else {
-        setAuthError(e.message || 'Google Auth failed');
-      }
+      setAuthError(getAuthErrorMessage(e));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -225,7 +255,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       alert('Password reset email sent! Please check your inbox.');
     } catch (e: any) {
       console.error('Password reset failed', e);
-      setAuthError(e.message || 'Failed to send password reset email');
+      setAuthError(getAuthErrorMessage(e));
     }
   };
 
@@ -402,6 +432,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
             <>
               <div className="space-y-3">
                 {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md leading-relaxed">{authError}</p>}
+                {domainWarning && <p className="text-amber-400 font-body font-bold text-xs text-center mb-4 drop-shadow-md leading-relaxed">{domainWarning}</p>}
                 <button
                   onClick={handleGoogleAuth}
                   disabled={isGoogleLoading || isEmailLoading}

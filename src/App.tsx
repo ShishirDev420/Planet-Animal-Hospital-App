@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from './lib/firebase';
+import { auth, db, checkFirebaseHealth } from './lib/firebase';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ProactivePlans from './pages/ProactivePlans';
@@ -46,27 +46,44 @@ export default function App() {
       return;
     }
 
+    let loadingTimeout: number | null = null;
+
+    const fetchUserDocWithRetry = async (uid: string, attempt = 1): Promise<boolean> => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (!userDoc.exists() || !userDoc.data()?.petName || userDoc.data()?.petName === 'Pending') {
+          return false; // needs onboarding
+        }
+        return true; // authenticated
+      } catch (e: any) {
+        console.error(`[Auth] Firestore read attempt ${attempt} failed:`, e.code, e.message);
+        if (attempt < 3) {
+          const delay = 2000 * Math.pow(2, attempt - 1);
+          await new Promise((res) => window.setTimeout(res, delay));
+          return fetchUserDocWithRetry(uid, attempt + 1);
+        }
+        console.error('[Auth] Firestore read exhausted all retries. Keeping user authenticated to prevent lockout.');
+        return true; // stay authenticated instead of signing out
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (!userDoc.exists() || !userDoc.data()?.petName || userDoc.data()?.petName === 'Pending') {
-            setAuthStatus('onboarding');
-          } else {
-            setAuthStatus('authenticated');
-          }
-        } catch (e) {
-          console.error("Error fetching user doc during auth state change:", e);
-          // Hard-code logic: If we fail to fetch the user doc, sign them out and revert to the sign-in page.
-          // This prevents returning users from being incorrectly pushed into the onboarding flow.
-          import('firebase/auth').then(({ signOut }) => signOut(auth));
-          setAuthStatus('unauthenticated');
-        }
+        const isFullyOnboarded = await fetchUserDocWithRetry(user.uid);
+        setAuthStatus(isFullyOnboarded ? 'authenticated' : 'onboarding');
       } else {
         setAuthStatus('unauthenticated');
       }
     });
-    return () => unsubscribe();
+
+    loadingTimeout = window.setTimeout(() => {
+      setAuthStatus((current) => (current === 'loading' ? 'unauthenticated' : current));
+    }, 20000);
+
+    return () => {
+      unsubscribe();
+      if (loadingTimeout) window.clearTimeout(loadingTimeout);
+    };
   }, [isDemoMode]);
 
   useEffect(() => {
@@ -76,6 +93,14 @@ export default function App() {
 
     startupRedirectHandledRef.current = true;
   }, [authStatus, isPreviewRoute, isInsideFrame]);
+
+  useEffect(() => {
+    checkFirebaseHealth().then(({ auth: authReachable, firestore: fsReachable }) => {
+      if (!authReachable || !fsReachable) {
+        console.error('[App] Firebase health check failed. Auth:', authReachable, 'Firestore:', fsReachable);
+      }
+    });
+  }, []);
 
   if (authStatus === 'loading') {
     return (
