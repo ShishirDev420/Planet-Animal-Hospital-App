@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { TimePeriod } from './useTimeOfDay';
 
 const PERIOD_ORDER: TimePeriod[] = ['morning', 'afternoon', 'evening'];
@@ -26,6 +26,10 @@ function saveCompleted(uid: string, periods: TimePeriod[]) {
 
 export function useCheckInStatus(uid: string, currentPeriod: TimePeriod) {
   const [completedPeriods, setCompletedPeriods] = useState<TimePeriod[]>(() => loadCompleted(uid));
+
+  useEffect(() => {
+    setCompletedPeriods(loadCompleted(uid));
+  }, [uid]);
 
   const isPeriodComplete = useCallback((period: TimePeriod) => {
     return completedPeriods.includes(period);

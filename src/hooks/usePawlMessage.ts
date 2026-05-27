@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { usePetProfile } from './usePetProfile';
 import { useTimeOfDay, type TimePeriod } from './useTimeOfDay';
 
 // Helper: Get current season in India based on month number
@@ -87,8 +86,7 @@ function pickDailyVariant(variants: Record<'summer' | 'monsoon' | 'winter', stri
   return pool[getDailyVariantIndex(profile, period, pool.length)] || pool[0];
 }
 
-export function usePawlMessage(period?: TimePeriod) {
-  const { profile, loading: profileLoading } = usePetProfile();
+export function usePawlMessage(profile: any, profileLoading: boolean, period?: TimePeriod) {
   const { currentPeriod } = useTimeOfDay();
   const activePeriod = period || currentPeriod;
   const [message, setMessage] = useState<string>('');
@@ -99,6 +97,7 @@ export function usePawlMessage(period?: TimePeriod) {
     if (profileLoading) return;
     if (!profile?.petName) {
       setMessage('');
+      setLoading(false);
       return;
     }
 
@@ -108,7 +107,6 @@ export function usePawlMessage(period?: TimePeriod) {
     const cacheKey = `pawl_${profile.uid}_${today}_${activePeriod}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-      console.log(`🐾 [Pawl] Using cached message for ${profile.petName} (${activePeriod})`);
       setMessage(cached);
       setError(false);
       return;
@@ -130,8 +128,6 @@ export function usePawlMessage(period?: TimePeriod) {
         medications: [],
         allergies: []
       };
-
-      console.log('🐾 [Pawl] Fetching message for:', petData);
 
       // Parse medications from additionalDetails if not structured
       if (profile.additionalDetails) {
@@ -155,7 +151,6 @@ export function usePawlMessage(period?: TimePeriod) {
 
       // Call Pawl backend
       const PAWL_BACKEND_URL = import.meta.env.VITE_PAWL_URL || 'http://localhost:8000';
-      console.log('🐾 [Pawl] Calling:', `${PAWL_BACKEND_URL}/daily-briefing`);
       
       const response = await fetch(`${PAWL_BACKEND_URL}/daily-briefing`, {
         method: 'POST',
@@ -170,7 +165,6 @@ export function usePawlMessage(period?: TimePeriod) {
       }
 
       const data = await response.json();
-      console.log('🐾 [Pawl] Message received:', data.message.substring(0, 100) + '...');
       setMessage(data.message);
       localStorage.setItem(cacheKey, data.message);
       setError(false);
@@ -179,7 +173,6 @@ export function usePawlMessage(period?: TimePeriod) {
       setError(true);
       // Fallback: period-aware tip based on pet info
       const fallback = getGenericDailyTip(profile, activePeriod);
-      console.log(`🐾 [Pawl] Using fallback message (${activePeriod})`);
       setMessage(fallback);
     } finally {
       setLoading(false);

@@ -122,6 +122,21 @@ const BOOKING_SERVICES = [
   { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' }
 ];
 
+type BookingStep = 'services' | 'date' | 'time' | 'confirm';
+
+const BOOKING_STEPS: { id: BookingStep; label: string }[] = [
+  { id: 'services', label: 'Service' },
+  { id: 'date', label: 'Date' },
+  { id: 'time', label: 'Time' },
+  { id: 'confirm', label: 'Confirm' },
+];
+
+const BOOKING_TIMES = [
+  { label: 'Morning', slots: ['9:00 AM', '10:00 AM', '11:00 AM'] },
+  { label: 'Afternoon', slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
+  { label: 'Evening', slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'] },
+];
+
 const HOME_PAW_MILESTONES = [
   {
     points: 500,
@@ -490,7 +505,7 @@ export default function Dashboard() {
 
   const profileLoading = useMemo(() => isDemoMode ? false : realProfileLoading, [isDemoMode, realProfileLoading]);
 
-  const { message: pawlMessage, loading: pawlLoading, error: pawlError } = usePawlMessage();
+  const { message: pawlMessage, loading: pawlLoading, error: pawlError } = usePawlMessage(petProfile, profileLoading);
   const { currentPeriod } = useTimeOfDay();
   const { completedCount, totalPeriods, isPeriodComplete } = useCheckInStatus(
     realPetProfile?.uid || realPetProfile?.parentName || 'demo',
@@ -527,36 +542,14 @@ export default function Dashboard() {
       return;
     }
 
-    let unsubscribeDoc: (() => void) | null = null;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (unsubscribeDoc) {
-        unsubscribeDoc();
-        unsubscribeDoc = null;
-      }
-      if (user) {
-        setUserId(user.uid);
-        const userDocRef = doc(db, 'users', user.uid);
-        unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setVerifiedPoints(data.pawPoints || 0);
-            setCurrentPlan(data.currentPlan || data.petProfile?.currentPlan || 'free');
-          }
-        }, (err) => {
-           console.error('onSnapshot error in Dashboard:', err);
-        });
+    setIsAuthReady(!profileLoading);
+    setUserId(petProfile?.uid || auth.currentUser?.uid || null);
 
-        setIsAuthReady(true);
-      } else {
-        setUserId(null);
-        setIsAuthReady(true);
-      }
-    });
-    return () => {
-      unsubscribe();
-      if (unsubscribeDoc) unsubscribeDoc();
-    };
-  }, [isDemoMode]);
+    if (petProfile) {
+      setVerifiedPoints(Number(petProfile.pawPoints || 0));
+      setCurrentPlan(petProfile.currentPlan || petProfile.petProfile?.currentPlan || 'free');
+    }
+  }, [isDemoMode, profileLoading, petProfile]);
 
   const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
     if (!userId) return;
@@ -604,6 +597,7 @@ export default function Dashboard() {
   const [selectedServices, setSelectedServices] = useState<{id: number, name: string, points: number, icon: any, desc: string}[]>([]);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
+  const [bookingStep, setBookingStep] = useState<BookingStep>('services');
   const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
@@ -611,18 +605,45 @@ export default function Dashboard() {
     if (params.get('openBooking') !== 'true') return;
 
     setIsBookVisitOpen(true);
+    setBookingStep('services');
 
     const serviceQuery = params.get('service')?.toLowerCase();
     if (serviceQuery) {
       const suggestedService = BOOKING_SERVICES.find((service) => service.name.toLowerCase().includes(serviceQuery));
-      if (suggestedService) setSelectedServices([suggestedService]);
+      if (suggestedService) {
+        setSelectedServices([suggestedService]);
+        setBookingStep('date');
+      }
     }
 
     const date = params.get('date');
     const time = params.get('time');
-    if (date) setBookingDate(date);
-    if (time) setBookingTime(time);
+    if (date) {
+      setBookingDate(date);
+      setBookingStep('time');
+    }
+    if (time) {
+      setBookingTime(time);
+      setBookingStep('confirm');
+    }
   }, [location.search]);
+
+  useEffect(() => {
+    if (!isBookVisitOpen) return;
+
+    const bodyOverflow = document.body.style.overflow;
+    const bodyTouchAction = document.body.style.touchAction;
+    const htmlOverscroll = document.documentElement.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    document.documentElement.style.overscrollBehavior = 'none';
+
+    return () => {
+      document.body.style.overflow = bodyOverflow;
+      document.body.style.touchAction = bodyTouchAction;
+      document.documentElement.style.overscrollBehavior = htmlOverscroll;
+    };
+  }, [isBookVisitOpen]);
 
   const submitBooking = async () => {
     if (selectedServices.length === 0 || !bookingDate || !bookingTime || !userId) return;
@@ -649,6 +670,15 @@ export default function Dashboard() {
     setSelectedServices([]);
     setBookingDate('');
     setBookingTime('');
+    setBookingStep('services');
+  };
+
+  const closeBookVisit = () => {
+    setIsBookVisitOpen(false);
+    setSelectedServices([]);
+    setBookingDate('');
+    setBookingTime('');
+    setBookingStep('services');
   };
 
   const closeModal = () => {
@@ -668,6 +698,59 @@ export default function Dashboard() {
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
   const whatsappMessage = buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime);
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
+  const briefingNeedsAttention = !isPeriodComplete(currentPeriod);
+  const bookingStepIndex = BOOKING_STEPS.findIndex((step) => step.id === bookingStep);
+  const bookingReady = selectedServices.length > 0 && Boolean(bookingDate) && Boolean(bookingTime);
+  const bookingStepAllowed: Record<BookingStep, boolean> = {
+    services: true,
+    date: selectedServices.length > 0,
+    time: selectedServices.length > 0 && Boolean(bookingDate),
+    confirm: bookingReady,
+  };
+  const selectedServiceNames = selectedServices.map((service) => service.name).join(', ');
+
+  const goToBookingStep = (step: BookingStep) => {
+    if (bookingStepAllowed[step]) setBookingStep(step);
+  };
+
+  const handleBookingPrimaryAction = () => {
+    if (bookingStep === 'services') {
+      if (selectedServices.length > 0) setBookingStep('date');
+      return;
+    }
+
+    if (bookingStep === 'date') {
+      if (bookingDate) setBookingStep('time');
+      return;
+    }
+
+    if (bookingStep === 'time') {
+      if (bookingTime) setBookingStep('confirm');
+      return;
+    }
+
+    if (bookingReady) {
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      submitBooking();
+    }
+  };
+
+  const bookingPrimaryCopy = bookingStep === 'services'
+    ? selectedServices.length > 0 ? 'Choose Date' : 'Select Services'
+    : bookingStep === 'date'
+      ? bookingDate ? 'Choose Time' : 'Select Date'
+      : bookingStep === 'time'
+        ? bookingTime ? 'Review Visit' : 'Select Time'
+        : 'Confirm Appointment';
+
+  const bookingPrimaryDisabled = bookingStep === 'services'
+    ? selectedServices.length === 0
+    : bookingStep === 'date'
+      ? !bookingDate
+      : bookingStep === 'time'
+        ? !bookingTime
+        : !bookingReady;
+
   if (profileLoading || !isAuthReady || (!isDemoMode && !petProfile)) {
     return (
       <PlanetOrbLoader
@@ -773,7 +856,10 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         onClick={() => navigate({ pathname: '/briefing', search: location.search })}
-        className="group relative mb-7 min-h-[112px] cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-black/72 via-black/60 to-black/46 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/25 hover:from-black/78 hover:to-black/52 mobile-briefing-card"
+        className={cn(
+          "group relative mb-7 min-h-[112px] cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-black/72 via-black/60 to-black/46 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/25 hover:from-black/78 hover:to-black/52 mobile-briefing-card",
+          briefingNeedsAttention && "briefing-attention-card border-[#fec708]/24 shadow-[0_18px_62px_rgba(254,199,8,0.10),0_18px_60px_rgba(0,0,0,0.25)]"
+        )}
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#fec708]/55 to-transparent" />
         <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#fec708]/8 blur-3xl transition-opacity duration-300 group-hover:opacity-70" />
@@ -785,6 +871,12 @@ export default function Dashboard() {
               <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">
                 {completedCount >= totalPeriods ? 'Done' : `${completedCount}/${totalPeriods}`}
               </span>
+              {briefingNeedsAttention && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#fec708]/20 bg-[#fec708]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[#fec708]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#fec708] shadow-[0_0_10px_rgba(254,199,8,0.8)]" />
+                  Due
+                </span>
+              )}
             </div>
             <p className="line-clamp-2 text-sm font-medium leading-6 text-white/72">
               {briefingPreview}
@@ -885,348 +977,351 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Book Visit Master Modal (Classy & Glassy Overhaul) */}
+      {/* Book Visit Full-Screen Flow */}
       <AnimatePresence>
         {isBookVisitOpen && (
           <motion.div
-            key="book-visit-backdrop"
+            key="book-visit-flow"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsBookVisitOpen(false)}
-            className="fixed inset-0 bg-slate-900/55 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 pb-24 sm:p-4 sm:pb-4"
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-[120] h-[100dvh] w-full overflow-hidden bg-[#050b07] text-white"
           >
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(254,199,8,0.14),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(45,212,191,0.09),transparent_30%),linear-gradient(180deg,#071912_0%,#050b07_52%,#020403_100%)]" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.045] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 220 220%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%221.05%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.78%22/%3E%3C/svg%3E")' }} />
+
             <motion.div
-              key="book-visit-modal"
-              initial={{ y: "100%", opacity: 0 }}
+              initial={{ y: 22, opacity: 0, scale: 0.985 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-2xl liquid-glass-modal rounded-t-[2.5rem] sm:rounded-[3rem] h-[calc(100dvh-6.75rem)] sm:h-[85vh] flex flex-col overflow-hidden"
+              exit={{ y: 18, opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+              className="relative z-10 mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col overflow-hidden px-4 pb-[calc(env(safe-area-inset-bottom)+var(--preview-safe-area-bottom,0px)+0.7rem)] pt-[calc(var(--preview-safe-area-top,0px)+0.75rem)] sm:px-6 sm:py-6"
             >
-              {/* Premium Glass Highlights */}
-              <div className="absolute -top-[20%] -left-[20%] w-[140%] h-[50%] bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-              <div className="absolute top-0 left-1/4 w-32 h-32 bg-planet-yellow/20 rounded-full blur-[80px] pointer-events-none" />
-
-              {/* Drag Handle (mobile) */}
-              <div className="flex justify-center pt-4 pb-2 sm:hidden shrink-0">
-                <div className="w-10 h-1 rounded-full bg-white/20" />
-              </div>
-
-              {/* Header */}
-              <div className="px-8 pt-6 pb-4 flex justify-between items-start shrink-0 z-10">
-                <div>
-                  <h2 className="cinematic-section-title text-3xl">
-                    Book <span className="text-planet-yellow">Visit</span>
-                  </h2>
-                  <p className="cinematic-kicker mt-2 flex items-center gap-2 text-xs text-white/70">
-                    <span className="w-1.5 h-1.5 rounded-full bg-planet-yellow shadow-[0_0_8px_rgba(254,199,8,0.6)] animate-pulse" />
-                    {petProfile?.name ? `Schedule for ${petProfile.name}` : 'Pet Health Scheduler'}
-                  </p>
-                </div>
+              <header className="shrink-0 pb-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="cinematic-kicker mb-2 text-[9px] tracking-[0.24em]">Locked Booking Mode</p>
+                    <h2 className="cinematic-section-title text-[2.35rem] leading-[0.88] tracking-[-0.065em] sm:text-[2.65rem]">
+                      Book <span className="text-planet-yellow">Visit</span>
+                    </h2>
+                    <p className="mt-1.5 text-xs font-bold leading-5 text-white/54 sm:text-sm">
+                      {petProfile?.name ? `Schedule a care slot for ${petProfile.name}.` : 'Schedule a care slot with Planet Animal.'}
+                    </p>
+                  </div>
                 <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsBookVisitOpen(false)}
-                  className="p-2.5 rounded-[1.25rem] bg-white/10 border border-white/20 text-white/60 hover:text-white transition-all shadow-xl backdrop-blur-md"
+                    whileHover={shouldReduceMotion ? undefined : { scale: 1.06, rotate: 90 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={closeBookVisit}
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/12 bg-white/[0.06] text-white/70 shadow-[0_16px_40px_rgba(0,0,0,0.34)] transition-colors hover:border-[#fec708]/24 hover:text-white"
+                    aria-label="Close Book Visit"
                 >
                   <X size={20}/>
                 </motion.button>
               </div>
+              </header>
 
-              {/* Progress Stepper - Refined */}
-              <div className="px-10 pb-6 flex items-center justify-between shrink-0 z-10">
-                {[
-                  { n: 1, label: 'Service', done: selectedServices.length > 0 },
-                  { n: 2, label: 'Date', done: !!bookingDate },
-                  { n: 3, label: 'Time', done: !!bookingTime },
-                ].map((step, i) => (
-                  <div key={step.n} className="flex flex-col items-center gap-2 flex-1 relative">
-                    {i < 2 && (
-                      <div className="absolute left-[calc(50%+16px)] right-[calc(-50%+16px)] top-[12px] h-[2px] bg-white/10 overflow-hidden">
-                         <motion.div
-                          initial={{ x: '-100%' }}
-                          animate={{ x: step.done ? '0%' : '-100%' }}
-                          className="h-full bg-planet-yellow/50"
-                         />
-                      </div>
-                    )}
-                      <motion.div
-                      animate={{
-                        backgroundColor: step.done ? '#fec708' : 'transparent',
-                        borderColor: step.done ? '#fec708' : 'rgba(255,255,255,0.2)',
-                        boxShadow: step.done ? '0 0 15px rgba(254,199,8,0.4)' : 'none'
-                      }}
-                      className="w-7 h-7 rounded-full flex items-center justify-center border z-10 transition-colors"
-                    >
-                      {step.done ? <Check size={14} className="text-black" strokeWidth={4} /> : <div className="w-1.5 h-1.5 rounded-full bg-white/40" />}
-                    </motion.div>
-                    <span className={`text-sm font-black uppercase tracking-widest ${step.done ? 'text-planet-yellow' : 'text-white/40'}`}>
-                      {step.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Scrollable Body */}
-              <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-8 pb-6 sm:pb-8 hide-scrollbar scroll-smooth overscroll-contain touch-pan-y">
-
-                {/* 1. Services Section */}
-                <section id="services-section" className="mb-10">
-                  <div className="flex justify-between items-end mb-4 px-1">
-                    <h3 className="cinematic-kicker text-xs text-white/50">Select Services</h3>
-                    {selectedServices.length > 0 && (
+              <div className="shrink-0 rounded-[1.6rem] border border-white/[0.08] bg-black/24 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-2.5">
+                <div className="grid grid-cols-4 gap-1.5">
+                  {BOOKING_STEPS.map((step, index) => {
+                    const complete = step.id === 'services'
+                      ? selectedServices.length > 0
+                      : step.id === 'date'
+                        ? Boolean(bookingDate)
+                        : step.id === 'time'
+                          ? Boolean(bookingTime)
+                          : bookingReady;
+                    const active = bookingStep === step.id;
+                    const allowed = bookingStepAllowed[step.id];
+                    return (
                       <button
-                        onClick={() => setSelectedServices([])}
-                        className="text-sm font-bold text-planet-yellow/60 hover:text-planet-yellow transition-colors uppercase tracking-widest"
+                        key={step.id}
+                        type="button"
+                        onClick={() => goToBookingStep(step.id)}
+                        disabled={!allowed}
+                        className={cn(
+                          "relative flex min-w-0 flex-col items-center gap-1 rounded-[1.1rem] px-1 py-1.5 text-center transition-all duration-300 sm:px-1.5 sm:py-2",
+                          active ? "bg-[#fec708] text-black shadow-[0_12px_28px_rgba(254,199,8,0.18)]" : allowed ? "text-white/60 hover:bg-white/[0.055]" : "text-white/24"
+                        )}
                       >
-                        Reset
+                        <span className={cn(
+                          "grid h-5 w-5 place-items-center rounded-full border text-[9px] font-black transition-all sm:h-6 sm:w-6 sm:text-[10px]",
+                          active ? "border-black/12 bg-black/10" : complete ? "border-[#fec708]/36 bg-[#fec708]/15 text-[#fec708]" : "border-white/12 bg-white/[0.04]"
+                        )}>
+                          {complete && !active ? <Check size={12} strokeWidth={4} /> : index + 1}
+                        </span>
+                        <span className="truncate text-[8px] font-black uppercase tracking-[0.12em]">{step.label}</span>
                       </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 gap-3">
-                    {BOOKING_SERVICES.map((service) => {
-                      const isSelected = selectedServices.some(s => s.id === service.id);
-                      const ServiceIcon = service.icon;
-                      return (
-                        <motion.button
-                          key={service.id}
-                          whileHover={{ scale: 1.01, x: 4 }}
-                          whileTap={{ scale: 0.99 }}
-                          onClick={() => {
-                            setSelectedServices(prev =>
-                              prev.some(s => s.id === service.id)
-                                ? prev.filter(s => s.id !== service.id)
-                                : [...prev, service]
-                            );
-                          }}
-                          className={cn(
-                            "relative w-full text-left rounded-[2rem] p-4 flex items-center gap-4 border transition-all duration-300",
-                            isSelected
-                              ? 'bg-planet-yellow/20 border-planet-yellow shadow-[0_10px_30px_rgba(254,199,8,0.2)]'
-                              : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/30'
-                          )}
-                        >
-                          <div className={cn(
-                            "w-12 h-12 rounded-[1.25rem] flex items-center justify-center transition-all duration-500",
-                            isSelected
-                              ? 'bg-planet-yellow text-black shadow-[0_0_20px_rgba(254,199,8,0.4)]'
-                              : 'bg-white/10 text-white/50'
-                          )}>
-                            <ServiceIcon size={24} />
-                          </div>
-
-                          <div className="flex-1">
-                            <p className={cn("cinematic-card-title text-xl", isSelected ? 'text-white' : 'text-white/90')}>{service.name}</p>
-                            <p className="text-white/50 text-sm font-medium mt-0.5 leading-tight">{service.desc}</p>
-                          </div>
-
-                          <div className="text-right">
-                            <div className={cn("flex items-center gap-1 mb-1 justify-end", isSelected ? 'text-planet-yellow' : 'text-white/30')}>
-                               <PawPrint size={12} className={isSelected ? 'fill-planet-yellow' : ''} />
-                               <span className="text-base font-black">+{service.points}</span>
-                            </div>
-                            <div className={cn(
-                              "w-6 h-6 rounded-full border-2 ml-auto flex items-center justify-center transition-all duration-300",
-                              isSelected ? 'border-planet-yellow bg-planet-yellow' : 'border-white/10'
-                            )}>
-                              {isSelected && <Check size={14} className="text-black" strokeWidth={4} />}
-                            </div>
-                          </div>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                {/* 2. Calendar Section */}
-                <section id="date-section" className="mb-10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-[1rem] bg-planet-yellow flex items-center justify-center text-black font-black text-sm">2</div>
-                    <h3 className="cinematic-card-title text-2xl">Preferred Date</h3>
-                  </div>
-                  <div className="grid grid-cols-4 gap-3">
-                    {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
-                      const date = new Date();
-                      date.setDate(date.getDate() + offset);
-                      const isToday = offset === 0;
-                      const dateStr = date.toISOString().split('T')[0];
-                      const isSelected = bookingDate === dateStr;
-
-                      return (
-                        <motion.button
-                          key={offset}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setBookingDate(dateStr)}
-                          className={cn(
-                            "flex flex-col items-center justify-center py-4 rounded-[1.25rem] border transition-all duration-300",
-                            isSelected
-                              ? 'bg-planet-yellow text-black border-planet-yellow shadow-lg'
-                              : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
-                          )}
-                        >
-                          <span className="text-sm font-black uppercase tracking-widest opacity-60 mb-1">
-                            {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}
-                          </span>
-                          <span className="text-xl font-black">{date.getDate()}</span>
-                          <span className="text-xs font-bold uppercase tracking-tighter opacity-40">
-                            {date.toLocaleDateString('en-US', { month: 'short' })}
-                          </span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                {/* 3. Time Selection */}
-                <section id="time-section" className="pb-10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-[1rem] bg-planet-yellow flex items-center justify-center text-black font-black text-sm">3</div>
-                    <h3 className="cinematic-card-title text-2xl">Preferred Time</h3>
-                  </div>
-                  <div className="space-y-6">
-                    {[
-                      { label: 'Morning', icon: <Clock size={14}/>, slots: ['9:00 AM', '10:00 AM', '11:00 AM'] },
-                      { label: 'Afternoon', icon: <Sparkles size={14}/>, slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
-                      { label: 'Evening', icon: <PawPrint size={14}/>, slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'] },
-                    ].map((group) => (
-                      <div key={group.label}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="text-planet-yellow/60">
-                            {group.icon}
-                          </div>
-                          <span className="text-xs font-black uppercase tracking-[0.15em] text-white/40">{group.label}</span>
-                          <div className="h-px flex-1 bg-white/10 ml-2" />
-                        </div>
-                        <div className="grid grid-cols-3 gap-2.5">
-                          {group.slots.map((time) => {
-                            const isSelected = bookingTime === time;
-                            return (
-                              <motion.button
-                                key={time}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setBookingTime(time)}
-                                className={cn(
-                                  "py-3.5 rounded-2xl text-base font-black transition-all border",
-                                  isSelected
-                                    ? 'bg-planet-yellow text-black border-planet-yellow shadow-[0_10px_20px_rgba(254,199,8,0.2)]'
-                                    : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/10'
-                                )}
-                              >
-                                {time}
-                              </motion.button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Confirmation Footer - Premium & Always Visible */}
-              <div className="shrink-0 bg-white/[0.08] backdrop-blur-[40px] border-t border-white/10 px-5 sm:px-8 py-4 sm:py-7 z-20 shadow-[0_-30px_60px_rgba(0,0,0,0.4)]">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <a
-                    href={(selectedServices.length === 0 || !bookingDate || !bookingTime) ? undefined : whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => {
-                      if (selectedServices.length === 0 || !bookingDate || !bookingTime) {
-                        e.preventDefault();
-                        if (selectedServices.length === 0) {
-                          document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' });
-                        } else if (!bookingDate) {
-                          document.getElementById('date-section')?.scrollIntoView({ behavior: 'smooth' });
-                        } else if (!bookingTime) {
-                          document.getElementById('time-section')?.scrollIntoView({ behavior: 'smooth' });
-                        }
-                      } else {
-                        submitBooking();
-                      }
-                    }}
-                    className={cn(
-                      "flex items-center justify-center gap-3 w-full py-4 sm:py-5 rounded-[1.25rem] font-black text-lg uppercase tracking-[0.04em] sm:tracking-[0.2em] transition-all duration-500 relative overflow-hidden group",
-                      (selectedServices.length === 0 || !bookingDate || !bookingTime)
-                        ? "bg-white/[0.14] text-white/90 border border-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-white/[0.18]"
-                        : "bg-planet-yellow text-black ring-1 ring-planet-yellow/40 shadow-[0_0_36px_rgba(254,199,8,0.38)] hover:shadow-[0_0_48px_rgba(254,199,8,0.55)] active:scale-[0.98]"
-                    )}
-                  >
-                    {(selectedServices.length > 0 && bookingDate && bookingTime) && (
-                      <div className="absolute inset-[-2px] rounded-[1.25rem] bg-planet-yellow/30 blur-xl opacity-70" />
-                    )}
-
-                    {/* Glossy Button Shine */}
-                    {(selectedServices.length > 0 && bookingDate && bookingTime) && (
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                    )}
-
-                    <span className="relative z-10 flex w-full items-center justify-between gap-3">
-                      {selectedServices.length === 0
-                        ? 'Select Services'
-                        : !bookingDate
-                          ? 'Select Date'
-                          : !bookingTime
-                            ? 'Select Time'
-                            : 'Confirm Appointment'
-                      }
-                      <ArrowRight size={18} className="shrink-0 group-hover:translate-x-1.5 transition-transform duration-300" />
-                    </span>
-                  </a>
-                </motion.div>
-
-                <div className="flex justify-between items-center mt-3 sm:mt-6">
-                  <div className="flex -space-x-3">
-                    {selectedServices.length > 0 ? (
-                      selectedServices.slice(0, 3).map((s, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ scale: 0, x: -20, rotate: -15 }}
-                          animate={{ scale: 1, x: 0, rotate: 0 }}
-                          className="w-9 h-9 sm:w-11 sm:h-11 rounded-[1rem] sm:rounded-[1.25rem] bg-white/10 border border-white/20 backdrop-blur-2xl flex items-center justify-center text-planet-yellow shadow-2xl"
-                        >
-                          <s.icon size={18} />
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-[1rem] sm:rounded-[1.25rem] bg-white/5 border border-white/10 border-dashed flex items-center justify-center text-white/20">
-                        <Plus size={18} />
-                      </div>
-                    )}
-                    {selectedServices.length > 3 && (
-                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-[1rem] sm:rounded-[1.25rem] bg-planet-yellow border border-black/10 flex items-center justify-center text-xs font-black text-black shadow-xl ring-2 ring-black/20">
-                        +{selectedServices.length - 3}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-white/40 uppercase tracking-[0.25em]">Reward Points</p>
-                    <motion.p
-                      key={selectedServices.length}
-                      initial={{ y: 5, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      className="text-3xl font-black text-planet-yellow leading-none flex items-center justify-end gap-1.5 mt-2 drop-shadow-[0_0_15px_rgba(254,199,8,0.8)]"
+              <div className="min-h-0 flex-1 overflow-hidden py-3">
+                <AnimatePresence mode="wait">
+                  {bookingStep === 'services' && (
+                    <motion.section
+                      key="booking-services"
+                      initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -16 }}
+                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                      className="flex h-full min-h-0 flex-col"
                     >
-                      {bookingFinalPoints.toLocaleString()}
-                      <span className="text-sm uppercase tracking-widest text-white/50 font-bold">pts</span>
-                    </motion.p>
-                    {selectedServices.length > 0 && (
-                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/40">
-                        {currentPlan === 'free'
-                          ? 'Free plan: General Checkup earns 500 pts'
-                          : `${bookingBasePoints.toLocaleString()} base x ${bookingMultiplier.toFixed(1)} multiplier`}
-                      </p>
-                    )}
+                      <div className="mb-3 flex items-end justify-between gap-3">
+                        <div>
+                          <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Select Services</p>
+                          <p className="mt-1 text-xs font-bold text-white/42">Pick one or more care items.</p>
+                        </div>
+                        {selectedServices.length > 0 && (
+                          <button
+                            onClick={() => setSelectedServices([])}
+                            className="rounded-full border border-[#fec708]/18 bg-[#fec708]/8 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#fec708]"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2.5 overflow-hidden">
+                        {BOOKING_SERVICES.map((service) => {
+                          const isSelected = selectedServices.some(s => s.id === service.id);
+                          const ServiceIcon = service.icon;
+                          return (
+                            <motion.button
+                              key={service.id}
+                              whileTap={{ scale: 0.985 }}
+                              onClick={() => {
+                                setSelectedServices(prev =>
+                                  prev.some(s => s.id === service.id)
+                                    ? prev.filter(s => s.id !== service.id)
+                                    : [...prev, service]
+                                );
+                              }}
+                              className={cn(
+                                "relative flex min-h-[4.75rem] w-full flex-col items-start gap-1.5 rounded-[1.35rem] border p-3 text-left transition-all duration-300",
+                                isSelected
+                                  ? "border-[#fec708]/62 bg-[#fec708]/14 shadow-[0_16px_36px_rgba(254,199,8,0.10)]"
+                                  : "border-white/[0.08] bg-white/[0.045] hover:border-white/16 hover:bg-white/[0.065]"
+                              )}
+                            >
+                              <div className={cn(
+                                "grid h-8 w-8 shrink-0 place-items-center rounded-[0.85rem] transition-all duration-300",
+                                isSelected ? "bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.28)]" : "bg-white/[0.075] text-white/48"
+                              )}>
+                                <ServiceIcon size={20} />
+                              </div>
+                              <div className="min-w-0 pr-7">
+                                <p className="cinematic-card-title line-clamp-2 text-[0.94rem] leading-[0.96] text-white">{service.name}</p>
+                                <p className="sr-only">{service.desc}</p>
+                              </div>
+                              <div className="absolute right-2.5 top-2.5 text-right">
+                                <div className={cn("mb-1 flex items-center justify-end gap-1", isSelected ? "text-[#fec708]" : "text-white/32")}>
+                                  <PawPrint size={11} className={isSelected ? 'fill-[#fec708]' : ''} />
+                                  <span className="text-xs font-black">+{service.points}</span>
+                                </div>
+                                <div className={cn(
+                                  "ml-auto grid h-6 w-6 place-items-center rounded-full border transition-all duration-300",
+                                  isSelected ? "border-[#fec708] bg-[#fec708] text-black" : "border-white/12 text-transparent"
+                                )}>
+                                  <Check size={13} strokeWidth={4} />
+                                </div>
+                              </div>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </motion.section>
+                  )}
+
+                  {bookingStep === 'date' && (
+                    <motion.section
+                      key="booking-date"
+                      initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -16 }}
+                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                      className="flex h-full min-h-0 flex-col"
+                    >
+                      <div className="mb-3">
+                        <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Preferred Date</p>
+                        <p className="mt-1 text-xs font-bold text-white/42">Choose the earliest comfortable clinic slot.</p>
+                      </div>
+                      <div className="grid min-h-0 flex-1 grid-cols-4 content-start gap-2.5 overflow-hidden">
+                        {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
+                          const date = new Date();
+                          date.setDate(date.getDate() + offset);
+                          const isToday = offset === 0;
+                          const dateStr = date.toISOString().split('T')[0];
+                          const isSelected = bookingDate === dateStr;
+
+                          return (
+                            <motion.button
+                              key={offset}
+                              whileTap={{ scale: 0.96 }}
+                              onClick={() => setBookingDate(dateStr)}
+                              className={cn(
+                                "flex min-h-[4.8rem] flex-col items-center justify-center rounded-[1.2rem] border px-1 transition-all duration-300",
+                                isSelected
+                                  ? "border-[#fec708] bg-[#fec708] text-black shadow-[0_16px_34px_rgba(254,199,8,0.16)]"
+                                  : "border-white/[0.08] bg-white/[0.045] text-white/58 hover:border-white/16 hover:bg-white/[0.065]"
+                              )}
+                            >
+                              <span className="mb-1 text-[9px] font-black uppercase tracking-[0.12em] opacity-62">
+                                {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}
+                              </span>
+                              <span className="text-2xl font-black leading-none">{date.getDate()}</span>
+                              <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] opacity-45">
+                                {date.toLocaleDateString('en-US', { month: 'short' })}
+                              </span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </motion.section>
+                  )}
+
+                  {bookingStep === 'time' && (
+                    <motion.section
+                      key="booking-time"
+                      initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -16 }}
+                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                      className="flex h-full min-h-0 flex-col"
+                    >
+                      <div className="mb-3">
+                        <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Preferred Time</p>
+                        <p className="mt-1 text-xs font-bold text-white/42">Pick the time window that fits your day.</p>
+                      </div>
+                      <div className="grid min-h-0 flex-1 content-start gap-2.5 overflow-hidden">
+                        {BOOKING_TIMES.map((group) => (
+                          <div key={group.label}>
+                            <div className="mb-2 flex items-center gap-2">
+                              <Clock size={12} className="text-[#fec708]/72" />
+                              <span className="text-[9px] font-black uppercase tracking-[0.17em] text-white/42">{group.label}</span>
+                              <div className="h-px flex-1 bg-white/[0.08]" />
+                            </div>
+                            <div className="grid grid-cols-4 gap-2">
+                              {group.slots.map((time) => {
+                                const isSelected = bookingTime === time;
+                                return (
+                                  <motion.button
+                                    key={time}
+                                    whileTap={{ scale: 0.96 }}
+                                    onClick={() => setBookingTime(time)}
+                                    className={cn(
+                                      "rounded-[1rem] border px-1 py-2 text-[11px] font-black transition-all duration-300 sm:px-2 sm:py-2.5 sm:text-sm",
+                                      isSelected
+                                        ? "border-[#fec708] bg-[#fec708] text-black shadow-[0_14px_30px_rgba(254,199,8,0.16)]"
+                                        : "border-white/[0.08] bg-white/[0.045] text-white/58 hover:border-white/16 hover:bg-white/[0.065]"
+                                    )}
+                                  >
+                                    {time}
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.section>
+                  )}
+
+                  {bookingStep === 'confirm' && (
+                    <motion.section
+                      key="booking-confirm"
+                      initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -16 }}
+                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                      className="flex h-full min-h-0 flex-col"
+                    >
+                      <div className="mb-3">
+                        <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Review Visit</p>
+                        <p className="mt-1 text-xs font-bold text-white/42">Confirm the details before we open WhatsApp.</p>
+                      </div>
+                      <div className="grid min-h-0 flex-1 content-start gap-3 overflow-hidden">
+                        <div className="rounded-[1.6rem] border border-[#fec708]/18 bg-[#fec708]/8 p-4">
+                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#fec708]">Services</p>
+                          <p className="mt-2 text-lg font-black leading-tight text-white">{selectedServiceNames || 'No service selected'}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="rounded-[1.4rem] border border-white/[0.08] bg-white/[0.045] p-4">
+                            <Calendar className="mb-3 h-5 w-5 text-[#fec708]" />
+                            <p className="text-[9px] font-black uppercase tracking-[0.17em] text-white/38">Date</p>
+                            <p className="mt-1 text-sm font-black text-white">
+                              {bookingDate ? new Date(`${bookingDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Not set'}
+                            </p>
+                          </div>
+                          <div className="rounded-[1.4rem] border border-white/[0.08] bg-white/[0.045] p-4">
+                            <Clock className="mb-3 h-5 w-5 text-[#fec708]" />
+                            <p className="text-[9px] font-black uppercase tracking-[0.17em] text-white/38">Time</p>
+                            <p className="mt-1 text-sm font-black text-white">{bookingTime || 'Not set'}</p>
+                          </div>
+                        </div>
+                        <div className="rounded-[1.6rem] border border-white/[0.08] bg-black/28 p-4">
+                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/38">Reward Points</p>
+                          <p className="mt-1 flex items-end gap-2 font-heading text-[2.55rem] font-black leading-none tracking-[-0.06em] text-[#fec708]">
+                            {bookingFinalPoints.toLocaleString()}
+                            <span className="pb-1 text-xs font-black uppercase tracking-[0.16em] text-white/44">pts</span>
+                          </p>
+                          {selectedServices.length > 0 && (
+                            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/38">
+                              {currentPlan === 'free'
+                                ? 'Free plan: General Checkup earns 500 pts'
+                                : `${bookingBasePoints.toLocaleString()} base x ${bookingMultiplier.toFixed(1)} multiplier`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.section>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <footer className="shrink-0 rounded-[1.65rem] border border-white/[0.08] bg-[#08110c]/95 p-2.5 shadow-[0_-18px_50px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-3">
+                <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/34">Step {Math.max(bookingStepIndex + 1, 1)} of {BOOKING_STEPS.length}</p>
+                    <p className="mt-1 truncate text-sm font-black text-white/80">
+                      {selectedServices.length > 0 ? selectedServiceNames : 'Start with a service'}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/34">Rewards</p>
+                    <p className="mt-1 text-xl font-black leading-none text-[#fec708]">{bookingFinalPoints.toLocaleString()} <span className="text-[10px] text-white/44">pts</span></p>
                   </div>
                 </div>
-
-              </div>
+                <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBookingStep(BOOKING_STEPS[Math.max(bookingStepIndex - 1, 0)]?.id || 'services')}
+                    disabled={bookingStep === 'services'}
+                    className="grid h-11 w-11 place-items-center rounded-[1.15rem] border border-white/[0.08] bg-white/[0.045] text-white/58 transition-all disabled:opacity-30 sm:h-12 sm:w-12"
+                    aria-label="Previous booking step"
+                  >
+                    <ArrowRight size={17} className="rotate-180" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBookingPrimaryAction}
+                    disabled={bookingPrimaryDisabled}
+                    className={cn(
+                      "group relative flex h-11 items-center justify-between overflow-hidden rounded-[1.15rem] px-4 text-xs font-black uppercase tracking-[0.12em] transition-all duration-300 sm:h-12 sm:text-sm",
+                      bookingPrimaryDisabled
+                        ? "border border-white/[0.08] bg-white/[0.055] text-white/34"
+                        : "bg-[#fec708] text-black shadow-[0_18px_42px_rgba(254,199,8,0.2)]"
+                    )}
+                  >
+                    {!bookingPrimaryDisabled && !shouldReduceMotion && (
+                      <span className="absolute inset-y-0 left-[-40%] w-1/2 -skew-x-12 bg-white/28 transition-transform duration-700 group-hover:translate-x-[280%]" />
+                    )}
+                    <span className="relative z-10 truncate">{bookingPrimaryCopy}</span>
+                    <ArrowRight size={17} className="relative z-10 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                </div>
+              </footer>
             </motion.div>
           </motion.div>
         )}
@@ -1356,7 +1451,7 @@ function RewardsCarousel({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.5, ease: premiumEase }}
-      className="pt-2"
+      className="pt-2 mobile-paw-points"
     >
       <div className="relative overflow-hidden rounded-[2.6rem] border border-[#fec708]/14 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.025)_44%,rgba(254,199,8,0.045))] p-4 shadow-[0_26px_80px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl sm:p-5">
         <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#fec708]/10 blur-[90px]" />
@@ -1386,7 +1481,7 @@ function RewardsCarousel({
 
         <div className="relative mb-5 px-1">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-white/50">
+            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-white/62">
               Journey progress
             </span>
             <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">
@@ -1394,7 +1489,7 @@ function RewardsCarousel({
             </span>
           </div>
           <div
-            className="relative h-2.5 overflow-hidden rounded-full border border-[#fec708]/12 bg-[#130f08] shadow-[inset_0_1px_7px_rgba(0,0,0,0.58),0_1px_0_rgba(254,199,8,0.08)]"
+            className="journey-progress-track relative h-3.5 overflow-hidden rounded-full border border-[#fec708]/18 bg-[#130f08] shadow-[inset_0_1px_8px_rgba(0,0,0,0.62),0_1px_0_rgba(254,199,8,0.12)]"
             role="progressbar"
             aria-label="Paw Points journey progress"
             aria-valuemin={0}
@@ -1403,20 +1498,18 @@ function RewardsCarousel({
           >
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(254,199,8,0.08),transparent_34%,rgba(255,255,255,0.04)_52%,transparent_72%)]" />
             <motion.div
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: journeyProgressTotal / 100 }}
-              viewport={{ once: true }}
+              initial={false}
+              animate={{ scaleX: journeyProgressTotal / 100 }}
               transition={{ duration: shouldReduceMotion ? 0 : 1.05, ease: premiumEase }}
-              className="absolute inset-y-0 left-0 w-full origin-left overflow-hidden rounded-full bg-[linear-gradient(90deg,#fec708,#ffe28f_48%,#d89b00)] shadow-[0_0_18px_rgba(254,199,8,0.28)]"
+              className="journey-progress-fill absolute inset-y-0 left-0 w-full origin-left overflow-hidden rounded-full bg-[linear-gradient(90deg,#fec708,#ffe28f_48%,#d89b00)] shadow-[0_0_22px_rgba(254,199,8,0.36)]"
             >
               <div className="absolute inset-x-0 top-0 h-px bg-white/48" />
-              {!shouldReduceMotion && (
+              {!shouldReduceMotion && journeyProgressTotal > 2 && journeyProgressTotal < 100 && (
                 <motion.span
                   className="absolute inset-y-0 w-16 -skew-x-12 bg-white/22 blur-[1px]"
                   initial={{ x: '-140%', opacity: 0 }}
-                  whileInView={{ x: '210%', opacity: [0, 0.72, 0] }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1.65, delay: 0.42, ease: premiumEase }}
+                  animate={{ x: '230%', opacity: [0, 0.72, 0] }}
+                  transition={{ duration: 2.3, repeat: Infinity, repeatDelay: 4.2, ease: premiumEase }}
                 />
               )}
             </motion.div>
@@ -1425,9 +1518,8 @@ function RewardsCarousel({
                 className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border border-[#fff0b8]/70 bg-[#ffe28f] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
                 style={{ left: `calc(${journeyProgressTotal}% - 7px)` }}
                 initial={{ opacity: 0, scale: 0.72 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.38, delay: shouldReduceMotion ? 0 : 0.78, ease: premiumEase }}
+                animate={shouldReduceMotion ? { opacity: 1, scale: 1 } : { opacity: 1, scale: [1, 1.08, 1] }}
+                transition={{ duration: shouldReduceMotion ? 0 : 2.8, repeat: shouldReduceMotion ? 0 : Infinity, ease: 'easeInOut' }}
               />
             )}
             <div className="absolute inset-x-0 top-0 h-px bg-white/18" />
@@ -1465,7 +1557,7 @@ function RewardsCarousel({
                           : "border-white/14 bg-white/[0.08] group-hover:border-white/28"
                     )} />
                   <span className={cn(
-                    "hidden text-[10px] font-black uppercase tracking-[0.14em] sm:block",
+                    "block text-[8px] font-black uppercase tracking-[0.08em] sm:text-[10px] sm:tracking-[0.14em]",
                     tickCurrent ? "text-[#fec708]" : tickUnlocked ? "text-white/42" : "text-white/24"
                   )}>
                     {milestone.points >= 1000 ? `${milestone.points / 1000}k` : milestone.points}
@@ -1514,7 +1606,7 @@ function RewardsCarousel({
                     </span>
                   </div>
                   <div
-                    className="relative h-2.5 overflow-hidden rounded-full border border-[#fec708]/12 bg-[#130f08] shadow-[inset_0_1px_7px_rgba(0,0,0,0.58),0_1px_0_rgba(254,199,8,0.08)]"
+                    className="journey-progress-track relative h-3 overflow-hidden rounded-full border border-[#fec708]/14 bg-[#130f08] shadow-[inset_0_1px_7px_rgba(0,0,0,0.58),0_1px_0_rgba(254,199,8,0.08)]"
                     role="progressbar"
                     aria-label={`${activeJourneyMilestone.title} progress`}
                     aria-valuemin={0}
@@ -1523,10 +1615,11 @@ function RewardsCarousel({
                   >
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(254,199,8,0.07),transparent_36%,rgba(255,255,255,0.035)_55%,transparent_78%)]" />
                     <motion.div
-                      initial={{ scaleX: 0 }}
-                      whileInView={{ scaleX: activeJourneyProgress / 100 }}
-                      viewport={{ once: true }}
-                      animate={isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.18)', '0 0 28px rgba(254,199,8,0.34)', '0 0 14px rgba(254,199,8,0.18)'] } : undefined}
+                      initial={false}
+                      animate={{
+                        scaleX: activeJourneyProgress / 100,
+                        ...(isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.18)', '0 0 28px rgba(254,199,8,0.34)', '0 0 14px rgba(254,199,8,0.18)'] } : {})
+                      }}
                       transition={{
                         scaleX: { duration: shouldReduceMotion ? 0 : 0.95, ease: premiumEase },
                         boxShadow: { duration: 3.2, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' },
@@ -1534,13 +1627,12 @@ function RewardsCarousel({
                       className={cn("absolute inset-y-0 left-0 w-full origin-left overflow-hidden rounded-full bg-gradient-to-r shadow-[0_0_18px_rgba(254,199,8,0.23)]", activeJourneyMilestone.fill)}
                     >
                       <div className="absolute inset-x-0 top-0 h-px bg-white/46" />
-                      {!shouldReduceMotion && (
+                      {!shouldReduceMotion && activeJourneyProgress > 3 && activeJourneyProgress < 100 && (
                         <motion.span
                           className="absolute inset-y-0 w-14 -skew-x-12 bg-white/20 blur-[1px]"
                           initial={{ x: '-135%', opacity: 0 }}
-                          whileInView={{ x: '215%', opacity: [0, 0.7, 0] }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1.55, delay: 0.36, ease: premiumEase }}
+                          animate={{ x: '220%', opacity: [0, 0.7, 0] }}
+                          transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 4, ease: premiumEase }}
                         />
                       )}
                     </motion.div>
@@ -1681,8 +1773,8 @@ function RewardsCarousel({
         </div>
 
         <div className="relative mt-3 px-1">
-          <div className="h-1 overflow-hidden rounded-full bg-white/[0.07]">
-            <motion.div style={{ scaleX: rewardsRailProgress }} className="h-full origin-left rounded-full bg-white/34" />
+          <div className="h-1.5 overflow-hidden rounded-full bg-[#130f08] shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)]">
+            <motion.div style={{ scaleX: rewardsRailProgress }} className="h-full origin-left rounded-full bg-[#fec708]/80 shadow-[0_0_14px_rgba(254,199,8,0.34)]" />
           </div>
         </div>
       </div>

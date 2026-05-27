@@ -264,7 +264,7 @@ export default function DailyBriefing() {
   const location = useLocation();
   const shouldReduceMotion = useReducedMotion();
   const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
-  const { profile, updateProfile } = usePetProfile();
+  const { profile, loading: profileLoading, updateProfile } = usePetProfile();
   const { currentPeriod } = useTimeOfDay();
 
   const uid = profile?.uid || profile?.parentName || 'demo';
@@ -279,7 +279,7 @@ export default function DailyBriefing() {
   } = useCheckInStatus(uid, currentPeriod);
 
   const [activePeriod, setActivePeriod] = useState<TimePeriod>(() => currentIncompletePeriod || currentPeriod);
-  const { message, loading: messageLoading, error: messageError } = usePawlMessage(activePeriod);
+  const { message, loading: messageLoading, error: messageError } = usePawlMessage(profile, profileLoading, activePeriod);
   const [justCompleted, setJustCompleted] = useState(false);
   const [awardNotice, setAwardNotice] = useState<string | null>(null);
 

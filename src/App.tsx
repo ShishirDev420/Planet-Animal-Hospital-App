@@ -3,29 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, authPersistenceReady, db, checkFirebaseHealth } from './lib/firebase';
 import { isPreviewDemoMode } from './lib/demoMode';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import ProactivePlans from './pages/ProactivePlans';
-import AIVet from './pages/AIVet';
-import AIAgents from './pages/AIAgents';
-import ProfileSelection from './pages/ProfileSelection';
-import CreateProfile from './pages/CreateProfile';
-import ProfileSettings from './pages/ProfileSettings';
-import Roadmap from './pages/Roadmap';
 import Welcome from './pages/Welcome';
-import Adoption from './pages/Adoption';
-import Rewards from './pages/Rewards';
-import DailyBriefing from './pages/DailyBriefing';
-import MedicalRecords from './pages/MedicalRecords';
-import MobilePreview from './components/MobilePreview';
 import ErrorBoundary from './components/ErrorBoundary';
 import PlanetOrbLoader from './components/PlanetOrbLoader';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ProactivePlans = lazy(() => import('./pages/ProactivePlans'));
+const AIVet = lazy(() => import('./pages/AIVet'));
+const AIAgents = lazy(() => import('./pages/AIAgents'));
+const ProfileSelection = lazy(() => import('./pages/ProfileSelection'));
+const CreateProfile = lazy(() => import('./pages/CreateProfile'));
+const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const Roadmap = lazy(() => import('./pages/Roadmap'));
+const Adoption = lazy(() => import('./pages/Adoption'));
+const Rewards = lazy(() => import('./pages/Rewards'));
+const DailyBriefing = lazy(() => import('./pages/DailyBriefing'));
+const MedicalRecords = lazy(() => import('./pages/MedicalRecords'));
+const MobilePreview = lazy(() => import('./components/MobilePreview'));
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated' | 'profile-sync-error';
 
@@ -134,6 +135,15 @@ export default function App() {
   return (
     <div className="dark min-h-screen bg-slate-950 text-white font-sans antialiased">
       <ErrorBoundary>
+        <Suspense
+          fallback={
+            <PlanetOrbLoader
+              fullscreen
+              label="Planet Animal Hospital"
+              detail="Loading your care workspace"
+            />
+          }
+        >
           {isPreviewRoute && !isInsideFrame ? (
             <Routes>
               <Route path="/preview" element={<MobilePreview />} />
@@ -168,6 +178,7 @@ export default function App() {
               )}
             </Routes>
           )}
+        </Suspense>
       </ErrorBoundary>
     </div>
   );

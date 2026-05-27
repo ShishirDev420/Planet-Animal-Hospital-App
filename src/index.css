@@ -560,6 +560,17 @@
     isolation: isolate;
   }
 
+  .mobile-shell-noise {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.036;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.72'/%3E%3C/svg%3E");
+    background-size: 144px 144px;
+  }
+
   .mobile-shell-orb-field {
     position: absolute;
     inset: 0;
@@ -575,9 +586,9 @@
     width: 24rem;
     height: 24rem;
     border-radius: 9999px;
-    filter: blur(110px);
-    opacity: 0.42;
-    will-change: transform, opacity;
+    filter: blur(76px);
+    opacity: 0.32;
+    will-change: transform;
     transform: translateZ(0);
     animation: mobile-shell-orb-drift 38s infinite ease-in-out;
   }
@@ -585,14 +596,14 @@
   .mobile-shell-orb-yellow {
     top: 10rem;
     left: -10rem;
-    background: rgb(254 199 8 / 0.36);
+    background: radial-gradient(circle, rgb(254 199 8 / 0.34) 0%, rgb(254 199 8 / 0.18) 42%, transparent 72%);
     animation-duration: 42s;
   }
 
   .mobile-shell-orb-green {
     top: 34%;
     right: -11rem;
-    background: rgb(45 212 191 / 0.28);
+    background: radial-gradient(circle, rgb(45 212 191 / 0.24) 0%, rgb(45 212 191 / 0.12) 44%, transparent 72%);
     animation-delay: -12s;
     animation-duration: 48s;
   }
@@ -600,7 +611,7 @@
   .mobile-shell-orb-amber {
     bottom: -10rem;
     left: 18%;
-    background: rgb(251 191 36 / 0.24);
+    background: radial-gradient(circle, rgb(251 191 36 / 0.22) 0%, rgb(251 191 36 / 0.11) 44%, transparent 72%);
     animation-delay: -24s;
     animation-duration: 56s;
   }
@@ -848,6 +859,65 @@
     box-shadow: 0 0 15px rgba(254, 199, 8, 0.5);
     animation: float-gentle 4s ease-in-out infinite;
   }
+
+  .briefing-attention-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--glow-angle),
+      transparent 0deg,
+      rgb(254 199 8 / 0.12) 58deg,
+      rgb(255 240 184 / 0.48) 86deg,
+      rgb(254 199 8 / 0.16) 118deg,
+      transparent 180deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: aura-rotate 12s linear infinite;
+  }
+
+  .briefing-attention-card::after {
+    content: '';
+    position: absolute;
+    inset: auto 16% -38% 16%;
+    height: 58%;
+    pointer-events: none;
+    border-radius: 999px;
+    background: radial-gradient(ellipse at center, rgb(254 199 8 / 0.12), transparent 68%);
+    animation: briefing-glow-breathe 6.5s ease-in-out infinite;
+  }
+
+  .journey-progress-track::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.10), transparent);
+    opacity: 0.32;
+  }
+}
+
+@keyframes briefing-glow-breathe {
+  0%, 100% {
+    opacity: 0.46;
+    transform: translate3d(0, 0, 0) scale(0.98);
+  }
+  50% {
+    opacity: 0.78;
+    transform: translate3d(0, -3px, 0) scale(1.03);
+  }
 }
 
 .icon-premium {
@@ -937,10 +1007,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-blob,
+  .mobile-shell-orb,
+  .briefing-attention-card::before,
+  .briefing-attention-card::after,
   .planet-loader-ambient,
   .planet-orb-stage::before,
   .planet-orb-stage::after {
     animation: none !important;
+  }
+
+  .mobile-shell-orb {
+    transform: none !important;
   }
 }
 
@@ -1061,5 +1139,14 @@
   .animate-point-glow-earned,
   .animate-point-glow-redeemed {
     animation: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .liquid-glass-modal,
+  .liquid-glass-glossy,
+  .bento-card-premium {
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
   }
 }

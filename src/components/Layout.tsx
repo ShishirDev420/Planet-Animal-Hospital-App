@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShieldPlus, Bot, Map, HeartHandshake, Smartphone, Users } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import SplashScreen from './SplashScreen';
 import PlanetOrbLoader from './PlanetOrbLoader';
@@ -22,6 +22,13 @@ const mobilePageTransition = {
   transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] as any }
 };
 
+const reducedPageTransition = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.01 }
+};
+
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -30,6 +37,7 @@ export default function Layout() {
   const previewDevice = new URLSearchParams(location.search).get('preview_device') || '';
   const preservedSearch = isInsideFrame || isPreviewDemoMode(location.search, location.pathname) ? location.search : '';
   const preservePreviewSearch = (to: string) => `${to}${preservedSearch}`;
+  const shouldReduceMotion = useReducedMotion();
   const previousPathRef = useRef(location.pathname);
   const desktopMainRef = useRef<HTMLDivElement | null>(null);
   const mobileMainRef = useRef<HTMLElement | null>(null);
@@ -41,7 +49,7 @@ export default function Layout() {
 
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024);
   const isMobileShell = !isDesktop || (isInsideFrame && !isDesktopPreview);
-  const activePageTransition = isMobileShell ? mobilePageTransition : pageTransition;
+  const activePageTransition = shouldReduceMotion ? reducedPageTransition : isMobileShell ? mobilePageTransition : pageTransition;
   const previewSafeAreaStyle = isInsideFrame && !isDesktopPreview ? ({
     '--preview-safe-area-top': previewDevice.includes('iphone') ? '52px' : previewDevice.includes('samsung') ? '44px' : '0px',
     '--preview-safe-area-bottom': previewDevice.includes('iphone') ? '34px' : previewDevice.includes('samsung') ? '28px' : '0px',
@@ -82,10 +90,10 @@ export default function Layout() {
 
     const timer = window.setTimeout(() => {
       setRouteLoader((current) => (current?.key === key ? null : current));
-    }, 920);
+    }, shouldReduceMotion ? 120 : 640);
 
     return () => window.clearTimeout(timer);
-  }, [isInsideFrame, location.pathname]);
+  }, [isInsideFrame, location.pathname, shouldReduceMotion]);
 
   return (
     <div style={previewSafeAreaStyle} className="fixed inset-0 h-[100dvh] w-full bg-slate-50 text-black/90 font-sans overflow-hidden dark:bg-[#071912] dark:text-white/90">
@@ -107,9 +115,9 @@ export default function Layout() {
       {/* Desktop ambient field stays outside routed content so it never remounts. */}
       {isDesktop && (!isInsideFrame || isDesktopPreview) && (
         <div className="ambient-orb-field fixed inset-x-0 bottom-0 overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-8%] left-[5%] w-96 h-96 bg-planet-yellow/34 rounded-full blur-[120px] opacity-50 animate-blob" style={{ animationDuration: '18s', animationTimingFunction: 'ease-in-out' }}></div>
-          <div className="absolute top-[22%] right-[5%] w-96 h-96 bg-teal-300/28 rounded-full blur-[120px] opacity-45 animate-blob" style={{ animationDelay: '4s', animationDuration: '22s', animationTimingFunction: 'ease-in-out' }}></div>
-          <div className="absolute bottom-[-18%] left-[20%] w-96 h-96 bg-amber-200/30 rounded-full blur-[120px] opacity-45 animate-blob" style={{ animationDelay: '8s', animationDuration: '26s', animationTimingFunction: 'ease-in-out' }}></div>
+          <div className="absolute top-[-8%] left-[5%] w-96 h-96 bg-planet-yellow/26 rounded-full blur-[88px] opacity-40 animate-blob" style={{ animationDuration: '22s', animationTimingFunction: 'ease-in-out' }}></div>
+          <div className="absolute top-[22%] right-[5%] w-96 h-96 bg-teal-300/22 rounded-full blur-[88px] opacity-36 animate-blob" style={{ animationDelay: '4s', animationDuration: '26s', animationTimingFunction: 'ease-in-out' }}></div>
+          <div className="absolute bottom-[-18%] left-[20%] w-96 h-96 bg-amber-200/22 rounded-full blur-[88px] opacity-36 animate-blob" style={{ animationDelay: '8s', animationDuration: '30s', animationTimingFunction: 'ease-in-out' }}></div>
         </div>
       )}
 
@@ -158,6 +166,7 @@ export default function Layout() {
           <div className="mobile-shell-orb mobile-shell-orb-green" />
           <div className="mobile-shell-orb mobile-shell-orb-amber" />
         </div>
+        <div aria-hidden="true" className="mobile-shell-noise" />
 
         <main ref={mobileMainRef} className="mobile-scroll-pane relative z-10 min-h-0 flex-1 overflow-y-auto pt-[var(--preview-safe-area-top,0px)] pb-[calc(6rem+var(--preview-safe-area-bottom,0px))] hide-scrollbar">
           <AnimatePresence mode="wait">
