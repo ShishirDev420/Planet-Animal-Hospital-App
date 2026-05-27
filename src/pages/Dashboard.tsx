@@ -902,17 +902,6 @@ export default function Dashboard() {
               exit={{ y: "100%", opacity: 0 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = e.clientX - rect.left - rect.width / 2;
-                const y = e.clientY - rect.top - rect.height / 2;
-                // Subtle tilt effect for premium feel
-                e.currentTarget.style.transform = `perspective(1200px) rotateX(${-y / 80}deg) rotateY(${x / 80}deg)`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg)`;
-              }}
-              style={{ perspective: '1200px', transition: 'transform 0.2s ease-out' }}
               className="relative w-full max-w-2xl liquid-glass-modal rounded-t-[2.5rem] sm:rounded-[3rem] h-[calc(100dvh-6.75rem)] sm:h-[85vh] flex flex-col overflow-hidden"
             >
               {/* Premium Glass Highlights */}
@@ -980,7 +969,7 @@ export default function Dashboard() {
               </div>
 
               {/* Scrollable Body */}
-              <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-8 pb-6 sm:pb-8 hide-scrollbar scroll-smooth">
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-8 pb-6 sm:pb-8 hide-scrollbar scroll-smooth overscroll-contain touch-pan-y">
 
                 {/* 1. Services Section */}
                 <section id="services-section" className="mb-10">
