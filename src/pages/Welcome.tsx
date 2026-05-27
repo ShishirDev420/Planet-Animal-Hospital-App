@@ -184,7 +184,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     try {
       setAuthError('');
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
       const result = await signInWithPopup(auth, provider);
       const { hasCompletedProfile } = await ensureUserDocument(result.user);
       continueToClinic(hasCompletedProfile);

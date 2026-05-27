@@ -7,7 +7,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db, checkFirebaseHealth } from './lib/firebase';
+import { auth, authPersistenceReady, db, checkFirebaseHealth } from './lib/firebase';
+import { isPreviewDemoMode } from './lib/demoMode';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ProactivePlans from './pages/ProactivePlans';
@@ -26,7 +27,7 @@ import MobilePreview from './components/MobilePreview';
 import ErrorBoundary from './components/ErrorBoundary';
 import PlanetOrbLoader from './components/PlanetOrbLoader';
 
-type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated';
+type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated' | 'profile-sync-error';
 
 export default function App() {
   const location = useLocation();
@@ -34,7 +35,7 @@ export default function App() {
   
   // Check if we are already inside the preview frame to avoid recursion
   const isInsideFrame = location.search.includes('preview_frame=true');
-  const isDemoMode = location.search.includes('demo_mode=true');
+  const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
   const isPreviewRoute = location.pathname === '/preview';
   const startupRedirectHandledRef = useRef(false);
 
@@ -47,14 +48,16 @@ export default function App() {
     }
 
     let loadingTimeout: number | null = null;
+    let cancelled = false;
+    let unsubscribe: (() => void) | null = null;
 
-    const fetchUserDocWithRetry = async (uid: string, attempt = 1): Promise<boolean> => {
+    const fetchUserDocWithRetry = async (uid: string, attempt = 1): Promise<AuthStatus> => {
       try {
         const userDoc = await getDoc(doc(db, 'users', uid));
         if (!userDoc.exists() || !userDoc.data()?.petName || userDoc.data()?.petName === 'Pending') {
-          return false; // needs onboarding
+          return 'onboarding';
         }
-        return true; // authenticated
+        return 'authenticated';
       } catch (e: any) {
         console.error(`[Auth] Firestore read attempt ${attempt} failed:`, e.code, e.message);
         if (attempt < 3) {
@@ -62,18 +65,23 @@ export default function App() {
           await new Promise((res) => window.setTimeout(res, delay));
           return fetchUserDocWithRetry(uid, attempt + 1);
         }
-        console.error('[Auth] Firestore read exhausted all retries. Keeping user authenticated to prevent lockout.');
-        return true; // stay authenticated instead of signing out
+        console.error('[Auth] Firestore read exhausted all retries. Keeping session, but blocking dummy profile fallback.');
+        return 'profile-sync-error';
       }
     };
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const isFullyOnboarded = await fetchUserDocWithRetry(user.uid);
-        setAuthStatus(isFullyOnboarded ? 'authenticated' : 'onboarding');
-      } else {
-        setAuthStatus('unauthenticated');
-      }
+    authPersistenceReady.finally(() => {
+      if (cancelled) return;
+
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (cancelled) return;
+        if (user) {
+          const nextStatus = await fetchUserDocWithRetry(user.uid);
+          if (!cancelled) setAuthStatus(nextStatus);
+        } else {
+          setAuthStatus('unauthenticated');
+        }
+      });
     });
 
     loadingTimeout = window.setTimeout(() => {
@@ -81,7 +89,8 @@ export default function App() {
     }, 20000);
 
     return () => {
-      unsubscribe();
+      cancelled = true;
+      if (unsubscribe) unsubscribe();
       if (loadingTimeout) window.clearTimeout(loadingTimeout);
     };
   }, [isDemoMode]);
@@ -108,6 +117,16 @@ export default function App() {
         fullscreen
         label="Planet Animal Hospital"
         detail="Syncing the main care dashboard"
+      />
+    );
+  }
+
+  if (authStatus === 'profile-sync-error') {
+    return (
+      <PlanetOrbLoader
+        fullscreen
+        label="Restoring Your Profile"
+        detail="You're still signed in. Reconnecting to your saved pet profile."
       />
     );
   }

@@ -7,6 +7,7 @@ import HealthJourney, { Stage, Task } from '../components/HealthJourney';
 import Markdown from 'react-markdown';
 import Logo from '../components/Logo';
 import PlanetOrbLoader from '../components/PlanetOrbLoader';
+import { isPreviewDemoMode } from '../lib/demoMode';
 
 const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
@@ -140,7 +141,7 @@ const parseRoadmap = (text: string, progressData: any = {}): Stage[] => {
 export default function Roadmap() {
   const navigate = useNavigate();
   const { profile, loading: profileLoading, updateProfile } = usePetProfile();
-  const isDemoMode = window.location.search.includes('demo_mode=true');
+  const isDemoMode = isPreviewDemoMode(window.location.search, window.location.pathname);
   
   const isProfileIncomplete = !profile?.petName && !profile?.name;
 

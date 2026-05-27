@@ -9,6 +9,7 @@ import { usePawlMessage } from '../hooks/usePawlMessage';
 import { useTimeOfDay, type TimePeriod, PERIOD_DISPLAY } from '../hooks/useTimeOfDay';
 import { useCheckInStatus } from '../hooks/useCheckInStatus';
 import { cn } from '../lib/utils';
+import { isPreviewDemoMode } from '../lib/demoMode';
 
 const PERIOD_ORDER: TimePeriod[] = ['morning', 'afternoon', 'evening'];
 const POINTS_PER_BRIEFING = 5;
@@ -262,7 +263,7 @@ export default function DailyBriefing() {
   const navigate = useNavigate();
   const location = useLocation();
   const shouldReduceMotion = useReducedMotion();
-  const isDemoMode = location.search.includes('demo_mode=true');
+  const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
   const { profile, updateProfile } = usePetProfile();
   const { currentPeriod } = useTimeOfDay();
 

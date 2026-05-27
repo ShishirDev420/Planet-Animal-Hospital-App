@@ -3,6 +3,7 @@ import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLocation } from 'react-router-dom';
+import { isPreviewDemoMode } from '../lib/demoMode';
 
 const DEMO_PROFILE_KEY = 'planet_animal_demo_profile';
 
@@ -48,7 +49,7 @@ export const DEMO_ROADMAP_TEXT = `### Phase: 1-3 Months
 
 export function usePetProfile() {
   const location = useLocation();
-  const isDemoMode = location.search.includes('demo_mode=true');
+  const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
   const demoProfile = {
     parentName: 'Shishir',
     petName: 'Onyx',
@@ -95,13 +96,15 @@ export function usePetProfile() {
     }
   };
 
-  const [profile, setProfile] = useState<any>(isDemoMode ? readDemoProfile() : {});
+  const [profile, setProfile] = useState<any>(isDemoMode ? readDemoProfile() : null);
   const [loading, setLoading] = useState(!isDemoMode);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (isDemoMode) {
       setProfile(readDemoProfile());
       setLoading(false);
+      setError(null);
       return;
     }
 
@@ -116,16 +119,19 @@ export function usePetProfile() {
         unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
             setProfile(normalizeProfile(docSnap.data()));
+            setError(null);
           } else {
-            setProfile({});
+            setProfile(null);
           }
           setLoading(false);
         }, (err) => {
           console.error('onSnapshot error in usePetProfile:', err);
+          setProfile(null);
+          setError(err);
           setLoading(false);
         });
       } else {
-        setProfile({});
+        setProfile(null);
         setLoading(false);
       }
     });
@@ -134,7 +140,7 @@ export function usePetProfile() {
       unsubscribeAuth();
       if (unsubscribeSnapshot) unsubscribeSnapshot();
     };
-  }, []);
+  }, [isDemoMode]);
 
   const updateProfile = async (updates: any) => {
     if (isDemoMode) {
@@ -150,5 +156,5 @@ export function usePetProfile() {
     await updateDoc(docRef, updates);
   };
 
-  return { profile, loading, updateProfile };
+  return { profile, loading, error, updateProfile };
 }

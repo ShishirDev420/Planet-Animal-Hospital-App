@@ -19,6 +19,7 @@ import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc } fr
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { buildWhatsAppMessage, calculateBookingPoints, getPointsMultiplier } from '../lib/pawPoints';
+import { isPreviewDemoMode } from '../lib/demoMode';
 
 enum OperationType {
   CREATE = 'create',
@@ -482,8 +483,8 @@ function getBriefingPreview(message: string, loading: boolean, petName: string) 
 
 export default function Dashboard() {
   const location = useLocation();
-  const isDemoMode = location.search.includes('demo_mode=true');
-  const { profile: realPetProfile, loading: realProfileLoading } = usePetProfile();
+  const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
+  const { profile: realPetProfile, loading: realProfileLoading, error: profileError } = usePetProfile();
 
   const petProfile = useMemo(() => realPetProfile, [realPetProfile]);
 
@@ -567,7 +568,7 @@ export default function Dashboard() {
     setPendingPoints(prev => prev + finalPoints);
 
     try {
-      const user = auth.currentUser || (window.location.search.includes('demo_mode=true') ? { uid: 'demo-user', email: 'demo@planetanimal.com', displayName: 'Demo Parent' } : null);
+      const user = auth.currentUser || (isDemoMode ? { uid: 'demo-user', email: 'demo@planetanimal.com', displayName: 'Demo Parent' } : null);
       if (!user) return;
 
       const petNameStr = petProfile?.name || 'Pet';
@@ -667,11 +668,11 @@ export default function Dashboard() {
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
   const whatsappMessage = buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime);
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
-  if (profileLoading || !isAuthReady) {
+  if (profileLoading || !isAuthReady || (!isDemoMode && !petProfile)) {
     return (
       <PlanetOrbLoader
         label="Planet Animal Hospital"
-        detail="Loading the main care dashboard"
+        detail={profileError ? "Reconnecting to your saved pet profile" : "Loading your saved pet profile"}
         className="h-full pb-32"
       />
     );

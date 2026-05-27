@@ -8,13 +8,14 @@ import { useProfileImages } from '../hooks/useProfileImages';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { isPreviewDemoMode } from '../lib/demoMode';
 
 export default function ProfileSelection() {
   const navigate = useNavigate();
   const { userImage, petImage } = useProfileImages();
   const [profileName, setProfileName] = useState('Loading...');
 
-  const isDemoMode = typeof window !== 'undefined' && window.location.search.includes('demo_mode=true');
+  const isDemoMode = typeof window !== 'undefined' && isPreviewDemoMode(window.location.search, window.location.pathname);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -28,15 +29,15 @@ export default function ProfileSelection() {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            const userName = auth.currentUser.displayName || data.parentName || data.displayName || 'User';
-            const petName = data.petName || 'Onyx';
+            const userName = data.parentName || auth.currentUser.displayName || data.displayName || 'Pet Parent';
+            const petName = data.petName && data.petName !== 'Pending' ? data.petName : 'Profile setup needed';
             setProfileName(`${userName} & ${petName}`);
           } else {
-            setProfileName(`${auth.currentUser.displayName || 'User'} & Onyx`);
+            setProfileName(`${auth.currentUser.displayName || 'Signed-in parent'} & Profile setup needed`);
           }
         } catch (e) {
           console.error("Error fetching profile", e);
-          setProfileName(`${auth.currentUser?.displayName || 'User'} & Onyx`);
+          setProfileName(`${auth.currentUser?.displayName || 'Signed-in parent'} & Syncing profile`);
         }
       }
     };

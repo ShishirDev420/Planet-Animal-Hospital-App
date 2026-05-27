@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 import SplashScreen from './SplashScreen';
 import PlanetOrbLoader from './PlanetOrbLoader';
 import Logo from './Logo';
+import { isPreviewDemoMode } from '../lib/demoMode';
 
 const pageTransition = {
   initial: { opacity: 0, y: 8 },
@@ -27,7 +28,7 @@ export default function Layout() {
   const isInsideFrame = location.search.includes('preview_frame=true');
   const isDesktopPreview = isInsideFrame && location.search.includes('preview_view=desktop');
   const previewDevice = new URLSearchParams(location.search).get('preview_device') || '';
-  const preservedSearch = isInsideFrame || location.search.includes('demo_mode=true') ? location.search : '';
+  const preservedSearch = isInsideFrame || isPreviewDemoMode(location.search, location.pathname) ? location.search : '';
   const preservePreviewSearch = (to: string) => `${to}${preservedSearch}`;
   const previousPathRef = useRef(location.pathname);
   const desktopMainRef = useRef<HTMLDivElement | null>(null);

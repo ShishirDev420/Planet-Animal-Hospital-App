@@ -3,10 +3,13 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Plus, User, ArrowLeft, Sparkles, Heart, Weight, ClipboardList } from 'lucide-react';
 import Logo from '../components/Logo';
-import { cn } from '../lib/utils';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
 export default function CreateProfile() {
   const navigate = useNavigate();
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     userName: '',
     petName: '',
@@ -14,10 +17,35 @@ export default function CreateProfile() {
     medicalHistory: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, we'd save this to Firebase. For now, we simulate success.
-    navigate('/profiles');
+    if (!auth.currentUser) {
+      setError('Please sign in again before creating a profile.');
+      return;
+    }
+
+    setIsSaving(true);
+    setError('');
+    try {
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
+        uid: auth.currentUser.uid,
+        email: auth.currentUser.email,
+        displayName: auth.currentUser.displayName || formData.userName.trim() || 'Pet Parent',
+        parentName: formData.userName.trim(),
+        petName: formData.petName.trim(),
+        weight: formData.petWeight.trim(),
+        medicalHistory: formData.medicalHistory.trim(),
+        pawPoints: 500,
+        currentPlan: 'free',
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+      navigate('/profiles');
+    } catch (err) {
+      console.error('Failed to create profile:', err);
+      setError('Failed to save profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -50,6 +78,7 @@ export default function CreateProfile() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-bold text-red-400">{error}</p>}
           {/* Your Name */}
           <div className="space-y-2">
             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1 dark:text-white/40">Your Name</label>
@@ -126,10 +155,11 @@ export default function CreateProfile() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
+            disabled={isSaving}
             className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3 mt-8"
           >
             <Sparkles size={20} className="text-planet-yellow" />
-            Create Profile
+            {isSaving ? 'Saving Profile...' : 'Create Profile'}
           </motion.button>
         </form>
       </motion.div>

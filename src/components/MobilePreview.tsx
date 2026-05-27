@@ -46,9 +46,8 @@ export default function MobilePreview() {
   // Build a clean "Open" URL (no preview_frame / preview_view params)
   const openUrl = useMemo(() => {
     const clean = new URL(normalizedPath, window.location.origin);
-    if (demoMode) clean.searchParams.set('demo_mode', 'true');
     return clean.toString();
-  }, [normalizedPath, demoMode]);
+  }, [normalizedPath]);
 
   const frame = DEVICE_FRAMES[device];
   const [viewport, setViewport] = useState(() => ({

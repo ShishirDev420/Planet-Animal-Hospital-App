@@ -1,5 +1,6 @@
 import { collection, addDoc, updateDoc, doc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from './firebase';
+import { isPreviewDemoMode } from './demoMode';
 
 export const CLINIC_WHATSAPP = '919004290923';
 export const CLINIC_PHONE = '9004290923';
@@ -206,7 +207,7 @@ export function getCurrentUserBookingSupport(): {
   petName: string;
 } | null {
   const currentUser = auth.currentUser;
-  const isDemo = window.location.search.includes('demo_mode=true');
+  const isDemo = isPreviewDemoMode(window.location.search, window.location.pathname);
 
   if (isDemo) {
     const saved = localStorage.getItem('planet_animal_demo_profile');
