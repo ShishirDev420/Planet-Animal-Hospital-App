@@ -63,6 +63,7 @@ export function usePetProfile() {
     medicalHistory: 'No known issues',
     surgicalHistory: 'Neutered at 6 months',
     pawPoints: 1250,
+    phone: '9876543210',
     cachedRoadmap: DEMO_ROADMAP_TEXT,
     roadmapGeneratedAt: Date.now(),
     roadmapProgress: {

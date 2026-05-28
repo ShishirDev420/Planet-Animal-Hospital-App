@@ -59,6 +59,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [gender, setGender] = useState('Male');
   const [weight, setWeight] = useState('');
   const [additionalDetails, setAdditionalDetails] = useState('');
+  const [phone, setPhone] = useState('');
 
   useEffect(() => {
     if (!initialOnboarding || !auth.currentUser) return;
@@ -151,6 +152,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           uid: userCredential.user.uid,
           email: userCredential.user.email,
+          phone: phone.trim() || '',
           displayName: userCredential.user.displayName || 'Pet Parent',
           petName: 'Pending',
           pawPoints: 500,
@@ -216,6 +218,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           gender,
           weight: weight.trim(),
           additionalDetails: additionalDetails.trim(),
+          phone: phone.trim() || '',
           pawPoints: 500,
         }, { merge: true });
         
@@ -317,6 +320,10 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
                   <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Weight (lbs/kg)</label>
                   <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
+                </motion.div>
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
+                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Mobile Number (for appointment reminders)</label>
+                  <input type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 9876543210" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
                 </motion.div>
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
                   <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Additional Details</label>
@@ -454,6 +461,12 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                   <input type="password" id="password" value={password} onChange={(e) => { setPassword(e.target.value); setAuthError(''); }} autoComplete={isSignUp ? 'new-password' : 'current-password'} data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Password" />
                   <label htmlFor="password" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Password</label>
                 </div>
+                {isSignUp && (
+                  <div className="relative group">
+                    <input type="tel" inputMode="numeric" id="phone" value={phone} onChange={(e) => { setPhone(e.target.value); setAuthError(''); }} autoComplete="tel" data-lpignore="true" data-form-type="phone" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Phone" />
+                    <label htmlFor="phone" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Phone (for appointment reminders)</label>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 pt-3">

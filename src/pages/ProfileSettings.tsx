@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut } from 'lucide-react';
+import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut, Phone } from 'lucide-react';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { signOut } from 'firebase/auth';
@@ -19,6 +19,7 @@ export default function ProfileSettings() {
   const [medicalHistory, setMedicalHistory] = useState(profile?.medicalHistory || '');
   const [age, setAge] = useState(profile?.age || '');
   const [gender, setGender] = useState(profile?.gender || '');
+  const [phone, setPhone] = useState(profile?.phone || '');
   const [reminders, setReminders] = useState(true);
   const [marketing, setMarketing] = useState(false);
 
@@ -34,6 +35,7 @@ export default function ProfileSettings() {
       if (profile.medicalHistory) setMedicalHistory(profile.medicalHistory);
       if (profile.age) setAge(profile.age);
       if (profile.gender) setGender(profile.gender);
+      if (profile.phone !== undefined) setPhone(profile.phone);
     }
   }, [profile]);
 
@@ -63,7 +65,7 @@ export default function ProfileSettings() {
     setIsSaving(true);
     setSaveError(false);
     try {
-      await updateProfile({ parentName: name, weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory, medicalHistory, age, gender });
+      await updateProfile({ parentName: name, weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory, medicalHistory, age, gender, phone: phone.trim() });
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
     } catch (err) {
@@ -198,6 +200,18 @@ export default function ProfileSettings() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
+                <Phone size={16} /> Mobile Number
+              </label>
+              <input 
+                type="tel" 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
+                placeholder="e.g. 9876543210"
               />
             </div>
           </div>

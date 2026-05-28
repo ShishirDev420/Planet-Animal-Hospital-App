@@ -655,6 +655,7 @@ export default function Dashboard() {
       await addDoc(collection(db, 'requests'), {
         userId: auth.currentUser?.uid || userId,
         patient: petProfile?.name || 'Pet',
+        phone: petProfile?.phone || '',
         reason: serviceNames,
         date: bookingDate,
         time: bookingTime,
@@ -692,11 +693,12 @@ export default function Dashboard() {
 
   const parentName = petProfile?.parentName || "Pet Parent";
   const petName = petProfile?.name || 'Pet';
+  const parentPhone = petProfile?.phone || '';
   const bookingBasePoints = selectedServices.reduce((acc, service) => acc + service.points, 0);
   const bookingFinalPoints = calculateBookingPoints(selectedServices, currentPlan);
   const bookingMultiplier = getMultiplier(currentPlan);
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
-  const whatsappMessage = buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime);
+  const whatsappMessage = `${buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime)}${parentPhone ? ` My mobile: ${parentPhone}.` : ''}`;
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
   const briefingNeedsAttention = !isPeriodComplete(currentPeriod);
   const bookingStepIndex = BOOKING_STEPS.findIndex((step) => step.id === bookingStep);
