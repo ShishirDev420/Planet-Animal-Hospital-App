@@ -255,11 +255,13 @@ export default function Rewards() {
         />
       </div>
 
+      <div className="fixed top-0 left-0 right-0 h-20 bg-gradient-to-b from-black via-black to-transparent z-[45] pointer-events-none" />
+
       <header className="px-5 pt-5 pb-3 flex items-center justify-between relative z-50 sm:px-6 sm:pt-10 sm:pb-6">
         <motion.button 
           whileHover={{ scale: 1.1, x: -5 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => navigate(-1)} 
+          onClick={() => { if (window.history.length > 1) { navigate(-1); } else { navigate('/'); } }} 
           className="w-10 h-10 rounded-xl bg-white/5 backdrop-blur-2xl border border-white/10 flex items-center justify-center sm:h-12 sm:w-12"
         >
           <ChevronLeft size={20} />
