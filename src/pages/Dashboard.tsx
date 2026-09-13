@@ -1,3 +1,4 @@
+import { useCare } from '../lib/care/client';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -520,16 +521,13 @@ export default function Dashboard() {
   const [pendingPoints, setPendingPoints] = useState(0);
   const [currentPlan, setCurrentPlan] = useState('free');
   const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
-  const [incentivesOrder, setIncentivesOrder] = useState<any[]>([]);
+  const care = useCare();
+  const incentivesOrder = care.state?.milestones.filter(m=>m.petId===care.petId && m.status==='approved').map(m=>({id:m.id,title:m.title,subtext:m.instructions,pointsText:m.walletReward ? m.walletReward.points+' pending points' : 'Confirm with clinic',pointsValue:m.walletReward?.points||0,theme:'green'})) || [];
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const getMultiplier = (plan: string) => getPointsMultiplier(plan);
 
-  useEffect(() => {
-    if (petProfile) {
-      setIncentivesOrder(getPersonalizedIncentives(petProfile as any));
-    }
-  }, [petProfile]);
+
 
   useEffect(() => {
     if (!isDemoMode) return;
@@ -551,44 +549,7 @@ export default function Dashboard() {
     }
   }, [isDemoMode, profileLoading, petProfile]);
 
-  const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
-    if (!userId) return;
-
-    const finalPoints = calculateBookingPoints([{ id: 0, name: serviceName, points: pointsValue }], currentPlan);
-
-    // Optimistic UI updates
-    setPendingIncentives(prev => [...prev, incentiveId]);
-    setPendingPoints(prev => prev + finalPoints);
-
-    try {
-      const user = auth.currentUser || (isDemoMode ? { uid: 'demo-user', email: 'demo@planetanimal.com', displayName: 'Demo Parent' } : null);
-      if (!user) return;
-
-      const petNameStr = petProfile?.name || 'Pet';
-
-      await addDoc(collection(db, 'requests'), {
-        userId: user.uid,
-        patient: petNameStr,
-        reason: serviceName,
-        date: "TBD",
-        time: "TBD",
-        points: 0,
-        status: 'pending',
-        actionId: incentiveId,
-        createdAt: serverTimestamp()
-      });
-
-      const message = buildWhatsAppMessage(petProfile?.parentName || 'Pet Parent', petNameStr, [serviceName], 'TBD', 'TBD');
-      const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
-
-    } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, 'requests');
-      // Revert optimistic update on failure
-      setPendingIncentives(prev => prev.filter(id => id !== incentiveId));
-      setPendingPoints(prev => prev - finalPoints);
-    }
-  };
+  const handleBookingRequest = async (_serviceName: string, _pointsValue: number, _incentiveId: string) => { navigate('/roadmap'); };
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
@@ -970,7 +931,7 @@ export default function Dashboard() {
                       Show this screen to our staff at checkout to claim your free consultation for {petName}.
                     </p>
                     <div className="bg-white rounded-xl p-4 shadow-sm inline-block">
-                      <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>
+                      <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Previous profile points</p>
                       <p className="text-3xl font-black text-slate-900">{verifiedPoints.toLocaleString()} <span className="text-base text-slate-400">pts</span></p>
                     </div>
                   </div>
@@ -1467,7 +1428,7 @@ function RewardsCarousel({
               <PawPrint className="h-3.5 w-3.5 fill-[#fec708]/20 text-[#fec708]" />
               <span className="cinematic-kicker text-[10px] tracking-[0.2em] text-[#fec708]">Paw Points Program</span>
             </div>
-            <h3 className="cinematic-section-title text-3xl leading-[1.02] tracking-[-0.035em]">One reward path</h3>
+            <h3 className="cinematic-section-title text-3xl leading-[1.02] tracking-[-0.035em]">Previous rewards program</h3>
             <p className="mt-2 max-w-[18rem] text-[0.95rem] font-bold leading-6 text-white/62">
               {pointsToActiveMilestone > 0
                 ? `${pointsToActiveMilestone.toLocaleString()} pts to ${activeJourneyMilestone.title}.`
@@ -1585,12 +1546,12 @@ function RewardsCarousel({
               <div className="relative flex h-full flex-col">
                 <div className="mb-5">
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">Current balance</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">Previous profile points</p>
                     <div className="mt-3 flex items-end gap-2">
                       <span className="cinematic-price text-[3.75rem] tabular-nums text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
                       <span className="pb-2 text-xs font-black uppercase tracking-[0.2em] text-[#fec708]/60">pts</span>
                     </div>
-                    {pendingPoints > 0 && (
+                    <p className="mt-2 text-xs text-white/70">Clinic reconciliation required. Open Rewards for your spendable wallet.</p>{pendingPoints > 0 && (
                       <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white/64">
                         +{pendingPoints.toLocaleString()} pending clinic verification
                       </p>

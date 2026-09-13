@@ -6,3 +6,11 @@ src/care-review.tsx
 tests
 prescription-review.html
 src/prescription-review.tsx
+
+.local-ops/
+firebase.test.json
+firestore-debug.log
+ui-debug.log
+
+assistant-review.html
+src/assistant-review.tsx

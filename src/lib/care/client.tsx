@@ -31,7 +31,7 @@ export function CareProvider({ children }: { children: ReactNode }) {
     if (visualDemo) { setState(null); setError('Visual preview only. Recorded care is available in the signed-in app; use the isolated care review for test data.'); setLoading(false); return; }
     const g = generation.current, request = ++seq.current;
     try { const data = await careRequest(); if (g === generation.current && request === seq.current) accept(data); }
-    catch (e) { if (g === generation.current && request === seq.current) { setState(null); setError((e as Error).message); } }
+    catch (e) { if (g === generation.current && request === seq.current) { setError((e as Error).message); } }
     finally { if (g === generation.current) setLoading(false); }
   };
   useEffect(() => {

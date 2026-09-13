@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test:care": "tsx --test tests/care.test.ts tests/care-api.test.ts tests/prescriptions.test.ts tests/prescription-api.test.ts"
+    "test:care": "tsx --test tests/care.test.ts tests/care-api.test.ts tests/prescriptions.test.ts tests/prescription-api.test.ts tests/wallet-assistant.test.ts",
+    "test:emulator": "firebase emulators:exec --only auth,firestore --project demo-planet-care --config firebase.test.json \"node node_modules/tsx/dist/cli.mjs --test tests/emulator.test.ts\""
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

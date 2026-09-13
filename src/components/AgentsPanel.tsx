@@ -1,3 +1,4 @@
+import CareAssistant from './CareAssistant';
 import CareWorkflow from './CareWorkflow';
 import { useCare } from '../lib/care/client';
 import { careSummary } from '../lib/care/domain';
@@ -126,11 +127,6 @@ export default function AgentsPanel() {
   const care = useCare();
   const activeAgent = useMemo(() => agents.find((agent) => agent.id === agentId) ?? agents[0], [agentId]);
   const agentState = useMemo(() => getAgentState(profile, care.state, care.petId), [profile, care.state, care.petId]);
-  const [messages, setMessages] = useState<Record<AgentId, ChatMessage[]>>(() => createInitialMessages(profile));
-  const [drafts, setDrafts] = useState<Record<AgentId, string>>({ pawl: '', pawlina: '', pritpawl: '' });
-  const [thinkingAgent, setThinkingAgent] = useState<AgentId | null>(null);
-  useEffect(() => { setMessages(createInitialMessages({ petName: care.state?.pets.find(p => p.id === care.petId)?.name })); setDrafts({pawl:'',pawlina:'',pritpawl:''}); }, [care.state?.ownerUid, care.petId]);
-
   const withSearch = (path: string) => {
     if (!location.search) return path;
     return `${path}${path.includes('?') ? '&' : '?'}${location.search.slice(1)}`;
@@ -138,44 +134,6 @@ export default function AgentsPanel() {
 
   const selectAgent = (agent: Agent) => {
     navigate(withSearch(`/agents/${agent.id}`));
-  };
-
-  const pushMessage = (agentId: AgentId, message: Omit<ChatMessage, 'id'>) => {
-    setMessages((current) => ({
-      ...current,
-      [agentId]: [...(current[agentId] ?? []), { ...message, id: `${agentId}-${Date.now()}-${Math.random()}` }],
-    }));
-  };
-
-  const submitPrompt = async (agent: Agent, prompt: string) => {
-    const cleanPrompt = prompt.trim();
-    if (!cleanPrompt || thinkingAgent) return;
-
-    pushMessage(agent.id, { from: 'user', text: cleanPrompt });
-    setDrafts((current) => ({ ...current, [agent.id]: '' }));
-    setThinkingAgent(agent.id);
-
-    try {
-      const recorded = care.state ? careSummary(care.state, care.petId) : care.error || 'Recorded care is still loading.';
-      const pendingSources=care.state?.prescriptions?.filter(r=>r.petId===care.petId&&r.status!=='deleted').length||0;
-      const response = /prescription|upload|scan|transcri/i.test(cleanPrompt) ? `Pritpawl: ${pendingSources} source records for this pet. Use Private prescriptions below to upload or review the original and confirm the transcription. Only the care team can approve clinical instructions; unknown dates remain unrecorded.` : /point|reward|redeem|credit|tier/i.test(cleanPrompt)
-        ? care.state ? `Pawl: ${care.state.ledger.reduce((n,l)=>n+l.points,0)} points were earned from staff-verified care. Booking earns no points. Checkup entitlements are separate; billing redemption is not connected to this pilot.` : recorded
-        : /book|appointment|remind|cancel|reschedul/i.test(cleanPrompt)
-          ? 'Pawlina: Use the shared care controls below to request or reschedule a recorded milestone and opt into reminders. Requests are not confirmed appointments. ' + recorded
-          : 'Pritpawl: ' + recorded + ' New concerns can be shared with the team below; I cannot approve instructions or change treatment.';
-      pushMessage(agent.id, { from: 'agent', text: response });
-
-    } catch (error) {
-      pushMessage(agent.id, { from: 'agent', text: 'I could not complete that action yet. Please confirm the profile is signed in and try again.' });
-    } finally {
-      setThinkingAgent(null);
-    }
-  };
-
-  const runPrimaryAction = async () => {
-    if (activeAgent.id === 'pawl') navigate(withSearch('/briefing'));
-    if (activeAgent.id === 'pawlina') navigate(withSearch('/briefing'));
-    if (activeAgent.id === 'pritpawl') await submitPrompt(activeAgent, 'Life-max my pet\'s health');
   };
 
   return (
@@ -241,15 +199,7 @@ export default function AgentsPanel() {
         <CareWorkflow />
         <motion.div variants={item} className="grid grid-cols-1 gap-4 xl:grid-cols-[410px_minmax(0,1fr)]">
           <AgentCard agent={activeAgent} state={agentState} isActive onSelect={() => selectAgent(activeAgent)} />
-          <AgentChat
-            agent={activeAgent}
-            messages={messages[activeAgent.id] ?? []}
-            draft={drafts[activeAgent.id] ?? ''}
-            isThinking={thinkingAgent === activeAgent.id}
-            onDraftChange={(value) => setDrafts((current) => ({ ...current, [activeAgent.id]: value }))}
-            onSubmit={(prompt) => submitPrompt(activeAgent, prompt)}
-            onPrimaryAction={runPrimaryAction}
-          />
+          <CareAssistant agent={activeAgent.id} />
         </motion.div>
       </motion.div>
     </section>
@@ -307,86 +257,6 @@ function AgentCard({ agent, state, isActive, onSelect }: { agent: Agent; state: 
         </div>
       </div>
     </motion.button>
-  );
-}
-
-function AgentChat({
-  agent,
-  messages,
-  draft,
-  isThinking,
-  onDraftChange,
-  onSubmit,
-  onPrimaryAction,
-}: {
-  agent: Agent;
-  messages: ChatMessage[];
-  draft: string;
-  isThinking: boolean;
-  onDraftChange: (value: string) => void;
-  onSubmit: (value: string) => void;
-  onPrimaryAction: () => void;
-}) {
-  return (
-    <div className="liquid-glass relative flex min-h-[450px] flex-col overflow-hidden rounded-[2rem] p-4 sm:p-5">
-      <div className="absolute right-0 top-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full blur-3xl" style={{ backgroundColor: agent.theme.glow }} />
-      <div className="relative z-10 mb-4 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Inline Agent Chat</p>
-          <h3 className="mt-1 font-heading text-2xl font-black text-white">{agent.name} workspace</h3>
-        </div>
-        <TypingIndicator color={agent.theme.accent} active={isThinking} />
-      </div>
-
-      <div className="relative z-10 mb-4 grid gap-2 sm:grid-cols-3">
-        {agent.quickPrompts.map((prompt) => (
-          <button key={prompt} onClick={() => onSubmit(prompt)} className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-left text-xs font-bold leading-5 text-white/75 transition-colors hover:bg-white/[0.09]">
-            {prompt}
-          </button>
-        ))}
-      </div>
-
-      <div className="relative z-10 flex-1 space-y-3 overflow-y-auto rounded-[1.5rem] border border-white/10 bg-black/20 p-3 hide-scrollbar">
-        <AnimatePresence mode="popLayout">
-          {messages.map((message) => (
-            <motion.div key={message.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={cn('flex', message.from === 'user' ? 'justify-end' : 'justify-start')}>
-              <div className={cn('max-w-[92%] rounded-2xl px-4 py-3 text-sm font-medium leading-6', message.from === 'user' ? 'bg-white text-black' : 'border border-white/10 bg-white/[0.06] text-white/76')}>
-                <p>{message.text}</p>
-                {message.roadmap && <RoadmapJsonCard roadmap={message.roadmap} color={agent.theme.accent} />}
-              </div>
-            </motion.div>
-          ))}
-          {isThinking && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3">
-                <TypingIndicator color={agent.theme.accent} active />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <form
-        className="relative z-10 mt-4 flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit(draft);
-        }}
-      >
-        <input
-          value={draft}
-          onChange={(event) => onDraftChange(event.target.value)}
-          placeholder={`Ask ${agent.name}...`}
-          className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-semibold text-white outline-none placeholder:text-white/30 focus:border-white/25"
-        />
-        <button type="submit" disabled={!draft.trim() || isThinking} className="flex h-12 w-12 items-center justify-center rounded-2xl text-black disabled:opacity-45" style={{ backgroundColor: agent.theme.accent }}>
-          {isThinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send size={17} />}
-        </button>
-        <button type="button" onClick={onPrimaryAction} className="hidden rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-xs font-black uppercase tracking-[0.16em] text-white/70 hover:bg-white/[0.10] sm:block">
-          {agent.cta}
-        </button>
-      </form>
-    </div>
   );
 }
 
@@ -477,18 +347,6 @@ function getLiveMetrics(agentId: AgentId, state: ReturnType<typeof getAgentState
 function getAgentState(profile: any, care: import('../lib/care/domain').CareState | null, petId: string) {
   const points = care?.ledger.reduce((n,l)=>n+l.points,0) || 0;
   const nextTier = pawPointTiers.find((tier) => tier.points > points) ?? pawPointTiers[pawPointTiers.length - 1];
-  const roadmapTasks = extractRoadmapTasks(profile?.cachedRoadmap || '');
-  const progress = profile?.roadmapProgress || {};
-  const breed = String(profile?.breed || '').toLowerCase();
-
-  const pritpawlRoadmap = profile?.pritpawlRoadmap as PritpawlRoadmap | undefined;
-  const totalRoadmapTasks = pritpawlRoadmap
-    ? pritpawlRoadmap.phases.reduce((sum, p) => sum + p.tasks.length, 0)
-    : roadmapTasks.length;
-  const completedRoadmapTasks = pritpawlRoadmap
-    ? pritpawlRoadmap.phases.reduce((sum, p) => sum + p.tasks.filter((t) => progress[t.id]).length, 0)
-    : roadmapTasks.filter((task) => progress[task.id]).length;
-
   return {
     points,
     nextTier,
@@ -496,10 +354,10 @@ function getAgentState(profile: any, care: import('../lib/care/domain').CareStat
     totalRoadmapTasks: care?.milestones.filter(m=>m.petId===petId).length || 0,
     completedRoadmapTasks: care?.milestones.filter(m=>m.petId===petId && m.status==='completed').length || 0,
     available: Boolean(care),
-    nextRoadmapTask: roadmapTasks.find((task) => !progress[task.id]),
+
     bookingSuggestion: care?.milestones.find(m=>m.petId===petId && m.status==='approved')?.title || 'Instructions needed',
     bestSlot: care?.milestones.find(m=>m.petId===petId && m.status==='approved')?.booking.status || 'Not recorded',
-    pritpawlRoadmap,
+
   };
 }
 

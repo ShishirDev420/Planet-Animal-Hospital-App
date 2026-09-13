@@ -1,3 +1,5 @@
+import walletHandler from './api/wallet';
+import assistantHandler from './api/assistant';
 import careHandler from './api/care';
 import prescriptionHandler, { MAX_REQUEST_BYTES } from './api/prescriptions';
 import tailwindcss from '@tailwindcss/vite';
@@ -106,7 +108,7 @@ export default defineConfig(({mode}) => {
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
           const endpoint = req.url?.split('?')[0];
-          if (endpoint !== '/api/care' && endpoint !== '/api/prescriptions') return next();
+          if (endpoint !== '/api/care' && endpoint !== '/api/prescriptions' && endpoint !== '/api/assistant' && endpoint !== '/api/wallet') return next();
           let size = 0; const chunks: Buffer[] = [];
           for await (const chunk of req) {
             size += Buffer.byteLength(chunk);
@@ -114,13 +116,11 @@ export default defineConfig(({mode}) => {
             chunks.push(Buffer.from(chunk));
           }
           (req as any).body = Buffer.concat(chunks).toString('utf8') || undefined;
-          await (endpoint === '/api/prescriptions' ? prescriptionHandler : careHandler)(req, res);
+          await (endpoint === '/api/prescriptions' ? prescriptionHandler : endpoint === '/api/assistant' ? assistantHandler : endpoint === '/api/wallet' ? walletHandler : careHandler)(req, res);
         });
       },
     }],
-    define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-    },
+
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

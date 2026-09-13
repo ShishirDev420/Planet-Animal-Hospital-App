@@ -1,3 +1,4 @@
+import ClinicWallet from '../components/ClinicWallet';
 import React, { useState, useMemo } from 'react';
 import { 
   Trophy,
@@ -223,7 +224,7 @@ export default function Rewards() {
   const pointsToNextTier = Math.max(0, nextTier.points - currentPoints);
   
   const handleRedeem = async (reward: any) => {
-    window.alert('Redemption requires clinic billing verification. This connection is not available in the pilot; no balance has been changed.');
+    window.alert('Use the clinic wallet above to reserve an invoice discount. Ask billing staff to confirm any previous program benefit separately; no balance has been changed.');
   };
 
   const { scrollY } = useScroll();
@@ -231,6 +232,8 @@ export default function Rewards() {
 
   return (
     <div className="min-h-screen w-full flex flex-col pb-40 overflow-x-hidden relative bg-black text-white selection:bg-[#fec708] selection:text-black">
+      <ClinicWallet />
+      <p className="relative z-10 px-5 text-sm text-planet-yellow">Previous program milestones below are retained for clinic eligibility review. They do not override the wallet invoice limits or automatically issue benefits.</p>
       {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <motion.div 
@@ -421,7 +424,7 @@ export default function Rewards() {
                   <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#fec708]/20 bg-[#fec708]/10 text-[#fec708]">
                     <Gift className="h-7 w-7" />
                   </div>
-                  <h3 className="cinematic-card-title text-3xl">Redeemable Value</h3>
+                  <h3 className="cinematic-card-title text-3xl">Previous Profile Value</h3>
                   <p className="mt-2 max-w-md text-[0.95rem] font-semibold leading-7 text-white/62">
                     Paw Points convert directly into clinical credit for eligible Planet Animal services.
                   </p>
@@ -744,7 +747,7 @@ export default function Rewards() {
                             whileTap={{ scale: 0.95 }}
                             className="mt-4 flex items-center gap-3 text-[#fec708] font-black text-xs uppercase tracking-[0.3em] group/btn bg-[#fec708]/5 px-5 py-2.5 rounded-2xl border border-[#fec708]/10 hover:bg-[#fec708] hover:text-black transition-all"
                           >
-                            Claim Reward <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
+                            Check Eligibility <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
                           </motion.button>
                         )}
                       </div>

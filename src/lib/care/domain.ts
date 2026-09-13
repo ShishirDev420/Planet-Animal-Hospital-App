@@ -10,6 +10,7 @@ export type Milestone = {
   approvedBy: string; approvedAt: number; windowStart: number | null; dueAt: number | null;
   reminderAt: number | null; ruleId: string; rule: Rule; configVersion: string;
   status: 'approved' | 'completed' | 'exempt'; completedAt?: number; verifiedBy?: string; evidence?: string;
+  walletReward?: {points:number;creditPaise:number;multiplier:number;policyVersion:string};
   booking: { status: 'none' | 'requested' | 'confirmed' | 'missed'; requestedAt?: number; requestedFor?: number; scheduledAt?: number; reference?: string };
 };
 export type QueueItem = { id: string; petId: string; milestoneId?: string; kind: 'scheduling' | 'missed' | 'clinical'; status: 'open' | 'resolved'; owner: string | null; nextAction: string; createdAt: number; updatedAt: number; resolution?: string };
@@ -159,6 +160,7 @@ export function applyCareCommand(original: CareState, actor: Actor, command: Rec
         requireRole(actor, ['coordinator', 'veterinarian', 'manager']);
         if (m.booking.status !== 'requested') fail('There is no pending appointment request.', 409);
         const scheduledAt = timestamp(command.scheduledAt)!; if (scheduledAt <= now) fail('Confirmed booking must be in the future.');
+        if (!m.walletReward && command._walletReward) m.walletReward = command._walletReward;
         m.booking = { ...m.booking, status: 'confirmed', scheduledAt, reference: text(command.reference, 'Successful clinic booking reference', 150) };
         closeQueue(s, m.id, ['scheduling', 'missed'], now);
       } else if (type === 'bookingFailed') {
@@ -170,12 +172,13 @@ export function applyCareCommand(original: CareState, actor: Actor, command: Rec
         m.booking.status = 'missed'; queue(s, petId, m.id, 'missed', 'Offer rescheduling without removing earned points.', now);
       } else if (type === 'complete') {
         requireRole(actor, ['coordinator', 'veterinarian', 'manager']);
+        if(!m.walletReward && command._walletReward)m.walletReward=command._walletReward;
         const evidence = text(command.evidence, 'Hospital completion evidence', 300);
         const completedAt = timestamp(command.completedAt)!;
         if (completedAt > now || completedAt < m.approvedAt) fail('Completion must be recorded after approval and no later than now.');
         if (s.ledger.some(l => l.evidence === evidence)) fail('This completion evidence has already earned a reward.', 409);
         m.status = 'completed'; m.completedAt = completedAt; m.verifiedBy = actor.uid; m.evidence = evidence;
-        if (!s.ledger.some(l => l.id === `care-${m.id}`)) s.ledger.push({ id: `care-${m.id}`, milestoneId: m.id, petId, points: m.rule.points, creditPaise: m.rule.creditPaise, createdAt: now, verifiedBy: actor.uid, evidence });
+        if (!s.ledger.some(l => l.id === `care-${m.id}`)) s.ledger.push({ id: `care-${m.id}`, milestoneId: m.id, petId, points: m.walletReward?.points ?? m.rule.points, creditPaise: m.walletReward?.creditPaise ?? m.rule.creditPaise, createdAt: now, verifiedBy: actor.uid, evidence });
       } else if (type === 'exempt') {
         requireRole(actor, ['veterinarian']); m.status = 'exempt'; m.evidence = text(command.reason, 'Exemption reason', 300);
       } else fail('Unsupported care action.');
