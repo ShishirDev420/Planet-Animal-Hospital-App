@@ -3,8 +3,6 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShieldPlus, Bot, Map, HeartHandshake, Smartphone, Users } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { cn } from '../lib/utils';
-import SplashScreen from './SplashScreen';
-import PlanetOrbLoader from './PlanetOrbLoader';
 import Logo from './Logo';
 import { isPreviewDemoMode } from '../lib/demoMode';
 
@@ -38,14 +36,8 @@ export default function Layout() {
   const preservedSearch = isInsideFrame || isPreviewDemoMode(location.search, location.pathname) ? location.search : '';
   const preservePreviewSearch = (to: string) => `${to}${preservedSearch}`;
   const shouldReduceMotion = useReducedMotion();
-  const previousPathRef = useRef(location.pathname);
   const desktopMainRef = useRef<HTMLDivElement | null>(null);
   const mobileMainRef = useRef<HTMLElement | null>(null);
-  const [routeLoader, setRouteLoader] = useState<null | {
-    key: number;
-    label: string;
-    detail: string;
-  }>(null);
 
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024);
   const isMobileShell = !isDesktop || (isInsideFrame && !isDesktopPreview);
@@ -68,50 +60,12 @@ export default function Layout() {
     mobileMainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname]);
 
-  useEffect(() => {
-    const previousPath = previousPathRef.current;
-    const nextPath = location.pathname;
-    previousPathRef.current = nextPath;
-
-    if (previousPath === nextPath || isInsideFrame) return;
-
-    const cameFromAgents = previousPath === '/agents' || previousPath.startsWith('/agents/');
-    const isMainDashboard = nextPath === '/';
-    const isRoadmap = nextPath === '/roadmap';
-
-    if (!cameFromAgents || (!isMainDashboard && !isRoadmap)) return;
-
-    const key = Date.now();
-    setRouteLoader({
-      key,
-      label: isRoadmap ? 'Preparing Health Roadmap' : 'Planet Animal Hospital',
-      detail: isRoadmap ? 'Aligning care milestones around your pet' : 'Bringing your main dashboard into focus',
-    });
-
-    const timer = window.setTimeout(() => {
-      setRouteLoader((current) => (current?.key === key ? null : current));
-    }, shouldReduceMotion ? 120 : 640);
-
-    return () => window.clearTimeout(timer);
-  }, [isInsideFrame, location.pathname, shouldReduceMotion]);
 
   return (
     <div style={previewSafeAreaStyle} className="fixed inset-0 h-[100dvh] w-full bg-slate-50 text-black/90 font-sans overflow-hidden dark:bg-[#071912] dark:text-white/90">
       {/* Noise Overlay for Anti-Banding */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
       
-      {/* SplashScreen only shows outside preview frame */}
-      {!isInsideFrame && <SplashScreen />}
-      <AnimatePresence>
-        {routeLoader && (
-          <PlanetOrbLoader
-            key={routeLoader.key}
-            fullscreen
-            label={routeLoader.label}
-            detail={routeLoader.detail}
-          />
-        )}
-      </AnimatePresence>
       {/* Desktop ambient field stays outside routed content so it never remounts. */}
       {isDesktop && (!isInsideFrame || isDesktopPreview) && (
         <div className="ambient-orb-field fixed inset-x-0 bottom-0 overflow-hidden pointer-events-none z-0">
