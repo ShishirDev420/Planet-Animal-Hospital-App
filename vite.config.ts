@@ -1,4 +1,5 @@
 import careHandler from './api/care';
+import prescriptionHandler, { MAX_REQUEST_BYTES } from './api/prescriptions';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -104,15 +105,16 @@ export default defineConfig(({mode}) => {
       name: 'planet-care-service',
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
-          if (req.url?.split('?')[0] !== '/api/care') return next();
+          const endpoint = req.url?.split('?')[0];
+          if (endpoint !== '/api/care' && endpoint !== '/api/prescriptions') return next();
           let size = 0; const chunks: Buffer[] = [];
           for await (const chunk of req) {
             size += Buffer.byteLength(chunk);
-            if (size > 20000) { res.statusCode = 413; res.end(JSON.stringify({error:'Request too large.'})); return; }
+            if (size > (endpoint === '/api/prescriptions' ? MAX_REQUEST_BYTES : 20000)) { res.statusCode = 413; res.end(JSON.stringify({error:'Request too large.'})); return; }
             chunks.push(Buffer.from(chunk));
           }
           (req as any).body = Buffer.concat(chunks).toString('utf8') || undefined;
-          await careHandler(req, res);
+          await (endpoint === '/api/prescriptions' ? prescriptionHandler : careHandler)(req, res);
         });
       },
     }],

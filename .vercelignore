@@ -4,3 +4,5 @@ docs/motion-release.md
 care-review.html
 src/care-review.tsx
 tests
+prescription-review.html
+src/prescription-review.tsx

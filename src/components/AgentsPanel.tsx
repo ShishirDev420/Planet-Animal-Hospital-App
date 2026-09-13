@@ -157,7 +157,8 @@ export default function AgentsPanel() {
 
     try {
       const recorded = care.state ? careSummary(care.state, care.petId) : care.error || 'Recorded care is still loading.';
-      const response = /point|reward|redeem|credit|tier/i.test(cleanPrompt)
+      const pendingSources=care.state?.prescriptions?.filter(r=>r.petId===care.petId&&r.status!=='deleted').length||0;
+      const response = /prescription|upload|scan|transcri/i.test(cleanPrompt) ? `Pritpawl: ${pendingSources} source records for this pet. Use Private prescriptions below to upload or review the original and confirm the transcription. Only the care team can approve clinical instructions; unknown dates remain unrecorded.` : /point|reward|redeem|credit|tier/i.test(cleanPrompt)
         ? care.state ? `Pawl: ${care.state.ledger.reduce((n,l)=>n+l.points,0)} points were earned from staff-verified care. Booking earns no points. Checkup entitlements are separate; billing redemption is not connected to this pilot.` : recorded
         : /book|appointment|remind|cancel|reschedul/i.test(cleanPrompt)
           ? 'Pawlina: Use the shared care controls below to request or reschedule a recorded milestone and opt into reminders. Requests are not confirmed appointments. ' + recorded

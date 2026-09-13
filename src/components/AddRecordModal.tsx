@@ -1,16 +1,14 @@
-import { useState, useRef } from 'react';
+import PrescriptionScanner from './PrescriptionScanner';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Camera, FileText, Upload, Loader2, Check, AlertCircle,
+  X, Loader2,
   Pill, Syringe, FlaskConical, Scissors, Stethoscope, NotepadText,
-  ChevronLeft, ChevronRight, Pencil, Save,
+  Save,
 } from 'lucide-react';
-import CameraCapture from './CameraCapture';
-import { parsePrescriptionImage } from '../lib/ocr';
-import type { OCRResult } from '../lib/ocr';
-import type { MedicalRecordType, MedicalRecordInput, Medication } from '../lib/medicalRecords';
+import type { MedicalRecordType, MedicalRecordInput } from '../lib/medicalRecords';
 
-type Step = 'type' | 'capture' | 'review' | 'manual' | 'saving';
+type Step = 'type' | 'manual' | 'saving';
 
 interface AddRecordModalProps {
   petName: string;
@@ -28,14 +26,10 @@ const RECORD_TYPES: { value: MedicalRecordType; label: string; icon: any; color:
 ];
 
 export default function AddRecordModal({ petName, onSave, onClose }: AddRecordModalProps) {
+  const [saveError,setSaveError]=useState('');
+  const [privatePrescription,setPrivatePrescription]=useState(false);
   const [step, setStep] = useState<Step>('type');
   const [recordType, setRecordType] = useState<MedicalRecordType>('prescription');
-  const [capturedFile, setCapturedFile] = useState<File | null>(null);
-  const [capturedPreview, setCapturedPreview] = useState<string | null>(null);
-  const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrError, setOcrError] = useState<string | null>(null);
-
   // Manual form state
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -43,48 +37,14 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
   const [clinicName, setClinicName] = useState('');
   const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
-  const [diagnosis, setDiagnosis] = useState('');
-  const [followUpDate, setFollowUpDate] = useState('');
-  const [medications, setMedications] = useState<Medication[]>([]);
 
   const handleTypeSelect = (type: MedicalRecordType) => {
     setRecordType(type);
     if (type === 'prescription') {
-      setStep('capture');
+      setPrivatePrescription(true);
     } else {
       setStep('manual');
     }
-  };
-
-  const handleCapture = (file: File) => {
-    setCapturedFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      setCapturedPreview(dataUrl);
-      runOCR(dataUrl);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const runOCR = async (base64Image: string) => {
-    setOcrLoading(true);
-    setOcrError(null);
-    try {
-      const result = await parsePrescriptionImage(base64Image);
-      setOcrResult(result);
-      if (result.success && result.medications.length === 0 && !result.instructions) {
-        setOcrError('No readable text found. You can enter details manually.');
-      }
-    } catch (err: any) {
-      setOcrError(err.message || 'OCR failed');
-    } finally {
-      setOcrLoading(false);
-    }
-  };
-
-  const handleSkipOCR = () => {
-    setStep('manual');
   };
 
   const handleSave = async () => {
@@ -100,32 +60,19 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
       tags: [],
       imageRef: '',
       pdfRef: '',
-      ocrRawText: ocrResult?.rawText || '',
-      medications: ocrResult?.medications.length ? ocrResult.medications : medications,
-      instructions: instructions || ocrResult?.instructions || '',
-      diagnosis: diagnosis || ocrResult?.diagnosis || '',
-      followUpDate: followUpDate || ocrResult?.date || '',
+      ocrRawText: '',
+      medications: [],
+      instructions,
+      diagnosis: '',
+      followUpDate: '',
       appointmentId: null,
-      verified: !!ocrResult?.success && ocrResult.confidence !== 'low',
+      verified: false,
     };
 
-    await onSave(input);
+    try { await onSave(input); } catch (e) { setSaveError((e as Error).message || 'Could not save this record.'); setStep('manual'); }
   };
 
-  const addMedication = () => {
-    setMedications([...medications, { name: '', dosage: '', frequency: '', duration: '', notes: '' }]);
-  };
-
-  const updateMedication = (index: number, field: keyof Medication, value: string) => {
-    const updated = [...medications];
-    updated[index] = { ...updated[index], [field]: value };
-    setMedications(updated);
-  };
-
-  const removeMedication = (index: number) => {
-    setMedications(medications.filter((_, i) => i !== index));
-  };
-
+  if(privatePrescription) return <PrescriptionScanner onClose={onClose}/>;
   return (
     <AnimatePresence>
       <motion.div
@@ -147,8 +94,6 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
             <div>
               <h2 className="cinematic-card-title text-lg text-slate-900 dark:text-white">
                 {step === 'type' && 'Add Medical Record'}
-                {step === 'capture' && 'Scan Prescription'}
-                {step === 'review' && 'Review & Verify'}
                 {step === 'manual' && 'Enter Details'}
                 {step === 'saving' && 'Saving...'}
               </h2>
@@ -197,194 +142,6 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
               </div>
             )}
 
-            {/* Step 2: Scan (prescription flow) or OCR result */}
-            {(step === 'capture' || step === 'review') && (
-              <>
-                {step === 'capture' && (
-                  <div
-                    onClick={() => {
-                      /* Will open camera */
-                    }}
-                    className="border-2 border-dashed border-amber-300 dark:border-amber-700 rounded-2xl p-10 text-center cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
-                  >
-                    <Camera size={48} className="mx-auto mb-4 text-amber-500" />
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Tap to open camera
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                      Take a clear photo of the prescription
-                    </p>
-                  </div>
-                )}
-
-                {capturedPreview && (
-                  <div>
-                    <div className="flex gap-4 mb-4">
-                      <img
-                        src={capturedPreview}
-                        alt="Prescription"
-                        className="w-1/3 h-40 object-contain rounded-xl border border-slate-200 dark:border-slate-700"
-                      />
-                      <div className="flex-1">
-                        {ocrLoading && (
-                          <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
-                            <Loader2 size={20} className="animate-spin" />
-                            <span className="text-sm font-medium">Analyzing prescription...</span>
-                          </div>
-                        )}
-
-                        {ocrError && (
-                          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-sm">
-                            <div className="flex items-center gap-2 mb-1">
-                              <AlertCircle size={14} />
-                              <span className="font-bold">OCR Issue</span>
-                            </div>
-                            <p>{ocrError}</p>
-                            <button
-                              onClick={handleSkipOCR}
-                              className="mt-2 text-xs font-bold text-planet-yellow hover:underline"
-                            >
-                              Enter details manually instead
-                            </button>
-                          </div>
-                        )}
-
-                        {ocrResult && ocrResult.success && !ocrError && (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                              <Check size={16} />
-                              <span className="text-sm font-bold">
-                                Read Successfully ({ocrResult.confidence} confidence)
-                              </span>
-                            </div>
-                            {ocrResult.medications.map((med, i) => (
-                              <div key={i} className="text-xs bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                                <p className="font-bold">{med.name || 'Unknown med'}</p>
-                                <p className="text-slate-500">{med.dosage} {med.frequency} {med.duration}</p>
-                              </div>
-                            ))}
-                            {ocrResult.instructions && (
-                              <p className="text-xs text-slate-500 line-clamp-2">
-                                {ocrResult.instructions}
-                              </p>
-                            )}
-                            <button
-                              onClick={() => setStep('review')}
-                              className="text-xs font-bold text-planet-yellow hover:underline"
-                            >
-                              Review and fill in details
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {step === 'capture' && !ocrLoading && (
-                      <div className="flex gap-3">
-                        <button
-                          onClick={handleSkipOCR}
-                          className="flex-1 py-3 px-4 rounded-2xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-                        >
-                          Skip & Enter Manually
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Review form (step === 'review') */}
-                {step === 'review' && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">
-                        Record Title
-                      </label>
-                      <input
-                        type="text"
-                        value={title || `Prescription — ${ocrResult?.vetName || vetName || ''}`}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-planet-yellow"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">Date</label>
-                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">Vet Name</label>
-                        <input type="text" value={vetName || ocrResult?.vetName || ''} onChange={(e) => setVetName(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">Clinic</label>
-                      <input type="text" value={clinicName || ocrResult?.clinicName || ''} onChange={(e) => setClinicName(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                    </div>
-
-                    {/* Medications */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Medications</label>
-                        <button onClick={addMedication} className="text-xs font-bold text-planet-yellow hover:underline">
-                          + Add
-                        </button>
-                      </div>
-                      {(ocrResult?.medications.length ? ocrResult.medications : medications).map((med, i) => (
-                        <div key={i} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl mb-2 border border-slate-100 dark:border-slate-700">
-                          <div className="grid grid-cols-2 gap-2 mb-2">
-                            <input
-                              type="text"
-                              placeholder="Medicine name"
-                              value={med.name}
-                              onChange={(e) => ocrResult?.medications.length ? null : updateMedication(i, 'name', e.target.value)}
-                              readOnly={!!ocrResult?.medications.length}
-                              className="px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-planet-yellow"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Dosage (e.g. 250mg)"
-                              value={med.dosage}
-                              onChange={(e) => ocrResult?.medications.length ? null : updateMedication(i, 'dosage', e.target.value)}
-                              readOnly={!!ocrResult?.medications.length}
-                              className="px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-planet-yellow"
-                            />
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <input type="text" placeholder="Frequency" value={med.frequency} onChange={(e) => ocrResult?.medications.length ? null : updateMedication(i, 'frequency', e.target.value)} readOnly={!!ocrResult?.medications.length} className="px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                            <input type="text" placeholder="Duration" value={med.duration} onChange={(e) => ocrResult?.medications.length ? null : updateMedication(i, 'duration', e.target.value)} readOnly={!!ocrResult?.medications.length} className="px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                            <input type="text" placeholder="Notes" value={med.notes} onChange={(e) => ocrResult?.medications.length ? null : updateMedication(i, 'notes', e.target.value)} readOnly={!!ocrResult?.medications.length} className="px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                          </div>
-                          {!ocrResult?.medications.length && (
-                            <button onClick={() => removeMedication(i)} className="text-xs text-rose-500 mt-2 hover:underline">
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">Instructions</label>
-                      <textarea
-                        value={instructions || ocrResult?.instructions || ''}
-                        onChange={(e) => setInstructions(e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-planet-yellow resize-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">Diagnosis</label>
-                      <input type="text" value={diagnosis || ocrResult?.diagnosis || ''} onChange={(e) => setDiagnosis(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1">Follow-up Date</label>
-                      <input type="text" value={followUpDate || ocrResult?.date || ''} onChange={(e) => setFollowUpDate(e.target.value)} placeholder="e.g. 2026-06-15 or '2 weeks'" className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-planet-yellow" />
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
             {/* Step: Manual Entry for non-prescription types */}
             {step === 'manual' && (
               <div className="space-y-3">
@@ -428,47 +185,11 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
             )}
           </div>
 
+          {saveError&&<p role="alert" className="px-5 text-sm text-red-500">{saveError}</p>}
           {/* Bottom Actions */}
           <div className="p-4 border-t border-slate-100 dark:border-slate-800 shrink-0 flex gap-3">
-            {step === 'capture' && capturedPreview && !ocrLoading && !ocrResult && !ocrError && (
-              <button
-                onClick={handleSkipOCR}
-                className="flex-1 py-3 rounded-2xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-              >
-                Skip & Enter Manually
-              </button>
-            )}
-
-            {step === 'review' && (
-              <>
-                <button
-                  onClick={() => setStep('capture')}
-                  className="px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold text-sm"
-                >
-                  <ChevronLeft size={16} className="inline mr-1" />
-                  Back
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="flex-1 py-3 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all flex items-center justify-center gap-2"
-                >
-                  <Save size={16} />
-                  Save Record
-                </button>
-              </>
-            )}
-
             {step === 'manual' && (
               <>
-                {recordType === 'prescription' && (
-                  <button
-                    onClick={() => setStep('capture')}
-                    className="px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold text-sm"
-                  >
-                    <ChevronLeft size={16} className="inline mr-1" />
-                    Scan Instead
-                  </button>
-                )}
                 <button
                   onClick={handleSave}
                   className="flex-1 py-3 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all flex items-center justify-center gap-2"
@@ -482,13 +203,6 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
         </motion.div>
       </motion.div>
 
-      {/* Camera layer */}
-      {step === 'capture' && !capturedPreview && (
-        <CameraCapture
-          onCapture={handleCapture}
-          onClose={() => setStep(recordType === 'prescription' ? 'type' : 'manual')}
-        />
-      )}
     </AnimatePresence>
   );
 }
