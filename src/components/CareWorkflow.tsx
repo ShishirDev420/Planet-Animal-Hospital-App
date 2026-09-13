@@ -1,10 +1,14 @@
+import { motion, useReducedMotion } from 'framer-motion';
+import PrescriptionWorkspace from './PrescriptionWorkspace';
+import PetHistory from './PetHistory';
 import { useState } from 'react';
 import { useCare } from '../lib/care/client';
 import { careSummary } from '../lib/care/domain';
 
 export const careInput = 'w-full min-w-0 rounded-xl border border-white/20 bg-[#071912] px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#fec708]';
 export const careButton = 'rounded-xl border border-[#fec708]/30 bg-[#fec708]/10 px-4 py-2.5 text-sm font-bold text-[#fec708] disabled:opacity-40';
-export default function CareWorkflow() {
+export default function CareWorkflow({prescriptionServices}: {prescriptionServices?: React.ComponentProps<typeof PrescriptionWorkspace>} = {}) {
+  const reducedMotion = useReducedMotion();
   const { state, petId, setPetId, loading, error, command, refresh } = useCare();
   const [busy, setBusy] = useState(false), [notice, setNotice] = useState(''), [update, setUpdate] = useState(''), [consent, setConsent] = useState(false), [date, setDate] = useState(''), [petName, setPetName] = useState('');
   const run = async (action: Record<string, unknown>, success: string) => {
@@ -18,8 +22,9 @@ export default function CareWorkflow() {
     {loading ? <p role="status" className="mt-4">Loading recorded care…</p> : error ? <div className="mt-4"><p role="alert">{error}</p><button className={`${careButton} mt-3`} onClick={() => void refresh()}>Retry care service</button></div> : state && <>
       {state.pets.length > 0 && <label className="mt-4 block text-sm">Pet<select className={`${careInput} mt-1`} value={petId} onChange={e => { setPetId(e.target.value); setNotice(''); setUpdate(''); setConsent(false); setDate(''); }}>{state.pets.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
       <details className="mt-3 text-sm"><summary className="cursor-pointer text-white/70">Add another pet to this care workspace</summary><label className="mt-3 block">Pet name<input className={careInput} value={petName} onChange={e=>setPetName(e.target.value)} maxLength={100}/></label><button className={`${careButton} mt-2`} disabled={busy || !petName.trim()} onClick={()=>void run({type:'addPet',petId:crypto.randomUUID(),name:petName},'Pet added to this account.')}>Add pet</button></details>
+      <PetHistory key={'history:'+state.ownerUid+':'+petId}/><PrescriptionWorkspace key={'source:'+state.ownerUid+':'+petId} {...prescriptionServices}/>
       <p className="mt-4 text-sm leading-6">{careSummary(state, petId)}</p>
-      <p className="mt-3 text-sm text-[#fec708]">{completed} staff-verified milestone{completed === 1 ? '' : 's'} completed</p>
+      <motion.p key={completed} role="status" initial={reducedMotion ? false : {opacity:0,y:4}} animate={{opacity:1,y:0}} transition={{duration:0.18}} className="mt-3 text-sm text-[#fec708]">{completed} staff-verified milestone{completed === 1 ? '' : 's'} completed</motion.p>
       {next ? <>
         <p className="mt-2 text-xs text-white/65">Approved record: {next.sourceRef}. Reward after verified completion: {next.rule.points} points · ₹{(next.rule.creditPaise / 100).toFixed(2)} clinic credit.</p>
         <p className="mt-2 text-sm">{next.booking.status === 'confirmed' ? `Clinic booking confirmed for ${new Date(next.booking.scheduledAt!).toLocaleString()} · ${next.booking.reference}` : next.booking.status === 'requested' ? 'Your request is awaiting clinic confirmation. No appointment or points have been issued.' : 'Request a clinic appointment for this recorded milestone.'}</p>

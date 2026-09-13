@@ -1,10 +1,12 @@
 /** Server-authoritative pilot state machine. AI output is never a command. */
+import { applyPrescriptionCommand, invalidatePrescription, validatePrescriptionApproval, type Prescription } from './prescriptions';
 export type Role = 'parent' | 'coordinator' | 'veterinarian' | 'manager';
 export type Actor = { uid: string; role: Role };
 export type Rule = { points: number; creditPaise: number };
 export type PilotConfig = { version: string; approvedBy: string; workflowName: string; rules: Record<string, Rule> };
 export type Milestone = {
   id: string; petId: string; title: string; instructions: string; sourceRef: string;
+  prescription?: { id: string; version: number; conflictDecision?: 'complementary' | 'replace' | 'no-other-active' };
   approvedBy: string; approvedAt: number; windowStart: number | null; dueAt: number | null;
   reminderAt: number | null; ruleId: string; rule: Rule; configVersion: string;
   status: 'approved' | 'completed' | 'exempt'; completedAt?: number; verifiedBy?: string; evidence?: string;
@@ -12,7 +14,8 @@ export type Milestone = {
 };
 export type QueueItem = { id: string; petId: string; milestoneId?: string; kind: 'scheduling' | 'missed' | 'clinical'; status: 'open' | 'resolved'; owner: string | null; nextAction: string; createdAt: number; updatedAt: number; resolution?: string };
 export type CareState = {
-  ownerUid: string; revision: number; pets: { id: string; name: string }[];
+  ownerUid: string; revision: number; pets: { id: string; name: string; history?: { breed: string; allergies: string; surgeries: string; conditions: string; origin: 'parent-reported'; updatedAt: number } }[];
+  prescriptions?: Prescription[];
   milestones: Milestone[]; queues: QueueItem[];
   updates: { id: string; petId: string; text: string; createdAt: number; consent: true }[];
   ledger: { id: string; milestoneId: string; petId: string; points: number; creditPaise: number; createdAt: number; verifiedBy: string; evidence: string }[];
@@ -65,6 +68,7 @@ function closeQueue(s: CareState, milestoneId: string, kinds: QueueItem['kind'][
   s.queues.filter(q => q.status === 'open' && q.milestoneId === milestoneId && kinds.includes(q.kind)).forEach(q => { q.status = 'resolved'; q.updatedAt = now; q.resolution = 'Care status updated'; });
 }
 export function reconcile(s: CareState, now: number) {
+  for (const rx of s.prescriptions || []) if (rx.expiresAt <= now || rx.status === 'deleted') invalidatePrescription(s, rx.id, now);
   for (const m of s.milestones) {
     if (m.status !== 'approved') {
       s.reminders.filter(r => r.milestoneId === m.id).forEach(r => { r.status = 'cancelled'; });
@@ -87,8 +91,20 @@ export function reconcile(s: CareState, now: number) {
 export function applyCareCommand(original: CareState, actor: Actor, command: Record<string, any>, config: PilotConfig | null, now: number): CareState {
   assertAccess(actor, original.ownerUid);
   const s: CareState = structuredClone(original);
+  // Expiry must be applied before a booking/completion can consume the old source.
+  reconcile(s, now);
   const type = command.type;
-  if (type === 'addPet') {
+  if (type === 'confirmPrescription' || type === 'deletePrescription') {
+    applyPrescriptionCommand(s, actor, command, now);
+  } else if (type === 'history') {
+    if (actor.uid !== s.ownerUid || command.consent !== true) fail('Parent consent is required.',403);
+    const pet = s.pets.find(p => p.id === command.petId); if (!pet) fail('Select a pet from this account.',404);
+    pet.history = { breed: text(command.breed,'Breed',100), allergies: '', surgeries: '', conditions: '', origin: 'parent-reported', updatedAt: now };
+    for (const field of ['allergies','surgeries','conditions'] as const) {
+      if (typeof command[field] !== 'string' || command[field].length > 600) fail('History fields must be text up to 600 characters.');
+      pet.history[field] = command[field].trim();
+    }
+  } else if (type === 'addPet') {
     const petId = id(command.petId);
     if (!s.pets.some(p => p.id === petId)) s.pets.push({ id: petId, name: text(command.name, 'Pet name', 100) });
   } else if (type === 'preferences') {
@@ -123,7 +139,10 @@ export function applyCareCommand(original: CareState, actor: Actor, command: Rec
       const start = timestamp(command.windowStart, true), due = timestamp(command.dueAt, true), reminder = timestamp(command.reminderAt, true);
       if (start !== null && due !== null && start > due) fail('Approved window starts after its due date.');
       if (reminder !== null && (due === null || reminder > due)) fail('Reminder must refer to the recorded approved due date.');
-      s.milestones.push({ id: milestoneId, petId, title: text(command.title, 'Milestone title', 160), instructions: text(command.instructions, 'Recorded instructions'), sourceRef: text(command.sourceRef, 'Clinical record reference', 250), approvedBy: actor.uid, approvedAt: now, windowStart: start, dueAt: due, reminderAt: reminder, ruleId: command.ruleId, rule: structuredClone(rule), configVersion: config.version, status: 'approved', booking: { status: 'none' } });
+      const source = command.prescriptionId ? validatePrescriptionApproval(s, command, now) : null;
+      if (!source && String(command.sourceRef || '').startsWith('rx:')) fail('Prescription references require source and version validation.');
+      s.milestones.push({ id: milestoneId, petId, title: text(command.title, 'Milestone title', 160), instructions: source ? source.instructions : text(command.instructions, 'Recorded instructions'), sourceRef: source ? `rx:${source.rx.id}:v${source.rx.revision}` : text(command.sourceRef, 'Clinical record reference', 250), ...(source ? {prescription:{id:source.rx.id,version:source.rx.revision,conflictDecision:source.conflictDecision}} : {}), approvedBy: actor.uid, approvedAt: now, windowStart: start, dueAt: due, reminderAt: reminder, ruleId: command.ruleId, rule: structuredClone(rule), configVersion: config.version, status: 'approved', booking: { status: 'none' } });
+      if (source) { const q = s.queues.find(q=>q.id===`rx-${source.rx.id}`); if(q){q.status='resolved';q.updatedAt=now;q.resolution='Veterinarian reviewed original source and conflicts.';} }
     } else {
       const m = s.milestones.find(m => m.id === command.milestoneId && m.petId === petId); if (!m) fail('Approved milestone not found for this pet.', 404);
       if (type === 'complete') requireRole(actor, ['coordinator', 'veterinarian', 'manager']);
@@ -164,6 +183,7 @@ export function applyCareCommand(original: CareState, actor: Actor, command: Rec
   }
   reconcile(s, now);
   if (s.pets.length > 20 || s.milestones.length > 150 || s.updates.length > 300 || s.queues.length > 300 || s.ledger.length > 150) fail('Pilot record limit reached; contact the clinic to archive reviewed history.', 409);
+  if (new TextEncoder().encode(JSON.stringify(s)).length > 750000) fail('Care record capacity reached; contact the clinic to archive history.',409);
   if (JSON.stringify(s) === JSON.stringify(original)) return original;
   s.revision++;
   return s;

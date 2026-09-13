@@ -1,3 +1,5 @@
+import PrescriptionWorkspace from '../components/PrescriptionWorkspace';
+import { useCare } from '../lib/care/client';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,6 +35,7 @@ const FILTER_OPTIONS: { label: string; value: MedicalRecordType | 'all' }[] = [
 ];
 
 export default function MedicalRecords() {
+  const care=useCare();
   const navigate = useNavigate();
   const { profile } = usePetProfile();
   const petName = profile?.petName || profile?.name || 'Your Pet';
@@ -118,6 +121,7 @@ export default function MedicalRecords() {
         </div>
       </header>
 
+      <PrescriptionWorkspace key={String(care.state?.ownerUid)+care.petId}/>
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-2">
         {FILTER_OPTIONS.map((opt) => (

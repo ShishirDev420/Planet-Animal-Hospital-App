@@ -1,5 +1,7 @@
 # Recorded care follow-through pilot
 
+The prescription-driven extension is documented in [prescription-care.md](prescription-care.md), including private source storage, transcription/version review, activation dependencies and updated verification. The foundation described below remains the base workflow.
+
 This feature branch extends the current green/yellow application. It retains the exact logo, character artwork, navigation, existing card styles and deployed shared bio/loader motion. It does not reuse the earlier redesign. No production deployment, Firestore rule deployment, live patient migration or outgoing message was performed for this feature.
 
 ## Connected behavior

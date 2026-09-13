@@ -12,6 +12,7 @@ export async function careRequest(body?: Record<string, unknown>, query = '') {
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) throw new Error('The care service is unavailable. Contact the clinic for your next step.');
   const data = await response.json();
+  if (auth.currentUser?.uid !== user.uid) throw new Error('Account changed. Reopen the care record.');
   if (!response.ok) throw new Error(data.error || 'Care request failed; please retry.');
   return data;
 }

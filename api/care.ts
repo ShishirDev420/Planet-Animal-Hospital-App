@@ -4,13 +4,13 @@ import { FieldPath, getFirestore } from 'firebase-admin/firestore';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { applyCareCommand, assertAccess, CareError, emptyState, metrics, reconcile, roleFromClaims, validateConfig, type Actor, type CareState, type PilotConfig } from '../src/lib/care/domain';
 
-function database() {
+export function database() {
   if (!process.env.CARE_FIREBASE_PROJECT_ID || !process.env.CARE_FIRESTORE_DATABASE_ID) throw new CareError(503, 'The care service is not configured. Please contact the clinic.');
   const app = getApps().find(a => a.name === 'care-service') || initializeApp({
     projectId: process.env.CARE_FIREBASE_PROJECT_ID,
     credential: process.env.CARE_FIREBASE_SERVICE_ACCOUNT_JSON ? cert(JSON.parse(process.env.CARE_FIREBASE_SERVICE_ACCOUNT_JSON)) : applicationDefault(),
   }, 'care-service');
-  return { auth: getAuth(app), db: getFirestore(app, process.env.CARE_FIRESTORE_DATABASE_ID) };
+  return { auth: getAuth(app), db: getFirestore(app, process.env.CARE_FIRESTORE_DATABASE_ID), app };
 }
 const validId = (value: unknown) => { if (typeof value !== 'string' || !/^[\w-]{1,128}$/.test(value)) throw new CareError(400, 'Invalid record identifier.'); return value; };
 const digest = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -20,7 +20,7 @@ function jobAuthorized(value: unknown) {
 }
 
 /** Same endpoint in Vercel and the local Vite middleware. Never accepts client roles. */
-export function createCareHandler(getServices: typeof database = database) {
+export function createCareHandler(getServices: () => Pick<ReturnType<typeof database>, 'auth' | 'db'> = database) {
 return async function handler(req: any, res: any) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Type', 'application/json');
@@ -92,6 +92,7 @@ return async function handler(req: any, res: any) {
     }
     assertAccess(actor, ownerUid);
     if (req.method === 'POST') {
+      if (body.type === 'deletePrescription') throw new CareError(400, 'Use the private prescription deletion endpoint.');
       const state = await mutate(ownerUid, body, actor);
       return send(200, { state, role: actor.role, config, metrics: metrics(state, Date.now()) });
     }
