@@ -2,9 +2,9 @@ import { createHash } from 'node:crypto';
 import { getStorage } from 'firebase-admin/storage';
 import { FieldPath } from 'firebase-admin/firestore';
 import { GoogleGenAI } from '@google/genai';
-import { database } from './care';
-import { applyCareCommand, assertAccess, CareError, emptyState, reconcile, roleFromClaims, type Actor, type CareState } from '../src/lib/care/domain';
-import { normalizeTranscript, prescriptionQueue, type Prescription, type Transcript } from '../src/lib/care/prescriptions';
+import { database } from './care.js';
+import { applyCareCommand, assertAccess, CareError, emptyState, reconcile, roleFromClaims, type Actor, type CareState } from '../src/lib/care/domain.js';
+import { normalizeTranscript, prescriptionQueue, type Prescription, type Transcript } from '../src/lib/care/prescriptions.js';
 
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 export const MAX_REQUEST_BYTES = 2900000;

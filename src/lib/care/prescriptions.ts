@@ -1,4 +1,4 @@
-import { CareError, type Actor, type CareState } from './domain';
+import { CareError, type Actor, type CareState } from './domain.js';
 
 export type Reading = { value: string | null; confidence: 'high' | 'medium' | 'low'; sourceQuote: string | null };
 export type Transcript = { petName: Reading; medications: Reading; instructions: Reading; followUp: Reading };

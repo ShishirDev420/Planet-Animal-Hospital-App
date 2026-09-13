@@ -1,8 +1,8 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { getStorage } from 'firebase-admin/storage';
 import { FieldPath } from 'firebase-admin/firestore';
-import { database } from './care';
-import { reconcile, type CareState } from '../src/lib/care/domain';
+import { database } from './care.js';
+import { reconcile, type CareState } from '../src/lib/care/domain.js';
 const digest=(v:string)=>createHash('sha256').update(v).digest();
 export default async function maintenance(req:any,res:any) {
  res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json');

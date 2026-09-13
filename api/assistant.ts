@@ -1,8 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import { createHash } from 'node:crypto';
-import { database } from './care';
-import { CareError, emptyState, type CareState } from '../src/lib/care/domain';
-import { allowance, assistantContext, ASSISTANT_LIMITS, reserveUsage, usageAt, validateDraft } from '../src/lib/care/assistant';
+import { database } from './care.js';
+import { CareError, emptyState, type CareState } from '../src/lib/care/domain.js';
+import { allowance, assistantContext, ASSISTANT_LIMITS, reserveUsage, usageAt, validateDraft } from '../src/lib/care/assistant.js';
 
 export async function generateAnswer(context: unknown, prompt: string, agent: string) {
   if (!process.env.CARE_ASSISTANT_API_KEY || !process.env.CARE_ASSISTANT_MODEL || process.env.CARE_ASSISTANT_DATA_APPROVED !== 'true') throw new CareError(503,'AI assistance is not configured for private care data. Your recorded care remains available.');

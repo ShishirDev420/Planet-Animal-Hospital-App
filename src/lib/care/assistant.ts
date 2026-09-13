@@ -1,4 +1,4 @@
-import { CareError, type CareState } from './domain';
+import { CareError, type CareState } from './domain.js';
 
 export const ASSISTANT_LIMITS = { daily: 5, monthly: 20, cooldownMs: 10000, leaseMs: 60000, attempts: 2 } as const;
 export const EDUCATION = [{ id: 'aaha-skin-2023', title: 'AAHA: managing allergic skin disease', url: 'https://www.aaha.org/trends-magazine/december-2023/2023-aaha-management-of-allergic-skin-diseases-in-dogs-and-cats-guidelines/', note: 'Skin care can require ongoing assessment and communication with the veterinary team. This general guidance does not diagnose a pet or set its treatment or follow-up date.' }];

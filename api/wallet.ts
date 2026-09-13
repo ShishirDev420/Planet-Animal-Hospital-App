@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
-import { database } from './care';
-import { assertAccess, CareError, roleFromClaims, type Actor, type CareState } from '../src/lib/care/domain';
-import { emptyWallet, finishDiscount, normalizeWallet, reserveDiscount, WALLET_POLICY, type Invoice, type Reservation, type Subscription, type Wallet } from '../src/lib/care/wallet';
+import { database } from './care.js';
+import { assertAccess, CareError, roleFromClaims, type Actor, type CareState } from '../src/lib/care/domain.js';
+import { emptyWallet, finishDiscount, normalizeWallet, reserveDiscount, WALLET_POLICY, type Invoice, type Reservation, type Subscription, type Wallet } from '../src/lib/care/wallet.js';
 const id=(v:unknown)=>{if(typeof v!=='string'||!/^[\w-]{1,128}$/.test(v))throw new CareError(400,'Invalid identifier.');return v;};
 const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
 const staff=(a:Actor)=>{if(a.role==='parent')throw new CareError(403,'Clinic staff access is required.');};

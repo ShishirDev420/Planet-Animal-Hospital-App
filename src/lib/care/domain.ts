@@ -1,5 +1,5 @@
 /** Server-authoritative pilot state machine. AI output is never a command. */
-import { applyPrescriptionCommand, invalidatePrescription, validatePrescriptionApproval, type Prescription } from './prescriptions';
+import { applyPrescriptionCommand, invalidatePrescription, validatePrescriptionApproval, type Prescription } from './prescriptions.js';
 export type Role = 'parent' | 'coordinator' | 'veterinarian' | 'manager';
 export type Actor = { uid: string; role: Role };
 export type Rule = { points: number; creditPaise: number };

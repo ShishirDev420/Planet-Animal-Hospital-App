@@ -1,4 +1,4 @@
-import { CareError, type Actor } from './domain';
+import { CareError, type Actor } from './domain.js';
 export const WALLET_POLICY={version:'clinic-2026-09-13',paisePerPoint:25,maxInvoiceDiscountPaise:25000,maxInvoicePercent:10,maxMonthlyDiscountPaise:100000,reservationMs:15*60*1000};
 export const SERVICE_POINTS={general_checkup:1000,grooming:800,vaccinations:750,ear_cleaning:200,haircut:200};
 export type Subscription={plan:'free'|'essential'|'advanced'|'prestige';status:'active'|'cancelled';startsAt:number;endsAt:number;paymentReference:string;verifiedBy:string};

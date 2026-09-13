@@ -1,9 +1,9 @@
-import { emptyWallet, verifiedMultiplier, SERVICE_POINTS, WALLET_POLICY, type Subscription, type Wallet } from '../src/lib/care/wallet';
+import { emptyWallet, verifiedMultiplier, SERVICE_POINTS, WALLET_POLICY, type Subscription, type Wallet } from '../src/lib/care/wallet.js';
 import { applicationDefault, cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldPath, getFirestore } from 'firebase-admin/firestore';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { applyCareCommand, assertAccess, CareError, emptyState, metrics, reconcile, roleFromClaims, validateConfig, type Actor, type CareState, type PilotConfig } from '../src/lib/care/domain';
+import { applyCareCommand, assertAccess, CareError, emptyState, metrics, reconcile, roleFromClaims, validateConfig, type Actor, type CareState, type PilotConfig } from '../src/lib/care/domain.js';
 
 export function database() {
   if (!process.env.CARE_FIREBASE_PROJECT_ID || !process.env.CARE_FIRESTORE_DATABASE_ID) throw new CareError(503, 'The care service is not configured. Please contact the clinic.');
