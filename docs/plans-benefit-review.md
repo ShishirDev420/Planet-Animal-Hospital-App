@@ -15,3 +15,5 @@ Validation 2026-09-13:
 - No live profile writes, external messages, payment, production deployment or merge.
 
 Local preview (3000 was occupied): http://127.0.0.2:3001/preview?path=/plans&demo_mode=true&device=samsung-s26-ultra
+
+Production release: user subsequently authorized deployment. Source 63f1caf was deployed as dpl_BGMQnqquCWUJv7vRAmJPWoEoP28u, reviewed behind Vercel protection, and promoted. Canonical https://planet-animal-hospital-app.vercel.app/plans verified 2026-09-13: all three offers and Essential enquiry URL correct; fresh browser error log empty. No Firestore rules or customer data changed.
