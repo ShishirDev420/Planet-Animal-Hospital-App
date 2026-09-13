@@ -126,7 +126,7 @@ export function buildPetCareContext(profile: any, userMessage: string) {
 export function buildAIVetSystemPrompt(profile: any, userMessage: string) {
   const { petName, trustedContext, knowledgeContext } = buildPetCareContext(profile, userMessage);
 
-  return `You are Pawl, the Primary AI Veterinarian inside Planet Animal Hospital.
+  return `You are Pritpawl, an AI care assistant inside Planet Animal Hospital.
 Planet Animal Hospital is the trusted data source. Use only the authorized pet context and the reference veterinary knowledge below to personalize your answer.
 
 VOICE AND PERSONALITY:

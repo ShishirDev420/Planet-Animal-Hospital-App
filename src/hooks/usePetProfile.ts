@@ -7,20 +7,7 @@ import { isPreviewDemoMode } from '../lib/demoMode';
 
 const DEMO_PROFILE_KEY = 'planet_animal_demo_profile';
 
-function normalizeProfile(data: any) {
-  if (!data) return data;
-  const petName = data.petName || data.name || '';
-  const typeBreedDetails = `${data.petType || ''} ${data.breed || ''} ${data.additionalDetails || ''} ${data.medicalHistory || ''}`.toLowerCase();
-  const isCat = typeBreedDetails.includes('cat') || typeBreedDetails.includes('feline') || petName.toLowerCase() === 'onyx';
-
-  return {
-    ...data,
-    petType: isCat ? 'Cat' : data.petType,
-    breed: petName.toLowerCase() === 'onyx' && (!data.breed || /lab|dog/i.test(data.breed)) ? 'Black Cat' : data.breed,
-    cachedRoadmap: petName.toLowerCase() === 'onyx' && /lab|dog|canine/i.test(data.cachedRoadmap || '') ? DEMO_ROADMAP_TEXT : data.cachedRoadmap,
-    name: petName,
-  };
-}
+function normalizeProfile(data: any) { return data ? { ...data, name: data.petName || data.name || '' } : data; }
 
 export const DEMO_ROADMAP_TEXT = `### Phase: 1-3 Months
 * **Baseline Wellness Exam**: Complete a full nose-to-tail veterinary exam | Scientific Rationale: Establishes clinical baselines for early detection.

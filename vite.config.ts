@@ -1,3 +1,4 @@
+import careHandler from './api/care';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -97,8 +98,24 @@ function sarvamProxyPlugin(env: Record<string, string>): Plugin {
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+  for (const [key,value] of Object.entries(env)) if (key.startsWith('CARE_') && process.env[key] === undefined) process.env[key] = value;
   return {
-    plugins: [react(), tailwindcss(), sarvamProxyPlugin(env)],
+    plugins: [react(), tailwindcss(), sarvamProxyPlugin(env), {
+      name: 'planet-care-service',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.url?.split('?')[0] !== '/api/care') return next();
+          let size = 0; const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            size += Buffer.byteLength(chunk);
+            if (size > 20000) { res.statusCode = 413; res.end(JSON.stringify({error:'Request too large.'})); return; }
+            chunks.push(Buffer.from(chunk));
+          }
+          (req as any).body = Buffer.concat(chunks).toString('utf8') || undefined;
+          await careHandler(req, res);
+        });
+      },
+    }],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },

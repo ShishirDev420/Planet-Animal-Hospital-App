@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Plus, User, ArrowLeft, Sparkles, Heart, Weight, ClipboardList } from 'lucide-react';
 import Logo from '../components/Logo';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
 export default function CreateProfile() {
@@ -27,6 +27,7 @@ export default function CreateProfile() {
     setIsSaving(true);
     setError('');
     try {
+      const existingProfile = await getDoc(doc(db, 'users', auth.currentUser.uid));
       await setDoc(doc(db, 'users', auth.currentUser.uid), {
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,
@@ -35,9 +36,7 @@ export default function CreateProfile() {
         petName: formData.petName.trim(),
         weight: formData.petWeight.trim(),
         medicalHistory: formData.medicalHistory.trim(),
-        pawPoints: 500,
-        currentPlan: 'free',
-        createdAt: serverTimestamp(),
+        ...(!existingProfile.exists() ? { pawPoints: 500, currentPlan: 'free', createdAt: serverTimestamp() } : {}),
       }, { merge: true });
       navigate('/profiles');
     } catch (err) {

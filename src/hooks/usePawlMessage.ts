@@ -1,3 +1,5 @@
+import { useCare } from '../lib/care/client';
+import { careSummary } from '../lib/care/domain';
 import { useState, useEffect } from 'react';
 import { useTimeOfDay, type TimePeriod } from './useTimeOfDay';
 
@@ -87,102 +89,8 @@ function pickDailyVariant(variants: Record<'summer' | 'monsoon' | 'winter', stri
 }
 
 export function usePawlMessage(profile: any, profileLoading: boolean, period?: TimePeriod) {
-  const { currentPeriod } = useTimeOfDay();
-  const activePeriod = period || currentPeriod;
-  const [message, setMessage] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (profileLoading) return;
-    if (!profile?.petName) {
-      setMessage('');
-      setLoading(false);
-      return;
-    }
-
-  const fetchPawlMessage = async () => {
-    // Check cache first (localStorage, per pet per day per period)
-    const today = new Date().toDateString();
-    const cacheKey = `pawl_${profile.uid}_${today}_${activePeriod}`;
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      setMessage(cached);
-      setError(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(false);
-
-    try {
-      // Build pet data payload from profile with defensive defaults
-      const petData: any = {
-        name: (profile.petName || 'your pet').trim(),
-        species: (profile.petType || 'dog').toLowerCase(),
-        breed: (profile.breed || 'indian pariah').toLowerCase(),
-        age: String(profile.age || 'adult'),
-        city: (profile.city || 'Mumbai').trim(),
-        month: getCurrentSeason(),
-        timeOfDay: activePeriod,
-        medications: [],
-        allergies: []
-      };
-
-      // Parse medications from additionalDetails if not structured
-      if (profile.additionalDetails) {
-        const meds = parseMedicationsFromText(profile.additionalDetails);
-        if (meds.length > 0) {
-          petData.medications = meds.map(m => ({
-            name: m.name,
-            time: m.time,
-            dosage: m.dosage
-          }));
-        }
-      }
-
-      // Parse allergies
-      if (profile.additionalDetails) {
-        const allergyList = parseAllergiesFromText(profile.additionalDetails);
-        if (allergyList.length > 0) {
-          petData.allergies = allergyList;
-        }
-      }
-
-      // Call Pawl backend
-      const PAWL_BACKEND_URL = import.meta.env.VITE_PAWL_URL || 'http://localhost:8000';
-      
-      const response = await fetch(`${PAWL_BACKEND_URL}/daily-briefing`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(petData),
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.info('🐾 [Pawl] HTTP fallback:', response.status, errorBody);
-        throw new Error(`Pawl responded ${response.status}: ${errorBody.substring(0, 100)}`);
-      }
-
-      const data = await response.json();
-      setMessage(data.message);
-      localStorage.setItem(cacheKey, data.message);
-      setError(false);
-    } catch (err: any) {
-      console.info('🐾 [Pawl] Fetch fallback:', err?.message || err);
-      setError(true);
-      // Fallback: period-aware tip based on pet info
-      const fallback = getGenericDailyTip(profile, activePeriod);
-      setMessage(fallback);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-    fetchPawlMessage();
-  }, [profile, profileLoading, activePeriod]);
-
-  return { message, loading, error };
+  const care = useCare();
+  return { message: care.state ? careSummary(care.state, care.petId) : care.error || 'Loading your recorded next step…', loading: care.loading, error: Boolean(care.error) };
 }
 
 // Breed-specific care notes for dogs

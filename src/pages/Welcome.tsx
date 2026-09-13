@@ -124,10 +124,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
 
     const data = existingProfile.data();
-    if (data && !data.pawPoints) {
-      await setDoc(docRef, { pawPoints: 500 }, { merge: true });
-      data.pawPoints = 500;
-    }
+    // Existing zero balances must never re-trigger the registration bonus.
     const hasCompletedProfile = Boolean(data?.petName && data.petName !== 'Pending');
     return { hasCompletedProfile };
   };
@@ -219,7 +216,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           weight: weight.trim(),
           additionalDetails: additionalDetails.trim(),
           phone: phone.trim() || '',
-          pawPoints: 500,
         }, { merge: true });
         
         if (onComplete) {

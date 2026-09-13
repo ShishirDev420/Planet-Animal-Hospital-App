@@ -213,7 +213,7 @@ export default function HealthJourney({
                     <>
                       Notify Planet Animal
                       <ArrowRight className="w-4 h-4" />
-                      <span className="ml-1 text-[10px]">+{stageRewardPoints} Paw Points</span>
+                      <span className="ml-1 text-[10px]">Personal progress only</span>
                     </>
                   )}
                 </button>
@@ -232,7 +232,7 @@ export default function HealthJourney({
                   Planet Animal notified
                 </p>
                 <p className="mt-1 text-sm font-medium text-[#fec708]">
-                  +{stageRewardPoints} Paw Points earned
+                  Personal progress recorded
                 </p>
               </motion.div>
             )}

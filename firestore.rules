@@ -15,6 +15,7 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isSignedIn() { return request.auth != null; }
+    function isStaff() { return isSignedIn() && request.auth.token.clinicId == 'planet-animal' && request.auth.token.clinicRole in ['coordinator', 'veterinarian', 'manager']; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
 
     function isValidUser(data) {
@@ -49,41 +50,34 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Temporarily allow anyone to read and update users so the staff terminal can function.
-      allow read: if true;
+      // Profiles are private; financial and care approval state is server-controlled.
+      allow read: if isOwner(userId) || isStaff();
       allow create: if isOwner(userId) && isValidId(userId) &&
                        isValidUser(incoming()) &&
                        incoming().uid == userId &&
                        (incoming().pawPoints == 0 || incoming().pawPoints == 500) &&
+                       (!('currentPlan' in incoming()) || incoming().currentPlan == 'free') &&
+                       !incoming().keys().hasAny(['role','clinicRole','wallet','balance','entitlements','careApproved']) &&
                        incoming().createdAt == request.time &&
                        incoming().keys().hasAll(['uid', 'email', 'pawPoints', 'createdAt']);
-      allow update: if true;
+      allow update: if isOwner(userId) && isValidUser(incoming()) &&
+        !incoming().diff(existing()).affectedKeys().hasAny(['uid','createdAt','pawPoints','currentPlan','role','clinicRole','wallet','balance','entitlements','careApproved']);
     }
 
     match /pointsQueue/{documentId} {
-      allow read: if isSignedIn() && existing().userId == request.auth.uid && isValidId(documentId);
-      allow create: if isSignedIn() && isValidId(documentId) &&
-                    isValidPointsQueueItem(incoming()) &&
-                    incoming().userId == request.auth.uid &&
-                    incoming().status == 'pending';
-      allow update: if isSignedIn() && isValidId(documentId) &&
-                    isValidPointsQueueItem(incoming()) &&
-                    existing().userId == request.auth.uid &&
-                    incoming().userId == request.auth.uid &&
-                    incoming().status == existing().status &&
-                    incoming().points == existing().points;
-      allow delete: if isSignedIn() && isValidId(documentId) && existing().userId == request.auth.uid;
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow write: if false;
     }
 
     match /requests/{documentId} {
-      // Temporarily allow staff terminal to read, update, delete requests
-      allow read: if true;
+      // Legacy appointment requests remain requests, never verified care.
+      allow read: if (isSignedIn() && existing().userId == request.auth.uid) || isStaff();
       allow create: if isSignedIn() && isValidId(documentId) &&
                     isValidRequestItem(incoming()) &&
                     incoming().userId == request.auth.uid &&
-                    incoming().status == 'pending';
-      allow update: if true;
-      allow delete: if true;
+                    incoming().status == 'pending' && (!('points' in incoming()) || incoming().points == 0);
+      allow update: if isStaff() || (isSignedIn() && existing().userId == request.auth.uid && incoming().userId == existing().userId && incoming().diff(existing()).affectedKeys().hasOnly(['status','date','time']) && incoming().status in ['pending','cancelled']);
+      allow delete: if false;
     }
   }
 }

@@ -1,28 +1,18 @@
+import CareWorkflow from './CareWorkflow';
+import { useCare } from '../lib/care/client';
+import { careSummary } from '../lib/care/domain';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { ArrowRight, CalendarClock, CheckCircle2, ChevronRight, Loader2, Map, Pill, Send, Sparkles, TicketPercent } from 'lucide-react';
 import type { ElementType, ReactElement } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { usePetProfile } from '../hooks/usePetProfile';
 import type { PritpawlRoadmap } from '../lib/pritpawlRoadmap';
-import {
-  PAWLINA_SERVICES,
-  buildWhatsAppMessage,
-  calculateBookingPoints,
-  callClinic,
-  cancelBookingRequest,
-  createBookingRequest,
-  awardPendingPoints,
-  getUserBookings,
-  rescheduleBookingRequest,
-  getCurrentUserBookingSupport,
-  getPointsMultiplier,
-  getProfilePlan,
-} from '../lib/pawPoints';
+
 import { cn } from '../lib/utils';
 
 type AgentId = 'pawl' | 'pawlina' | 'pritpawl';
-type AgentStatus = 'Online' | 'Planning';
+type AgentStatus = 'Guide' | 'Planning';
 
 type Agent = {
   id: AgentId;
@@ -64,10 +54,10 @@ const agents: Agent[] = [
   {
     id: 'pawl',
     name: 'Pawl',
-    role: 'Paw Points Journey Agent',
+    role: 'Paw Points Guide',
     purpose: 'Earn, redeem, and climb loyalty tiers with less guesswork.',
-    description: 'Guides pet parents through Paw Points, reward timing, loyalty tiers, and smart visit combos.',
-    status: 'Online',
+    description: 'Guides pet parents through Paw Points, reward timing, loyalty tiers, and staff-verified care completion.',
+    status: 'Guide',
     cta: 'Open Rewards',
     Icon: TicketPercent,
     Avatar: PawlAvatar,
@@ -82,10 +72,10 @@ const agents: Agent[] = [
   {
     id: 'pawlina',
     name: 'Pawlina',
-    role: 'Appointment & Paw Points Agent',
-    purpose: 'Book, cancel, move appointments. Earn Paw Points on every visit, call the clinic directly.',
-    description: 'Full-spectrum booking: create visits tied to Paw Points, cancel or reschedule, auto-send WhatsApp confirm to 9004290923, and dial the clinic instantly.',
-    status: 'Online',
+    role: 'Follow-up Coordinator',
+    purpose: 'Follow recorded care, request appointments, and keep follow-ups visible.',
+    description: 'Coordinates approved reminders and appointment requests. Clinical questions go to the care team.',
+    status: 'Guide',
     cta: 'Book Visit',
     Icon: CalendarClock,
     Avatar: PawlinaAvatar,
@@ -100,11 +90,11 @@ const agents: Agent[] = [
   {
     id: 'pritpawl',
     name: 'Pritpawl',
-    role: 'Life-Max & Roadmap Agent',
-    purpose: 'Breed-customized longevity plans focused on nutrition, exercise, behavioral & psychological health — all science-backed for life-maxing.',
-    description: 'Builds a verified, peer-reviewed care roadmap from influential veterinary science (AVMA, AAHA, WSAVA, JAVMA), tailored precisely to your pet\'s breed, age, weight, and history.',
-    status: 'Online',
-    cta: 'Generate Roadmap',
+    role: 'Care-plan Guide',
+    purpose: 'Understand the next step recorded and approved by your veterinarian.',
+    description: 'Organizes approved instructions and gathers parent updates. Missing instructions remain unavailable until the team provides them.',
+    status: 'Guide',
+    cta: 'Explain My Next Step',
     Icon: Pill,
     Avatar: PritpawlAvatar,
     quickPrompts: ['Life-max my pet\'s health', 'Show nutrition & exercise plan', 'Track my roadmap progress'],
@@ -133,11 +123,13 @@ export default function AgentsPanel() {
   const location = useLocation();
   const { agentId } = useParams();
   const { profile, updateProfile } = usePetProfile();
+  const care = useCare();
   const activeAgent = useMemo(() => agents.find((agent) => agent.id === agentId) ?? agents[0], [agentId]);
-  const agentState = useMemo(() => getAgentState(profile), [profile]);
+  const agentState = useMemo(() => getAgentState(profile, care.state, care.petId), [profile, care.state, care.petId]);
   const [messages, setMessages] = useState<Record<AgentId, ChatMessage[]>>(() => createInitialMessages(profile));
   const [drafts, setDrafts] = useState<Record<AgentId, string>>({ pawl: '', pawlina: '', pritpawl: '' });
   const [thinkingAgent, setThinkingAgent] = useState<AgentId | null>(null);
+  useEffect(() => { setMessages(createInitialMessages({ petName: care.state?.pets.find(p => p.id === care.petId)?.name })); setDrafts({pawl:'',pawlina:'',pritpawl:''}); }, [care.state?.ownerUid, care.petId]);
 
   const withSearch = (path: string) => {
     if (!location.search) return path;
@@ -164,14 +156,14 @@ export default function AgentsPanel() {
     setThinkingAgent(agent.id);
 
     try {
-      if (agent.id === 'pawlina') {
-        const reply = await handlePawlinaPrompt(cleanPrompt, profile, pushMessage);
-        pushMessage(agent.id, { from: 'agent', text: reply });
-      } else if (agent.id === 'pritpawl' && shouldGenerateRoadmap(cleanPrompt)) {
-        pushMessage(agent.id, { from: 'agent', text: buildPritpawlCachedRoadmapReply(cleanPrompt, profile, agentState) });
-      } else {
-        pushMessage(agent.id, { from: 'agent', text: buildAgentReply(agent.id, cleanPrompt, profile, agentState) });
-      }
+      const recorded = care.state ? careSummary(care.state, care.petId) : care.error || 'Recorded care is still loading.';
+      const response = /point|reward|redeem|credit|tier/i.test(cleanPrompt)
+        ? care.state ? `Pawl: ${care.state.ledger.reduce((n,l)=>n+l.points,0)} points were earned from staff-verified care. Booking earns no points. Checkup entitlements are separate; billing redemption is not connected to this pilot.` : recorded
+        : /book|appointment|remind|cancel|reschedul/i.test(cleanPrompt)
+          ? 'Pawlina: Use the shared care controls below to request or reschedule a recorded milestone and opt into reminders. Requests are not confirmed appointments. ' + recorded
+          : 'Pritpawl: ' + recorded + ' New concerns can be shared with the team below; I cannot approve instructions or change treatment.';
+      pushMessage(agent.id, { from: 'agent', text: response });
+
     } catch (error) {
       pushMessage(agent.id, { from: 'agent', text: 'I could not complete that action yet. Please confirm the profile is signed in and try again.' });
     } finally {
@@ -180,8 +172,8 @@ export default function AgentsPanel() {
   };
 
   const runPrimaryAction = async () => {
-    if (activeAgent.id === 'pawl') navigate(withSearch('/rewards'));
-    if (activeAgent.id === 'pawlina') navigate(withSearch('/?openBooking=true&service=Vaccination'));
+    if (activeAgent.id === 'pawl') navigate(withSearch('/briefing'));
+    if (activeAgent.id === 'pawlina') navigate(withSearch('/briefing'));
     if (activeAgent.id === 'pritpawl') await submitPrompt(activeAgent, 'Life-max my pet\'s health');
   };
 
@@ -204,10 +196,10 @@ export default function AgentsPanel() {
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Choose Your Agent</p>
-              <p className="mt-1 text-sm font-semibold text-white/70">Switch instantly between Pawl, Pawlina, and Pritpawl.</p>
+              <p className="mt-1 text-sm font-semibold text-white/70">One shared care record across Pawl, Pawlina, and Pritpawl.</p>
             </div>
             <span className="hidden rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/45 sm:inline-flex">
-              3 agents live
+              Shared care workspace
             </span>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -230,7 +222,7 @@ export default function AgentsPanel() {
               Active agent, live chat.
             </h1>
             <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-white/58 sm:text-base">
-              Select any agent. The flashcard and conversation render inline together, with history and logic scoped to that agent.
+              All three guides use the same recorded care status. Complete the next action below without switching agents.
             </p>
           </div>
 
@@ -245,6 +237,7 @@ export default function AgentsPanel() {
           </div>
         </motion.header>
 
+        <CareWorkflow />
         <motion.div variants={item} className="grid grid-cols-1 gap-4 xl:grid-cols-[410px_minmax(0,1fr)]">
           <AgentCard agent={activeAgent} state={agentState} isActive onSelect={() => selectAgent(activeAgent)} />
           <AgentChat
@@ -464,24 +457,24 @@ function RoadmapJsonCard({ roadmap, color }: { roadmap: PritpawlRoadmap; color: 
 function getLiveMetrics(agentId: AgentId, state: ReturnType<typeof getAgentState>) {
   if (agentId === 'pawl') {
     return [
-      { label: 'Paw Points', value: state.points.toLocaleString() },
-      { label: 'Next Tier', value: state.nextTier.title },
+      { label: 'Paw Points', value: state.available ? state.points.toLocaleString() : 'Unavailable' },
+      { label: 'Awards', value: 'Staff verified' },
     ];
   }
   if (agentId === 'pawlina') {
     return [
-      { label: 'Best Slot', value: state.bestSlot },
-      { label: 'Suggested', value: state.bookingSuggestion },
+      { label: 'Booking', value: state.bestSlot },
+      { label: 'Next step', value: state.bookingSuggestion },
     ];
   }
   return [
-    { label: 'Life-Max', value: `${state.completedRoadmapTasks}/${state.totalRoadmapTasks}` },
-    { label: 'Focus', value: state.totalRoadmapTasks > 0 ? 'Generated' : 'Generate' },
+    { label: 'Recorded care', value: `${state.completedRoadmapTasks}/${state.totalRoadmapTasks}` },
+    { label: 'Focus', value: state.totalRoadmapTasks > 0 ? 'Approved records' : 'Instructions needed' },
   ];
 }
 
-function getAgentState(profile: any) {
-  const points = Number(profile?.pawPoints || 0);
+function getAgentState(profile: any, care: import('../lib/care/domain').CareState | null, petId: string) {
+  const points = care?.ledger.reduce((n,l)=>n+l.points,0) || 0;
   const nextTier = pawPointTiers.find((tier) => tier.points > points) ?? pawPointTiers[pawPointTiers.length - 1];
   const roadmapTasks = extractRoadmapTasks(profile?.cachedRoadmap || '');
   const progress = profile?.roadmapProgress || {};
@@ -499,11 +492,12 @@ function getAgentState(profile: any) {
     points,
     nextTier,
     pointsToNext: Math.max(0, nextTier.points - points),
-    totalRoadmapTasks,
-    completedRoadmapTasks,
+    totalRoadmapTasks: care?.milestones.filter(m=>m.petId===petId).length || 0,
+    completedRoadmapTasks: care?.milestones.filter(m=>m.petId===petId && m.status==='completed').length || 0,
+    available: Boolean(care),
     nextRoadmapTask: roadmapTasks.find((task) => !progress[task.id]),
-    bookingSuggestion: breed.includes('lab') || breed.includes('retriever') ? 'Joint Check' : 'Wellness Check',
-    bestSlot: '10:00 AM',
+    bookingSuggestion: care?.milestones.find(m=>m.petId===petId && m.status==='approved')?.title || 'Instructions needed',
+    bestSlot: care?.milestones.find(m=>m.petId===petId && m.status==='approved')?.booking.status || 'Not recorded',
     pritpawlRoadmap,
   };
 }
@@ -560,349 +554,9 @@ function createInitialMessages(profile: any): Record<AgentId, ChatMessage[]> {
   const petName = profile?.petName || profile?.name || 'your pet';
   return {
     pawl: [{ id: 'pawl-welcome', from: 'agent', text: `I can see ${petName}'s Paw Points status and route reward decisions here.` }],
-    pawlina: [{ id: 'pawlina-welcome', from: 'agent', text: `I can book, cancel, or move appointments for ${petName} — every booking earns Paw Points and auto-confirms via WhatsApp to 9004290923. Just tell me what you need.` }],
-    pritpawl: [{ id: 'pritpawl-welcome', from: 'agent', text: `I generate breed-customized life-maxing roadmaps for ${petName} — covering nutrition, exercise, behavioral health, and psychological wellness, all backed by peer-reviewed veterinary science (AVMA, AAHA, WSAVA, JAVMA).` }],
+    pawlina: [{ id: 'pawlina-welcome', from: 'agent', text: 'I coordinate approved follow-ups. Use the shared controls to request an appointment; only the clinic can confirm it. Booking does not earn points.' }],
+    pritpawl: [{ id: 'pritpawl-welcome', from: 'agent', text: 'I explain recorded, veterinarian-approved instructions and help share updates with the team. I cannot diagnose, approve dates or change treatment.' }],
   };
-}
-
-function shouldGenerateRoadmap(prompt: string) {
-  return /generate|roadmap|life-max|life max|health plan|care plan|nutrition|exercise|behavior|psychological|prescription/i.test(prompt);
-}
-
-function buildPritpawlCachedRoadmapReply(prompt: string, profile: any, state: ReturnType<typeof getAgentState>) {
-  const petName = profile?.petName || profile?.name || 'your pet';
-  const roadmapText = profile?.cachedRoadmap || '';
-  const tasks = extractRoadmapTasks(roadmapText);
-  const progress = profile?.roadmapProgress || {};
-  const lowerPrompt = prompt.toLowerCase();
-
-  if (!roadmapText || tasks.length === 0) {
-    return `I do not see a generated roadmap for ${petName} yet. Open the Roadmap section first so I can read the plan, nutrition, exercise, and progress from the same source of truth.`;
-  }
-
-  if (/progress|track|complete/i.test(lowerPrompt)) {
-    return buildCachedRoadmapProgressReply(petName, tasks, progress);
-  }
-
-  const wantsNutrition = /nutrition|diet|food|feed|weight|hydration|protein/i.test(lowerPrompt);
-  const wantsExercise = /exercise|activity|fitness|walk|movement|play|enrich|environment|behavior|mental|scratch|climb/i.test(lowerPrompt);
-
-  if (wantsNutrition || wantsExercise) {
-    const sections: string[] = [];
-
-    if (wantsNutrition) {
-      const nutritionTasks = tasks.filter((task) => /nutrition|diet|food|feed|weight|hydration|protein/i.test(`${task.title} ${task.description} ${task.rationale}`));
-      sections.push(formatRoadmapTaskSection('Nutrition plan', nutritionTasks));
-    }
-
-    if (wantsExercise) {
-      const exerciseTasks = tasks.filter((task) => /exercise|activity|fitness|walk|movement|play|enrich|environment|behavior|mental|scratch|climb/i.test(`${task.title} ${task.description} ${task.rationale}`));
-      sections.push(formatRoadmapTaskSection('Exercise and enrichment plan', exerciseTasks));
-    }
-
-    return `${petName}'s roadmap has already been generated in the Roadmap section. Here is the relevant plan from that roadmap:\n\n${sections.join('\n\n')}`;
-  }
-
-  const generatedDate = profile?.roadmapGeneratedAt ? ` on ${new Date(profile.roadmapGeneratedAt).toLocaleDateString()}` : '';
-  const phaseSummary = formatPhaseProgress(tasks, progress);
-
-  return `${petName}'s life-maxing roadmap has already been generated in the Roadmap section${generatedDate}.\n\nCurrent progress: ${state.completedRoadmapTasks}/${state.totalRoadmapTasks} tasks complete.\n\n${phaseSummary}\n\nUse the Roadmap section to check off tasks, unlock the next stage, and keep progress synced.`;
-}
-
-function buildCachedRoadmapProgressReply(petName: string, tasks: CachedRoadmapTask[], progress: Record<string, boolean>) {
-  const completedTasks = tasks.filter((task) => progress[task.id]).length;
-  const pct = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
-
-  return `Roadmap progress for ${petName}: ${pct}% complete (${completedTasks}/${tasks.length} tasks).\n\n${formatPhaseProgress(tasks, progress)}\n\nThis is reading from the same Roadmap section progress, so checked-off tasks stay synced.`;
-}
-
-function formatPhaseProgress(tasks: CachedRoadmapTask[], progress: Record<string, boolean>) {
-  const phaseTitles = [...new Set(tasks.map((task) => task.phaseTitle))];
-
-  return phaseTitles.map((phaseTitle) => {
-    const phaseTasks = tasks.filter((task) => task.phaseTitle === phaseTitle);
-    const done = phaseTasks.filter((task) => progress[task.id]).length;
-    const nextTask = phaseTasks.find((task) => !progress[task.id]);
-    return `${phaseTitle}: ${done}/${phaseTasks.length} complete${nextTask ? `; next: ${nextTask.title}` : '; complete'}`;
-  }).join('\n');
-}
-
-function formatRoadmapTaskSection(title: string, tasks: CachedRoadmapTask[]) {
-  if (tasks.length === 0) return `${title}: No dedicated task is listed yet, but the full roadmap still contains preventive care steps to follow.`;
-
-  return `${title}:\n${tasks.map((task) => `- ${task.title} (${task.phaseTitle}): ${task.description}`).join('\n')}`;
-}
-
-// ─── Pawlina: Full booking/cancel/move/call backend ──────────────────────
-
-async function handlePawlinaPrompt(
-  prompt: string,
-  profile: any,
-  pushMessage: (agentId: AgentId, message: Omit<ChatMessage, 'id'>) => void,
-): Promise<string> {
-  const petName = profile?.petName || profile?.name || 'your pet';
-  const parentName = profile?.parentName || 'Pet Parent';
-  const plan = getProfilePlan(profile);
-  const lowerPrompt = prompt.toLowerCase();
-  const userSupport = getCurrentUserBookingSupport();
-  const userId = userSupport?.userId || (profile?.uid as string) || 'demo-user';
-  const resolvedParentName = userSupport?.parentName || parentName;
-  const resolvedPetName = userSupport?.petName || petName;
-
-  if (/call|phone|dial|hospital|contact/i.test(lowerPrompt)) {
-    callClinic();
-    return 'Dialing Planet Animal Hospital at 900-429-0923 now. Your phone dialer should open — if not, check your browser permissions for tel: links.';
-  }
-
-  if (/cancel|remove|delete/i.test(lowerPrompt)) {
-    if (!userId) return 'I need you to be signed in before I can look up your appointments.';
-    const bookings = await getUserBookings(userId);
-    const pending = bookings.filter((b) => b.status === 'pending');
-    if (pending.length === 0) {
-      return 'I could not find any pending appointments to cancel. If you have a specific date or service in mind, tell me more details.';
-    }
-    const list = pending.map((b, i) => `${i + 1}. ${b.reason} on ${b.date} at ${b.time} (${b.points} pts, ID: ${b.id.slice(0, 6)})`).join('\n');
-    return `Here are your pending appointments:\n${list}\n\nReply with the number (e.g., "cancel 1") or the service name to cancel a specific booking.`;
-  }
-
-  if (/cancel\s+(\d+)/i.test(lowerPrompt)) {
-    const match = lowerPrompt.match(/cancel\s+(\d+)/i);
-    const index = parseInt(match![1]) - 1;
-    if (!userId) return 'Please sign in to manage appointments.';
-    const bookings = await getUserBookings(userId);
-    const pending = bookings.filter((b) => b.status === 'pending');
-    if (index < 0 || index >= pending.length) return 'That appointment number is not valid. Please check the list and try again.';
-    const target = pending[index];
-    const success = await cancelBookingRequest(target.id);
-    return success
-      ? `Cancelled your ${target.reason} appointment on ${target.date} at ${target.time}. The ${target.points} paw points have been released.`
-      : 'I was unable to cancel that appointment. Please try again or contact the clinic directly at 900-429-0923.';
-  }
-
-  if (/move|reschedule|change/i.test(lowerPrompt) && !/date|time/i.test(lowerPrompt)) {
-    if (!userId) return 'I need you to be signed in before I can look up your appointments.';
-    const bookings = await getUserBookings(userId);
-    const pending = bookings.filter((b) => b.status === 'pending');
-    if (pending.length === 0) {
-      return 'I could not find any pending appointments to reschedule. Would you like to book a new visit instead?';
-    }
-    const list = pending.map((b, i) => `${i + 1}. ${b.reason} on ${b.date} at ${b.time} (ID: ${b.id.slice(0, 6)})`).join('\n');
-    return `Here are your pending appointments:\n${list}\n\nTell me which one to move and the new date/time (e.g., "move #1 to May 20 at 3:00 PM").`;
-  }
-
-  if (/move|reschedule/i.test(lowerPrompt) && /date|time|#|to\s/i.test(lowerPrompt)) {
-    if (!userId) return 'Please sign in to manage appointments.';
-    const bookings = await getUserBookings(userId);
-    const pending = bookings.filter((b) => b.status === 'pending');
-    const numMatch = lowerPrompt.match(/(\d+)/);
-    const requested = numMatch ? parseInt(numMatch[0]) : 1;
-    const index = pending.length >= requested ? requested - 1 : 0;
-    if (pending.length === 0) return 'I could not find any pending appointments to reschedule. Would you like to book new?';
-    const target = pending[index];
-    const dateMatch = prompt.match(/([A-Z][a-z]+ \d{1,2}|\d{4}-\d{2}-\d{2})/i);
-    const timeMatch = prompt.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/);
-    const newDate = dateMatch ? dateMatch[0] : target.date;
-    const newTime = timeMatch ? timeMatch[0] : target.time;
-    const success = await rescheduleBookingRequest(target.id, newDate, newTime);
-    return success
-      ? `Moved your ${target.reason} appointment to ${newDate} at ${newTime}. Your ${target.points} paw points stay intact. I can send a new WhatsApp confirmation — just say "send reminder".`
-      : 'I could not reschedule that appointment. Please try again or call the clinic at 900-429-0923.';
-  }
-
-  if (/book|vaccine|visit|schedule|appointment|checkup|check-up|groom|ear|haircut/i.test(lowerPrompt) && !hasDateTimePrompt(prompt)) {
-    const matchingService = findPawlinaService(lowerPrompt);
-    if (matchingService) {
-      const serviceNames = PAWLINA_SERVICES.map((s, i) => `${i + 1}. ${s.name} — +${s.points} pts`).join('\n');
-      const points = calculateBookingPoints([matchingService], plan);
-      const multiplierNote = getBookingRewardNote(plan, points);
-      return `Booked: **${matchingService.name}** for ${resolvedPetName}.\n\nEarns +${Math.round(points)} paw points${multiplierNote}.\n\nTo confirm, I need a date and time. You can also use the "Book Visit" button above to select them visually.\n\nAvailable services:\n${serviceNames}\n\nOr tell me: "${matchingService.name} on [date] at [time]" and I will lock it in.`;
-    }
-
-    const serviceNames = PAWLINA_SERVICES.map((s, i) => `${i + 1}. ${s.name} — +${s.points} pts`).join('\n');
-    return `Which service should I book for ${resolvedPetName}?\n\n${serviceNames}\n\nTell me the number or service name, plus preferred date/time.`;
-  }
-
-  if (hasDateTimePrompt(prompt)) {
-    const dateMatch = prompt.match(/([A-Z][a-z]+ \d{1,2}|\d{4}-\d{2}-\d{2})/i);
-    const timeMatch = prompt.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i);
-    const date = dateMatch ? dateMatch[0] : 'TBD';
-    const time = timeMatch ? timeMatch[0] : 'TBD';
-
-    const matchingService = findPawlinaService(lowerPrompt) || { id: 0, name: 'Visit', points: 750 };
-
-    if (!userId || userId === 'demo-user') {
-      const message = buildWhatsAppMessage(resolvedParentName, resolvedPetName, [matchingService.name], date, time);
-      const url = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
-      const points = calculateBookingPoints([matchingService], plan);
-      return `Opening WhatsApp with your booking details for ${matchingService.name} on ${date} at ${time}. Once the clinic confirms, the +${Math.round(points)} paw points will be pending for verification${getBookingRewardNote(plan, points)}.`;
-    }
-
-    const points = calculateBookingPoints([matchingService], plan);
-    const requestId = await createBookingRequest(userId, resolvedPetName, matchingService.name, date, time, points);
-    await awardPendingPoints(userId, resolvedParentName, resolvedPetName, matchingService.name, points);
-
-    const message = buildWhatsAppMessage(resolvedParentName, resolvedPetName, [matchingService.name], date, time);
-    window.open(`https://wa.me/919004290923?text=${encodeURIComponent(message)}`, '_blank');
-
-    return requestId
-      ? `Appointment confirmed!\n\nService: ${matchingService.name}\nDate: ${date}\nTime: ${time}\nPaw Points: +${Math.round(points)} (pending verification)${getBookingRewardNote(plan, points)}\n\nWhatsApp sent to 9004290923. The clinic will confirm shortly.`
-      : `I created the booking but hit a snag saving it. WhatsApp has been opened — the clinic has your details: ${matchingService.name} on ${date} at ${time}.`;
-  }
-
-  if (/reminder|remind|confirm/i.test(lowerPrompt)) {
-    const message = buildWhatsAppMessage(resolvedParentName, resolvedPetName, ['Visit'], 'TBD', 'TBD');
-    window.open(`https://wa.me/919004290923?text=${encodeURIComponent(message)}`, '_blank');
-    return `I have opened a WhatsApp message to Planet Animal Hospital at 9004290923. Use the "Book Visit" button above to set the exact date and time.`;
-  }
-
-  if (/upcoming|status|my appointment/i.test(lowerPrompt)) {
-    if (!userId) return 'I need you to be signed in to look up your appointments.';
-    const bookings = await getUserBookings(userId);
-    const pending = bookings.filter((b) => b.status === 'pending');
-    if (pending.length === 0) return `No upcoming appointments found for ${resolvedPetName}. Would you like to book one?`;
-    const list = pending.map((b, i) => `${i + 1}. ${b.reason} — ${b.date} at ${b.time} (+${b.points} pts)`).join('\n');
-    return `Upcoming appointments for ${resolvedPetName}:\n${list}\n\nTotal pending paw points from visits: ${pending.reduce((sum, b) => sum + b.points, 0).toLocaleString()} pts`;
-  }
-
-  return 'I can book, cancel, or move appointments for you. Every visit earns Paw Points and auto-confirms via WhatsApp to 9004290923. Try: "Book next vaccine" or "Call Planet Animal Hospital" to reach the clinic directly.';
-}
-
-function getBookingRewardNote(plan: string, points: number) {
-  const normalizedPlan = plan.toLowerCase();
-  if (normalizedPlan === 'free') {
-    return points > 0
-      ? ' (free General Checkup starter reward)'
-      : ' (free plan: no Paw Points for this service)';
-  }
-
-  return ` (${getPointsMultiplier(plan).toFixed(1)}x ${normalizedPlan} plan multiplier applied)`;
-}
-
-function hasDateTimePrompt(prompt: string) {
-  const lowerPrompt = prompt.toLowerCase();
-  return /date.*time|time.*date/i.test(prompt) ||
-    (/\d{1,2}:\d{2}/i.test(prompt) && /may|june|july|aug|sept|oct|nov|dec|jan|feb|mar|apr|tomorrow|today|next/i.test(lowerPrompt));
-}
-
-function findPawlinaService(prompt: string) {
-  const normalizedPrompt = prompt.toLowerCase().replace(/check-up/g, 'checkup');
-  return PAWLINA_SERVICES.find((service) => {
-    const serviceName = service.name.toLowerCase().replace(/check-up/g, 'checkup');
-    return normalizedPrompt.includes(serviceName) ||
-      (serviceName === 'general checkup' && normalizedPrompt.includes('checkup')) ||
-      (serviceName === 'vaccinations' && /vaccine|vaccination|booster|shot/.test(normalizedPrompt)) ||
-      (serviceName === 'full grooming' && /groom|spa|bath/.test(normalizedPrompt)) ||
-      (serviceName === 'ear cleaning' && /ear/.test(normalizedPrompt)) ||
-      (serviceName === 'haircut' && /haircut|trim/.test(normalizedPrompt));
-  });
-}
-
-// ─── Pritpawl: Life-max roadmap reply builder ───────────────────────────
-
-function buildPritpawlReply(
-  prompt: string,
-  profile: any,
-  state: ReturnType<typeof getAgentState>,
-  roadmap: PritpawlRoadmap,
-): string {
-  const petName = profile?.petName || profile?.name || 'your pet';
-  const breed = profile?.breed || roadmap.species || 'mixed breed';
-  const age = profile?.age || 'adult';
-  const primaryFocus = getRoadmapPrimaryFocus(roadmap);
-  const totalPawPoints = getRoadmapTotalPawPoints(roadmap);
-  const lowerPrompt = prompt.toLowerCase();
-
-  if (/nutrition|diet|food|feed/i.test(lowerPrompt)) {
-    const nutritionTasks = roadmap.phases.flatMap((p) =>
-      p.tasks.filter((t) => /nutrition|diet|food|weight|feed/i.test(t.title + t.description)),
-    );
-    if (nutritionTasks.length === 0) return `${petName}'s roadmap includes nutrition optimization across all phases. Regenerate the roadmap to see full nutrition details.`;
-    const lines = nutritionTasks.map((t) => `**${t.title}** (Phase: ${roadmap.phases.find((p) => p.tasks.includes(t))?.title}): ${t.description}`);
-    return `Nutrition plan for ${petName} (${breed}):\n\n${lines.join('\n\n')}\n\nAll recommendations follow AAHA Nutritional Assessment Guidelines and Hand et al., Small Animal Clinical Nutrition.`;
-  }
-
-  if (/exercise|activity|fitness|walk/i.test(lowerPrompt)) {
-    const exerciseTasks = roadmap.phases.flatMap((p) =>
-      p.tasks.filter((t) => /exercise|activity|fitness|walk|movement|rehab/i.test(t.title + t.description)),
-    );
-    if (exerciseTasks.length === 0) return `${petName}'s roadmap includes breed-specific exercise optimization. Regenerate the roadmap to see full details.`;
-    const lines = exerciseTasks.map((t) => `**${t.title}** (Phase: ${roadmap.phases.find((p) => p.tasks.includes(t))?.title}): ${t.description}`);
-    return `Exercise plan for ${petName} (${breed}):\n\n${lines.join('\n\n')}\n\nProtocol per AVMA guidelines and Canine Rehabilitation & Physical Therapy (Millis, Levine, Taylor).`;
-  }
-
-  if (/behavior|psychological|mental|anxiety|stress|cognitive|enrich/i.test(lowerPrompt)) {
-    const bhTasks = roadmap.phases.flatMap((p) =>
-      p.tasks.filter((t) => /behavior|psychological|mental|anxiety|stress|cognitive|enrich/i.test(t.title + t.description)),
-    );
-    if (bhTasks.length === 0) return `${petName}'s roadmap includes behavioral and psychological wellness. Regenerate for full details.`;
-    const lines = bhTasks.map((t) => `**${t.title}** (Phase: ${roadmap.phases.find((p) => p.tasks.includes(t))?.title}): ${t.description}`);
-    return `Behavioral & psychological wellness plan for ${petName} (${breed}):\n\n${lines.join('\n\n')}\n\nBased on AAHA Canine and Feline Behavior Management Guidelines and AAFP/AAHA Environmental Needs Guidelines.`;
-  }
-
-  if (/progress|track|complete/i.test(lowerPrompt)) {
-    const progress = profile?.roadmapProgress || {};
-    const totalTasks = roadmap.phases.reduce((sum, p) => sum + p.tasks.length, 0);
-    const completedTasks = roadmap.phases.reduce((sum, p) => sum + p.tasks.filter((t) => progress[t.id]).length, 0);
-    const pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-    const phaseBreakdown = roadmap.phases.map((p) => {
-      const done = p.tasks.filter((t) => progress[t.id]).length;
-      return `${p.title}: ${done}/${p.tasks.length} tasks done (+${getPhasePawPoints(p)} pts on completion)`;
-    }).join('\n');
-    return `Roadmap progress for ${petName}: **${pct}%** complete (${completedTasks}/${totalTasks} tasks)\n\n${phaseBreakdown}\n\nTotal paw points from roadmap completion: **${totalPawPoints.toLocaleString()} pts**`;
-  }
-
-  if (/refill|med/i.test(lowerPrompt)) {
-    const meds = roadmap.prescriptionPlan.map((m, i) =>
-      `${i + 1}. **${m.name}** — ${m.dosage}, ${m.schedule}\n   Refill: ${m.refillWindow}\n   Purpose: ${m.purpose}`,
-    ).join('\n\n');
-    return `Medication & supplement plan for ${petName}:\n\n${meds}\n\nNever change prescriptions without veterinary approval.`;
-  }
-
-  const phaseList = roadmap.phases.map((p) => {
-    const taskTitles = p.tasks.slice(0, 2).map((t) => `- ${t.title}`).join('\n');
-    return `**${p.title}** (${p.timeline}) — ${pawPointsToINR(getPhasePawPoints(p))} pts\n${taskTitles}`;
-  }).join('\n\n');
-
-  return `Life-maxing roadmap generated for **${roadmap.petName}** (${breed}, age ${age}).\n\n` +
-    `Primary focus: **${primaryFocus}**.\n\n${roadmap.summary}\n\n` +
-    `${phaseList}\n\n` +
-    `Total: **${totalPawPoints.toLocaleString()} paw points** for completing all phases.\n\n` +
-    `All recommendations are substantiated by peer-reviewed guidelines from AVMA, AAHA, WSAVA, and published veterinary literature.\n\n` +
-    `Ask me about any phase, or say "show nutrition & exercise plan" or "track my roadmap progress."`;
-}
-
-function getRoadmapPrimaryFocus(roadmap: PritpawlRoadmap) {
-  return roadmap.phases[0]?.focus || roadmap.summary.split('.')[0] || 'preventive longevity';
-}
-
-function getPhasePawPoints(phase: PritpawlRoadmap['phases'][number]) {
-  return Math.max(500, phase.tasks.length * 250);
-}
-
-function getRoadmapTotalPawPoints(roadmap: PritpawlRoadmap) {
-  return roadmap.phases.reduce((sum, phase) => sum + getPhasePawPoints(phase), 0);
-}
-
-function pawPointsToINR(points: number): string {
-  const value = points * 0.25;
-  return '₹' + value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function buildAgentReply(agentId: AgentId, prompt: string, profile: any, state: ReturnType<typeof getAgentState>) {
-  const petName = profile?.petName || profile?.name || 'your pet';
-
-  if (agentId === 'pawl') {
-    if (/tier/i.test(prompt)) return `${petName} has ${state.points.toLocaleString()} Paw Points. Next tier: ${state.nextTier.title}. Points needed: ${state.pointsToNext.toLocaleString()}.`;
-    if (/multiplier/i.test(prompt)) return 'Best multiplier move: book a preventive visit tied to breed risk, then redeem after the next tier unlock.';
-    return `Best redemption: hold until ${state.nextTier.title} unless there is an immediate clinical need.`;
-  }
-
-  if (agentId === 'pawlina') {
-    return 'I can book, cancel, or move appointments for you. Every visit earns Paw Points and auto-confirms via WhatsApp to 9004290923. Try: "Book next vaccine", "Move my appointment", "Call Planet Animal Hospital".';
-  }
-
-  return 'I generate breed-customized life-maxing roadmaps. Say "Life-max my pet\'s health" for a full plan covering nutrition, exercise, behavioral & psychological wellness — all backed by peer-reviewed veterinary science.';
 }
 
 function AgentAvatar({ agent, large = false, compact = false }: { agent: Agent; large?: boolean; compact?: boolean }) {

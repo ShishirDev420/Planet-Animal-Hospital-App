@@ -13,7 +13,9 @@ import Layout from './components/Layout';
 import Welcome from './pages/Welcome';
 import ErrorBoundary from './components/ErrorBoundary';
 import PlanetOrbLoader from './components/PlanetOrbLoader';
+import { useCare } from './lib/care/client';
 
+const StaffCare = lazy(() => import('./pages/StaffCare'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ProactivePlans = lazy(() => import('./pages/ProactivePlans'));
 const AIVet = lazy(() => import('./pages/AIVet'));
@@ -27,6 +29,10 @@ const Rewards = lazy(() => import('./pages/Rewards'));
 const DailyBriefing = lazy(() => import('./pages/DailyBriefing'));
 const MedicalRecords = lazy(() => import('./pages/MedicalRecords'));
 const MobilePreview = lazy(() => import('./components/MobilePreview'));
+function ScopedCareAssistant() {
+  const care = useCare();
+  return <AIVet key={`${care.state?.ownerUid || 'loading'}:${care.petId}`} />;
+}
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'onboarding' | 'authenticated' | 'profile-sync-error';
 
@@ -151,6 +157,7 @@ export default function App() {
             </Routes>
           ) : (
             <Routes>
+              <Route path="/staff" element={<StaffCare />} />
               {authStatus === 'unauthenticated' || authStatus === 'onboarding' ? (
                 <>
                   <Route path="/" element={<Welcome key={authStatus} initialOnboarding={authStatus === 'onboarding'} onComplete={() => setAuthStatus('authenticated')} />} />
@@ -164,7 +171,7 @@ export default function App() {
                   <Route path="/" element={<Layout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="plans" element={<ProactivePlans />} />
-                    <Route path="ai" element={<AIVet />} />
+                    <Route path="ai" element={<ScopedCareAssistant />} />
                     <Route path="agents" element={<AIAgents />} />
                     <Route path="agents/:agentId" element={<AIAgents />} />
                     <Route path="roadmap" element={<Roadmap />} />

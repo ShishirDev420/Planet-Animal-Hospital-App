@@ -5,10 +5,12 @@ import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Ste
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { signOut } from 'firebase/auth';
+import { useCare } from '../lib/care/client';
 import { auth } from '../lib/firebase';
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
+  const care = useCare();
   const { profile, updateProfile } = usePetProfile();
   const [name, setName] = useState(profile?.parentName || '');
   const [email, setEmail] = useState('');
@@ -111,6 +113,7 @@ export default function ProfileSettings() {
           <ArrowLeft size={20} className="text-slate-600 dark:text-white/90" />
         </button>
         <h1 className="cinematic-section-title text-3xl drop-shadow-md">Profile Settings</h1>
+        {care.role !== "parent" && <button className="mt-3 text-[#fec708]" onClick={() => navigate("/staff")}>Open care team workspace</button>}
         <div className="w-11" /> {/* Spacer */}
       </header>
 

@@ -1,3 +1,5 @@
+import { useCare } from '../lib/care/client';
+import { careSummary } from '../lib/care/domain';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Mic, Camera, Settings, Stethoscope } from 'lucide-react';
@@ -44,10 +46,10 @@ function buildChocolateTriageResponse(petName: string) {
 
 function buildEmergencyResponse(transcript: string, petName: string) {
   if (isChocolateConcern(transcript)) {
-    return `This sounds potentially urgent for ${petName}, especially with dark chocolate, cocoa, a large amount, symptoms, or added toxins. I am calling the nearest configured 24/7 emergency veterinary line from Thane now; keep the wrapper and do not induce vomiting unless the vet instructs you.`;
+    return `This sounds potentially urgent for ${petName}, especially with dark chocolate, cocoa, a large amount, symptoms, or added toxins. Please contact a veterinary emergency service directly. This app has not placed a call or alerted the hospital; keep the wrapper and do not induce vomiting unless the vet instructs you.`;
   }
 
-  return `This sounds like an emergency for ${petName}. I am calling the nearest configured 24/7 emergency veterinary line from Thane now; please keep ${petName} safely positioned and do not give medicines unless a veterinarian instructs you.`;
+  return `This sounds like an emergency for ${petName}. Please contact a veterinary emergency service directly. This app has not placed a call or alerted the hospital; please keep ${petName} safely positioned and do not give medicines unless a veterinarian instructs you.`;
 }
 
 function isUsableAPIKey(value: string) {
@@ -129,14 +131,16 @@ async function transcribeWithSarvam(audioBlob: Blob, apiKey?: string): Promise<s
 }
 
 export default function AIVet() {
+  const care = useCare();
   const navigate = useNavigate();
-  const { profile } = usePetProfile();
+  const { profile: legacyProfile } = usePetProfile();
+  const profile = care.petId === 'primary' ? legacyProfile : { petName: care.state?.pets.find(p => p.id === care.petId)?.name };
   const { keys, status } = useAPIKeys();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'ai', content: string}[]>([
-    { role: 'ai', content: `Namaste. I'm Pawl, your AI veterinarian here at Planet Animal Hospital. I have ${profile?.petName || 'your pet'}'s profile ready. What can I help with today?` }
+    { role: 'ai', content: `Namaste. I'm Pritpawl, your AI care assistant here at Planet Animal Hospital. I have ${profile?.petName || 'your pet'}'s profile ready. What can I help with today?` }
   ]);
   const [showScanner, setShowScanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -550,7 +554,7 @@ export default function AIVet() {
 
   const handleTestVoice = () => {
     stopCurrentSpeech();
-    speakText('Hi, I am Pawl. I can hear you, and I will use Onyx\'s correct pet profile before I respond.', true);
+    speakText('Hi, I am Pritpawl, your AI care assistant. I can help explain recorded instructions.', true);
   };
 
   const speakTextStreaming = async (textStream: AsyncIterable<string>) => {
@@ -647,14 +651,17 @@ export default function AIVet() {
         setIsProcessing(false);
         setStreamingText('');
         if (isCallActiveRef.current) await speakText(emergencyText);
-        callEmergencyVetNearThane();
+        // No automatic external call; the parent chooses how to contact emergency care.
         return;
       }
 
       const knowledgeContext = buildKnowledgeContext(petType, petBreed, transcript);
 
-      const systemPrompt = `You are Pawl, the Primary AI Veterinarian at Planet Animal Hospital.
+      const systemPrompt = `You are Pritpawl, an AI care assistant at Planet Animal Hospital.
 You are the heart of this hospital and a trusted partner to every pet parent.
+
+BOUNDARIES: You cannot diagnose, approve a plan, invent clinical dates, change treatment, confirm bookings, or change points. Clinical questions remain unresolved for the care team.
+RECORDED APPROVED NEXT STEP: ${care.state ? careSummary(care.state, care.petId) : 'Unavailable; ask the team for recorded instructions.'}
 
 SOURCE OF TRUTH:
 - The onboarding profile below is the trusted source for ${petName}'s species, breed, age, weight, medical history, surgical history, diet, and parent-provided notes.
@@ -662,9 +669,9 @@ SOURCE OF TRUTH:
 - If a field is missing, say it is not provided and ask one focused follow-up question.
 
 VOICE & PERSONALITY:
-- Tone: Genuinely warm, deeply empathetic, approachable. Like a close friend who is a world-class vet.
+- Tone: Genuinely warm, deeply empathetic, approachable. Warm and clear; never impersonate a veterinarian.
 - Style: Professional yet kind. Use gentle Indian English cadence ("ji", "Namaste") naturally.
-- Always speak in first person as Pawl. Never refer to yourself as "Pawl" in third person.
+- Always speak in first person as Pritpawl. Never refer to yourself as "Pritpawl" in third person.
 - Sound present in the conversation. Acknowledge interruptions, corrections, and new details naturally.
 - Engagement: Be PROACTIVE. Ask follow-up questions about ${petName}'s appetite, energy, or behavior.
 - Empathy first: Acknowledge feelings before giving advice ("I understand how worrying this can be, ji").
@@ -684,7 +691,7 @@ LANGUAGE ADAPTATION:
 CRITICAL RULES (NON-NEGOTIABLE):
 1. NEVER diagnose conditions — always recommend in-person veterinary examination for confirmation.
 2. NEVER prescribe medications or dosages — only suggest discussing options with a vet.
-3. For emergency symptoms (difficulty breathing, collapse, severe bleeding, bloating, inability to urinate, seizures, high-risk poisoning): be directive and tell the parent to seek emergency veterinary care now. The app may already be calling ${THANE_EMERGENCY_DESTINATION}; do not claim you alerted the team unless the app explicitly confirms it.
+3. For emergency symptoms (difficulty breathing, collapse, severe bleeding, bloating, inability to urinate, seizures, high-risk poisoning): be directive and tell the parent to seek emergency veterinary care now. Do not claim a call was placed, that the clinic is open, or that anyone was alerted. No response time is confirmed here.
 4. Always include a gentle disclaimer that this is not a substitute for professional veterinary care.
 5. Only provide information supported by established veterinary science and the reference knowledge provided.
 6. If uncertain, say so honestly and recommend consulting a veterinarian.
@@ -705,7 +712,7 @@ PET CONTEXT:
 - Medical History: ${medicalHistory}
 - Surgical History: ${surgicalHistory}
 - Parent Notes: ${additionalDetails}
-${roadmap ? `\nLONGEVITY ROADMAP (current care plan for ${petName}):\n${roadmap}` : '\nNo longevity roadmap generated yet.'}
+${roadmap ? `\nUNREVIEWED AI ROADMAP (not approved clinical instructions for ${petName}):\n${roadmap}` : '\nNo longevity roadmap generated yet.'}
 
 REFERENCE VETERINARY KNOWLEDGE (use this to ground your responses):
 ${knowledgeContext}`;
@@ -979,7 +986,7 @@ ${knowledgeContext}`;
         {/* Subtitle */}
         <div className="text-center mt-4">
           <p className="cinematic-kicker text-[10px] tracking-[0.22em]">
-            Pawl, Primary Vet
+            Pritpawl, Care Assistant
           </p>
         </div>
 
@@ -989,7 +996,7 @@ ${knowledgeContext}`;
               Preview Demo
             </p>
             <p className="mt-1 text-xs leading-relaxed text-amber-50/75">
-              Pawl can show a safe sample response now. Connect your own OpenAI or Gemini API key in settings for full live AI Vet answers.
+              Pritpawl can show a safe sample response now. Connect your own OpenAI or Gemini API key in settings for full live AI Vet answers.
             </p>
           </div>
         )}
@@ -1051,7 +1058,7 @@ ${knowledgeContext}`;
                     {msg.role === 'ai' && (
                       <h4 className="font-heading tracking-tight text-[#fec708] text-[10px] font-bold uppercase mb-1.5 flex items-center gap-1.5">
                         <Stethoscope className="w-3 h-3" />
-                        Pawl
+                        Pritpawl
                       </h4>
                     )}
                     <p className="font-body font-medium text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
