@@ -196,7 +196,7 @@ export default function Rewards() {
         {
           id: 'current-balance',
           type: 'earned',
-          activity: 'Paw Points Balance Verified',
+          activity: 'Legacy recorded balance — reconciliation required',
           points: currentPoints,
           date: 'Current balance',
           source: 'balance',
@@ -223,19 +223,7 @@ export default function Rewards() {
   const pointsToNextTier = Math.max(0, nextTier.points - currentPoints);
   
   const handleRedeem = async (reward: any) => {
-    if (currentPoints < reward.points) return;
-    
-    try {
-      setRedeemedReward(reward.title);
-      setShowRedeemSuccess(true);
-      
-      const newPoints = currentPoints - reward.points;
-      await updateProfile({ pawPoints: newPoints });
-      
-      setTimeout(() => setShowRedeemSuccess(false), 4000);
-    } catch (error) {
-      console.error('Failed to redeem reward:', error);
-    }
+    window.alert('Redemption requires clinic billing verification. This connection is not available in the pilot; no balance has been changed.');
   };
 
   const { scrollY } = useScroll();

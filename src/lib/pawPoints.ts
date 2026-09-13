@@ -118,7 +118,7 @@ export async function createBookingRequest(
       reason,
       date,
       time,
-      points,
+      points: 0,
       status: 'pending',
       createdAt: serverTimestamp(),
     });
@@ -129,29 +129,6 @@ export async function createBookingRequest(
   }
 }
 
-export async function awardPendingPoints(
-  userId: string,
-  parentName: string,
-  petName: string,
-  serviceName: string,
-  points: number,
-): Promise<string | null> {
-  try {
-    const docRef = await addDoc(collection(db, 'pointsQueue'), {
-      userId,
-      parent: parentName,
-      pet: petName,
-      service: serviceName,
-      points,
-      status: 'pending',
-      actionId: `booking-${Date.now()}`,
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Failed to award pending points:', error);
-    return null;
-  }
-}
 
 export async function cancelBookingRequest(requestId: string): Promise<boolean> {
   try {

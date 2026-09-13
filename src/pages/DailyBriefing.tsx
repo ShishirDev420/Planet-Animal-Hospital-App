@@ -1,3 +1,4 @@
+import CareWorkflow from '../components/CareWorkflow';
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, ChevronRight, Circle, HeartPulse, Moon, PawPrint, ShieldCheck, SunMedium, Sunrise, Trophy, Zap } from 'lucide-react';
@@ -303,15 +304,7 @@ export default function DailyBriefing() {
     if (isActiveComplete || justCompleted) return;
 
     setJustCompleted(true);
-    try {
-      await updateProfile({
-        pawPoints: isDemoMode ? points + POINTS_PER_BRIEFING : increment(POINTS_PER_BRIEFING),
-      });
-      setAwardNotice(`+${POINTS_PER_BRIEFING} Paw Points banked`);
-    } catch (error) {
-      console.error('Could not award briefing Paw Points:', error);
-      setAwardNotice('Briefing complete. Points sync will retry.');
-    }
+    setAwardNotice('Briefing marked read. Rewards require staff-verified care.');
 
     completePeriod(activePeriod);
     setTimeout(() => {
@@ -329,6 +322,7 @@ export default function DailyBriefing() {
       className="relative -mt-[var(--preview-safe-area-top,0px)] min-h-full overflow-hidden bg-[#071912] px-4 pb-32 pt-[calc(var(--preview-safe-area-top,0px)+1rem)] text-white"
     >
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_74%_4%,rgba(254,199,8,0.055),transparent_34%),radial-gradient(circle_at_12%_24%,rgba(44,128,90,0.10),transparent_30%),linear-gradient(180deg,#08140e_0%,#071912_44%,#040806_100%)]" />
+      <CareWorkflow />
       <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.035] mix-blend-soft-light" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 180 180%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.65%22/%3E%3C/svg%3E")' }} />
       <motion.div
         className="pointer-events-none absolute right-[-46%] top-[4rem] z-0 h-[380px] w-[380px] rounded-full bg-[#fec708]/10 blur-3xl"
@@ -388,7 +382,7 @@ export default function DailyBriefing() {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             />
           </div>
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-[#fec708]">+{DAILY_BRIEFING_POINTS}/day</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-[#fec708]">Recorded follow-through</span>
         </motion.div>
 
         {allComplete ? (
@@ -409,7 +403,7 @@ export default function DailyBriefing() {
             <p className="cinematic-copy mx-auto mt-4 max-w-sm text-sm">{petName} has the full daily care rhythm logged. Tomorrow's ritual will be ready with fresh prompts.</p>
             <div className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full bg-[#fec708] px-5 py-3 text-black shadow-[0_18px_42px_rgba(254,199,8,0.22)]">
               <PawPrint size={15} />
-              <span className="text-[11px] font-black uppercase tracking-[0.18em]">+{DAILY_BRIEFING_POINTS} Paw Points earned</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.18em]">Briefings marked read</span>
             </div>
           </motion.section>
         ) : (
@@ -432,7 +426,7 @@ export default function DailyBriefing() {
                 <PeriodGlyph period={activePeriod} large />
                 <div className="min-w-0 flex-1 pt-1">
                   <p className="cinematic-kicker mb-2 text-[9px] tracking-[0.26em]">{visual.eyebrow}</p>
-                  <h2 className="cinematic-card-title text-2xl text-white">Pawl's {display.title}</h2>
+                  <h2 className="cinematic-card-title text-2xl text-white">Pritpawl's {display.title}</h2>
                   <p className="mt-2 text-sm font-semibold leading-6 text-white/58">{parsedBriefing.intro}</p>
                 </div>
               </div>
@@ -449,7 +443,7 @@ export default function DailyBriefing() {
                 )}
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/18 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.17em] text-[#fec708]">
                   <Zap size={12} />
-                  +{POINTS_PER_BRIEFING} on completion
+                  Care verified by staff earns rewards
                 </span>
               </div>
 
@@ -499,7 +493,7 @@ export default function DailyBriefing() {
                     transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   />
                   <span className="truncate text-[9px] font-black uppercase tracking-[0.22em]">
-                    {awardNotice || (messageError ? 'Local care intelligence active' : 'Personalized by Pawl')}
+                    {awardNotice || (messageError ? 'Recorded care service unavailable' : 'Recorded care guidance')}
                   </span>
                 </div>
 
@@ -523,7 +517,7 @@ export default function DailyBriefing() {
                       </span>
                       <span className="text-left">
                         <span className="block text-[12px] font-black uppercase tracking-[0.18em]">{justCompleted ? 'Care banked' : 'Mark complete'}</span>
-                        <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-black/54">Earn +{POINTS_PER_BRIEFING} Paw Points</span>
+                        <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-black/54">Mark this briefing read</span>
                       </span>
                     </span>
                     <ChevronRight className="relative h-5 w-5 transition-transform group-hover:translate-x-1" />

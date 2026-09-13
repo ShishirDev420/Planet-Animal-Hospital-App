@@ -572,7 +572,7 @@ export default function Dashboard() {
         reason: serviceName,
         date: "TBD",
         time: "TBD",
-        points: finalPoints,
+        points: 0,
         status: 'pending',
         actionId: incentiveId,
         createdAt: serverTimestamp()
@@ -664,7 +664,8 @@ export default function Dashboard() {
         createdAt: serverTimestamp()
       });
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'requests');
+      window.alert('The appointment request was not saved. Please retry; no appointment is confirmed.');
+      return;
     }
 
     setIsBookVisitOpen(false);
@@ -695,7 +696,7 @@ export default function Dashboard() {
   const petName = petProfile?.name || 'Pet';
   const parentPhone = petProfile?.phone || '';
   const bookingBasePoints = selectedServices.reduce((acc, service) => acc + service.points, 0);
-  const bookingFinalPoints = calculateBookingPoints(selectedServices, currentPlan);
+  const bookingFinalPoints = 0;
   const bookingMultiplier = getMultiplier(currentPlan);
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
   const whatsappMessage = `${buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime)}${parentPhone ? ` My mobile: ${parentPhone}.` : ''}`;
@@ -898,7 +899,7 @@ export default function Dashboard() {
             icon={<Calendar className="text-planet-yellow" />}
             title="Book Visit"
             subtitle="Checkups & Grooming"
-            onClick={() => setIsBookVisitOpen(true)}
+            onClick={() => navigate({ pathname: '/briefing', search: location.search })}
             className="mobile-action-card"
           />
           <ActionCard
@@ -911,7 +912,7 @@ export default function Dashboard() {
           <ActionCard
             icon={<Bot className="text-planet-yellow" />}
             title="AI Vet"
-            subtitle="Instant Health Advice"
+            subtitle="AI Care Assistant"
             onClick={() => navigate('/ai')}
             className="mobile-action-card"
           />

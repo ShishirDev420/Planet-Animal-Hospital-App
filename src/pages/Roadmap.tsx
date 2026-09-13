@@ -1,3 +1,4 @@
+import CareWorkflow from '../components/CareWorkflow';
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, RefreshCw, Lock, Stethoscope, Shield, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,74 +12,10 @@ import { isPreviewDemoMode } from '../lib/demoMode';
 
 const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
-const ROADMAP_STAGE_REWARD_POINTS = 50;
+const ROADMAP_STAGE_REWARD_POINTS = 0;
 
-const generateRoadmapText = async (formData: any) => {
-  if (!apiKey) {
-    throw new Error('Groq API Key missing');
-  }
-  
-  const petProfile = {
-    name: formData.name,
-    species: formData.species,
-    breed: formData.breed,
-    age: formData.age,
-    issues: formData.issues
-  };
-  const medicalHistory = formData.medicalHistory || 'None';
-
-  try {
-     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-       method: "POST",
-       headers: {
-         "Authorization": `Bearer ${apiKey}`,
-         "Content-Type": "application/json"
-       },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            {
-              role: "system",
-              content: `You are an elite veterinary longevity researcher at Planet Animal Hospital. 
-Your task is to generate a comprehensive, science-backed health roadmap.
-
-STRUCTURE RULES (CRITICAL):
-1. Use EXACTLY these headings for phases: '### Phase: 1-3 Months', '### Phase: 3-6 Months', '### Phase: 6-12 Months', '### Phase: Long-term'.
-2. For each phase, provide 3 specific action items as bullet points.
-3. Format each bullet point EXACTLY like this:
-   * **[Action Name]**: [Short Description] | [Scientific Rationale: ...]
-4. Each rationale should be a concise, authoritative explanation of WHY this extends life or improves health.
-5. Include a '### Verifiable Sources' section at the end with 2-3 real links to institutions like AVMA (avma.org), AAHA (aaha.org), or Cornell Vet (vet.cornell.edu).
-6. Tone: Premium, visionary, and deeply scientific. Avoid fluff.`
-            },
-           {
-             role: "user",
-             content: `Generate a longevity roadmap for ${petProfile.name}.
-Species: ${petProfile.species}
-Breed: ${petProfile.breed}
-Age: ${petProfile.age}
-Primary Concerns: ${petProfile.issues}
-Medical History: ${medicalHistory}
-Surgical History: ${formData.surgicalHistory || 'None'}`
-           }
-         ],
-         temperature: 0.6,
-         max_tokens: 2500
-       })
-     });
-
-     if (!response.ok) {
-       const errText = await response.text();
-       throw new Error(`API Error: ${response.status} ${errText}`);
-     }
-
-     const data = await response.json();
-     const markdownText = data.choices[0].message.content;
-     return markdownText || "Failed to generate roadmap.";
-  } catch (error: any) {
-    console.error("Error generating roadmap:", error);
-    throw new Error(error.message || "Failed to generate roadmap.");
-  }
+const generateRoadmapText = async (formData: any): Promise<string> => {
+  throw new Error('A veterinarian must record and approve the next clinical step. Use the care team request below.');
 };
 
 const parseRoadmap = (text: string, progressData: any = {}): Stage[] => {
@@ -298,6 +235,8 @@ export default function Roadmap() {
 
   return (
     <div className="h-full w-full flex flex-col pb-28">
+      <CareWorkflow />
+      <p className="relative px-5 py-3 text-sm text-[#fec708]">Any previously generated roadmap below is an unreviewed draft. It does not approve clinical dates, treatment or rewards.</p>
       <div className="relative w-full px-5 pt-6 pb-2">
         <div className="absolute left-1/2 top-0 h-40 w-72 -translate-x-1/2 rounded-full bg-[#fec708]/10 blur-[90px]" />
         <div className="relative z-10 mx-auto flex max-w-2xl items-center gap-3 rounded-full border border-white/8 bg-black/20 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
@@ -354,7 +293,7 @@ export default function Roadmap() {
                       </p>
                       
                       <button onClick={handleSubmit} disabled={loading} className="w-full bg-gradient-to-r from-[#fec708] to-[#fec708] text-black py-4 rounded-xl font-heading text-[11px] font-black uppercase tracking-[0.22em] flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all">
-                        Generate My Roadmap <ArrowRight className="w-5 h-5" />
+                        Request Approved Instructions <ArrowRight className="w-5 h-5" />
                       </button>
                     </div>
                   </motion.div>
@@ -400,7 +339,6 @@ export default function Roadmap() {
                           if (updateProfile) {
                             try {
                               await updateProfile({
-                                pawPoints: Number(profile?.pawPoints || 0) + ROADMAP_STAGE_REWARD_POINTS,
                                 roadmapStageClaims: {
                                   ...stageClaims,
                                   [stageId]: true,
