@@ -1,4 +1,5 @@
 import PlanetOrbLoader from './PlanetOrbLoader';
+import RouteTransitionLoader from './RouteTransitionLoader';
 import CareReminderNotice from './CareReminderNotice';
 import { Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
@@ -65,6 +66,7 @@ export default function Layout() {
 
   return (
     <div style={previewSafeAreaStyle} className="fixed inset-0 h-[100dvh] w-full bg-slate-50 text-black/90 font-sans overflow-hidden dark:bg-[#071912] dark:text-white/90">
+      <RouteTransitionLoader />
       {/* Noise Overlay for Anti-Banding */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
 
