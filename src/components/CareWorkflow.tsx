@@ -1,3 +1,4 @@
+import ApprovedAdviceSpeech from './ApprovedAdviceSpeech';
 import ClinicWallet from './ClinicWallet';
 import { motion, useReducedMotion } from 'framer-motion';
 import PrescriptionWorkspace from './PrescriptionWorkspace';
@@ -20,14 +21,14 @@ export default function CareWorkflow({prescriptionServices}: {prescriptionServic
   return <section aria-label="Recorded care follow-through" className="relative z-10 my-5 rounded-[2rem] border border-white/10 bg-black/40 p-5 text-white sm:p-6">
     <p className="cinematic-kicker text-[#fec708]">Your recorded next step</p>
     <p className="mt-2 text-sm text-white/70">Pritpawl guides your plan · Pawlina coordinates follow-up · Pawl explains rewards.</p>
-    {loading ? <p role="status" className="mt-4">Loading recorded care…</p> : error && !state ? <div className="mt-4"><p role="alert">{error}</p><button className={`${careButton} mt-3`} onClick={() => void refresh()}>Retry care service</button></div> : state && <>
-      {error && <p role="status" className="mt-3 text-sm text-[#fec708]">Refresh unavailable. Showing the last loaded record. {error}</p>}
+    {loading && !state ? <p role="status" className="mt-4">Loading recorded care…</p> : error && !state ? <div className="mt-4"><p role="alert">{error}</p><button className={`${careButton} mt-3`} onClick={() => void refresh()}>Retry care service</button></div> : state && <>
+      {loading && <p role="status" className="mt-3 text-sm text-white/70">Refreshing recorded care…</p>}{error && <p role="status" className="mt-3 text-sm text-[#fec708]">Refresh unavailable. Showing the last loaded record. {error}</p>}
       {state.pets.length > 0 && <label className="mt-4 block text-sm">Pet<select className={`${careInput} mt-1`} value={petId} onChange={e => { setPetId(e.target.value); setNotice(''); setUpdate(''); setConsent(false); setDate(''); }}>{state.pets.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
       <details className="mt-3 text-sm"><summary className="cursor-pointer text-white/70">Add another pet to this care workspace</summary><label className="mt-3 block">Pet name<input className={careInput} value={petName} onChange={e=>setPetName(e.target.value)} maxLength={100}/></label><button className={`${careButton} mt-2`} disabled={busy || !petName.trim()} onClick={()=>void run({type:'addPet',petId:crypto.randomUUID(),name:petName},'Pet added to this account.')}>Add pet</button></details>
-      <PetHistory key={'history:'+state.ownerUid+':'+petId}/><PrescriptionWorkspace key={'source:'+state.ownerUid+':'+petId} {...prescriptionServices}/>
+      <button className={`${careButton} mt-4`} disabled={busy || !state.pets.some(p=>p.id===petId)} onClick={()=>void run({type:"requestCheckup",id:"checkup-"+petId+"-"+new Date().toISOString().slice(0,10),petId,text:"Please contact me to arrange a proactive checkup and confirm reward eligibility.",consent:true},"Checkup request saved for the care team. Booking and reward eligibility still need clinic confirmation.")}>Ask Pawlina to arrange a checkup</button><PetHistory key={'history:'+state.ownerUid+':'+petId}/><PrescriptionWorkspace key={'source:'+state.ownerUid+':'+petId} {...prescriptionServices}/>
       <p className="mt-4 text-sm leading-6">{careSummary(state, petId)}</p>
       <motion.p key={completed} role="status" initial={reducedMotion ? false : {opacity:0,y:4}} animate={{opacity:1,y:0}} transition={{duration:0.18}} className="mt-3 text-sm text-[#fec708]">{completed} staff-verified milestone{completed === 1 ? '' : 's'} completed</motion.p>
-      {next ? <>
+      {next ? <><p className="mt-3 text-sm whitespace-pre-line">{next.instructions}</p><ApprovedAdviceSpeech text={next.title + '. ' + next.instructions} approvalId={next.id + ':' + next.approvedAt} />
         <p className="mt-2 text-xs text-white/65">Approved record: {next.sourceRef}. {next.walletReward ? `${next.walletReward.points} points pending verified completion.` : "The clinic confirms reward eligibility with your booking."}</p>
         <p className="mt-2 text-sm">{next.booking.status === 'confirmed' ? `Clinic booking confirmed for ${new Date(next.booking.scheduledAt!).toLocaleString()} · ${next.booking.reference}` : next.booking.status === 'requested' ? 'Your request is awaiting clinic confirmation. No appointment is confirmed.' : 'Request a clinic appointment for this recorded milestone.'}</p>
         <label className="mt-4 block text-sm">Preferred appointment date and time<input className={`${careInput} mt-1`} type="datetime-local" value={date} onInput={e=>setDate(e.currentTarget.value)} onChange={e=>setDate(e.target.value)}/></label>

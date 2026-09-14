@@ -4,8 +4,8 @@ export const SERVICE_POINTS={general_checkup:1000,grooming:800,vaccinations:750,
 export type Subscription={plan:'free'|'essential'|'advanced'|'prestige';status:'active'|'cancelled';startsAt:number;endsAt:number;paymentReference:string;verifiedBy:string};
 export function verifiedMultiplier(s:Subscription|null,now:number) {return s?.status==='active' && s.verifiedBy && s.paymentReference && s.startsAt<=now && s.endsAt>now ? ({free:1,essential:1,advanced:1.5,prestige:2}[s.plan] || 1):1;}
 export type Wallet={points:number;reservedPoints:number;monthlyPaise:number;month:string;legacyReconciled:boolean;revision:number;reconciliationRequired?:boolean};
-export type Invoice={ownerUid:string;eligiblePaise:number;reference:string;status:'open'|'discounted'|'cancelled';createdBy:string;discountPaise?:number};
-export type Reservation={id:string;invoiceId:string;points:number;paise:number;status:'reserved'|'applied'|'released'|'reversed';expiresAt:number;month:string;actorUid:string};
+export type Invoice={ownerUid:string;eligiblePaise:number;totalPaise?:number;reference:string;status:'open'|'discounted'|'cancelled';createdBy:string;discountPaise?:number};
+export type Reservation={id:string;invoiceId:string;points:number;paise:number;status:'reserved'|'applied'|'released'|'reversed';expiresAt:number;month:string;actorUid:string;basis?:'entire-bill';totalPaise?:number;percent?:number;tierId?:string;policyVersion?:string};
 export const emptyWallet=():Wallet=>({points:0,reservedPoints:0,monthlyPaise:0,month:'',legacyReconciled:false,revision:0});
 export function normalizeWallet(w:Wallet,now:number):Wallet {const month=new Date(now).toISOString().slice(0,7);return {...w,month,monthlyPaise:w.month===month?w.monthlyPaise:0};}
 export function reserveDiscount(w:Wallet,invoice:Invoice,points:unknown,id:string,invoiceId:string,actor:Actor,now:number) {

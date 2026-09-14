@@ -28,11 +28,13 @@ return async function handler(req: any, res: any) {
   const send = (status: number, data: unknown) => { res.statusCode = status; res.end(JSON.stringify(data)); };
   try {
     if (!['GET', 'POST'].includes(req.method)) return send(405, { error: 'Method not allowed.' });
-    const { auth, db } = getServices();
+
     let body = req.body || {};
     if (typeof body === 'string') { if (Buffer.byteLength(body) > 20000) throw new CareError(413, 'Request too large.'); body = JSON.parse(body); }
     if (!body || Array.isArray(body) || typeof body !== 'object' || Buffer.byteLength(JSON.stringify(body)) > 20000) throw new CareError(400, 'Invalid care request.');
     const job = req.method === 'POST' && body.type === 'runDueJobs' && jobAuthorized(req.headers['x-care-job-token']);
+    if (!job && !/^Bearer (.+)$/.test(String(req.headers.authorization || ''))) throw new CareError(401, 'Sign in to use the care service.');
+    const { auth, db } = getServices();
     let actor: Actor;
     if (job) actor = { uid: 'care-job', role: 'coordinator' };
     else {

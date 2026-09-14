@@ -2,6 +2,25 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Shared interaction feedback stays legible against the established dark surfaces. */
+@layer base {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-planet-yellow, #fec708);
+    outline-offset: 4px;
+  }
+}
+
+/* Covers decorative CSS motion throughout the app, including pseudo-elements.
+   Framer route motion and the shadow-root orbit renderer handle this separately. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @property --glow-angle {
   syntax: '<angle>';
   initial-value: 0deg;

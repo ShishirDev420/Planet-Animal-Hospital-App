@@ -124,12 +124,12 @@ export function applyCareCommand(original: CareState, actor: Actor, command: Rec
   } else {
     const petId = id(command.petId);
     if (!s.pets.some(p => p.id === petId)) fail('Select a pet from this account.', 404);
-    if (type === 'update' || type === 'requestInstructions') {
+    if (type === 'update' || type === 'requestInstructions' || type === 'requestCheckup') {
       if (command.consent !== true) fail('Parent consent is required before sharing this update.');
       if (actor.uid !== s.ownerUid) fail('Parent updates must come from the parent.', 403);
       const updateId = id(command.id);
       if (!s.updates.some(u => u.id === updateId)) s.updates.push({ id: updateId, petId, text: text(command.text, 'Update'), createdAt: now, consent: true });
-      queue(s, petId, undefined, type === 'update' ? 'clinical' : 'scheduling', type === 'update' ? 'Review the parent update. Clinical questions remain unresolved until a veterinarian reviews them.' : 'Find the recorded clinical instructions and approved dates.', now);
+      queue(s, petId, undefined, type === 'update' ? 'clinical' : 'scheduling', type === 'update' ? 'Review the parent update. Clinical questions remain unresolved until a veterinarian reviews them.' : type === 'requestCheckup' ? 'Contact the parent to arrange a proactive checkup. Confirm availability, clinical approval and reward eligibility; no appointment or points are confirmed yet.' : 'Find the recorded clinical instructions and approved dates.', now);
     } else if (type === 'approve') {
       requireRole(actor, ['veterinarian']);
       if (!config?.approvedBy) fail('Hospital-approved pilot reward configuration is unavailable.', 409);

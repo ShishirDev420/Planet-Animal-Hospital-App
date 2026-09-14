@@ -56,7 +56,7 @@ export function createAssistantHandler(getServices = database, generate = genera
       const draft=validateDraft(await generate(reserved.context,b.prompt,b.agent));
       await db.runTransaction(async tx=>{const [r,u,c]=await Promise.all([tx.get(ref),tx.get(usageRef),tx.get(careRef)]);if(r.data()?.attempts!==reserved.attempt)throw new CareError(409,'A newer retry replaced this answer.');if(!c.exists || JSON.stringify(assistantContext(c.data() as CareState,b.petId,Date.now()))!==JSON.stringify(reserved.context))throw new CareError(409,'The care sources changed. Ask again using the current record.');tx.set(ref,{...r.data(),status:'ready',draft});if(u.data()?.activeRequestId===b.requestId&&u.data()?.activeAttempt===reserved.attempt)tx.set(usageRef,{...u.data(),activeUntil:0});});
       return send(200,{draft,allowance:allowance(reserved.usage)});
-    } catch(e) {await db.runTransaction(async tx=>{const [r,u]=await Promise.all([tx.get(ref),tx.get(usageRef)]);if(r.data()?.attempts===reserved.attempt){tx.set(ref,{...r.data(),status:'failed'});tx.set(usageRef,{...u.data(),activeUntil:0});}});throw e;}
+    } catch(e) {await db.runTransaction(async tx=>{const [r,u]=await Promise.all([tx.get(ref),tx.get(usageRef)]);if(r.data()?.attempts===reserved.attempt){tx.set(ref,{...r.data(),status:'failed'});if(u.data()?.activeRequestId===b.requestId&&u.data()?.activeAttempt===reserved.attempt)tx.set(usageRef,{...u.data(),activeUntil:0});}});throw e;}
   } catch(e) {send(e instanceof CareError?e.status:503,{error:e instanceof CareError?e.message:'AI assistance is unavailable. Retry the same question; your care record is unchanged.'});}
  };
 }

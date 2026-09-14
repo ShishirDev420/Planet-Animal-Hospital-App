@@ -1,30 +1,32 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import PlanetOrbLoader from './PlanetOrbLoader';
+import CareReminderNotice from './CareReminderNotice';
+import { Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShieldPlus, Bot, Map, HeartHandshake, Smartphone, Users } from 'lucide-react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import Logo from './Logo';
 import { isPreviewDemoMode } from '../lib/demoMode';
 
 const pageTransition = {
-  initial: { opacity: 0, y: 8 },
+  initial: { opacity: 0.9, y: 5 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -8 },
-  transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as any }
+  transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] as any }
 };
 
 const mobilePageTransition = {
-  initial: { opacity: 0 },
+  initial: { opacity: 0.9 },
   animate: { opacity: 1 },
   exit: { opacity: 0 },
-  transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] as any }
+  transition: { duration: 0.16, ease: [0.22, 1, 0.36, 1] as any }
 };
 
 const reducedPageTransition = {
-  initial: { opacity: 0 },
+  initial: false as const,
   animate: { opacity: 1 },
   exit: { opacity: 0 },
-  transition: { duration: 0.01 }
+  transition: { duration: 0 }
 };
 
 export default function Layout() {
@@ -65,7 +67,7 @@ export default function Layout() {
     <div style={previewSafeAreaStyle} className="fixed inset-0 h-[100dvh] w-full bg-slate-50 text-black/90 font-sans overflow-hidden dark:bg-[#071912] dark:text-white/90">
       {/* Noise Overlay for Anti-Banding */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-      
+
       {/* Desktop ambient field stays outside routed content so it never remounts. */}
       {isDesktop && (!isInsideFrame || isDesktopPreview) && (
         <div className="ambient-orb-field fixed inset-x-0 bottom-0 overflow-hidden pointer-events-none z-0">
@@ -95,18 +97,18 @@ export default function Layout() {
             <DesktopNavItem to={preservePreviewSearch('/roadmap')} icon={<Map size={20} />} label="Roadmap" />
           </div>
           <div className="p-4 border-t border-white/8">
-            <DesktopNavItem to={preservePreviewSearch('/profiles')} icon={<span className="text-lg">??</span>} label="Switch Profile" />
+            <DesktopNavItem to={preservePreviewSearch('/profiles')} icon={<Users size={20} />} label="Switch Profile" />
           </div>
         </nav>
-        
+
         {/* Desktop Main Content */}
         <div ref={desktopMainRef} className="flex-1 flex justify-center overflow-y-auto">
           <div className="w-full max-w-[96rem] px-6 py-8 xl:px-10">
-            <AnimatePresence mode="wait">
-              <motion.div key={location.pathname} {...activePageTransition}>
-                <Outlet />
+
+              <CareReminderNotice/><motion.div key={location.pathname} {...activePageTransition}>
+                <Suspense fallback={<PlanetOrbLoader label="Planet Animal Hospital" detail="Loading this page" />}><Outlet /></Suspense>
               </motion.div>
-            </AnimatePresence>
+
           </div>
         </div>
         </div>
@@ -123,11 +125,11 @@ export default function Layout() {
         <div aria-hidden="true" className="mobile-shell-noise" />
 
         <main ref={mobileMainRef} className="mobile-scroll-pane relative z-10 min-h-0 flex-1 overflow-y-auto pt-[var(--preview-safe-area-top,0px)] pb-[calc(6rem+var(--preview-safe-area-bottom,0px))] hide-scrollbar">
-          <AnimatePresence mode="wait">
-            <motion.div key={location.pathname} {...activePageTransition}>
-              <Outlet />
+
+            <CareReminderNotice/><motion.div key={location.pathname} {...activePageTransition}>
+              <Suspense fallback={<PlanetOrbLoader label="Planet Animal Hospital" detail="Loading this page" />}><Outlet /></Suspense>
             </motion.div>
-          </AnimatePresence>
+
         </main>
 
         {/* Bottom Navigation - Premium Liquid Glass - Updated with 5 items */}
@@ -159,7 +161,7 @@ export default function Layout() {
   );
 }
 
-function DesktopNavItem({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
+function DesktopNavItem({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) { const reduce=useReducedMotion();
   return (
     <NavLink
       to={to}
@@ -173,7 +175,7 @@ function DesktopNavItem({ to, icon, label }: { to: string; icon: React.ReactNode
             <motion.div
               layoutId="desktop-nav-indicator"
               className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-planet-yellow rounded-r-full"
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              transition={reduce?{duration:0}:{ type: "spring", stiffness: 450, damping: 35 }}
             />
           )}
           <span className={isActive ? 'text-planet-yellow' : ''}>{icon}</span>
@@ -184,7 +186,7 @@ function DesktopNavItem({ to, icon, label }: { to: string; icon: React.ReactNode
   );
 }
 
-function NavItem({ to, icon, label, isCenter }: { to: string; icon: React.ReactNode; label: string; isCenter?: boolean }) {
+function NavItem({ to, icon, label, isCenter }: { to: string; icon: React.ReactNode; label: string; isCenter?: boolean }) { const reduce=useReducedMotion();
   return (
     <NavLink
       to={to}
@@ -218,7 +220,7 @@ function NavItem({ to, icon, label, isCenter }: { to: string; icon: React.ReactN
                 "absolute -bottom-1 w-4 h-0.5 rounded-full bg-planet-yellow",
                 isCenter ? "hidden" : ""
               )}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              transition={reduce?{duration:0}:{ type: "spring", stiffness: 450, damping: 35 }}
             />
           )}
         </>

@@ -1,3 +1,4 @@
+import { requestCareJson } from './request';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -8,12 +9,9 @@ import { isPreviewDemoMode } from '../demoMode';
 export async function careRequest(body?: Record<string, unknown>, query = '') {
   const user = auth.currentUser;
   if (!user) throw new Error('Sign in to view your recorded care.');
-  const response = await fetch(`/api/care${query}`, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${await user.getIdToken()}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) throw new Error('The care service is unavailable. Contact the clinic for your next step.');
-  const data = await response.json();
+  const data = await requestCareJson(`/api/care${query}`, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${await user.getIdToken()}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   if (auth.currentUser?.uid !== user.uid) throw new Error('Account changed. Reopen the care record.');
-  if (!response.ok) throw new Error(data.error || 'Care request failed; please retry.');
+
   return data;
 }
 type Workspace = { state: CareState | null; role: Role; config: PilotConfig | null; loading: boolean; error: string; petId: string; setPetId: (id: string) => void; refresh: () => Promise<void>; command: (body: Record<string, unknown>) => Promise<void> };
@@ -29,10 +27,10 @@ export function CareProvider({ children }: { children: ReactNode }) {
   const accept = (data: any) => { setState(data.state); setRole(data.role); setConfig(data.config); setPetId(current => data.state.pets.some((p:any) => p.id === current) ? current : data.state.pets[0]?.id || 'primary'); setError(''); };
   const refresh = async () => {
     if (visualDemo) { setState(null); setError('Visual preview only. Recorded care is available in the signed-in app; use the isolated care review for test data.'); setLoading(false); return; }
-    const g = generation.current, request = ++seq.current;
+    const g = generation.current, request = ++seq.current; setLoading(true);
     try { const data = await careRequest(); if (g === generation.current && request === seq.current) accept(data); }
     catch (e) { if (g === generation.current && request === seq.current) { setError((e as Error).message); } }
-    finally { if (g === generation.current) setLoading(false); }
+    finally { if (g === generation.current && request === seq.current) setLoading(false); }
   };
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, () => { generation.current++; setState(null); setRole('parent'); setConfig(null); setPetId('primary'); setLoading(true); void refresh(); });
