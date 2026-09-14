@@ -38,3 +38,15 @@ All synthetic entries and local operations/secrets are excluded from deployment.
 Final measured Roadmap tablet width/content: 768/768. Browser source and 50 built asset files had zero matches for actual private server credential strings across 157 source paths. Logo and live offer-data hashes matched. Existing build chunk-size and Node dependency warnings remain.
 
 Advanced/Premium source research is implemented but not activated: a separate canonical dog/cat query retrieves primary veterinary literature without patient data in the search; retrieved citations are preserved for veterinarian review and shown with approved observations. Clinical provider credentials/research setup remain required. The browser never accepts an AI key.
+
+## Canonical production receipt
+
+Final deployed application source: `c265652` (includes the integrated release `dc28afb` and sign-in CSS correction `da1e8c4`). Vercel deployment `dpl_729Gvde1rPDmsyeAXKku21M4CWh5` is READY and aliased to https://planet-animal-hospital-app.vercel.app . No protected URL/access bypass was used.
+
+Public canonical homepage returned 200. All six private endpoints (`care`, `wallet`, `assistant`, `prescriptions`, `clinical`, `maintenance`) returned JSON 401 without identity; the care endpoint also rejected a malformed token with 401. This verifies loading/auth rejection, not live clinical/provider/staff operations.
+
+The served graph contained all 50 expected assets. Ten were byte-identical to the local build; all 49 non-CSS assets matched after normalizing content-hashed filename references. Production CSS retained every local selector, added 78 utility selectors and six utility/theme defaults, and differed in tiny compiler color-conversion rounding. No byte-identical CSS claim is made. The sole omitted legacy sign-in utility found in the earlier rollout was replaced with supported `grow`. Canonical logo bytes match exactly. No actual private credential strings were found in the served graph.
+
+The live in-app Samsung preview rendered all three offers and the new Roadmap with working navigation. Final patch prevents a visual preview or isolated review page from connecting to a signed-in live wallet; both component mounting and the wallet request helper enforce the guard. The final live preview displayed the disconnected-wallet notice, and no explicit wallet transaction was submitted during the checks. Care/prescription review fixtures now provide their speech component's Router context. Post-fix typecheck/build passed; backend test logic was unchanged.
+
+Operational limits above still apply. Deployed code does not mean Apple sign-in, staff approval access, clinical inference/research, commercial redemption rates or external messaging are configured. Actual staff/terminal identity coordination is also still required for the legacy Firestore rule transition. Native Safari, physical-device audio and screenshot-based visual verification were not available.
