@@ -442,9 +442,9 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                   <span>{isGoogleLoading && socialChoice === 'google' ? 'Opening Google' : 'Continue with Google'}</span>
                 </button>
                 <button type="button" onClick={() => void handleSocialAuth('apple')} disabled={isGoogleLoading || isEmailLoading} className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/30 bg-black px-6 py-4 font-semibold text-white disabled:opacity-60">{isGoogleLoading && socialChoice === 'apple' && <Loader2 className="h-5 w-5 animate-spin"/>}{isGoogleLoading && socialChoice === 'apple' ? 'Opening Apple' : 'Sign in with Apple'}</button><p className="text-center text-xs text-white/65">Sign in to keep your pet records together. No AI subscription or API key needed.</p><div className="relative flex items-center py-1">
-                  <div className="flex-grow border-t border-white/10"></div>
+                  <div className="grow border-t border-white/10"></div>
                   <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-heading font-bold uppercase tracking-widest">or use email</span>
-                  <div className="flex-grow border-t border-white/10"></div>
+                  <div className="grow border-t border-white/10"></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-1">
                   <button type="button" onClick={() => { setIsSignUp(false); setAuthError(''); }} className={`rounded-xl px-3 py-2.5 text-xs font-heading font-black uppercase tracking-[0.18em] transition-all ${!isSignUp ? 'bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.25)]' : 'text-white/45 hover:text-white'}`}>Sign In</button>
