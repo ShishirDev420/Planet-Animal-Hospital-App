@@ -1,3 +1,4 @@
+import { useCare } from '../lib/care/client';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -520,16 +521,13 @@ export default function Dashboard() {
   const [pendingPoints, setPendingPoints] = useState(0);
   const [currentPlan, setCurrentPlan] = useState('free');
   const [pendingIncentives, setPendingIncentives] = useState<string[]>([]);
-  const [incentivesOrder, setIncentivesOrder] = useState<any[]>([]);
+  const care = useCare();
+  const incentivesOrder = care.state?.milestones.filter(m=>m.petId===care.petId && m.status==='approved').map(m=>({id:m.id,title:m.title,subtext:m.instructions,pointsText:m.walletReward ? m.walletReward.points+' pending points' : 'Confirm with clinic',pointsValue:m.walletReward?.points||0,theme:'green'})) || [];
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const getMultiplier = (plan: string) => getPointsMultiplier(plan);
 
-  useEffect(() => {
-    if (petProfile) {
-      setIncentivesOrder(getPersonalizedIncentives(petProfile as any));
-    }
-  }, [petProfile]);
+
 
   useEffect(() => {
     if (!isDemoMode) return;
@@ -551,44 +549,7 @@ export default function Dashboard() {
     }
   }, [isDemoMode, profileLoading, petProfile]);
 
-  const handleBookingRequest = async (serviceName: string, pointsValue: number, incentiveId: string) => {
-    if (!userId) return;
-
-    const finalPoints = calculateBookingPoints([{ id: 0, name: serviceName, points: pointsValue }], currentPlan);
-
-    // Optimistic UI updates
-    setPendingIncentives(prev => [...prev, incentiveId]);
-    setPendingPoints(prev => prev + finalPoints);
-
-    try {
-      const user = auth.currentUser || (isDemoMode ? { uid: 'demo-user', email: 'demo@planetanimal.com', displayName: 'Demo Parent' } : null);
-      if (!user) return;
-
-      const petNameStr = petProfile?.name || 'Pet';
-
-      await addDoc(collection(db, 'requests'), {
-        userId: user.uid,
-        patient: petNameStr,
-        reason: serviceName,
-        date: "TBD",
-        time: "TBD",
-        points: 0,
-        status: 'pending',
-        actionId: incentiveId,
-        createdAt: serverTimestamp()
-      });
-
-      const message = buildWhatsAppMessage(petProfile?.parentName || 'Pet Parent', petNameStr, [serviceName], 'TBD', 'TBD');
-      const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
-
-    } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, 'requests');
-      // Revert optimistic update on failure
-      setPendingIncentives(prev => prev.filter(id => id !== incentiveId));
-      setPendingPoints(prev => prev - finalPoints);
-    }
-  };
+  const handleBookingRequest = async (_serviceName: string, _pointsValue: number, _incentiveId: string) => { navigate('/roadmap'); };
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
@@ -770,45 +731,9 @@ export default function Dashboard() {
       <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95 mobile-dashboard">
         {/* Header with Logo */}
       <header className="pt-4 mb-2 mobile-header-row">
-        <div className="hidden lg:block">
-          <div className="grid min-h-[14rem] w-full grid-cols-[13rem_minmax(0,1fr)_13rem] items-center gap-6 py-5 xl:min-h-[15rem] xl:grid-cols-[15rem_minmax(0,1fr)_15rem]">
-            <button onClick={() => navigate('/profiles')} className="group flex justify-start" aria-label="Switch profile">
-              <div className="relative flex h-40 w-40 items-center justify-center rounded-full drop-shadow-[0_0_42px_rgba(254,199,8,0.38)] transition-all duration-300 group-hover:scale-[1.03] group-active:scale-95 xl:h-44 xl:w-44">
-                <Logo className="!h-40 !w-40 xl:!h-44 xl:!w-44" />
-              </div>
-            </button>
-
-            <div className="flex min-w-0 flex-col items-center text-center">
-              <h1 className="font-cinematic text-[4.65rem] font-black uppercase leading-[0.82] tracking-[0.1em] text-white drop-shadow-[0_18px_44px_rgba(0,0,0,0.42)] xl:text-[5.6rem] 2xl:text-[6.15rem]">
-                Planet Animal
-              </h1>
-              <p className="mt-4 font-heading text-[1.05rem] font-black uppercase leading-none tracking-[0.52em] text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.28)] xl:text-[1.25rem]">
-                Hospital & Wellness
-              </p>
-            </div>
-
-            <div className="flex items-start justify-end gap-3 self-start pt-3">
-              <button
-                onClick={() => navigate('/settings')}
-                title="Settings"
-                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-sm transition-all duration-300 hover:bg-white/[0.14] cursor-pointer group"
-              >
-                <Settings className="w-4 h-4 text-white/80 group-hover:text-white transition-colors duration-300" />
-              </button>
-              <button
-                onClick={() => setIsLogoutModalOpen(true)}
-                title="Logout"
-                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-red-400/15 bg-red-500/[0.08] shadow-sm transition-all duration-300 hover:bg-red-500/[0.14] cursor-pointer group"
-              >
-                <LogOut className="w-4 h-4 text-red-400 group-hover:text-red-500 transition-colors duration-300" />
-              </button>
-            </div>
-          </div>
-
-          <div className="mb-7 mt-1">
-            <h2 className="cinematic-section-title text-4xl drop-shadow-md xl:text-5xl">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
-            <p className="cinematic-copy mt-2 text-base">Let's keep {petName} healthy today.</p>
-          </div>
+        <div className="hidden lg:block desktop-dashboard-heading">
+          <div><p className="desktop-eyebrow">A good day starts with care</p><h1>Hi, {petProfile?.parentName || 'Pet Parent'}<span className="desktop-greeting-dot">.</span></h1><p>Let's keep {petName} healthy, happy and a little more loved.</p></div>
+          <button onClick={() => setIsLogoutModalOpen(true)} className="desktop-quiet-button" aria-label="Logout"><LogOut size={16}/> Sign out</button>
         </div>
 
         <div className="lg:hidden">
@@ -853,11 +778,18 @@ export default function Dashboard() {
         </div>
       </header>
 
+      <section className="hidden lg:block desktop-pet-overview" aria-label="Pet care overview">
+        <div className="desktop-pet-overview-main"><span className="desktop-eyebrow">Your companion</span><h2>{petName}’s<span>care space</span></h2><p>Every small step adds up to a healthier life together.</p><button className="desktop-primary-button" onClick={() => navigate({pathname:'/roadmap',search:location.search})}>View health roadmap <ArrowRight size={17}/></button></div>
+        <div className="desktop-pet-details"><PawPrint size={32} strokeWidth={1.3} aria-hidden="true"/><dl><div><dt>Pet</dt><dd>{petProfile?.petType || 'Not recorded'}</dd></div><div><dt>Age</dt><dd>{petProfile?.age || 'Not recorded'}</dd></div><div><dt>Breed</dt><dd>{petProfile?.breed || 'Not recorded'}</dd></div></dl><button onClick={() => navigate({pathname:'/profiles',search:location.search})}>View pet profile <ArrowRight size={15}/></button></div>
+      </section>
+
       {/* Pawl Daily Briefing Card */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={shouldReduceMotion ? { duration: 0 } : { delay: 0.2 }}
+        role="button" tabIndex={0} aria-label="Open daily briefing"
+        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate({ pathname: '/briefing', search: location.search }); } }}
         onClick={() => navigate({ pathname: '/briefing', search: location.search })}
         className={cn(
           "group relative mb-7 min-h-[112px] cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-black/72 via-black/60 to-black/46 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition-all duration-300 hover:border-[#fec708]/25 hover:from-black/78 hover:to-black/52 mobile-briefing-card",
@@ -892,7 +824,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Quick Actions */}
-      <div>
+      <div className="desktop-actions-section">
         <h3 className="cinematic-card-title mb-4 text-xl drop-shadow-sm mobile-quick-actions-title">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mobile-quick-actions-grid">
           <ActionCard
@@ -906,21 +838,21 @@ export default function Dashboard() {
             icon={<FileText className="text-planet-yellow" />}
             title="Medical Records"
             subtitle="Vaccines & History"
-            onClick={() => navigate('/records')}
+            onClick={() => navigate({ pathname: '/records', search: location.search })}
             className="mobile-action-card"
           />
           <ActionCard
             icon={<Bot className="text-planet-yellow" />}
             title="AI Vet"
             subtitle="AI Care Assistant"
-            onClick={() => navigate('/ai')}
+            onClick={() => navigate({ pathname: '/ai', search: location.search })}
             className="mobile-action-card"
           />
           <ActionCard
             icon={<Map className="text-planet-yellow" />}
             title="Roadmap"
             subtitle="Longevity Plan"
-            onClick={() => navigate('/roadmap')}
+            onClick={() => navigate({ pathname: '/roadmap', search: location.search })}
             className="mobile-action-card"
           />
         </div>
@@ -970,7 +902,7 @@ export default function Dashboard() {
                       Show this screen to our staff at checkout to claim your free consultation for {petName}.
                     </p>
                     <div className="bg-white rounded-xl p-4 shadow-sm inline-block">
-                      <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>
+                      <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Previous profile points</p>
                       <p className="text-3xl font-black text-slate-900">{verifiedPoints.toLocaleString()} <span className="text-base text-slate-400">pts</span></p>
                     </div>
                   </div>
@@ -1349,11 +1281,16 @@ export default function Dashboard() {
 }
 
 function ActionCard({ icon, title, subtitle, onClick, className }: { icon: React.ReactNode, title: string, subtitle: string, onClick: () => void, className?: string }) {
+  const reduce = useReducedMotion();
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
+      aria-label={title}
+      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onClick(); } }}
       onClick={onClick}
-      whileHover={{ y: -4, scale: 1.03, boxShadow: '0 12px 32px rgba(254,199,8,0.15)' }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={reduce ? undefined : { y: -4, scale: 1.03, boxShadow: '0 12px 32px rgba(254,199,8,0.15)' }}
+      whileTap={reduce ? undefined : { scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={cn(
         "bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl dark:backdrop-blur-[24px] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem] p-6 flex flex-col items-start gap-3 cursor-pointer hover:bg-white/90 dark:hover:bg-white/[0.08] mobile-action-card",
@@ -1454,7 +1391,7 @@ function RewardsCarousel({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.5, ease: premiumEase }}
-      className="pt-2 mobile-paw-points"
+      className="pt-2 mobile-paw-points desktop-rewards-section"
     >
       <div className="relative overflow-hidden rounded-[2.6rem] border border-[#fec708]/14 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.025)_44%,rgba(254,199,8,0.045))] p-4 shadow-[0_26px_80px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl sm:p-5">
         <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#fec708]/10 blur-[90px]" />
@@ -1467,7 +1404,7 @@ function RewardsCarousel({
               <PawPrint className="h-3.5 w-3.5 fill-[#fec708]/20 text-[#fec708]" />
               <span className="cinematic-kicker text-[10px] tracking-[0.2em] text-[#fec708]">Paw Points Program</span>
             </div>
-            <h3 className="cinematic-section-title text-3xl leading-[1.02] tracking-[-0.035em]">One reward path</h3>
+            <h3 className="cinematic-section-title text-3xl leading-[1.02] tracking-[-0.035em]">Previous rewards program</h3>
             <p className="mt-2 max-w-[18rem] text-[0.95rem] font-bold leading-6 text-white/62">
               {pointsToActiveMilestone > 0
                 ? `${pointsToActiveMilestone.toLocaleString()} pts to ${activeJourneyMilestone.title}.`
@@ -1585,12 +1522,12 @@ function RewardsCarousel({
               <div className="relative flex h-full flex-col">
                 <div className="mb-5">
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">Current balance</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">Previous profile points</p>
                     <div className="mt-3 flex items-end gap-2">
                       <span className="cinematic-price text-[3.75rem] tabular-nums text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
                       <span className="pb-2 text-xs font-black uppercase tracking-[0.2em] text-[#fec708]/60">pts</span>
                     </div>
-                    {pendingPoints > 0 && (
+                    <p className="mt-2 text-xs text-white/70">Clinic reconciliation required. Open Rewards for your spendable wallet.</p>{pendingPoints > 0 && (
                       <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white/64">
                         +{pendingPoints.toLocaleString()} pending clinic verification
                       </p>

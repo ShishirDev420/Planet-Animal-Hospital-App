@@ -1,8 +1,9 @@
+import { emptyWallet, verifiedMultiplier, SERVICE_POINTS, WALLET_POLICY, type Subscription, type Wallet } from '../src/lib/care/wallet.js';
 import { applicationDefault, cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldPath, getFirestore } from 'firebase-admin/firestore';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { applyCareCommand, assertAccess, CareError, emptyState, metrics, reconcile, roleFromClaims, validateConfig, type Actor, type CareState, type PilotConfig } from '../src/lib/care/domain';
+import { applyCareCommand, assertAccess, CareError, emptyState, metrics, reconcile, roleFromClaims, validateConfig, type Actor, type CareState, type PilotConfig } from '../src/lib/care/domain.js';
 
 export function database() {
   if (!process.env.CARE_FIREBASE_PROJECT_ID || !process.env.CARE_FIRESTORE_DATABASE_ID) throw new CareError(503, 'The care service is not configured. Please contact the clinic.');
@@ -27,11 +28,13 @@ return async function handler(req: any, res: any) {
   const send = (status: number, data: unknown) => { res.statusCode = status; res.end(JSON.stringify(data)); };
   try {
     if (!['GET', 'POST'].includes(req.method)) return send(405, { error: 'Method not allowed.' });
-    const { auth, db } = getServices();
+
     let body = req.body || {};
     if (typeof body === 'string') { if (Buffer.byteLength(body) > 20000) throw new CareError(413, 'Request too large.'); body = JSON.parse(body); }
     if (!body || Array.isArray(body) || typeof body !== 'object' || Buffer.byteLength(JSON.stringify(body)) > 20000) throw new CareError(400, 'Invalid care request.');
     const job = req.method === 'POST' && body.type === 'runDueJobs' && jobAuthorized(req.headers['x-care-job-token']);
+    if (!job && !/^Bearer (.+)$/.test(String(req.headers.authorization || ''))) throw new CareError(401, 'Sign in to use the care service.');
+    const { auth, db } = getServices();
     let actor: Actor;
     if (job) actor = { uid: 'care-job', role: 'coordinator' };
     else {
@@ -68,15 +71,33 @@ return async function handler(req: any, res: any) {
       const previous = await tx.get(ref);
       const profile = previous.exists ? null : await tx.get(db.doc(`users/${uid}`));
       const state = previous.exists ? previous.data() as CareState : emptyState(uid, profile?.data()?.petName);
-      const next = applyCareCommand(state, effectiveActor, command, config, Date.now());
+      const subscription = await tx.get(db.doc('careSubscriptions/'+uid));
+      const milestone = state.milestones.find(m=>m.id===command.milestoneId);
+      const multiplier = verifiedMultiplier(subscription.data() as Subscription || null,Date.now());
+      const paid=subscription.data() as Subscription | undefined;
+      const activePaid=!!paid && paid.plan!=='free' && paid.status==='active' && !!paid.verifiedBy && !!paid.paymentReference && paid.startsAt<=Date.now() && paid.endsAt>Date.now();
+      const standard=milestone?.configVersion==='clinic-2026-09-13' && Object.hasOwn(SERVICE_POINTS,milestone.ruleId);
+      const basePoints=standard ? (activePaid ? SERVICE_POINTS[milestone!.ruleId as keyof typeof SERVICE_POINTS] : milestone!.ruleId==='general_checkup'?500:0) : milestone?.rule.points || 0;
+      const baseCredit=standard ? basePoints*WALLET_POLICY.paisePerPoint : milestone?.rule.creditPaise || 0;
+      const trustedCommand = {...command,_walletReward:milestone ? {points:Math.floor(basePoints*multiplier),creditPaise:Math.floor(baseCredit*multiplier),multiplier,policyVersion:WALLET_POLICY.version} : undefined};
+      const next = applyCareCommand(state, effectiveActor, trustedCommand, config, Date.now());
       if (next === state) return state;
       const additions = next.ledger.filter(l => !state.ledger.some(old => old.id === l.id));
+      const walletRef=db.doc('careWallets/'+uid);
+      const walletDoc=additions.length ? await tx.get(walletRef) : null;
+      const wallet:Wallet=walletDoc?.exists ? walletDoc.data() as Wallet : emptyWallet();
       // A reused clinic completion reference cannot earn points in another account either.
       for (const entry of additions) {
         const claim = db.doc(`careEvidence/${digest(entry.evidence)}`);
         if ((await tx.get(claim)).exists) throw new CareError(409, 'That clinic completion reference has already earned a reward.');
       }
       for (const entry of additions) tx.create(db.doc(`careEvidence/${digest(entry.evidence)}`), { ownerUid: uid, milestoneId: entry.milestoneId, createdAt: entry.createdAt });
+      for(const entry of additions) {
+        const convertible=entry.creditPaise===entry.points*WALLET_POLICY.paisePerPoint;
+        if(convertible) wallet.points+=entry.points;
+        tx.create(db.doc('careWallets/'+uid+'/entries/'+entry.id),{...entry,type:'earn',at:entry.createdAt,convertible,policyVersion:WALLET_POLICY.version,source:'staff-verified care'});
+      }
+      if(additions.length){wallet.revision++;tx.set(walletRef,wallet);}
       tx.set(ref, next);
       for (const q of next.queues) if (JSON.stringify(q) !== JSON.stringify(state.queues.find(old => old.id === q.id))) tx.set(db.doc(`careQueue/${digest(uid + ':' + q.id)}`), { ...q, ownerUid: uid });
       if (next.revision !== state.revision) tx.create(db.collection('careAudit').doc(), { ownerUid: uid, actorUid: effectiveActor.uid, role: effectiveActor.role, type: command.type, revision: next.revision, at: Date.now() });

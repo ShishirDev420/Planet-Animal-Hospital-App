@@ -1,3 +1,5 @@
+import { ClinicalReview } from '../components/ClinicalCare';
+import ClinicWallet from '../components/ClinicWallet';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import StaffPrescriptions from '../components/StaffPrescriptions';
@@ -26,6 +28,7 @@ function StaffCareSession() {
     <Link to="/" className="text-[#fec708]">← Parent app</Link><h1 className="mt-5 font-heading text-3xl font-black">Care team workspace</h1><p className="mt-2 text-sm text-white/70">Recorded instructions, follow-ups and verified care. Access is checked by the server.</p>
     {notice && <p role="status" className="my-4 rounded-xl border border-[#fec708]/30 p-3">{notice}</p>}
     {role!=='parent' && <>
+      {role==='veterinarian'&&<Link to="/doctor" className="my-4 block text-[#fec708] underline">Open doctor portal</Link>}{uid && <ClinicWallet ownerUid={uid} staff />}
       <div className="my-5 flex flex-wrap gap-2">{[['scheduling','Needs scheduling'],['missed','Missed / unresolved follow-up'],['clinical','Needs clinical review']].map(([key,label])=><button key={key} aria-pressed={kind===key} className={careButton} onClick={()=>setKind(key)}>{label}</button>)}</div>
       <p className="text-xs text-white/65">Up to 50 open items per page. Queue counts are not hospital-wide outcome claims.</p>
       <div className="my-4 grid gap-3 md:grid-cols-2">{items.map(q=><button key={q.recordId} className="rounded-2xl border border-white/15 bg-black/30 p-4 text-left" onClick={()=>void loadAccount(q.ownerUid)}><p className="font-bold">{q.kind} · {q.status}</p><p className="mt-1 text-sm break-all">Account {q.ownerUid} · Pet {q.petId}</p><p className="mt-2 text-sm">{q.nextAction}</p><p className="mt-2 text-xs text-white/65">Owner: {q.owner || 'Unassigned'}</p></button>)}</div>
@@ -35,7 +38,7 @@ function StaffCareSession() {
         {stats&&<p className="mt-2 text-sm">This account: {stats.completedInWindow}/{stats.due} due milestones completed in the approved window · {stats.petsWithDatedNextStep}/{stats.pets} pets have a dated next step · {stats.unresolved} unresolved items · {stats.awards} awards / {stats.uniqueAwards} unique.</p>}
         <button className={`${careButton} mt-3`} disabled={busy} onClick={()=>void act({type:'tick'})}>Refresh follow-up queues</button>
         {state.pets.map(p=><p key={p.id} className="mt-3 text-sm"><strong>{p.name}:</strong> {careSummary(state,p.id)}</p>)}
-        <StaffPrescriptions key={uid} state={state} config={config} role={role} busy={busy} act={act}/>{state.updates.map(u=><p key={u.id} className="mt-3 rounded-xl border border-white/10 p-3 text-sm">Parent update · {u.petId} · {new Date(u.createdAt).toLocaleString()}: {u.text}</p>)}
+        {role === 'veterinarian' && state.pets.map(p=><div key={p.id}><h3 className="mt-5 text-lg font-bold">{p.name} · Clinical analysis</h3><ClinicalReview ownerUid={state.ownerUid} petId={p.id}/></div>)}<StaffPrescriptions key={uid} state={state} config={config} role={role} busy={busy} act={act}/>{state.updates.map(u=><p key={u.id} className="mt-3 rounded-xl border border-white/10 p-3 text-sm">Parent update · {u.petId} · {new Date(u.createdAt).toLocaleString()}: {u.text}</p>)}
         {state.queues.filter(q=>q.status==='open').map(q=><form key={q.id} className="mt-4 rounded-xl border border-white/15 p-3" onSubmit={e=>{const f=fields(e);void act({type:'queue',queueId:q.id,nextAction:f.nextAction,resolve:f.resolve==='on'});}}><p>{q.kind} · Owner: {q.owner||'Unassigned'}</p><label className="mt-2 block text-sm">Next action / resolution<input className={careInput} name="nextAction" required maxLength={500} defaultValue={q.nextAction}/></label><label className="mt-2 flex gap-2 text-sm"><input type="checkbox" name="resolve" disabled={q.kind==='clinical'&&role!=='veterinarian'}/>Resolve (clinical review requires a veterinarian)</label><button className={`${careButton} mt-2`} disabled={busy}>Assign to me and save</button></form>)}
         {state.milestones.map(m=><article key={m.id} className="mt-5 rounded-xl border border-white/15 p-4"><h3 className="font-bold">{m.title} · {m.status}</h3><p className="mt-2 text-sm">{m.instructions}</p><p className="mt-2 text-xs text-white/65">Source: {m.sourceRef} · Pet {m.petId} · Booking {m.booking.status} · {m.rule.points} points after verification</p>
           {m.status==='approved'&&<>

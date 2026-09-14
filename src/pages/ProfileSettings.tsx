@@ -1,3 +1,4 @@
+import LinkedSignInMethods from '../components/LinkedSignInMethods';
 import { useState, useRef, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -115,7 +116,7 @@ export default function ProfileSettings() {
         <h1 className="cinematic-section-title text-3xl drop-shadow-md">Profile Settings</h1>
         {care.role !== "parent" && <button className="mt-3 text-[#fec708]" onClick={() => navigate("/staff")}>Open care team workspace</button>}
         <div className="w-11" /> {/* Spacer */}
-      </header>
+      </header><LinkedSignInMethods />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}

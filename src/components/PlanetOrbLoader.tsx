@@ -16,7 +16,7 @@ export default function PlanetOrbLoader({
     if (host.current) return mountPlanetMotion(host.current, planetLogo);
   }, []);
   return (
-    <motion.div role="status" aria-live="polite"
+    <motion.div role="status" aria-live="polite" aria-atomic="true"
       initial={false} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.2 }}
       className={cn(
@@ -25,12 +25,12 @@ export default function PlanetOrbLoader({
       )}
     >
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_50%_40%,rgba(254,199,8,0.18),transparent_34%),radial-gradient(circle_at_20%_80%,rgba(20,184,166,0.13),transparent_30%),linear-gradient(145deg,#03110c_0%,#071912_54%,#020806_100%)]" />
-      <div className="relative w-full" style={{ maxWidth: compact ? 280 : 380 }}>
+      <div aria-hidden="true" className="pointer-events-none relative w-full" style={{ maxWidth: compact ? 280 : 380 }}>
         <div ref={host} data-planet-motion style={{ display: 'contents' }} />
       </div>
       <div className="relative z-10 max-w-[19rem]">
         <p className="font-heading text-xl font-black leading-tight text-white sm:text-2xl">{label}</p>
-        <p className="mt-2 text-xs font-semibold leading-relaxed tracking-[0.08em] text-[#ffe9a3]/75">{detail}</p>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-[#ffe9a3]/85">{detail}</p>
       </div>
     </motion.div>
   );

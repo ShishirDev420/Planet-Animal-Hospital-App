@@ -1,7 +1,8 @@
+import { socialSignIn, socialAuthError, type SocialProvider } from '../lib/socialAuth';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, type User } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, type User } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { Loader2 } from 'lucide-react';
@@ -47,6 +48,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [authError, setAuthError] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [socialChoice, setSocialChoice] = useState<SocialProvider>('google');
   const [isSignUp, setIsSignUp] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [headerWord, setHeaderWord] = useState('Love');
@@ -178,17 +180,16 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
   };
 
-  const handleGoogleAuth = async () => {
-    setIsGoogleLoading(true);
+  const handleSocialAuth = async (name: SocialProvider) => {
+    setIsGoogleLoading(true); setSocialChoice(name);
     try {
       setAuthError('');
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+
+      const result = await socialSignIn(name);
       const { hasCompletedProfile } = await ensureUserDocument(result.user);
       continueToClinic(hasCompletedProfile);
     } catch (e: any) {
-      console.error('Google Login failed', e);
-      setAuthError(getAuthErrorMessage(e));
+      setAuthError(socialAuthError(e));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -217,7 +218,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           additionalDetails: additionalDetails.trim(),
           phone: phone.trim() || '',
         }, { merge: true });
-        
+
         if (onComplete) {
           onComplete();
         } else {
@@ -259,17 +260,17 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         </div>
 
         <div className="relative z-20 w-full max-w-md md:max-w-xl mx-auto px-4 pb-12 pt-4 shrink-0">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5, ease: "easeOut" }} 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="w-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 sm:p-8"
           >
             <div className="space-y-6">
               <h3 className="cinematic-card-title text-center text-xl">Welcome! Who are we caring for?</h3>
               {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
-              
-              <motion.div 
+
+              <motion.div
                 initial="hidden"
                 animate="show"
                 variants={{
@@ -353,7 +354,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
       <div className="relative z-10 flex flex-col min-h-screen w-full pb-8">
         {/* ✨ MAIN UI CONTENT */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 pt-12 pb-4 shrink-0">
-          
+
         <div className="flex items-center justify-center mb-1 sm:mb-2 animate-fade-in-up">
           <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-28 sm:w-36 h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse-slow z-50" referrerPolicy="no-referrer" />
         </div>
@@ -424,7 +425,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
               <div className="space-y-3">
                 {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md leading-relaxed">{authError}</p>}
                 <button
-                  onClick={handleGoogleAuth}
+                  onClick={() => void handleSocialAuth('google')}
                   disabled={isGoogleLoading || isEmailLoading}
                   className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-heading font-bold uppercase tracking-widest text-slate-800 bg-white hover:bg-slate-100 transition-all duration-300 active:scale-95 shadow-md disabled:opacity-60 disabled:active:scale-100"
                 >
@@ -438,12 +439,12 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                   )}
-                  <span>{isGoogleLoading ? 'Opening Google' : 'Continue with Google'}</span>
+                  <span>{isGoogleLoading && socialChoice === 'google' ? 'Opening Google' : 'Continue with Google'}</span>
                 </button>
-                <div className="relative flex items-center py-1">
-                  <div className="flex-grow border-t border-white/10"></div>
+                <button type="button" onClick={() => void handleSocialAuth('apple')} disabled={isGoogleLoading || isEmailLoading} className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/30 bg-black px-6 py-4 font-semibold text-white disabled:opacity-60">{isGoogleLoading && socialChoice === 'apple' && <Loader2 className="h-5 w-5 animate-spin"/>}{isGoogleLoading && socialChoice === 'apple' ? 'Opening Apple' : 'Sign in with Apple'}</button><p className="text-center text-xs text-white/65">Sign in to keep your pet records together. No AI subscription or API key needed.</p><div className="relative flex items-center py-1">
+                  <div className="grow border-t border-white/10"></div>
                   <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-heading font-bold uppercase tracking-widest">or use email</span>
-                  <div className="flex-grow border-t border-white/10"></div>
+                  <div className="grow border-t border-white/10"></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-1">
                   <button type="button" onClick={() => { setIsSignUp(false); setAuthError(''); }} className={`rounded-xl px-3 py-2.5 text-xs font-heading font-black uppercase tracking-[0.18em] transition-all ${!isSignUp ? 'bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.25)]' : 'text-white/45 hover:text-white'}`}>Sign In</button>
@@ -466,8 +467,8 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
               </div>
 
               <div className="space-y-4 pt-3">
-                <button 
-                  onClick={onSubmit} 
+                <button
+                  onClick={onSubmit}
                   disabled={isEmailLoading || isGoogleLoading}
                   className="w-full bg-[#fec708] hover:bg-[#e0b006] text-black font-heading font-bold uppercase tracking-widest py-3.5 px-4 rounded-xl transition-all duration-300 ease-out shadow-[0_0_15px_rgba(254,199,8,0.2)] hover:shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
                 >

@@ -1,3 +1,4 @@
+import { BrowserRouter } from 'react-router-dom';
 import { useCallback, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MotionConfig } from 'framer-motion';
@@ -34,6 +35,6 @@ function Review() {
 if(import.meta.env.DEV) {
   const width=Number(new URLSearchParams(location.search).get('reviewWidth'));
   const root=createRoot(document.getElementById('root')!);
-  root.render([320,768].includes(width)?<main><p className="p-3 text-white">Synthetic review · {width}px contained viewport</p><iframe id="fixture-viewport" title={`${width}px prescription review`} src="/prescription-review.html" style={{width,height:900,border:0}}/></main>:<Review/>);
+  root.render(<BrowserRouter>{[320,768].includes(width)?<main><p className="p-3 text-white">Synthetic review · {width}px contained viewport</p><iframe id="fixture-viewport" title={`${width}px prescription review`} src="/prescription-review.html" style={{width,height:900,border:0}}/></main>:<Review/>}</BrowserRouter>);
   import.meta.hot?.dispose(()=>root.unmount());
 }
