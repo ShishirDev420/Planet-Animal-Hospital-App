@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import PlanetOrbLoader from './PlanetOrbLoader';
 import planetLogo from '../assets/planet-logo.png';
@@ -31,8 +31,7 @@ export default function RouteTransitionLoader() {
     const timer = window.setTimeout(() => setDestination(null), 900);
     return () => window.clearTimeout(timer);
   }, [pathname, reduced]);
-  return <AnimatePresence>{destination !== null && !reduced &&
+  return destination !== null && !reduced ?
     <PlanetOrbLoader key="section-transition" fullscreen label="Planet Animal Hospital" detail={`Opening ${sectionNames[destination] || 'your next section'}`} className="planet-section-transition" />
-  }</AnimatePresence>;
+  : null;
 }
-
