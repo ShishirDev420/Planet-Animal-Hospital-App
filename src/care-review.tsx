@@ -1,3 +1,4 @@
+import { BrowserRouter } from 'react-router-dom';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import CareWorkflow, { careButton } from './components/CareWorkflow';
@@ -18,4 +19,4 @@ function Review() {
     <CareReviewProvider value={{state,role:'parent',config,loading:false,error:'',petId,setPetId,refresh:async()=>{},command:async body=>run('parent',{...body,petId:body.petId||petId})}}><CareWorkflow/></CareReviewProvider>
   </main>;
 }
-if (import.meta.env.DEV) createRoot(document.getElementById('root')!).render(<Review/>);
+if (import.meta.env.DEV) createRoot(document.getElementById('root')!).render(<BrowserRouter><Review/></BrowserRouter>);

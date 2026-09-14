@@ -1,15 +1,27 @@
+import { useLocation, useInRouterContext } from 'react-router-dom';
+import { isPreviewDemoMode } from '../lib/demoMode';
 import { requestCareJson } from '../lib/care/request';
 import RedemptionPolicyEditor from './RedemptionPolicyEditor';
 import { useEffect, useRef, useState } from 'react';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 export async function walletRequest(body?:Record<string,unknown>,ownerUid?:string) {
+ if(isPreviewDemoMode() || window.location.pathname.endsWith('-review.html'))throw new Error('Visual previews cannot access the live wallet.');
  const user=auth.currentUser;if(!user)throw new Error('Sign in to view your clinic wallet.');
  const d=await requestCareJson('/api/wallet'+(ownerUid?'?ownerUid='+encodeURIComponent(ownerUid):''),{method:body?'POST':'GET',headers:{Authorization:`Bearer ${await user.getIdToken()}`,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
  if(auth.currentUser?.uid!==user.uid)throw new Error('Account changed. Reopen the wallet.');return d;
 }
 const field='block w-full min-w-0 rounded-xl border border-white/20 bg-black/20 p-3 mt-1';
-export default function ClinicWallet({ownerUid,staff=false}:{ownerUid?:string;staff?:boolean}) {
+export default function ClinicWallet(props:{ownerUid?:string;staff?:boolean}) {
+ const routed=useInRouterContext();
+ return routed?<RoutedWallet {...props}/>:<PreviewWalletNotice/>;
+}
+function PreviewWalletNotice(){return <p className="my-5 rounded-2xl border border-white/15 p-5 text-sm text-white/70">Visual preview only. Sign in through the main app to use your clinic wallet. No live wallet is connected here.</p>;}
+function RoutedWallet(props:{ownerUid?:string;staff?:boolean}) {
+ const location=useLocation();
+ return isPreviewDemoMode(location.search,location.pathname)||location.pathname.endsWith('-review.html')?<PreviewWalletNotice/>:<AuthenticatedWallet {...props}/>;
+}
+function AuthenticatedWallet({ownerUid,staff=false}:{ownerUid?:string;staff?:boolean}) {
  const [session,setSession]=useState(auth.currentUser?.uid);useEffect(()=>onAuthStateChanged(auth,u=>setSession(u?.uid)),[]);
  return <WalletSession key={`${session}:${ownerUid}`} ownerUid={ownerUid} staff={staff}/>;
 }
