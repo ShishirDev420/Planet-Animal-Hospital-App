@@ -28,7 +28,7 @@ function StaffCareSession() {
     <Link to="/" className="text-[#fec708]">← Parent app</Link><h1 className="mt-5 font-heading text-3xl font-black">Care team workspace</h1><p className="mt-2 text-sm text-white/70">Recorded instructions, follow-ups and verified care. Access is checked by the server.</p>
     {notice && <p role="status" className="my-4 rounded-xl border border-[#fec708]/30 p-3">{notice}</p>}
     {role!=='parent' && <>
-      {uid && <ClinicWallet ownerUid={uid} staff />}
+      {role==='veterinarian'&&<Link to="/doctor" className="my-4 block text-[#fec708] underline">Open doctor portal</Link>}{uid && <ClinicWallet ownerUid={uid} staff />}
       <div className="my-5 flex flex-wrap gap-2">{[['scheduling','Needs scheduling'],['missed','Missed / unresolved follow-up'],['clinical','Needs clinical review']].map(([key,label])=><button key={key} aria-pressed={kind===key} className={careButton} onClick={()=>setKind(key)}>{label}</button>)}</div>
       <p className="text-xs text-white/65">Up to 50 open items per page. Queue counts are not hospital-wide outcome claims.</p>
       <div className="my-4 grid gap-3 md:grid-cols-2">{items.map(q=><button key={q.recordId} className="rounded-2xl border border-white/15 bg-black/30 p-4 text-left" onClick={()=>void loadAccount(q.ownerUid)}><p className="font-bold">{q.kind} · {q.status}</p><p className="mt-1 text-sm break-all">Account {q.ownerUid} · Pet {q.petId}</p><p className="mt-2 text-sm">{q.nextAction}</p><p className="mt-2 text-xs text-white/65">Owner: {q.owner || 'Unassigned'}</p></button>)}</div>

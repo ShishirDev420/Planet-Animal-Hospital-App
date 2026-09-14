@@ -43,6 +43,24 @@ export function createClinicalHandler(getServices: () => Pick<ReturnType<typeof 
       if (typeof b === 'string') { if (Buffer.byteLength(b) > 45000) throw new CareError(413,'Request too large.'); b = JSON.parse(b); }
       if (!b || typeof b !== 'object' || Array.isArray(b) || Buffer.byteLength(JSON.stringify(b)) > 45000) throw new CareError(400,'Invalid analysis request.');
       const url = new URL(req.url,'http://clinical.local');
+      if (req.method === 'GET' && url.searchParams.get('view') === 'patients') {
+        if (actor.role !== 'veterinarian') throw new CareError(403, 'Only a verified veterinarian can open the doctor portal.');
+        const cursor = url.searchParams.get('cursor');
+        let query = db.collection('careAccounts').orderBy('__name__').limit(10);
+        if (cursor) query = query.startAfter(id(cursor));
+        const page = await query.get();
+        const patients = await Promise.all(page.docs.map(async account => {
+          const state = account.data() as CareState;
+          const [work, subscription] = await Promise.all([db.collection(`careClinical/${account.id}/pets`).get(), db.doc('careSubscriptions/' + account.id).get()]);
+          const tier = clinicalTier(subscription.data() as any, Date.now());
+          return { ownerUid: account.id, tier, pets: state.pets.map(pet => {
+            const workspace = work.docs.find(d => d.id === pet.id)?.data() as Workspace | undefined;
+            const analyses = workspace?.analyses || [];
+            return { id: pet.id, name: pet.name, awaitingReview: analyses.filter(a => a.status === 'draft').length, latestStatus: analyses.at(-1)?.status || 'No analysis requested' };
+          }) };
+        }));
+        return send(200, { role: actor.role, patients, nextCursor: page.size === 10 ? page.docs.at(-1)!.id : null });
+      }
       const ownerUid = id(b.ownerUid || url.searchParams.get('ownerUid') || actor.uid), petId = id(b.petId || url.searchParams.get('petId'));
       assertAccess(actor,ownerUid);
       const careRef = db.doc('careAccounts/' + ownerUid), workRef = db.doc(`careClinical/${ownerUid}/pets/${petId}`), subRef = db.doc('careSubscriptions/' + ownerUid);
@@ -64,7 +82,11 @@ export function createClinicalHandler(getServices: () => Pick<ReturnType<typeof 
           const analysis = w.analyses.find(a => a.id === b.analysisId);
           if (!analysis) throw new CareError(404,'Analysis not found.');
           const nextAnalysis = reviewAnalysis(analysis,actor,b.action,b.revision,sourceHash,b.content,b.note,sourceIds(context),now);
-          const next = { ...w, revision:w.revision+1, analyses: w.analyses.map(a => a.id === analysis.id ? nextAnalysis : a) };
+          // One currently approved analysis per pet; an approval replaces prior published advice atomically.
+          const next = { ...w, revision:w.revision+1, analyses: w.analyses.map(a => a.id === analysis.id ? nextAnalysis : b.action === 'approve' && a.status === 'approved' ? { ...a, status: 'rejected' as const, revision: a.revision + 1, approvedBy: undefined, approvedAt: undefined, reviewNote: `Superseded by ${analysis.id}`, reviewedBy: actor.uid, reviewedAt: now } : a) };
+          // Firestore rejects undefined fields; remove obsolete approval attribution from superseded versions.
+          next.analyses.forEach(a => { if (a.status === 'rejected') { delete a.approvedBy; delete a.approvedAt; } });
+          for (const previous of w.analyses.filter(a => a.id !== analysis.id && a.status === 'approved' && b.action === 'approve')) tx.create(db.collection('careClinicalAudit').doc(), { ownerUid, petId, analysisId: previous.id, actorUid: actor.uid, action: 'superseded', at: now, previous, next: next.analyses.find(a => a.id === previous.id) });
           tx.create(db.collection('careClinicalAudit').doc(), { ownerUid, petId, analysisId:analysis.id, actorUid:actor.uid, action:b.action, at:now, previous:analysis, next:nextAnalysis });
           tx.set(workRef,next); return { payload: view(next) };
         }

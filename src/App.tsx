@@ -16,6 +16,7 @@ import PlanetOrbLoader from './components/PlanetOrbLoader';
 import { useCare } from './lib/care/client';
 
 const StaffCare = lazy(() => import('./pages/StaffCare'));
+const DoctorPortal = lazy(() => import('./pages/DoctorPortal'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ProactivePlans = lazy(() => import('./pages/ProactivePlans'));
 const AIVet = lazy(() => import('./pages/AIVet'));
@@ -158,6 +159,7 @@ export default function App() {
           ) : (
             <Routes>
               <Route path="/staff" element={<StaffCare />} />
+              <Route path="/doctor" element={<DoctorPortal />} />
               {authStatus === 'unauthenticated' || authStatus === 'onboarding' ? (
                 <>
                   <Route path="/" element={<Welcome key={authStatus} initialOnboarding={authStatus === 'onboarding'} onComplete={() => setAuthStatus('authenticated')} />} />
