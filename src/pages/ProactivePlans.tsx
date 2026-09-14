@@ -26,11 +26,11 @@ export default function ProactivePlans() {
       <div className="px-6 lg:px-8 max-w-6xl mx-auto relative z-10">
         <div className="pt-4 lg:pt-10 pb-8 lg:pb-10">
           <span className="inline-flex items-center gap-2 rounded-full border border-planet-yellow/15 bg-planet-yellow/10 px-3 py-1.5 cinematic-kicker mb-5"><Shield size={13} aria-hidden="true" />Care memberships</span>
-          <h1 className="cinematic-title text-4xl lg:text-6xl max-w-3xl mb-4">Make room for <span className="text-planet-yellow">regular care.</span></h1>
-          <p className="cinematic-copy text-sm lg:text-base max-w-2xl">Compare consultation, grooming and care benefits. Find the plan you’d like to explore, then confirm the details with the hospital before joining.</p>
+          <h1 className="cinematic-title text-4xl lg:text-6xl max-w-3xl mb-4">More care for your pet.<br /><span className="text-planet-yellow">More value for you.</span></h1>
+          <p className="cinematic-copy text-sm lg:text-base max-w-2xl">Bring regular care and service discounts into one monthly plan. Choose around the care your pet needs.</p>
           <a href="#compare-plans" className="inline-block text-planet-yellow text-sm font-semibold mt-5 underline underline-offset-4 focus-visible:outline-2">Compare all benefits</a>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-7">
+        <div className="mb-6 rounded-2xl border border-white/15 p-5"><h2 className="font-semibold">Pay per visit or plan ahead</h2><p className="mt-2 text-sm leading-relaxed text-white/75">Pay per visit when you need care, or pay monthly for the benefits below. Discounted and non-included services cost extra.</p></div><div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-7">
           {planOffers.map(plan => (
             <article key={plan.id} className={`relative rounded-2xl flex flex-col liquid-glass-tier ${plan.surface} ${selected === plan.id ? 'ring-2 ring-planet-yellow' : ''}`} aria-labelledby={`title-${plan.id}`}>
               <div className="absolute inset-0 rounded-2xl bg-black/20" aria-hidden="true" />
@@ -46,7 +46,7 @@ export default function ProactivePlans() {
                   {plan.features.map(benefit => <li key={benefit} className="flex gap-3"><span className="text-planet-yellow" aria-hidden="true">·</span><span>{benefit}</span></li>)}
                 </ul>
                 <p className="text-xs text-white/65 mb-5">Listed points rate <span className="text-white font-semibold">{plan.points}</span></p>
-                <button onClick={() => setSelected(plan.id)} aria-controls="plan-next-step" aria-expanded={selected === plan.id} className="w-full rounded-xl bg-planet-yellow text-black font-semibold px-4 py-3 min-h-12 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-planet-yellow">Explore {plan.name.replace(' Paws', '')}</button>
+                <button onClick={() => setSelected(plan.id)} aria-controls="plan-next-step" aria-expanded={selected === plan.id} className="w-full rounded-xl bg-planet-yellow text-black font-semibold px-4 py-3 min-h-12 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-planet-yellow">Check {plan.name.replace(' Paws', '')} benefits</button>
               </div>
             </article>
           ))}

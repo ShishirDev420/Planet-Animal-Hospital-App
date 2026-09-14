@@ -1,4 +1,6 @@
+import { createPortal } from 'react-dom';
 import { useCare } from '../lib/care/client';
+import HomeRewardProgress from '../components/HomeRewardProgress';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -19,7 +21,7 @@ import { useCheckInStatus } from '../hooks/useCheckInStatus';
 import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
-import { buildWhatsAppMessage, calculateBookingPoints, getPointsMultiplier } from '../lib/pawPoints';
+import { buildWhatsAppUrl, buildWhatsAppMessage, calculateBookingPoints, getPointsMultiplier } from '../lib/pawPoints';
 import { isPreviewDemoMode } from '../lib/demoMode';
 
 enum OperationType {
@@ -120,7 +122,8 @@ const BOOKING_SERVICES = [
   { id: 2, name: 'Full Grooming', points: 800, icon: Sparkles, desc: 'Bath, trim & nail care' },
   { id: 3, name: 'Vaccinations', points: 750, icon: Syringe, desc: 'Core & booster shots' },
   { id: 4, name: 'Ear Cleaning', points: 200, icon: Ear, desc: 'Deep clean & inspection' },
-  { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' }
+  { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' },
+  { id: 6, name: 'Follow-up appointment', points: 0, icon: Stethoscope, desc: 'Review with your veterinarian' }
 ];
 
 type BookingStep = 'services' | 'date' | 'time' | 'confirm';
@@ -129,11 +132,11 @@ const BOOKING_STEPS: { id: BookingStep; label: string }[] = [
   { id: 'services', label: 'Service' },
   { id: 'date', label: 'Date' },
   { id: 'time', label: 'Time' },
-  { id: 'confirm', label: 'Confirm' },
+  { id: 'confirm', label: 'Review' },
 ];
 
 const BOOKING_TIMES = [
-  { label: 'Morning', slots: ['9:00 AM', '10:00 AM', '11:00 AM'] },
+  { label: 'Morning', slots: ['10:00 AM', '11:00 AM'] },
   { label: 'Afternoon', slots: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'] },
   { label: 'Evening', slots: ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'] },
 ];
@@ -560,6 +563,10 @@ export default function Dashboard() {
   const [bookingTime, setBookingTime] = useState('');
   const [bookingStep, setBookingStep] = useState<BookingStep>('services');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [trackBooking, setTrackBooking] = useState(false);
+  const [bookingPetId, setBookingPetId] = useState('');
+  const [bookingNotice, setBookingNotice] = useState('');
+  const bookingRequestRef = useRef({ fingerprint: '', id: '' });
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -592,52 +599,34 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isBookVisitOpen) return;
 
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const appRoot = document.getElementById('root');
+    const previousInert = appRoot?.inert ?? false;
+    if (appRoot) appRoot.inert = true;
+    document.getElementById('booking-close')?.focus();
+    const handleEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') closeBookVisit(); };
+    document.addEventListener('keydown', handleEscape);
     const bodyOverflow = document.body.style.overflow;
     const bodyTouchAction = document.body.style.touchAction;
     const htmlOverscroll = document.documentElement.style.overscrollBehavior;
     document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
+    document.body.style.touchAction = 'pan-y';
     document.documentElement.style.overscrollBehavior = 'none';
 
     return () => {
+      if (appRoot) appRoot.inert = previousInert;
+      document.removeEventListener('keydown', handleEscape);
+      previousFocus?.focus();
       document.body.style.overflow = bodyOverflow;
       document.body.style.touchAction = bodyTouchAction;
       document.documentElement.style.overscrollBehavior = htmlOverscroll;
     };
   }, [isBookVisitOpen]);
 
-  const submitBooking = async () => {
-    if (selectedServices.length === 0 || !bookingDate || !bookingTime || !userId) return;
-
-    const finalPoints = calculateBookingPoints(selectedServices, currentPlan);
-    const serviceNames = selectedServices.map(s => s.name).join(', ');
-
-    try {
-      await addDoc(collection(db, 'requests'), {
-        userId: auth.currentUser?.uid || userId,
-        patient: petProfile?.name || 'Pet',
-        phone: petProfile?.phone || '',
-        reason: serviceNames,
-        date: bookingDate,
-        time: bookingTime,
-        points: finalPoints,
-        status: 'pending',
-        createdAt: serverTimestamp()
-      });
-    } catch (error) {
-      window.alert('The appointment request was not saved. Please retry; no appointment is confirmed.');
-      return;
-    }
-
-    setIsBookVisitOpen(false);
-    setSelectedServices([]);
-    setBookingDate('');
-    setBookingTime('');
-    setBookingStep('services');
-  };
-
   const closeBookVisit = () => {
     setIsBookVisitOpen(false);
+    setTrackBooking(false);
+    setBookingPetId('');
     setSelectedServices([]);
     setBookingDate('');
     setBookingTime('');
@@ -654,17 +643,24 @@ export default function Dashboard() {
   };
 
   const parentName = petProfile?.parentName || "Pet Parent";
-  const petName = petProfile?.name || 'Pet';
+  const petName = care.state?.pets.find(pet => pet.id === bookingPetId)?.name || petProfile?.name || 'Pet';
   const parentPhone = petProfile?.phone || '';
   const bookingBasePoints = selectedServices.reduce((acc, service) => acc + service.points, 0);
   const bookingFinalPoints = 0;
   const bookingMultiplier = getMultiplier(currentPlan);
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
-  const whatsappMessage = `${buildWhatsAppMessage(parentName, petName, selectedServices.map(s => s.name), bookingDate, bookingTime)}${parentPhone ? ` My mobile: ${parentPhone}.` : ''}`;
+  const whatsappMessage = `Hello Planet Animal Hospital, I am ${parentName}, ${petName}'s parent.\n\nI would like to request: ${selectedServices.map(s => s.name).join(', ')}.\nPreferred date: ${bookingDate}\nPreferred time: ${bookingTime} (India time)\n\nPlease confirm availability, charges and any preparation needed. Thank you!`;
+  const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const isFutureBookingTime = (time: string) => {
+    const match = time.match(/^(\d+):(\d+) (AM|PM)$/);
+    if (!match || !bookingDate) return false;
+    const hour = Number(match[1]) % 12 + (match[3] === 'PM' ? 12 : 0);
+    return new Date(`${bookingDate}T${String(hour).padStart(2, '0')}:${match[2]}:00+05:30`).getTime() > Date.now();
+  };
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
   const briefingNeedsAttention = !isPeriodComplete(currentPeriod);
   const bookingStepIndex = BOOKING_STEPS.findIndex((step) => step.id === bookingStep);
-  const bookingReady = selectedServices.length > 0 && Boolean(bookingDate) && Boolean(bookingTime);
+  const bookingReady = selectedServices.length > 0 && bookingDate >= todayLocal && isFutureBookingTime(bookingTime);
   const bookingStepAllowed: Record<BookingStep, boolean> = {
     services: true,
     date: selectedServices.length > 0,
@@ -684,18 +680,25 @@ export default function Dashboard() {
     }
 
     if (bookingStep === 'date') {
-      if (bookingDate) setBookingStep('time');
+      if (bookingDate >= todayLocal) setBookingStep('time');
       return;
     }
 
     if (bookingStep === 'time') {
-      if (bookingTime) setBookingStep('confirm');
+      if (isFutureBookingTime(bookingTime)) setBookingStep('confirm');
       return;
     }
 
-    if (bookingReady) {
+    if (bookingReady && (!trackBooking || Boolean(bookingPetId))) {
+      if (trackBooking && !isDemoMode) {
+        const fingerprint = bookingPetId + ':' + whatsappMessage;
+        if (bookingRequestRef.current.fingerprint !== fingerprint) bookingRequestRef.current = { fingerprint, id: crypto.randomUUID() };
+        void care.command({ type: 'requestCheckup', petId: bookingPetId, id: bookingRequestRef.current.id, text: whatsappMessage, consent: true })
+          .then(() => setBookingNotice('Your appointment request is saved for the care team. The clinic still needs to confirm it.'))
+          .catch(() => setBookingNotice('The app could not save your request for tracking. You can still send it in WhatsApp.'));
+      }
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-      submitBooking();
+      closeBookVisit();
     }
   };
 
@@ -705,15 +708,15 @@ export default function Dashboard() {
       ? bookingDate ? 'Choose Time' : 'Select Date'
       : bookingStep === 'time'
         ? bookingTime ? 'Review Visit' : 'Select Time'
-        : 'Confirm Appointment';
+        : 'Open WhatsApp to send';
 
   const bookingPrimaryDisabled = bookingStep === 'services'
     ? selectedServices.length === 0
     : bookingStep === 'date'
-      ? !bookingDate
+      ? !bookingDate || bookingDate < todayLocal
       : bookingStep === 'time'
-        ? !bookingTime
-        : !bookingReady;
+        ? !isFutureBookingTime(bookingTime)
+        : !bookingReady || (trackBooking && !bookingPetId);
 
   if (profileLoading || !isAuthReady || (!isDemoMode && !petProfile)) {
     return (
@@ -727,7 +730,7 @@ export default function Dashboard() {
 
   return (
     <>
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full"><div className="planet-orbital-background" aria-hidden="true"><i /><i /><span /></div>
       <div className="relative z-10 p-6 space-y-8 pb-4 dark:text-white/95 mobile-dashboard">
         {/* Header with Logo */}
       <header className="pt-4 mb-2 mobile-header-row">
@@ -779,9 +782,11 @@ export default function Dashboard() {
       </header>
 
       <section className="hidden lg:block desktop-pet-overview" aria-label="Pet care overview">
-        <div className="desktop-pet-overview-main"><span className="desktop-eyebrow">Your companion</span><h2>{petName}’s<span>care space</span></h2><p>Every small step adds up to a healthier life together.</p><button className="desktop-primary-button" onClick={() => navigate({pathname:'/roadmap',search:location.search})}>View health roadmap <ArrowRight size={17}/></button></div>
-        <div className="desktop-pet-details"><PawPrint size={32} strokeWidth={1.3} aria-hidden="true"/><dl><div><dt>Pet</dt><dd>{petProfile?.petType || 'Not recorded'}</dd></div><div><dt>Age</dt><dd>{petProfile?.age || 'Not recorded'}</dd></div><div><dt>Breed</dt><dd>{petProfile?.breed || 'Not recorded'}</dd></div></dl><button onClick={() => navigate({pathname:'/profiles',search:location.search})}>View pet profile <ArrowRight size={15}/></button></div>
+        <div className="desktop-pet-overview-main"><h2>{petName}’s<span>care space</span></h2><p>Your next step in care, all in one place.</p><button className="desktop-primary-button" onClick={() => navigate({pathname:'/roadmap',search:location.search})}>View health roadmap <ArrowRight size={17}/></button></div>
+        <button className="desktop-profile-link" onClick={() => navigate({pathname:'/profiles',search:location.search})}>View pet profile <ArrowRight size={15}/></button>
       </section>
+
+      <HomeRewardProgress demo={isDemoMode} onBook={() => { setBookingStep('services'); setIsBookVisitOpen(true); }} onWallet={() => navigate({ pathname: '/rewards', search: location.search })} />
 
       {/* Pawl Daily Briefing Card */}
       <motion.div
@@ -823,17 +828,11 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      {bookingNotice && <p role="status" className="rounded-2xl border border-planet-yellow/20 bg-white/5 p-4 text-sm text-planet-yellow">{bookingNotice}</p>}
       {/* Quick Actions */}
       <div className="desktop-actions-section">
         <h3 className="cinematic-card-title mb-4 text-xl drop-shadow-sm mobile-quick-actions-title">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mobile-quick-actions-grid">
-          <ActionCard
-            icon={<Calendar className="text-planet-yellow" />}
-            title="Book Visit"
-            subtitle="Checkups & Grooming"
-            onClick={() => navigate({ pathname: '/briefing', search: location.search })}
-            className="mobile-action-card"
-          />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mobile-quick-actions-grid">
           <ActionCard
             icon={<FileText className="text-planet-yellow" />}
             title="Medical Records"
@@ -913,10 +912,10 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Book Visit Full-Screen Flow */}
-      <AnimatePresence>
+      {createPortal(<AnimatePresence>
         {isBookVisitOpen && (
           <motion.div
-            key="book-visit-flow"
+            key="book-visit-flow" role="dialog" aria-modal="true" aria-labelledby="booking-title"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -936,12 +935,12 @@ export default function Dashboard() {
               <header className="shrink-0 pb-3">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="cinematic-kicker mb-2 text-[9px] tracking-[0.24em]">Locked Booking Mode</p>
-                    <h2 className="cinematic-section-title text-[2.35rem] leading-[0.88] tracking-[-0.065em] sm:text-[2.65rem]">
+                    <p className="cinematic-kicker mb-2 text-[9px] tracking-[0.24em]">Plan your visit</p>
+                    <h2 id="booking-title" className="cinematic-section-title text-[2.35rem] leading-[0.88] tracking-[-0.065em] sm:text-[2.65rem]">
                       Book <span className="text-planet-yellow">Visit</span>
                     </h2>
                     <p className="mt-1.5 text-xs font-bold leading-5 text-white/54 sm:text-sm">
-                      {petProfile?.name ? `Schedule a care slot for ${petProfile.name}.` : 'Schedule a care slot with Planet Animal.'}
+                      {petProfile?.name ? `Choose your preferred visit for ${petProfile.name}.` : 'Schedule a care slot with Planet Animal.'}
                     </p>
                   </div>
                 <motion.button
@@ -949,7 +948,7 @@ export default function Dashboard() {
                     whileTap={{ scale: 0.92 }}
                     onClick={closeBookVisit}
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/12 bg-white/[0.06] text-white/70 shadow-[0_16px_40px_rgba(0,0,0,0.34)] transition-colors hover:border-[#fec708]/24 hover:text-white"
-                    aria-label="Close Book Visit"
+                    id="booking-close" aria-label="Close Book Visit"
                 >
                   <X size={20}/>
                 </motion.button>
@@ -1018,13 +1017,14 @@ export default function Dashboard() {
                         )}
                       </div>
 
-                      <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2.5 overflow-hidden">
+                      <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2.5 overflow-y-auto overscroll-contain hide-scrollbar">
                         {BOOKING_SERVICES.map((service) => {
                           const isSelected = selectedServices.some(s => s.id === service.id);
                           const ServiceIcon = service.icon;
                           return (
                             <motion.button
                               key={service.id}
+                              aria-pressed={isSelected}
                               whileTap={{ scale: 0.985 }}
                               onClick={() => {
                                 setSelectedServices(prev =>
@@ -1051,10 +1051,6 @@ export default function Dashboard() {
                                 <p className="sr-only">{service.desc}</p>
                               </div>
                               <div className="absolute right-2.5 top-2.5 text-right">
-                                <div className={cn("mb-1 flex items-center justify-end gap-1", isSelected ? "text-[#fec708]" : "text-white/32")}>
-                                  <PawPrint size={11} className={isSelected ? 'fill-[#fec708]' : ''} />
-                                  <span className="text-xs font-black">+{service.points}</span>
-                                </div>
                                 <div className={cn(
                                   "ml-auto grid h-6 w-6 place-items-center rounded-full border transition-all duration-300",
                                   isSelected ? "border-[#fec708] bg-[#fec708] text-black" : "border-white/12 text-transparent"
@@ -1080,21 +1076,22 @@ export default function Dashboard() {
                     >
                       <div className="mb-3">
                         <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Preferred Date</p>
-                        <p className="mt-1 text-xs font-bold text-white/42">Choose the earliest comfortable clinic slot.</p>
+                        <p className="mt-1 text-xs font-bold text-white/42">Choose a preferred date. The clinic will confirm availability.</p>
                       </div>
+                      <label className="mb-4 block text-sm text-white/80">Choose any future date<input aria-label="Preferred appointment date" type="date" min={todayLocal} value={bookingDate} onInput={event => { setBookingDate(event.currentTarget.value); setBookingTime(''); }} onChange={event => { setBookingDate(event.target.value); setBookingTime(''); }} className="mt-2 w-full rounded-2xl border border-white/20 bg-white/10 p-3 text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-[#fec708]" /></label>
                       <div className="grid min-h-0 flex-1 grid-cols-4 content-start gap-2.5 overflow-hidden">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
                           const date = new Date();
                           date.setDate(date.getDate() + offset);
                           const isToday = offset === 0;
-                          const dateStr = date.toISOString().split('T')[0];
+                          const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                           const isSelected = bookingDate === dateStr;
 
                           return (
                             <motion.button
                               key={offset}
                               whileTap={{ scale: 0.96 }}
-                              onClick={() => setBookingDate(dateStr)}
+                              onClick={() => { setBookingDate(dateStr); setBookingTime(''); }}
                               className={cn(
                                 "flex min-h-[4.8rem] flex-col items-center justify-center rounded-[1.2rem] border px-1 transition-all duration-300",
                                 isSelected
@@ -1127,7 +1124,7 @@ export default function Dashboard() {
                     >
                       <div className="mb-3">
                         <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Preferred Time</p>
-                        <p className="mt-1 text-xs font-bold text-white/42">Pick the time window that fits your day.</p>
+                        <p className="mt-1 text-xs font-bold text-white/42">Clinic hours: daily, 10 AM–10 PM (India time), per Google. Holiday hours may differ. The clinic confirms your requested time.</p>
                       </div>
                       <div className="grid min-h-0 flex-1 content-start gap-2.5 overflow-hidden">
                         {BOOKING_TIMES.map((group) => (
@@ -1143,10 +1140,11 @@ export default function Dashboard() {
                                 return (
                                   <motion.button
                                     key={time}
+                                    disabled={!isFutureBookingTime(time)}
                                     whileTap={{ scale: 0.96 }}
                                     onClick={() => setBookingTime(time)}
                                     className={cn(
-                                      "rounded-[1rem] border px-1 py-2 text-[11px] font-black transition-all duration-300 sm:px-2 sm:py-2.5 sm:text-sm",
+                                      "disabled:opacity-30 disabled:cursor-not-allowed rounded-[1rem] border px-1 py-2 text-[11px] font-black transition-all duration-300 sm:px-2 sm:py-2.5 sm:text-sm",
                                       isSelected
                                         ? "border-[#fec708] bg-[#fec708] text-black shadow-[0_14px_30px_rgba(254,199,8,0.16)]"
                                         : "border-white/[0.08] bg-white/[0.045] text-white/58 hover:border-white/16 hover:bg-white/[0.065]"
@@ -1174,9 +1172,10 @@ export default function Dashboard() {
                     >
                       <div className="mb-3">
                         <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Review Visit</p>
-                        <p className="mt-1 text-xs font-bold text-white/42">Confirm the details before we open WhatsApp.</p>
+                        <p className="mt-1 text-xs font-bold text-white/42">Review your request, then send it in WhatsApp.</p>
                       </div>
-                      <div className="grid min-h-0 flex-1 content-start gap-3 overflow-hidden">
+                      <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto overscroll-contain hide-scrollbar">
+                        {!isDemoMode && Boolean(care.state?.pets.length) && <div className="rounded-2xl border border-white/15 bg-white/5 p-4"><label className="flex gap-3 text-sm"><input type="checkbox" checked={trackBooking} onChange={e => setTrackBooking(e.target.checked)} className="accent-[#fec708]"/>Save this request for my care team to follow up.</label>{trackBooking && <label className="mt-3 block text-sm">Pet for this request<select value={bookingPetId} onChange={e => setBookingPetId(e.target.value)} className="mt-2 w-full rounded-xl bg-[#10251a] p-3"><option value="">Choose your pet</option>{care.state?.pets.map(pet => <option key={pet.id} value={pet.id}>{pet.name}</option>)}</select></label>}</div>}
                         <div className="rounded-[1.6rem] border border-[#fec708]/18 bg-[#fec708]/8 p-4">
                           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#fec708]">Services</p>
                           <p className="mt-2 text-lg font-black leading-tight text-white">{selectedServiceNames || 'No service selected'}</p>
@@ -1195,20 +1194,7 @@ export default function Dashboard() {
                             <p className="mt-1 text-sm font-black text-white">{bookingTime || 'Not set'}</p>
                           </div>
                         </div>
-                        <div className="rounded-[1.6rem] border border-white/[0.08] bg-black/28 p-4">
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/38">Reward Points</p>
-                          <p className="mt-1 flex items-end gap-2 font-heading text-[2.55rem] font-black leading-none tracking-[-0.06em] text-[#fec708]">
-                            {bookingFinalPoints.toLocaleString()}
-                            <span className="pb-1 text-xs font-black uppercase tracking-[0.16em] text-white/44">pts</span>
-                          </p>
-                          {selectedServices.length > 0 && (
-                            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/38">
-                              {currentPlan === 'free'
-                                ? 'Free plan: General Checkup earns 500 pts'
-                                : `${bookingBasePoints.toLocaleString()} base x ${bookingMultiplier.toFixed(1)} multiplier`}
-                            </p>
-                          )}
-                        </div>
+                        <div className="rounded-[1.6rem] border border-white/10 bg-black/20 p-4"><p className="text-sm font-semibold text-[#fec708]">Your WhatsApp message</p><p className="mt-2 text-sm leading-relaxed text-white/80 whitespace-pre-wrap">{whatsappMessage}</p><p className="mt-3 text-xs text-white/65">This is a request. Your appointment is confirmed only when the hospital replies.</p></div>
                       </div>
                     </motion.section>
                   )}
@@ -1223,10 +1209,7 @@ export default function Dashboard() {
                       {selectedServices.length > 0 ? selectedServiceNames : 'Start with a service'}
                     </p>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/34">Rewards</p>
-                    <p className="mt-1 text-xl font-black leading-none text-[#fec708]">{bookingFinalPoints.toLocaleString()} <span className="text-[10px] text-white/44">pts</span></p>
-                  </div>
+
                 </div>
                 <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
                   <button
@@ -1260,7 +1243,7 @@ export default function Dashboard() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
     </div>
     </div>
 
@@ -1347,377 +1330,14 @@ function MagneticWrapper({ children, className }: { children: React.ReactNode, c
   );
 }
 
-function RewardsCarousel({
-  verifiedPoints,
-  pendingPoints,
-  shouldReduceMotion,
-  navigate,
-  locationSearch,
-}: {
-  verifiedPoints: number;
-  pendingPoints: number;
-  shouldReduceMotion: boolean;
-  navigate: ReturnType<typeof useNavigate>;
-  locationSearch: string;
+function RewardsCarousel({ verifiedPoints, pendingPoints, navigate, locationSearch }: {
+  verifiedPoints: number; pendingPoints: number; shouldReduceMotion: boolean;
+  navigate: ReturnType<typeof useNavigate>; locationSearch: string;
 }) {
-  const rewardsCarouselRef = useRef<HTMLDivElement>(null);
-  const rewardSlideRefs = useRef<(HTMLElement | null)[]>([]);
-  const { scrollXProgress: rewardsScrollProgress } = useScroll({ container: rewardsCarouselRef });
-  const rewardsRailProgress = useSpring(rewardsScrollProgress, {
-    stiffness: shouldReduceMotion ? 1000 : 180,
-    damping: shouldReduceMotion ? 100 : 28,
-    mass: 0.8,
-  });
-
-  const premiumEase = [0.22, 1, 0.36, 1] as const;
-  const homePawMilestones = HOME_PAW_MILESTONES;
-  const activeMilestoneIndex = homePawMilestones.findIndex((milestone) => verifiedPoints < milestone.points);
-  const activeJourneyIndex = activeMilestoneIndex === -1 ? homePawMilestones.length - 1 : activeMilestoneIndex;
-  const activeJourneyMilestone = homePawMilestones[activeJourneyIndex];
-  const previousMilestonePoints = activeJourneyIndex > 0 ? homePawMilestones[activeJourneyIndex - 1].points : 0;
-  const activeJourneyRange = Math.max(1, activeJourneyMilestone.points - previousMilestonePoints);
-  const activeJourneyProgress = activeMilestoneIndex === -1
-    ? 100
-    : Math.min(100, Math.max(0, ((verifiedPoints - previousMilestonePoints) / activeJourneyRange) * 100));
-  const pointsToActiveMilestone = Math.max(0, activeJourneyMilestone.points - verifiedPoints);
-  const unlockedMilestoneCount = homePawMilestones.filter((milestone) => verifiedPoints >= milestone.points).length;
-  const journeyProgressTotal = Math.min(100, ((unlockedMilestoneCount + activeJourneyProgress / 100) / homePawMilestones.length) * 100);
-  const isNearNextTier = activeJourneyProgress >= 82 && activeJourneyProgress < 100;
-  const isVeryNearNextTier = activeJourneyProgress >= 94 && activeJourneyProgress < 100;
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: shouldReduceMotion ? 0 : 0.5, ease: premiumEase }}
-      className="pt-2 mobile-paw-points desktop-rewards-section"
-    >
-      <div className="relative overflow-hidden rounded-[2.6rem] border border-[#fec708]/14 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.025)_44%,rgba(254,199,8,0.045))] p-4 shadow-[0_26px_80px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl sm:p-5">
-        <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#fec708]/10 blur-[90px]" />
-        <div className="pointer-events-none absolute -left-28 bottom-0 h-64 w-64 rounded-full bg-emerald-200/5 blur-[92px]" />
-        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[#fff0b8]/38 to-transparent" />
-
-        <div className="relative mb-4 flex items-start justify-between gap-4 px-1">
-          <div className="min-w-0">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#fec708]/18 bg-[#fec708]/7 px-3 py-1.5">
-              <PawPrint className="h-3.5 w-3.5 fill-[#fec708]/20 text-[#fec708]" />
-              <span className="cinematic-kicker text-[10px] tracking-[0.2em] text-[#fec708]">Paw Points Program</span>
-            </div>
-            <h3 className="cinematic-section-title text-3xl leading-[1.02] tracking-[-0.035em]">Previous rewards program</h3>
-            <p className="mt-2 max-w-[18rem] text-[0.95rem] font-bold leading-6 text-white/62">
-              {pointsToActiveMilestone > 0
-                ? `${pointsToActiveMilestone.toLocaleString()} pts to ${activeJourneyMilestone.title}.`
-                : 'All homepage rewards shown here are unlocked.'}
-            </p>
-          </div>
-          <div className="shrink-0 rounded-3xl border border-white/10 bg-black/[0.18] px-4 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/48">Reached</p>
-            <p className="mt-1 font-heading text-2xl font-black leading-none tabular-nums text-[#fec708]">
-              {unlockedMilestoneCount}/{homePawMilestones.length}
-            </p>
-          </div>
-        </div>
-
-        <div className="relative mb-5 px-1">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-white/62">
-              Journey progress
-            </span>
-            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">
-              milestone {Math.min(activeJourneyIndex + 1, homePawMilestones.length)} of {homePawMilestones.length}
-            </span>
-          </div>
-          <div
-            className="journey-progress-track relative h-3.5 overflow-hidden rounded-full border border-[#fec708]/18 bg-[#130f08] shadow-[inset_0_1px_8px_rgba(0,0,0,0.62),0_1px_0_rgba(254,199,8,0.12)]"
-            role="progressbar"
-            aria-label="Paw Points journey progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(journeyProgressTotal)}
-          >
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(254,199,8,0.08),transparent_34%,rgba(255,255,255,0.04)_52%,transparent_72%)]" />
-            <motion.div
-              initial={false}
-              animate={{ scaleX: journeyProgressTotal / 100 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 1.05, ease: premiumEase }}
-              className="journey-progress-fill absolute inset-y-0 left-0 w-full origin-left overflow-hidden rounded-full bg-[linear-gradient(90deg,#fec708,#ffe28f_48%,#d89b00)] shadow-[0_0_22px_rgba(254,199,8,0.36)]"
-            >
-              <div className="absolute inset-x-0 top-0 h-px bg-white/48" />
-              {!shouldReduceMotion && journeyProgressTotal > 2 && journeyProgressTotal < 100 && (
-                <motion.span
-                  className="absolute inset-y-0 w-16 -skew-x-12 bg-white/22 blur-[1px]"
-                  initial={{ x: '-140%', opacity: 0 }}
-                  animate={{ x: '230%', opacity: [0, 0.72, 0] }}
-                  transition={{ duration: 2.3, repeat: Infinity, repeatDelay: 4.2, ease: premiumEase }}
-                />
-              )}
-            </motion.div>
-            {journeyProgressTotal > 3 && (
-              <motion.span
-                className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border border-[#fff0b8]/70 bg-[#ffe28f] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
-                style={{ left: `calc(${journeyProgressTotal}% - 7px)` }}
-                initial={{ opacity: 0, scale: 0.72 }}
-                animate={shouldReduceMotion ? { opacity: 1, scale: 1 } : { opacity: 1, scale: [1, 1.08, 1] }}
-                transition={{ duration: shouldReduceMotion ? 0 : 2.8, repeat: shouldReduceMotion ? 0 : Infinity, ease: 'easeInOut' }}
-              />
-            )}
-            <div className="absolute inset-x-0 top-0 h-px bg-white/18" />
-          </div>
-          <div className="mt-3 grid" style={{ gridTemplateColumns: `repeat(${homePawMilestones.length}, minmax(0, 1fr))` }}>
-            {homePawMilestones.map((milestone, index) => {
-              const tickUnlocked = verifiedPoints >= milestone.points;
-              const tickCurrent = index === activeJourneyIndex;
-              return (
-                <button
-                  key={milestone.title}
-                  type="button"
-                  onClick={() => {
-                    rewardSlideRefs.current[index + 1]?.scrollIntoView({
-                      behavior: shouldReduceMotion ? 'auto' : 'smooth',
-                      inline: 'center',
-                      block: 'nearest',
-                    });
-                  }}
-                  className="group flex min-h-9 flex-col items-center justify-start gap-1"
-                  aria-label={`View ${milestone.title}`}
-                >
-                  <motion.span
-                    animate={tickCurrent && !shouldReduceMotion ? {
-                      scale: [1, 1.16, 1],
-                      boxShadow: ['0 0 12px rgba(254,199,8,0.30)', '0 0 22px rgba(254,199,8,0.46)', '0 0 12px rgba(254,199,8,0.30)'],
-                    } : undefined}
-                    transition={{ duration: 2.8, repeat: tickCurrent && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' }}
-                    className={cn(
-                      "h-2.5 w-2.5 rounded-full border transition-all duration-300",
-                      tickCurrent
-                        ? "border-[#fec708] bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
-                        : tickUnlocked
-                          ? "border-[#fec708]/40 bg-[#fec708]/55"
-                          : "border-white/14 bg-white/[0.08] group-hover:border-white/28"
-                    )} />
-                  <span className={cn(
-                    "block text-[8px] font-black uppercase tracking-[0.08em] sm:text-[10px] sm:tracking-[0.14em]",
-                    tickCurrent ? "text-[#fec708]" : tickUnlocked ? "text-white/42" : "text-white/24"
-                  )}>
-                    {milestone.points >= 1000 ? `${milestone.points / 1000}k` : milestone.points}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div ref={rewardsCarouselRef} className="relative -mx-4 overflow-x-auto px-4 pb-2 hide-scrollbar [scroll-snap-type:x_mandatory] sm:-mx-5 sm:px-5">
-          <div className="flex gap-4">
-            <motion.article
-              ref={(node) => { rewardSlideRefs.current[0] = node; }}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: premiumEase }}
-              className="relative min-h-[248px] w-[84vw] max-w-[360px] shrink-0 overflow-hidden rounded-[2.1rem] border border-[#fec708]/18 bg-[linear-gradient(150deg,rgba(254,199,8,0.10),rgba(255,255,255,0.055)_42%,rgba(255,255,255,0.025))] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.09)] backdrop-blur-xl [scroll-snap-align:start] sm:w-[322px]"
-            >
-              <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#fec708]/12 blur-[70px]" />
-              <div className="relative flex h-full flex-col">
-                <div className="mb-5">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">Previous profile points</p>
-                    <div className="mt-3 flex items-end gap-2">
-                      <span className="cinematic-price text-[3.75rem] tabular-nums text-[#fec708]">{verifiedPoints.toLocaleString()}</span>
-                      <span className="pb-2 text-xs font-black uppercase tracking-[0.2em] text-[#fec708]/60">pts</span>
-                    </div>
-                    <p className="mt-2 text-xs text-white/70">Clinic reconciliation required. Open Rewards for your spendable wallet.</p>{pendingPoints > 0 && (
-                      <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white/64">
-                        +{pendingPoints.toLocaleString()} pending clinic verification
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-auto">
-                  <div className="mb-3 flex items-end justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/52">Next unlock</p>
-                      <h4 className="cinematic-card-title mt-1 text-2xl text-white">{activeJourneyMilestone.title}</h4>
-                    </div>
-                    <span className="shrink-0 text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708]">
-                      {Math.round(activeJourneyProgress)}%
-                    </span>
-                  </div>
-                  <div
-                    className="journey-progress-track relative h-3 overflow-hidden rounded-full border border-[#fec708]/14 bg-[#130f08] shadow-[inset_0_1px_7px_rgba(0,0,0,0.58),0_1px_0_rgba(254,199,8,0.08)]"
-                    role="progressbar"
-                    aria-label={`${activeJourneyMilestone.title} progress`}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={Math.round(activeJourneyProgress)}
-                  >
-                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(254,199,8,0.07),transparent_36%,rgba(255,255,255,0.035)_55%,transparent_78%)]" />
-                    <motion.div
-                      initial={false}
-                      animate={{
-                        scaleX: activeJourneyProgress / 100,
-                        ...(isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.18)', '0 0 28px rgba(254,199,8,0.34)', '0 0 14px rgba(254,199,8,0.18)'] } : {})
-                      }}
-                      transition={{
-                        scaleX: { duration: shouldReduceMotion ? 0 : 0.95, ease: premiumEase },
-                        boxShadow: { duration: 3.2, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' },
-                      }}
-                      className={cn("absolute inset-y-0 left-0 w-full origin-left overflow-hidden rounded-full bg-gradient-to-r shadow-[0_0_18px_rgba(254,199,8,0.23)]", activeJourneyMilestone.fill)}
-                    >
-                      <div className="absolute inset-x-0 top-0 h-px bg-white/46" />
-                      {!shouldReduceMotion && activeJourneyProgress > 3 && activeJourneyProgress < 100 && (
-                        <motion.span
-                          className="absolute inset-y-0 w-14 -skew-x-12 bg-white/20 blur-[1px]"
-                          initial={{ x: '-135%', opacity: 0 }}
-                          animate={{ x: '220%', opacity: [0, 0.7, 0] }}
-                          transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 4, ease: premiumEase }}
-                        />
-                      )}
-                    </motion.div>
-                    {activeJourneyProgress > 4 && (
-                      <motion.span
-                        className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border border-white/60 bg-[#fff0b8] shadow-[0_0_18px_rgba(254,199,8,0.42)]"
-                        style={{ left: `calc(${activeJourneyProgress}% - 7px)` }}
-                        initial={{ opacity: 0, scale: 0.72 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        animate={isNearNextTier && !shouldReduceMotion ? { boxShadow: ['0 0 14px rgba(254,199,8,0.30)', '0 0 24px rgba(254,199,8,0.48)', '0 0 14px rgba(254,199,8,0.30)'] } : undefined}
-                        transition={{
-                          opacity: { duration: shouldReduceMotion ? 0 : 0.38, delay: shouldReduceMotion ? 0 : 0.68, ease: premiumEase },
-                          scale: { duration: shouldReduceMotion ? 0 : 0.38, delay: shouldReduceMotion ? 0 : 0.68, ease: premiumEase },
-                          boxShadow: { duration: 2.8, repeat: isNearNextTier && !shouldReduceMotion ? Infinity : 0, ease: 'easeInOut' },
-                        }}
-                      />
-                    )}
-                    <div className="absolute inset-x-0 top-0 h-px bg-white/18" />
-                    {isVeryNearNextTier && !shouldReduceMotion && (
-                      <motion.span
-                        className="absolute inset-y-0 w-12 rounded-full bg-white/12 blur-sm"
-                        initial={{ x: '-120%' }}
-                        animate={{ x: '260%' }}
-                        transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 3.5, ease: premiumEase }}
-                      />
-                    )}
-                  </div>
-                  <p className={cn("mt-3 text-[0.95rem] font-bold leading-6", isNearNextTier ? "text-[#fec708]" : "text-white/62")}>
-                    {pointsToActiveMilestone > 0 ? `${pointsToActiveMilestone.toLocaleString()} pts left. ${isNearNextTier ? 'Almost there.' : activeJourneyMilestone.note}` : 'Ready to claim your unlocked rewards.'}
-                  </p>
-                  <button
-                    onClick={() => navigate({ pathname: '/rewards', search: locationSearch })}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#fec708]/24 bg-[#fec708]/10 px-4 py-3 text-[11px] font-black uppercase tracking-[0.16em] text-[#fec708] transition-colors duration-300 hover:border-[#fec708]/38 hover:bg-[#fec708]/14"
-                  >
-                    View Rewards Hub
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            </motion.article>
-
-            {homePawMilestones.map((milestone, index) => {
-              const isUnlocked = verifiedPoints >= milestone.points;
-              const isCurrent = index === activeJourneyIndex;
-              const isLocked = !isUnlocked;
-              const isNearCard = isCurrent && isNearNextTier;
-              const cardProgress = isUnlocked
-                ? 100
-                : isCurrent
-                  ? activeJourneyProgress
-                  : Math.min(100, Math.max(0, (verifiedPoints / milestone.points) * 100));
-              const MilestoneIcon = milestone.icon;
-
-              return (
-                <motion.article
-                  key={milestone.title}
-                  ref={(node) => { rewardSlideRefs.current[index + 1] = node; }}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: shouldReduceMotion ? 0 : index * 0.035, ease: premiumEase }}
-                  whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.012, transition: { type: 'spring', stiffness: 260, damping: 30, mass: 0.85 } }}
-                  whileTap={{ scale: 0.985 }}
-                  className={cn(
-                    "relative min-h-[248px] w-[84vw] max-w-[360px] shrink-0 overflow-hidden rounded-[2.1rem] border p-5 shadow-[0_18px_55px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl [scroll-snap-align:start] sm:w-[322px]",
-                    isCurrent
-                      ? "border-[#fec708]/34 bg-[linear-gradient(150deg,rgba(254,199,8,0.09),rgba(255,255,255,0.055)_45%,rgba(255,255,255,0.025))]"
-                      : isUnlocked
-                        ? "border-white/12 bg-[linear-gradient(150deg,rgba(255,255,255,0.07),rgba(255,255,255,0.028))]"
-                        : "border-white/9 bg-[linear-gradient(150deg,rgba(255,255,255,0.045),rgba(255,255,255,0.018))]"
-                  )}
-                >
-                  <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br", milestone.surface, isCurrent ? "opacity-[0.82]" : isUnlocked ? "opacity-[0.46]" : "opacity-[0.26] saturate-50")} />
-                  <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/18 to-transparent" />
-
-                  <div className="relative flex h-full flex-col">
-                    <div className="mb-5 flex items-start justify-between gap-4">
-                      <motion.div
-                        animate={isNearCard && !shouldReduceMotion ? { scale: [1, 1.035, 1] } : undefined}
-                        transition={{ duration: 2.8, repeat: isNearCard && !shouldReduceMotion ? Infinity : 0, ease: [0.45, 0, 0.2, 1] }}
-                        className={cn(
-                          "grid h-14 w-14 place-items-center rounded-2xl border transition-colors duration-500",
-                          isUnlocked || isCurrent ? cn(milestone.ring, milestone.glow) : "border-white/10 bg-white/[0.035] text-white/32"
-                        )}
-                      >
-                        <MilestoneIcon className="h-7 w-7" strokeWidth={2.35} />
-                      </motion.div>
-
-                      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/[0.16] px-3 py-1.5 backdrop-blur-md">
-                        {isUnlocked ? <Check className="h-3.5 w-3.5 text-[#fec708]" /> : <Lock className="h-3.5 w-3.5 text-white/38" />}
-                        <span className={cn("text-[10px] font-black uppercase tracking-[0.16em]", isUnlocked ? "text-[#fec708]" : isCurrent ? "text-white/72" : "text-white/42")}>
-                          {isUnlocked ? 'Unlocked' : isCurrent ? (isNearCard ? 'Almost' : 'Next') : 'Upcoming'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="min-h-[6.8rem]">
-                      {milestone.hero ? (
-                        <div className="mb-3 flex items-end gap-3">
-                          <span className={cn("font-heading text-[3.2rem] font-black leading-none tracking-[-0.08em]", isLocked && !isCurrent ? "text-white/38" : "text-[#fec708]")}>{milestone.hero}</span>
-                          <span className="pb-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white/52">rebate</span>
-                        </div>
-                      ) : null}
-                      <p className={cn("text-[11px] font-black uppercase tracking-[0.16em]", isCurrent ? "text-[#fec708]" : "text-white/46")}>{milestone.badge}</p>
-                      <h4 className={cn("cinematic-card-title mt-2 text-[1.38rem] leading-[1.06]", isLocked && !isCurrent ? "text-white/62" : "text-white")}>{milestone.title}</h4>
-                      <p className={cn("mt-2 text-[0.95rem] font-bold leading-6", isLocked && !isCurrent ? "text-white/46" : "text-white/66")}>{milestone.subtitle}</p>
-                      <p className={cn("mt-3 text-[0.82rem] font-semibold leading-relaxed", isLocked && !isCurrent ? "text-white/38" : "text-white/54")}>{milestone.detail}</p>
-                    </div>
-
-                    <div className="mt-auto pt-5">
-                      <div className="mb-2 flex items-end justify-between gap-3">
-                        <span className={cn("font-heading text-2xl font-black leading-none tabular-nums tracking-[-0.055em]", isLocked && !isCurrent ? "text-white/34" : "text-[#fec708]")}>{milestone.points.toLocaleString()}</span>
-                        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-white/44">PTS</span>
-                      </div>
-                      <div className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
-                        <motion.div
-                          initial={{ scaleX: 0 }}
-                          whileInView={{ scaleX: cardProgress / 100 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: shouldReduceMotion ? 0 : 0.75, delay: shouldReduceMotion ? 0 : index * 0.035, ease: premiumEase }}
-                          className={cn("absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r", isLocked && !isCurrent ? "from-white/22 to-white/10" : milestone.fill)}
-                        />
-                        {isNearCard && !shouldReduceMotion && (
-                          <motion.span
-                            className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-[#fec708] shadow-[0_0_18px_rgba(254,199,8,0.52)]"
-                            animate={{ opacity: [0.72, 1, 0.72], scale: [0.9, 1.08, 0.9] }}
-                            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.article>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="relative mt-3 px-1">
-          <div className="h-1.5 overflow-hidden rounded-full bg-[#130f08] shadow-[inset_0_1px_5px_rgba(0,0,0,0.55)]">
-            <motion.div style={{ scaleX: rewardsRailProgress }} className="h-full origin-left rounded-full bg-[#fec708]/80 shadow-[0_0_14px_rgba(254,199,8,0.34)]" />
-          </div>
-        </div>
-      </div>
-    </motion.section>
-  );
+  return <details className="mobile-paw-points desktop-rewards-section rounded-2xl border border-white/10 p-5 text-sm text-white/70">
+    <summary className="min-h-11 cursor-pointer py-3 font-semibold text-white">Previous rewards program</summary>
+    <p className="mt-2">{verifiedPoints.toLocaleString('en-IN')} historical points. The clinic needs to check these before they can join your available wallet.</p>
+    {pendingPoints > 0 && <p className="mt-2">{pendingPoints.toLocaleString('en-IN')} points awaiting clinic verification.</p>}
+    <button className="mt-3 min-h-11 text-planet-yellow underline focus-visible:outline focus-visible:outline-2" onClick={() => navigate({ pathname: '/rewards', search: locationSearch })}>Open your clinic wallet</button>
+  </details>;
 }

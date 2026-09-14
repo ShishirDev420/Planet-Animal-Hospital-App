@@ -3,7 +3,7 @@ export const planOffers = [
   {
     id: 'essential', name: 'Essential Paws', price: '₹999',
     focus: 'Consultations & grooming',
-    description: 'Everyday discounts, with vaccination and follow-up benefits.',
+    description: 'For regular consultations and grooming: pay less per service, with a free deworming follow-up each quarter.',
     highlights: ['15% off consultations', '10% off grooming'],
     features: ['Discounted core vaccinations', 'Free quarterly deworming follow-up'],
     points: '1.0×', surface: 'liquid-glass-essential',
@@ -11,7 +11,7 @@ export const planOffers = [
   {
     id: 'advanced', name: 'Advanced Paws', price: '₹1,999',
     focus: 'More included care benefits',
-    description: 'Essential benefits, plus dental, grooming and care coordination.',
+    description: 'Adds a dental exam and consultation, grooming every three months, and a dedicated longevity officer.',
     highlights: ['Free dental exam & consultation', '1 free grooming every 3 months'],
     features: ['Everything in Essential', 'Dedicated longevity officer', '15% off biannual blood panels'],
     points: '1.5×', surface: 'liquid-glass-advanced',
@@ -19,7 +19,7 @@ export const planOffers = [
   {
     id: 'prestige', name: 'Premium Paws', price: '₹3,499',
     focus: 'Wider service discounts',
-    description: 'Higher consultation and grooming discounts, with additional care benefits.',
+    description: 'For wider care needs: half-price consultations and grooming, plus a listed twice-yearly ultrasound.',
     highlights: ['50% off consultations', '50% off grooming'],
     features: ['Paw Pal agent', 'Biannual full-body ultrasound', 'Calendar sync — confirm availability'],
     points: '2.0×', surface: 'liquid-glass-premium-tier',

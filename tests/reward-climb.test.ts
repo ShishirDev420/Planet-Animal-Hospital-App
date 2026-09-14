@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { rewardPosition } from '../src/components/RewardClimb';
+import type { RedemptionPolicy } from '../src/lib/care/redemption';
+const policy: RedemptionPolicy = { version: 'test-only', status: 'active', basis: 'entire-bill', approvedBy: 'test', approvedAt: 1, tiers: [{ id: 'a', points: 500, percent: 5 }, { id: 'b', points: 1500, percent: 10 }] };
+assert.equal(rewardPosition(0, policy).fraction, 0);
+assert.equal(rewardPosition(499, policy).level, 0);
+assert.equal(rewardPosition(500, policy).level, 1);
+assert.equal(rewardPosition(500, policy).fraction, 0);
+assert.equal(rewardPosition(1000, policy).fraction, .5);
+assert.equal(rewardPosition(1500, policy).next, undefined);
+assert.equal(rewardPosition(2000, policy).fraction, 1);
+assert.equal(rewardPosition(1000, { ...policy, status: 'draft' }).tiers.length, 0);
+assert.equal(rewardPosition(1000).tiers.length, 0);
+assert.equal(rewardPosition(-20, policy).fraction, 0);
+console.log('10 reward threshold and inactive-policy assertions passed');

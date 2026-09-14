@@ -1,6 +1,7 @@
 import { socialSignIn, socialAuthError, type SocialProvider } from '../lib/socialAuth';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import OnboardingForm from '../components/OnboardingForm';
+import '../styles/onboarding.css';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, type User } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -50,8 +51,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [socialChoice, setSocialChoice] = useState<SocialProvider>('google');
   const [isSignUp, setIsSignUp] = useState(false);
-  const [activeBenefit, setActiveBenefit] = useState(0);
-  const [headerWord, setHeaderWord] = useState('Love');
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [parentName, setParentName] = useState('');
   const [petName, setPetName] = useState('');
@@ -70,34 +70,6 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
     setNeedsOnboarding(true);
   }, [initialOnboarding, parentName]);
-
-  const headerWords = ['Love', 'Care', 'Trust', 'Healing'];
-
-  const benefits = [
-    { title: "✨ Proactive Healthcare", desc: "Automated updates to keep your pet thriving." },
-    { title: "📅 1-Tap Booking", desc: "Schedule clinic visits instantly." },
-    { title: "🏆 Earn Paw Points", desc: "Get rewarded for proactive preventative care." }
-  ];
-
-  // The rotating flashcard timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveBenefit((prev) => (prev + 1) % benefits.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [benefits.length]);
-
-  // The Heartbeat Header timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setHeaderWord((prev) => {
-        const nextIndex = (headerWords.indexOf(prev) + 1) % headerWords.length;
-        return headerWords[nextIndex];
-      });
-    }, 2000);
-    return () => clearInterval(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const continueToClinic = (hasCompletedProfile: boolean) => {
     if (!hasCompletedProfile) {
@@ -198,9 +170,12 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const handleCompleteProfile = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (!parentName.trim() || !petName.trim() || !breed.trim() || !age.trim() || !weight.trim()) {
-      setAuthError('Please fill in all fields!');
+      setAuthError('Add your name, your pet’s name, breed, age and weight to continue.');
       return;
     }
+    if (!auth.currentUser) { setAuthError('Please sign in again to save your profile.'); return; }
+    if (isProfileSaving) return;
+    setIsProfileSaving(true);
     try {
       setAuthError('');
       if (auth.currentUser) {
@@ -229,7 +204,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     } catch (e: any) {
       console.error('Onboarding failed', e);
       setAuthError('Failed to save profile. Please try again.');
-    }
+    } finally { setIsProfileSaving(false); }
   };
 
   const handleForgotPassword = async () => {
@@ -247,249 +222,29 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
   };
 
-  if (needsOnboarding) {
-    return (
-      <div className="relative overflow-hidden w-full min-h-screen bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-        {/* Background Ambient Orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
-          <div className="relative w-full max-w-5xl h-full">
-            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
-            <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-          </div>
-        </div>
-
-        <div className="relative z-20 w-full max-w-md md:max-w-xl mx-auto px-4 pb-12 pt-4 shrink-0">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="w-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 sm:p-8"
-          >
-            <div className="space-y-6">
-              <h3 className="cinematic-card-title text-center text-xl">Welcome! Who are we caring for?</h3>
-              {authError && <p className="text-red-400 text-xs text-center mb-2">{authError}</p>}
-
-              <motion.div
-                initial="hidden"
-                animate="show"
-                variants={{
-                  hidden: { opacity: 0 },
-                  show: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.1 }
-                  }
-                }}
-                className="space-y-4"
-              >
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Your Name (Pet Parent)</label>
-                  <input type="text" value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder="e.g. John" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
-                </motion.div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Pet's Name</label>
-                  <input type="text" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g. Bella" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
-                </motion.div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Pet Type</label>
-                  <select value={petType} onChange={(e) => setPetType(e.target.value)} className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all appearance-none backdrop-blur-sm shadow-inner">
-                    <option value="Dog" className="text-black">Dog</option>
-                    <option value="Cat" className="text-black">Cat</option>
-                  </select>
-                </motion.div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Breed</label>
-                  <input type="text" value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="e.g. Golden Retriever" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
-                </motion.div>
-                <div className="grid grid-cols-2 gap-4">
-                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                    <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Age</label>
-                    <input type="text" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 2 yrs" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
-                  </motion.div>
-                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                    <select value={gender} onChange={(e) => setGender(e.target.value)} className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all appearance-none backdrop-blur-sm shadow-inner">
-                      <option value="Male" className="text-black">Male</option>
-                      <option value="Female" className="text-black">Female</option>
-                      <option value="Other" className="text-black">Other</option>
-                    </select>
-                  </motion.div>
-                </div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Weight (lbs/kg)</label>
-                  <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="e.g. 15 lbs" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
-                </motion.div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Mobile Number (for appointment reminders)</label>
-                  <input type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 9876543210" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all backdrop-blur-sm shadow-inner" />
-                </motion.div>
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="space-y-1.5">
-                  <label className="block text-[11px] font-heading font-bold tracking-[0.15em] uppercase text-white/70 ml-1">Additional Details</label>
-                  <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} placeholder="Any special needs, quirks, or roadmap requests?" className="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3.5 font-body font-medium text-slate-100 placeholder:text-white/30 focus:outline-none focus:border-[#fec708] focus:ring-1 focus:ring-[#fec708]/50 transition-all min-h-[100px] backdrop-blur-sm shadow-inner resize-none" />
-                </motion.div>
-              </motion.div>
-
-              <div className="pt-2">
-                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} onClick={handleCompleteProfile} className="w-full bg-gradient-to-r from-[#fec708] to-yellow-500 text-black font-heading font-bold uppercase tracking-widest py-4 rounded-2xl shadow-[0_0_20px_rgba(254,199,8,0.3)] hover:shadow-[0_0_30px_rgba(254,199,8,0.5)] transition-all flex items-center justify-center border border-yellow-400">
-                  Enter the Clinic
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative overflow-hidden w-full min-h-screen bg-[#071912] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-      {/* Background Ambient Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center">
-        <div className="relative w-full max-w-5xl h-full">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-planet-yellow/40 rounded-full blur-3xl opacity-60 animate-blob"></div>
-          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-teal-300/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-amber-200/40 rounded-full blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-        </div>
-      </div>
-
-      <div className="relative z-10 flex flex-col min-h-screen w-full pb-8">
-        {/* ✨ MAIN UI CONTENT */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 pt-12 pb-4 shrink-0">
-
-        <div className="flex items-center justify-center mb-1 sm:mb-2 animate-fade-in-up">
-          <img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" className="w-28 sm:w-36 h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] animate-pulse-slow z-50" referrerPolicy="no-referrer" />
-        </div>
-
-        {/* Cinematic Tagline */}
-        <div className="flex flex-col items-center justify-center text-center w-full mb-1 sm:mb-2">
-          <h1 className="cinematic-title mb-0 text-4xl drop-shadow-md sm:text-5xl">
-            20 Years of
-          </h1>
-          <div className="relative flex h-[1.5em] w-full items-center justify-center font-heading text-4xl font-black tracking-[-0.055em] text-[#fec708] drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] sm:text-5xl">
-            {headerWords.map((word) => (
-              <span
-                key={word}
-                className={`absolute w-full text-center inset-x-0 transition-opacity duration-1000 ease-in-out ${
-                  headerWord === word ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-              >
-                {word}.
-              </span>
-            ))}
-          </div>
-          <div className="flex flex-row items-center justify-center gap-2 mt-4 mb-4 w-full">
-            <span className="text-xs sm:text-sm font-bold text-white/50 tracking-[0.15em] uppercase whitespace-nowrap">
-              Now Powered by
-            </span>
-            <svg className="h-5 w-5 sm:h-6 sm:w-6 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] animate-pulse" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="g-colors" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#4285F4">
-                    <animate attributeName="stop-color" values="#4285F4; #EA4335; #FBBC05; #34A853; #4285F4" dur="4s" repeatCount="indefinite" />
-                  </stop>
-                  <stop offset="50%" stopColor="#EA4335">
-                    <animate attributeName="stop-color" values="#EA4335; #FBBC05; #34A853; #4285F4; #EA4335" dur="4s" repeatCount="indefinite" />
-                  </stop>
-                  <stop offset="100%" stopColor="#FBBC05">
-                    <animate attributeName="stop-color" values="#FBBC05; #34A853; #4285F4; #EA4335; #FBBC05" dur="4s" repeatCount="indefinite" />
-                  </stop>
-                </linearGradient>
-              </defs>
-              <path fill="url(#g-colors)" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-          </div>
-        </div>
-
-        {/* Premium Liquid Glass Flashcard */}
-        <div className="w-full max-w-md md:max-w-xl my-1 sm:my-2 h-[90px] sm:h-[110px] flex flex-col justify-center items-center text-center bg-white/[0.08] backdrop-blur-3xl border border-white/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] rounded-3xl py-2 px-4 sm:px-6 overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(254,199,8,0.25)] hover:bg-white/10" style={{ willChange: 'auto' }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeBenefit}
-              initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
-              transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
-              style={{ willChange: 'transform, opacity, filter' }}
-              className="flex flex-col items-center justify-center text-center w-full"
-            >
-              <h3 className="cinematic-card-title mb-1 text-xl drop-shadow-md sm:text-2xl">{benefits[activeBenefit].title}</h3>
-              <p className="text-white/70 font-medium text-xs sm:text-sm tracking-tight leading-relaxed max-w-[280px] mx-auto">{benefits[activeBenefit].desc}</p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-
-        {/* 🔐 BOTTOM AUTH FORM / ONBOARDING SWAP */}
-        <div className="relative z-20 w-full max-w-md md:max-w-xl mx-auto px-4 pb-12 shrink-0">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <>
-              <div className="space-y-3">
-                {authError && <p className="text-red-400 font-body font-bold text-sm text-center mb-4 drop-shadow-md leading-relaxed">{authError}</p>}
-                <button
-                  onClick={() => void handleSocialAuth('google')}
-                  disabled={isGoogleLoading || isEmailLoading}
-                  className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-heading font-bold uppercase tracking-widest text-slate-800 bg-white hover:bg-slate-100 transition-all duration-300 active:scale-95 shadow-md disabled:opacity-60 disabled:active:scale-100"
-                >
-                  {isGoogleLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                  )}
-                  <span>{isGoogleLoading && socialChoice === 'google' ? 'Opening Google' : 'Continue with Google'}</span>
-                </button>
-                <button type="button" onClick={() => void handleSocialAuth('apple')} disabled={isGoogleLoading || isEmailLoading} className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/30 bg-black px-6 py-4 font-semibold text-white disabled:opacity-60">{isGoogleLoading && socialChoice === 'apple' && <Loader2 className="h-5 w-5 animate-spin"/>}{isGoogleLoading && socialChoice === 'apple' ? 'Opening Apple' : 'Sign in with Apple'}</button><p className="text-center text-xs text-white/65">Sign in to keep your pet records together. No AI subscription or API key needed.</p><div className="relative flex items-center py-1">
-                  <div className="grow border-t border-white/10"></div>
-                  <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-heading font-bold uppercase tracking-widest">or use email</span>
-                  <div className="grow border-t border-white/10"></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-1">
-                  <button type="button" onClick={() => { setIsSignUp(false); setAuthError(''); }} className={`rounded-xl px-3 py-2.5 text-xs font-heading font-black uppercase tracking-[0.18em] transition-all ${!isSignUp ? 'bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.25)]' : 'text-white/45 hover:text-white'}`}>Sign In</button>
-                  <button type="button" onClick={() => { setIsSignUp(true); setAuthError(''); }} className={`rounded-xl px-3 py-2.5 text-xs font-heading font-black uppercase tracking-[0.18em] transition-all ${isSignUp ? 'bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.25)]' : 'text-white/45 hover:text-white'}`}>Create Account</button>
-                </div>
-                <div className="relative group">
-                  <input type="email" id="email" value={email} onChange={(e) => { setEmail(e.target.value); setAuthError(''); }} autoComplete="email" data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Email" />
-                  <label htmlFor="email" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Email</label>
-                </div>
-                <div className="relative group">
-                  <input type="password" id="password" value={password} onChange={(e) => { setPassword(e.target.value); setAuthError(''); }} autoComplete={isSignUp ? 'new-password' : 'current-password'} data-lpignore="true" data-form-type="other" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Password" />
-                  <label htmlFor="password" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Password</label>
-                </div>
-                {isSignUp && (
-                  <div className="relative group">
-                    <input type="tel" inputMode="numeric" id="phone" value={phone} onChange={(e) => { setPhone(e.target.value); setAuthError(''); }} autoComplete="tel" data-lpignore="true" data-form-type="phone" className="peer w-full bg-black/20 border border-white/10 rounded-xl px-4 pt-5 pb-2 text-slate-200 font-body font-bold tracking-wide placeholder-transparent focus:outline-none focus:border-[#fec708]/50 focus:ring-1 focus:ring-[#fec708]/30 transition-all duration-300 ease-out" placeholder="Phone" />
-                    <label htmlFor="phone" className="absolute left-4 top-1 text-[10px] font-body font-bold text-slate-200 tracking-wide uppercase transition-all duration-300 ease-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:text-white/40 peer-focus:top-1 peer-focus:text-[10px] peer-focus:font-bold peer-focus:text-white/80 cursor-text select-none">Phone (for appointment reminders)</label>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-4 pt-3">
-                <button
-                  onClick={onSubmit}
-                  disabled={isEmailLoading || isGoogleLoading}
-                  className="w-full bg-[#fec708] hover:bg-[#e0b006] text-black font-heading font-bold uppercase tracking-widest py-3.5 px-4 rounded-xl transition-all duration-300 ease-out shadow-[0_0_15px_rgba(254,199,8,0.2)] hover:shadow-[0_0_20px_rgba(254,199,8,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {isEmailLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {isEmailLoading ? 'Please wait' : isSignUp ? 'Create Account' : 'Enter the Clinic'}
-                </button>
-                <div className="flex justify-between w-full px-1">
-                  {isSignUp ? (
-                    <div></div>
-                  ) : (
-                    <button type="button" onClick={handleForgotPassword} className="text-xs font-body font-bold text-white/60 hover:text-white transition-colors duration-300 ease-out cursor-pointer tracking-wide">Forgot Password?</button>
-                  )}
-                  <span className="text-xs font-body font-bold text-white/40 tracking-wide">
-                    {isSignUp ? 'Profile setup comes next' : 'New parents can create an account'}
-                  </span>
-                </div>
-              </div>
-            </>
-          </motion.div>
-        </div>
-      </div>
-    </div>
-  );
+  const busy = isEmailLoading || isGoogleLoading;
+  const setters = { parentName: setParentName, petName: setPetName, petType: setPetType, breed: setBreed, age: setAge, gender: setGender, weight: setWeight, phone: setPhone, additionalDetails: setAdditionalDetails };
+  return <main className="onboarding-shell"><div className="onboarding-wrap">
+    <header className="onboarding-brand"><img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" referrerPolicy="no-referrer" /><p><strong>Planet Animal</strong>Hospital &amp; Wellness</p></header>
+    <div className="onboarding-intro"><h1>{needsOnboarding ? 'Their care starts with you.' : 'A familiar place. A little more care.'}</h1><p>{needsOnboarding ? 'Create your pet’s profile in two short steps.' : 'Your pet’s records, care journey and next visit, together.'}</p></div>
+    <section className="onboarding-card" aria-label={needsOnboarding ? 'Create your pet profile' : 'Sign in to Planet Animal'}>
+      {needsOnboarding ? <OnboardingForm values={{ parentName, petName, petType, breed, age, gender, weight, phone, additionalDetails }} onChange={(key, value) => { setters[key](value); setAuthError(''); }} onSubmit={() => void handleCompleteProfile()} saving={isProfileSaving} error={authError} /> : <>
+        <button type="button" className="onboarding-social" disabled={busy} onClick={() => void handleSocialAuth('google')}>{isGoogleLoading && socialChoice === 'google' ? <><Loader2 size={18} className="animate-spin" />Opening Google…</> : 'Continue with Google'}</button>
+        <button type="button" className="onboarding-social" disabled={busy} onClick={() => void handleSocialAuth('apple')}>{isGoogleLoading && socialChoice === 'apple' ? <><Loader2 size={18} className="animate-spin" />Opening Apple…</> : 'Sign in with Apple'}</button>
+        <div className="onboarding-divider">or continue with email</div>
+        <div className="onboarding-tabs" aria-label="Account options"><button type="button" aria-pressed={!isSignUp} disabled={busy} onClick={() => { setIsSignUp(false); setAuthError(''); }}>Sign in</button><button type="button" aria-pressed={isSignUp} disabled={busy} onClick={() => { setIsSignUp(true); setAuthError(''); }}>Create account</button></div>
+        <form onSubmit={onSubmit} className="onboarding-form">
+          {authError && <p role="alert" className="onboarding-error">{authError}</p>}
+          <fieldset disabled={busy} className="onboarding-fields"><legend className="sr-only">Account details</legend>
+            <label className="onboarding-field"><span>Email</span><input type="email" required value={email} onChange={e => { setEmail(e.target.value); setAuthError(''); }} autoComplete="email" placeholder="you@example.com" /></label>
+            <label className="onboarding-field"><span>Password</span><input type="password" required minLength={isSignUp ? 6 : undefined} value={password} onChange={e => { setPassword(e.target.value); setAuthError(''); }} autoComplete={isSignUp ? 'new-password' : 'current-password'} placeholder={isSignUp ? 'At least 6 characters' : 'Your password'} /></label>
+            {isSignUp && <label className="onboarding-field"><span>Mobile number<small>Optional</small></span><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} autoComplete="tel" placeholder="Your contact number" /></label>}
+          </fieldset>
+          <button className="onboarding-primary" type="submit" disabled={busy}>{isEmailLoading && <Loader2 size={18} className="animate-spin" />}{isEmailLoading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}</button>
+          <p className="onboarding-note">{isSignUp ? 'Next, introduce us to your pet.' : 'Welcome back to your pet’s care.'}</p>
+        </form>
+        {!isSignUp && <button type="button" disabled={busy} className="onboarding-text-button" onClick={handleForgotPassword}>Forgot password?</button>}
+      </>}
+    </section>
+  </div></main>;
 }

@@ -1169,3 +1169,12 @@
     -webkit-backdrop-filter: blur(24px) saturate(1.5);
   }
 }
+/* Quiet orbital atmosphere, kept behind the dashboard content. */
+.planet-orbital-background { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.planet-orbital-background i { position: absolute; width: 430px; height: 430px; right: -210px; top: 40px; border: 1px solid rgb(254 199 8 / 8%); border-radius: 50%; animation: planet-orbit 90s linear infinite; }
+.planet-orbital-background i::after { content: ''; position: absolute; left: 62px; top: 62px; width: 5px; height: 5px; border-radius: 50%; background: rgb(254 199 8 / 35%); }
+.planet-orbital-background i:nth-child(2) { width: 620px; height: 620px; right: -305px; top: -55px; animation-duration: 140s; animation-direction: reverse; }
+.planet-orbital-background span { position: absolute; right: -30px; top: 205px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgb(254 199 8 / 10%), transparent 70%); }
+@keyframes planet-orbit { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .planet-orbital-background i { animation: none; } }
+.desktop-profile-link { align-self: end; justify-self: end; display: flex; align-items: center; gap: 8px; min-height: 44px; color: #fec708; font-size: 14px; }
