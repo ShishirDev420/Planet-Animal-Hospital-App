@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Calendar, FileText, Award, ChevronRight, Gift, X, Dog,
-  Syringe, Sparkles, Stethoscope, LogOut, PawPrint, Clock, Lock, Settings, Bot, Map, Check, Scissors, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
+  Syringe, Sparkles, Stethoscope, LogOut, PawPrint, Clock, Lock, Settings, Bot, Map, Check, ArrowRight, Plus, TrendingUp, Star, Zap, Trophy
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Logo from '../components/Logo';
@@ -122,12 +122,28 @@ function DogEarIcon({ size = 20 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M10 7c-2.6-2.3-5.2-1.6-6 1.2-.7 2.5-.2 6.8 1 9.3.9 1.9 2.3 2.6 4 2.2M22 7c2.6-2.3 5.2-1.6 6 1.2.7 2.5.2 6.8-1 9.3-.9 1.9-2.3 2.6-4 2.2" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 7c1.5-1 3.5-1.5 6-1.5S20.5 6 22 7c2 4.3 2.1 9.5 1.1 13.4-.7 2.7-3.3 5-7.1 5s-6.4-2.3-7.1-5C7.9 16.5 8 11.3 10 7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M13 16h.01M19 16h.01" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round"/><path d="M14 20c1.2 1.4 2.8 1.4 4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
 }
 
+function CheckupIcon({ size = 20 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 5v7a6 6 0 0 0 12 0V5M5 5h4m8 0h4M13 18v2a6 6 0 0 0 12 0v-2"/><circle cx="25" cy="15" r="3"/><path d="m11 11 2 2 3-3"/></svg>;
+}
+
+function GroomingIcon({ size = 20 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 16h22l-2 9H7l-2-9ZM9 25v2m14-2v2M7 16v-4c0-2 1-3 3-3h3"/><path d="m18 4 .7 2.3L21 7l-2.3.7L18 10l-.7-2.3L14 7l3.3-.7L18 4ZM25 8l.4 1.6L27 10l-1.6.4L25 12l-.4-1.6L23 10l1.6-.4L25 8Z"/></svg>;
+}
+
+function VaccinationIcon({ size = 20 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 23 12-12 4 4-12 12-4-4ZM18 9l5 5m-2-8 6 6M5 26l-2 3m7-12 5 5m-4-8 5 5"/><path d="m23 4 5 5"/></svg>;
+}
+
+function HaircutIcon({ size = 20 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="23" r="3"/><circle cx="14" cy="25" r="3"/><path d="M9.5 21 25 7m-9 15L7 8m8 15L26 9M21 5c2-1 4 0 5 2"/><path d="m24 19 1.2 1.8L27 22l-1.8 1.2L24 25l-1.2-1.8L21 22l1.8-1.2L24 19Z"/></svg>;
+}
+
 const BOOKING_SERVICES = [
-  { id: 1, name: 'General Checkup', points: 1000, icon: Stethoscope, desc: 'Full health assessment' },
-  { id: 2, name: 'Full Grooming', points: 800, icon: Sparkles, desc: 'Bath, trim & nail care' },
-  { id: 3, name: 'Vaccinations', points: 750, icon: Syringe, desc: 'Core & booster shots' },
+  { id: 1, name: 'General Checkup', points: 1000, icon: CheckupIcon, desc: 'Full health assessment' },
+  { id: 2, name: 'Full Grooming', points: 800, icon: GroomingIcon, desc: 'Bath, trim & nail care' },
+  { id: 3, name: 'Vaccinations', points: 750, icon: VaccinationIcon, desc: 'Core & booster shots' },
   { id: 4, name: 'Ear Cleaning', points: 200, icon: DogEarIcon, desc: 'Dog ear care & inspection' },
-  { id: 5, name: 'Haircut', points: 200, icon: Scissors, desc: 'Breed-specific styling' },
+  { id: 5, name: 'Haircut', points: 200, icon: HaircutIcon, desc: 'Breed-specific styling' },
   { id: 6, name: 'Follow-up appointment', points: 0, icon: Stethoscope, desc: 'Review with your veterinarian' }
 ];
 
@@ -624,7 +640,7 @@ export default function Dashboard() {
                             >
                               <motion.div animate={shouldReduceMotion ? undefined : isSelected ? { scale: 1.08, rotate: -4 } : { scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 350, damping: 20 }} className={cn(
                                 "grid h-8 w-8 shrink-0 place-items-center rounded-[0.85rem] transition-all duration-300",
-                                isSelected ? "bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.28)]" : "bg-white/[0.075] text-white/48"
+                                isSelected ? "bg-[#fec708] text-black shadow-[0_0_18px_rgba(254,199,8,0.28)]" : "bg-white/[0.09] text-white/75"
                               )}>
                                 <ServiceIcon size={20} />
                               </motion.div>
