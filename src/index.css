@@ -266,25 +266,12 @@
     height: clamp(5.75rem, 24vw, 10rem);
   }
 
-  .paw-balance-logo-halo {
-    position: absolute;
-    inset: 0;
-    border-radius: 999px;
-    background:
-      radial-gradient(circle, oklch(0.86 0.18 87 / 0.24), transparent 56%),
-      radial-gradient(circle, oklch(0.73 0.16 82 / 0.15), transparent 72%);
-    box-shadow: 0 0 68px oklch(0.78 0.17 84 / 0.34);
-  }
-
   .paw-balance-logo {
     width: clamp(4.65rem, 18.5vw, 7.85rem);
     height: clamp(4.65rem, 18.5vw, 7.85rem);
     background: #fec708;
     border: 1px solid oklch(0.98 0.04 96 / 0.25);
-    box-shadow:
-      0 0 58px oklch(0.78 0.17 84 / 0.52),
-      0 0 0 0.95rem oklch(0.78 0.17 84 / 0.075),
-      inset 0 1px 14px oklch(0.98 0.04 96 / 0.26);
+    box-shadow: none;
   }
 
   .paw-balance-number {
@@ -1178,3 +1165,7 @@
 @keyframes planet-orbit { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .planet-orbital-background i { animation: none; } }
 .desktop-profile-link { align-self: end; justify-self: end; display: flex; align-items: center; gap: 8px; min-height: 44px; color: #fec708; font-size: 14px; }
+
+/* Soft background atmosphere keeps attention on care and the original logo. */
+.mobile-shell-orb-field { opacity: .3; }
+.planet-orbital-background { opacity: .35; }

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import planetLogo from '../assets/planet-logo.png';
+import PlanetSoul from './PlanetSoul';
 import './planet-loader.css';
 
 type Request = { label?: string; detail?: string; className?: string };
@@ -26,13 +26,7 @@ export function PlanetLoadingProvider({ children }: { children: ReactNode }) {
 
 function OrbScreen({ active = true, label = 'Planet Animal Hospital', detail = 'Loading your pet care', className = '' }: Request & { active?: boolean }) {
   return <div className={`planet-loading-screen ${className}`} hidden={!active} role="status" aria-live="polite" aria-atomic="true" data-planet-loading-screen>
-    <div className="planet-loading-orb" aria-hidden="true">
-      <div className="planet-loading-halo" />
-      <div className="planet-loading-ring planet-loading-ring-outer" />
-      <div className="planet-loading-ring planet-loading-ring-inner" />
-      <div className="planet-loading-orbit"><i /></div>
-      <img src={planetLogo} alt="" width="128" height="128" decoding="sync" fetchPriority="high" />
-    </div>
+    {active && <PlanetSoul className="planet-loading-soul" />}
     <div className="planet-loading-copy"><p>{label}</p><span>{detail}</span></div>
   </div>;
 }

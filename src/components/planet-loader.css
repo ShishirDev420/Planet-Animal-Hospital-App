@@ -1,16 +1,8 @@
 .planet-loading-screen{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px;background:radial-gradient(ellipse at 50% 42%,#173726 0%,#071912 48%,#03110c 100%);color:#fff;text-align:center;isolation:isolate}
 .planet-loading-screen[hidden]{display:none}
-.planet-loading-orb{position:relative;display:grid;place-items:center;width:min(76vw,310px);aspect-ratio:1;flex-shrink:0}
-.planet-loading-orb img{position:relative;width:40%;height:auto;border-radius:50%;object-fit:contain;box-shadow:0 0 28px #fec70838;z-index:2}
-.planet-loading-halo{position:absolute;inset:12%;border-radius:50%;background:conic-gradient(from 60deg,transparent,#fec70845,transparent,#43c8ae30,transparent);filter:blur(18px);animation:planet-loader-turn 12s linear infinite}
-.planet-loading-ring{position:absolute;border-radius:50%;border:1px solid transparent;animation:planet-loader-turn 9s linear infinite}
-.planet-loading-ring-outer{inset:3%;border-top-color:#8bd6c366;border-right-color:#8bd6c318;transform:rotate(-35deg);animation-duration:14s;animation-direction:reverse}
-.planet-loading-ring-inner{inset:14%;border-top-color:#ffe7a8bb;border-left-color:#fec70828;box-shadow:inset 0 0 16px #fec70808}
-.planet-loading-orbit{position:absolute;inset:14%;animation:planet-loader-turn 9s linear infinite}
-.planet-loading-orbit i{position:absolute;top:-2px;left:50%;width:5px;height:5px;border-radius:50%;background:#fff1bd;box-shadow:0 0 12px #fec708bb}
+.planet-loading-soul{width:min(82vw,360px);flex-shrink:0}
 .planet-loading-copy{max-width:300px}
 .planet-loading-copy p{font-family:var(--font-heading,inherit);font-size:clamp(19px,5vw,24px);font-weight:800;line-height:1.25;margin:0}
 .planet-loading-copy span{display:block;margin-top:10px;color:#ffe9a3cc;font-size:14px;line-height:1.6}
-@keyframes planet-loader-turn{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.planet-loading-screen *{animation:none!important}}
-@media(max-height:480px){.planet-loading-screen{gap:12px}.planet-loading-orb{width:180px}}
+@media(max-height:480px){.planet-loading-screen{gap:10px}.planet-loading-soul{width:210px}.planet-loading-soul .planet-soul__caption{display:none}}

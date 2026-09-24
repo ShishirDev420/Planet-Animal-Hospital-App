@@ -1,34 +1,63 @@
-import { requestCareJson } from '../lib/care/request';
 import { useEffect, useRef, useState } from 'react';
+import { ArrowRight, Check, MessageCircleMore, Send, Sparkles } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { useCare } from '../lib/care/client';
+import { requestCareJson } from '../lib/care/request';
 import { EDUCATION, type AssistantDraft } from '../lib/care/assistant';
-const input='w-full min-w-0 rounded-xl border border-white/20 bg-black/20 px-3 py-3 text-sm text-white';
-export async function assistantRequest(body?:Record<string,unknown>) {
-  const user=auth.currentUser;if(!user)throw new Error('Sign in for your free assistant allowance.');
-  const data=await requestCareJson('/api/assistant',{method:body?'POST':'GET',headers:{Authorization:`Bearer ${await user.getIdToken()}`,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})},{timeoutMs:35000});
-  if(auth.currentUser?.uid!==user.uid)throw new Error('Account changed. Reopen the assistant.');
+
+type Allowance = { dailyRemaining: number; dailyLimit: number; monthlyRemaining: number; monthlyLimit: number };
+export async function assistantRequest(body?: Record<string, unknown>) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Sign in to use your free requests.');
+  const data = await requestCareJson('/api/assistant', { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${await user.getIdToken()}`, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) }, { timeoutMs: 35000 });
+  if (auth.currentUser?.uid !== user.uid) throw new Error('Account changed. Reopen the assistant.');
   return data;
 }
-export default function CareAssistant({agent='pritpawl',requestService=assistantRequest}:{agent?:'pawl'|'pawlina'|'pritpawl';requestService?:typeof assistantRequest}) {
-  const care=useCare();
-  // Parent key remounts this private workspace on account/pet/agent changes.
+
+export default function CareAssistant({ agent = 'pritpawl', requestService = assistantRequest }: { agent?: 'pawl' | 'pawlina' | 'pritpawl'; requestService?: typeof assistantRequest }) {
+  const care = useCare();
   return <AssistantSession key={`${care.state?.ownerUid}:${care.petId}:${agent}`} agent={agent} requestService={requestService}/>;
 }
-function AssistantSession({agent,requestService}:{agent:string;requestService:typeof assistantRequest}) {
-  const care=useCare();const [prompt,setPrompt]=useState(''),[consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[answer,setAnswer]=useState<AssistantDraft|null>(null),[remaining,setRemaining]=useState<any>(null),[availability,setAvailability]=useState('Checking free assistant availability…');
-  const request=useRef({prompt:'',id:''}),mounted=useRef(true);
-  useEffect(()=>{mounted.current=true;void requestService().then(d=>{if(mounted.current)setRemaining(d.allowance);}).catch(e=>{if(mounted.current)setAvailability(e.message);});return()=>{mounted.current=false;};},[]);
-  const ask=async()=>{if(busy||!consent||!prompt.trim())return;setBusy(true);setError('');if(request.current.prompt!==prompt)request.current={prompt,id:crypto.randomUUID()};try{const d=await requestService({agent,petId:care.petId,prompt,requestId:request.current.id,consent,adult:true});if(mounted.current){setAnswer(d.draft);setRemaining(d.allowance);}}catch(e){if(mounted.current)setError((e as Error).message);}finally{if(mounted.current)setBusy(false);}};
-  return <section aria-label={`${agent} AI discussion`} className="liquid-glass relative rounded-[2rem] border border-white/10 p-5 text-white min-w-0">
-    <p className="cinematic-kicker">{agent} · AI care discussion</p><h2 className="cinematic-card-title text-2xl mt-2">Understand the next step.</h2>
-    <p className="mt-3 text-sm text-white/75">Get help organizing the selected pet’s records and preparing questions about missing details or appointments. Clinical advice comes from your veterinarian.</p>
-    <p className="mt-3 text-xs text-planet-yellow" role="status">{remaining?`${remaining.dailyRemaining} of ${remaining.dailyLimit} free requests left today · ${remaining.monthlyRemaining} of ${remaining.monthlyLimit} this month. Resets at UTC boundaries.`:availability}</p>
-    {!care.state && <p className="mt-3 text-xs text-white/70">Record-based AI discussion needs your signed-in care workspace. Free general guides on Roadmap remain available.</p>}
-    <label className="block text-sm mt-4">Your question<textarea className={`${input} mt-2`} rows={3} maxLength={2000} value={prompt} onChange={e=>setPrompt(e.target.value)}/></label>
-    <label className="flex gap-3 text-xs leading-relaxed mt-3"><input type="checkbox" className="shrink-0 mt-1" checked={consent} onChange={e=>setConsent(e.target.checked)}/>I am 18 or older. Send this question, selected pet history, recorded instructions and prescription text to the hospital’s configured Gemini service. Images are not sent by this chat. AI discussion drafts are kept for seven days, with deletion processing after expiry; they are not clinical approval.</label>
-    <button onClick={()=>void ask()} disabled={!care.state||busy||!consent||!prompt.trim()} className="mt-4 rounded-xl bg-planet-yellow text-black px-5 py-3 font-semibold disabled:opacity-40">{busy?'Preparing an answer…':error?'Retry this question':'Ask '+agent}</button>
-    {error&&<div><p role="alert" className="mt-3 text-sm text-planet-yellow">{error}</p><button disabled={busy||!consent||!prompt.trim()} className="mt-2 text-xs underline" onClick={()=>{request.current={prompt:"",id:""};void ask();}}>Start a new request (uses your allowance)</button></div>}
-    {answer&&<div className="mt-5 border-t border-white/15 pt-4 space-y-3"><h3 className="font-semibold">AI discussion draft · needs veterinary review</h3><p className="text-sm leading-relaxed whitespace-pre-wrap">{answer.summary}</p><h4 className="text-sm font-semibold">Questions to discuss with your veterinarian</h4><ul className="space-y-3 text-sm">{answer.discussionTopics.map((t,i)=><li key={i}>{t.question}{t.sourceId&&<a className="block mt-1 text-planet-yellow underline" href={EDUCATION.find(s=>s.id===t.sourceId)?.url} target="_blank" rel="noopener noreferrer">General veterinary guidance (opens a new tab)</a>}</li>)}</ul>{answer.uncertainty.map((u,i)=><p className="text-xs text-planet-yellow" key={i}>{u}</p>)}<p className="text-xs text-white/65">No treatment, date, appointment or reward has been approved or changed by this answer. Follow your veterinarian’s recorded instructions.</p></div>}
+
+function AssistantSession({ agent, requestService }: { agent: string; requestService: typeof assistantRequest }) {
+  const care = useCare();
+  const pet = care.state?.pets.find(item => item.id === care.petId);
+  const [prompt, setPrompt] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [answer, setAnswer] = useState<AssistantDraft | null>(null);
+  const [allowance, setAllowance] = useState<Allowance | null>(null);
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [availability, setAvailability] = useState('Checking availability…');
+  const request = useRef({ prompt: '', id: '' });
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    void requestService().then(result => { if (mounted.current) { setAllowance(result.allowance); setConfigured(result.configured); setAvailability(result.configured ? '' : 'The clinic is setting up AI chat. Your care record is still available.'); } }).catch(error => { if (mounted.current) { setConfigured(false); setAvailability((error as Error).message); } });
+    return () => { mounted.current = false; };
+  }, [requestService]);
+  const ask = async () => {
+    if (busy || !configured || !consent || !prompt.trim() || !pet) return;
+    setBusy(true); setError(''); setAnswer(null);
+    if (request.current.prompt !== prompt) request.current = { prompt, id: crypto.randomUUID() };
+    try { const result = await requestService({ agent, petId: care.petId, prompt, requestId: request.current.id, consent, adult: true }); if (mounted.current) { setAnswer(result.draft); setAllowance(result.allowance); } }
+    catch (error) { if (mounted.current) setError((error as Error).message); }
+    finally { if (mounted.current) setBusy(false); }
+  };
+  return <section className="ai-chat" aria-label="AI care conversation">
+    <div className="ai-chat-context"><span className="ai-vet-eyebrow">Your conversation</span><h2>{pet ? `Let’s talk about ${pet.name}.` : 'Select your pet to begin.'}</h2><p>{pet ? 'We’ll use this pet’s recorded history and instructions to help you prepare better questions.' : 'Your saved pet details will appear here once your care record loads.'}</p>
+      {care.state && care.state.pets.length > 1 && <label className="ai-pet-select">Pet in this conversation<select value={care.petId} onChange={event => care.setPetId(event.target.value)}>{care.state.pets.map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>}
+    </div>
+      <div className="ai-chat-body"><div className="ai-allowance"><span className="ai-allowance-icon"><Sparkles size={19}/></span><div><strong>Your free requests</strong>{allowance ? <p><b>{allowance.dailyRemaining} of {allowance.dailyLimit}</b> left today <span>·</span> <b>{allowance.monthlyRemaining} of {allowance.monthlyLimit}</b> left this month</p> : <p>{availability}</p>}<small>Resets daily at 5:30 AM India time; monthly on the 1st.</small></div></div>
+      {configured === false && allowance && <p className="ai-unavailable" role="status">{availability}</p>}
+      <div className="ai-chat-starter"><MessageCircleMore size={22}/><p>Ask about something in {pet?.name || 'your pet'}’s record, or prepare for the next visit.</p></div>
+      <label className="ai-question-label" htmlFor="care-question">Your question</label><textarea id="care-question" rows={4} maxLength={2000} placeholder="For example: What should I ask at our next visit?" value={prompt} onChange={event => setPrompt(event.target.value)}/><p className="ai-question-count">{prompt.length} / 2,000</p>
+      <div className="ai-question-chips" aria-label="Example questions"><button type="button" onClick={() => setPrompt('What details are missing from my pet’s recorded care?')}>What’s missing from the record?</button><button type="button" onClick={() => setPrompt('What questions should I ask the veterinarian about the recorded instructions?')}>Questions for my vet</button></div>
+      <label className="ai-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)}/><span>I’m 18 or older and agree to send this question and {pet?.name || 'my pet'}’s recorded care text to the clinic’s AI service. Images are not sent. Drafts are kept for seven days and do not count as veterinary approval.</span></label>
+      <button type="button" className="ai-send" onClick={() => void ask()} disabled={!care.state || !pet || busy || !configured || !consent || !prompt.trim() || allowance?.dailyRemaining === 0 || allowance?.monthlyRemaining === 0}>{busy ? 'Preparing your answer…' : 'Ask about my pet'}<Send size={18}/></button>
+      {error && <div role="alert" className="ai-error"><p>{error}</p><button type="button" onClick={() => { request.current = { prompt: '', id: '' }; void ask(); }} disabled={busy}>Start a new request <ArrowRight size={15}/></button></div>}
+      {answer && <article className="ai-answer" aria-live="polite"><span className="ai-vet-eyebrow">A starting point for your visit</span><h3>Here’s what we found</h3><p>{answer.summary}</p>{answer.discussionTopics.length > 0 && <><h4>Questions to bring to your veterinarian</h4><ul>{answer.discussionTopics.map((topic, index) => <li key={index}><Check size={17}/><div>{topic.question}{topic.sourceId && <a href={EDUCATION.find(source => source.id === topic.sourceId)?.url} target="_blank" rel="noopener noreferrer">Read general veterinary guidance <ArrowRight size={13}/></a>}</div></li>)}</ul></>}{answer.uncertainty.map((item, index) => <p className="ai-uncertainty" key={index}>{item}</p>)}<small>No treatment, appointment, reward or care record has been changed by this answer. Follow your veterinarian’s instructions.</small></article>}
+    </div>
   </section>;
 }

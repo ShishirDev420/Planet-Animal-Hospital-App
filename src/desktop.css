@@ -45,6 +45,7 @@
 .desktop-workspace .mobile-action-card p { font-size: 12px; }
 .desktop-workspace .mobile-dashboard { padding: 0; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, 1fr); gap: 26px; }
 .desktop-workspace .mobile-dashboard > * { min-width: 0; margin: 0; }
+.desktop-workspace .home-reward-card { grid-column: 1 / -1; grid-row: 2; }
 .desktop-workspace .mobile-header-row { grid-column: 1 / -1; padding: 0 0 5px; }
 .desktop-workspace .desktop-dashboard-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
 .desktop-eyebrow { display: block; color: #b9c6a7; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.8px; }
@@ -53,8 +54,10 @@
 .desktop-dashboard-heading h1 + p { color: var(--desktop-muted); font-size: 13px; line-height: 1.7; }
 .desktop-quiet-button { display: flex; align-items: center; gap: 8px; padding: 10px 0 10px 10px; flex-shrink: 0; color: #b7c5ba; font-size: 11px; }
 .desktop-pet-overview { display: none; }
-.desktop-workspace .desktop-pet-overview { display: flex; grid-column: 1; border: 1px solid #365038; background: #203b28; border-radius: 20px; overflow: hidden; }
+.desktop-workspace .desktop-pet-overview { display: flex; grid-column: 1; grid-row: 3; border: 1px solid #365038; background: #203b28; border-radius: 20px; overflow: hidden; }
 .desktop-pet-overview-main { padding: 30px; flex: 1; min-width: 0; }
+.desktop-care-soul { align-self: center; flex: 0 1 190px; margin: 8px 0; }
+.desktop-care-soul .planet-soul__caption { color: #c1ceae; }
 .desktop-pet-overview h2 { font-family: var(--font-heading); font-size: clamp(28px, 2.6vw, 40px); font-weight: 500; line-height: 1.08; letter-spacing: -1.3px; margin: 16px 0 14px; overflow-wrap: anywhere; }
 .desktop-pet-overview h2 span { display: block; color: #c1ceae; }
 .desktop-pet-overview-main > p { font-size: 12px; line-height: 1.8; color: #bfcdbb; max-width: 250px; }
@@ -66,7 +69,7 @@
 .desktop-pet-details dt { font-size: 9px; text-transform: uppercase; letter-spacing: 1.3px; color: #a6b59e; }
 .desktop-pet-details dd { color: #f0f2e5; font-size: 12px; margin-top: 3px; overflow-wrap: anywhere; }
 .desktop-pet-details button { display: flex; gap: 8px; align-items: center; color: #e1e5cf; font-size: 10px; margin-top: 24px; }
-.desktop-workspace .mobile-briefing-card { grid-column: 2; grid-row: 2; background: #10251c; border: 1px solid var(--desktop-line); border-radius: 20px; box-shadow: none; backdrop-filter: none; padding: 30px; display: flex; flex-direction: column; justify-content: center; transition: border-color 160ms ease, background-color 160ms ease; }
+.desktop-workspace .mobile-briefing-card { grid-column: 2; grid-row: 3; background: #10251c; border: 1px solid var(--desktop-line); border-radius: 20px; box-shadow: none; backdrop-filter: none; padding: 30px; display: flex; flex-direction: column; justify-content: center; transition: border-color 160ms ease, background-color 160ms ease; }
 .desktop-workspace .mobile-briefing-card:hover { border-color: #728251; background: #142b20; }
 .desktop-workspace .mobile-briefing-card > .absolute { display: none; }
 .desktop-workspace .mobile-briefing-card > .relative { flex-direction: column; gap: 28px; }
@@ -94,6 +97,7 @@
   .desktop-page { padding: 28px 26px 18px; }
   .desktop-workspace .mobile-dashboard { grid-template-columns: minmax(0, 1fr) minmax(250px, .85fr); gap: 20px; }
   .desktop-pet-overview-main { padding: 24px; }
+  .desktop-care-soul { flex-basis: 165px; }
   .desktop-pet-details { display: none; }
   .desktop-workspace .mobile-briefing-card { padding: 24px; }
   .desktop-workspace .mobile-action-card { padding: 17px; }

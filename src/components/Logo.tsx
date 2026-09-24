@@ -17,7 +17,7 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
     <img
       src={planetLogo}
       alt="Planet Animal Hospital Logo"
-      className={`${sizeClasses[size]} h-auto object-contain drop-shadow-[0_0_20px_rgba(254,199,8,0.8)] ${className}`}
+      className={`${sizeClasses[size]} h-auto object-contain ${className}`}
     />
   );
 }

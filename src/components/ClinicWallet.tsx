@@ -1,47 +1,105 @@
-import RewardClimb from './RewardClimb';
-import { useLocation, useInRouterContext } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useInRouterContext, useLocation } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { ArrowDownLeft, ArrowUpRight, Clock3, RefreshCw, ShieldCheck, Wallet } from 'lucide-react';
+import { auth } from '../lib/firebase';
 import { isPreviewDemoMode } from '../lib/demoMode';
 import { requestCareJson } from '../lib/care/request';
+import RewardClimb from './RewardClimb';
 import RedemptionPolicyEditor from './RedemptionPolicyEditor';
-import { useEffect, useRef, useState } from 'react';
-import { auth } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-export async function walletRequest(body?:Record<string,unknown>,ownerUid?:string) {
- if(isPreviewDemoMode() || window.location.pathname.endsWith('-review.html'))throw new Error('Visual previews cannot access the live wallet.');
- const user=auth.currentUser;if(!user)throw new Error('Sign in to view your clinic wallet.');
- const d=await requestCareJson('/api/wallet'+(ownerUid?'?ownerUid='+encodeURIComponent(ownerUid):''),{method:body?'POST':'GET',headers:{Authorization:`Bearer ${await user.getIdToken()}`,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
- if(auth.currentUser?.uid!==user.uid)throw new Error('Account changed. Reopen the wallet.');return d;
+import '../pages/rewards.css';
+
+export async function walletRequest(body?: Record<string, unknown>, ownerUid?: string) {
+  if (isPreviewDemoMode() || window.location.pathname.endsWith('-review.html')) throw new Error('Visual previews cannot access the live wallet.');
+  const user = auth.currentUser;
+  if (!user) throw new Error('Sign in to view your clinic wallet.');
+  const data = await requestCareJson('/api/wallet' + (ownerUid ? '?ownerUid=' + encodeURIComponent(ownerUid) : ''), {
+    method: body ? 'POST' : 'GET',
+    headers: { Authorization: `Bearer ${await user.getIdToken()}`, 'Content-Type': 'application/json' },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  if (auth.currentUser?.uid !== user.uid) throw new Error('Account changed. Reopen the wallet.');
+  return data;
 }
-const field='block w-full min-w-0 rounded-xl border border-white/20 bg-black/20 p-3 mt-1';
-export default function ClinicWallet(props:{ownerUid?:string;staff?:boolean}) {
- const routed=useInRouterContext();
- return routed?<RoutedWallet {...props}/>:<PreviewWalletNotice/>;
+
+const field = 'wallet-field';
+export default function ClinicWallet(props: { ownerUid?: string; staff?: boolean }) {
+  const routed = useInRouterContext();
+  return routed ? <RoutedWallet {...props}/> : <PreviewWalletNotice/>;
 }
-function PreviewWalletNotice(){return <p className="my-5 rounded-2xl border border-white/15 p-5 text-sm text-white/70">Visual preview only. Sign in through the main app to use your clinic wallet. No live wallet is connected here.</p>;}
-function RoutedWallet(props:{ownerUid?:string;staff?:boolean}) {
- const location=useLocation();
- return isPreviewDemoMode(location.search,location.pathname)||location.pathname.endsWith('-review.html')?<PreviewWalletNotice/>:<AuthenticatedWallet {...props}/>;
+function PreviewWalletNotice() { return <div className="wallet-empty">Visual preview only. Sign in through the main app to view verified points.</div>; }
+function RoutedWallet(props: { ownerUid?: string; staff?: boolean }) {
+  const location = useLocation();
+  return isPreviewDemoMode(location.search, location.pathname) || location.pathname.endsWith('-review.html') ? <PreviewWalletNotice/> : <AuthenticatedWallet {...props}/>;
 }
-function AuthenticatedWallet({ownerUid,staff=false}:{ownerUid?:string;staff?:boolean}) {
- const [session,setSession]=useState(auth.currentUser?.uid);useEffect(()=>onAuthStateChanged(auth,u=>setSession(u?.uid)),[]);
- return <WalletSession key={`${session}:${ownerUid}`} ownerUid={ownerUid} staff={staff}/>;
+function AuthenticatedWallet({ ownerUid, staff = false }: { ownerUid?: string; staff?: boolean }) {
+  const [session, setSession] = useState(auth.currentUser?.uid);
+  useEffect(() => onAuthStateChanged(auth, user => setSession(user?.uid)), []);
+  return <WalletSession key={`${session}:${ownerUid}`} ownerUid={ownerUid} staff={staff}/>;
 }
-function WalletSession({ownerUid,staff}:{ownerUid?:string;staff:boolean}) {
- const [data,setData]=useState<any>(null),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[invoice,setInvoice]=useState(''),[points,setPoints]=useState(''),[reference,setReference]=useState(''),[eligible,setEligible]=useState(''),[plan,setPlan]=useState('essential'),[start,setStart]=useState(''),[end,setEnd]=useState('');const mounted=useRef(true),reservation=useRef({fingerprint:'',id:''});
- const load=async()=>{try{const d=await walletRequest(undefined,ownerUid);if(mounted.current){setData(d);setNotice('');}}catch(e){if(mounted.current)setNotice((e as Error).message);}};
- useEffect(()=>{mounted.current=true;void load();return()=>{mounted.current=false;};},[]);
- const run=async(b:Record<string,unknown>)=>{setBusy(true);try{const result=await walletRequest({...b,...(ownerUid?{ownerUid}:{})});if(mounted.current){await load();setNotice(result.invoiceId?'Invoice registered. Give the parent this ID: '+result.invoiceId:'Recorded by the wallet service.');}}catch(e){if(mounted.current)setNotice((e as Error).message);}finally{if(mounted.current)setBusy(false);}};
- return <section aria-label="Clinic wallet" className="relative z-10 rounded-2xl border border-white/15 bg-black/30 p-5 my-5 text-white">
-  <h2 className="cinematic-card-title text-2xl">Pawl · Your clinic wallet</h2>
-  {data&&<><RewardClimb points={data.wallet ? data.wallet.points-data.wallet.reservedPoints : null} policy={data.redemptionPolicy} paused={data.wallet?.reconciliationRequired}/><div className="flex flex-wrap gap-x-6 gap-y-3 border-t border-white/10 pt-4 text-sm text-white/70"><p><strong className="text-white">{data.pendingPoints}</strong> pending confirmed care</p><p><strong className="text-white">{data.wallet?.reservedPoints??'—'}</strong> reserved for an invoice</p></div>  {!data.wallet?.legacyReconciled&&<p className="text-sm text-planet-yellow">Previous profile balance: {data.legacyPoints===null?'not recorded':data.legacyPoints+' points'}. Your clinic will check these before adding them to your available wallet.</p>}
-  <p className="text-xs leading-relaxed text-white/75 mt-3">Verified points unlock clinic-configured percentage discounts on the entire recorded bill. Selecting a tier reserves its points; staff confirms the actual discount before points are spent. Checkup entitlements remain separate.</p>
-  {data.redemptionPolicy?.status!=="active"&&<p className="mt-3 text-sm text-planet-yellow">Whole-bill discount thresholds are awaiting clinic approval. Your earned points and existing reservations are preserved.</p>}
-  {staff&&data.role==="manager"&&<RedemptionPolicyEditor busy={busy} onSave={policy=>void run({type:"configureRedemption",policy})}/>}
-  {!staff&&<details className="mt-4"><summary className="cursor-pointer font-semibold">Use points at the hospital</summary><p className="text-sm mt-3">Ask billing staff for the invoice ID. Reserve points here, then staff confirms the actual invoice discount. A reservation lasts 15 minutes; release it if unused.</p><label className="block text-sm mt-3">Invoice ID<input className={field} value={invoice} onChange={e=>setInvoice(e.target.value)}/></label><label className="block text-sm mt-3">Whole-bill discount tier<select className={field} value={points} onChange={e=>setPoints(e.target.value)}><option value="">Choose a tier</option>{data.redemptionPolicy?.status==="active"&&data.redemptionPolicy.tiers.map((tier:any)=><option key={tier.id} value={tier.id}>{tier.points} points → {tier.percent}% off the entire bill</option>)}</select></label><button disabled={busy||!invoice||!points} className="mt-3 rounded-xl bg-planet-yellow text-black p-3 font-semibold disabled:opacity-40" onClick={()=>{const fingerprint=invoice+':'+points;if(reservation.current.fingerprint!==fingerprint)reservation.current={fingerprint,id:crypto.randomUUID()};void run({type:'reserveTier',id:reservation.current.id,invoiceId:invoice,tierId:points});}}>Reserve invoice discount</button></details>}
-  {staff&&<details className="mt-4"><summary className="cursor-pointer font-semibold">Billing controls</summary><label className="block text-sm mt-3">Actual invoice / billing adjustment reference<input className={field} value={reference} onChange={e=>setReference(e.target.value)}/></label><label className="block text-sm mt-3">Entire invoice total in paise (all items and taxes)<input type="number" min="1" step="1" className={field} value={eligible} onChange={e=>setEligible(e.target.value)}/></label><button disabled={busy||!reference||!eligible} className="mt-3 border border-planet-yellow/40 rounded-xl p-3" onClick={()=>void run({type:'registerInvoice',reference,eligiblePaise:Number(eligible),totalPaise:Number(eligible)})}>Record confirmed invoice</button>{data.role==='manager'&&!data.wallet?.legacyReconciled&&<button disabled={busy||data.legacyPoints===null} className="block mt-3 border border-white/30 rounded-xl p-3" onClick={()=>void run({type:'reconcileLegacy',expectedPoints:data.legacyPoints})}>Manager: reconcile displayed legacy balance</button>}{data.role==='manager'&&<div className="border-t border-white/15 pt-3 mt-4"><h3 className="font-semibold">Verify paid membership</h3><p className="text-xs mt-2">Enter its actual payment receipt above. Existing reward snapshots stay unchanged.</p><label className="block text-sm mt-3">Plan<select className={field} value={plan} onChange={e=>setPlan(e.target.value)}><option value="essential">Essential</option><option value="advanced">Advanced</option><option value="prestige">Premium</option></select></label><label className="block text-sm mt-3">Paid period begins<input type="datetime-local" className={field} value={start} onChange={e=>setStart(e.target.value)}/></label><label className="block text-sm mt-3">Paid period ends<input type="datetime-local" className={field} value={end} onChange={e=>setEnd(e.target.value)}/></label><button className="mt-3 border border-planet-yellow/40 rounded-xl p-3" disabled={busy||!reference||!start||!end} onClick={()=>void run({type:'verifySubscription',plan,status:'active',paymentReference:reference,startsAt:new Date(start).getTime(),endsAt:new Date(end).getTime()})}>Confirm verified payment</button><button className="block mt-3 underline" disabled={busy||!reference||!start||!end} onClick={()=>void run({type:'verifySubscription',plan,status:'cancelled',paymentReference:reference,startsAt:new Date(start).getTime(),endsAt:new Date(end).getTime()})}>Record cancellation of this membership</button></div>}</details>}
-  {data.wallet?.reconciliationRequired&&<p role="alert" className="mt-3 text-sm text-planet-yellow">The clinic needs to check a refunded reward. Your other history is retained; new redemptions are paused.</p>}
-  {data.reservations.map((r:any)=><div key={r.id} className="mt-3 border border-white/15 rounded-xl p-3 text-sm"><p>{r.points} points reserved · ID {r.id}</p>{r.basis==="entire-bill"&&<p>{r.percent}% off the entire ₹{(r.totalPaise/100).toFixed(2)} bill · ₹{(r.paise/100).toFixed(2)} discount</p>}<p>Expires {new Date(r.expiresAt).toLocaleString()}</p><button disabled={busy} className="underline mt-2" onClick={()=>void run({type:'release',id:r.id})}>Release reservation</button>{staff&&<button disabled={busy||!reference} className="block underline mt-2 text-planet-yellow" onClick={()=>void run({type:'apply',id:r.id,billingReference:reference})}>Confirm discount applied to the invoice</button>}</div>)}
-  <details className="mt-4"><summary className="cursor-pointer text-sm">Latest wallet activity</summary>{data.entries.map((e:any)=><p key={e.id} className="mt-2 text-xs">{e.type} · {e.points??'—'} points · {new Date(e.at).toLocaleString()}{e.convertible===false?' · Awaiting clinic check':''}{staff&&data.role==='manager'&&e.status==='reconciliation-required'&&<button className="block underline mt-1" disabled={busy} onClick={()=>void run({type:'settleRefund',id:e.id})}>Settle this refunded reward from available points</button>}{staff&&e.type==='earn'&&e.convertible===true&&<button className="block underline mt-1" disabled={busy||!reference} onClick={()=>void run({type:'reverseEarn',entryId:e.id,billingReference:reference})}>Record verified service refund</button>}{staff&&e.type==='apply'&&<button className="block underline mt-1" disabled={busy||!reference} onClick={()=>void run({type:'reverse',id:e.id.replace('apply-',''),billingReference:reference})}>Reverse confirmed invoice discount</button>}</p>)}</details></>}
-  {notice&&<p role="status" className="mt-3 text-sm text-planet-yellow break-words">{notice}</p>}<button onClick={()=>void load()} className="mt-3 underline text-sm" disabled={busy}>Refresh wallet</button>
- </section>;
+function WalletSession({ ownerUid, staff }: { ownerUid?: string; staff: boolean }) {
+  const [data, setData] = useState<any>(null);
+  const [notice, setNotice] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [invoice, setInvoice] = useState('');
+  const [tierId, setTierId] = useState('');
+  const [reference, setReference] = useState('');
+  const [eligible, setEligible] = useState('');
+  const [plan, setPlan] = useState('essential');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+  const mounted = useRef(true);
+  const reservation = useRef({ fingerprint: '', id: '' });
+  const load = async () => {
+    try { const result = await walletRequest(undefined, ownerUid); if (mounted.current) { setData(result); setNotice(''); } }
+    catch (error) { if (mounted.current) setNotice((error as Error).message); }
+    finally { if (mounted.current) setLoading(false); }
+  };
+  useEffect(() => { mounted.current = true; void load(); return () => { mounted.current = false; }; }, []);
+  const run = async (body: Record<string, unknown>) => {
+    setBusy(true);
+    try { const result = await walletRequest({ ...body, ...(ownerUid ? { ownerUid } : {}) }); await load(); if (mounted.current) setNotice(result.invoiceId ? `Invoice registered: ${result.invoiceId}` : 'Your wallet has been updated.'); }
+    catch (error) { if (mounted.current) setNotice((error as Error).message); }
+    finally { if (mounted.current) setBusy(false); }
+  };
+  const wallet = data?.wallet;
+  const available = wallet && Number.isFinite(wallet.points) && Number.isFinite(wallet.reservedPoints) ? Math.max(0, wallet.points - wallet.reservedPoints) : null;
+  const active = data?.redemptionPolicy?.status === 'active';
+  const tiers = active ? data.redemptionPolicy.tiers : [];
+  const reservations = data?.reservations || [];
+  const entries = data?.entries || [];
+  return <section aria-label="Clinic wallet" className="wallet-workspace">
+    <div className="wallet-balance-panel">
+      <div className="wallet-balance-top"><span><Wallet size={17}/> Your available balance</span><button type="button" onClick={() => void load()} disabled={busy || loading} aria-label="Refresh wallet"><RefreshCw size={17}/></button></div>
+      <div className="wallet-balance-value" aria-live="polite">{available === null ? '—' : available.toLocaleString('en-IN')} <small>Paw Points</small></div>
+      <p>{loading ? 'Checking your verified balance…' : available === null ? auth.currentUser ? 'Your verified balance is unavailable right now.' : 'Sign in to see your verified balance.' : 'Shared across your pets at Planet Animal Hospital.'}</p>
+      <div className="wallet-balance-orbit" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div>
+    </div>
+
+    {data && <>
+      <div className="wallet-status-grid">
+        <div><span className="wallet-stat-icon"><ShieldCheck size={20}/></span><span>Awaiting clinic check</span><strong>{Number.isFinite(data.pendingPoints) ? data.pendingPoints.toLocaleString('en-IN') : '—'}</strong><small>These points are not available yet.</small></div>
+        <div><span className="wallet-stat-icon"><Clock3 size={20}/></span><span>Reserved for a bill</span><strong>{Number.isFinite(wallet?.reservedPoints) ? wallet.reservedPoints.toLocaleString('en-IN') : '—'}</strong><small>Held until the reservation ends or staff confirms it.</small></div>
+      </div>
+
+      <div className="wallet-journey-panel"><div className="wallet-section-head"><span className="wallet-eyebrow">Your next chapter</span><h2>Reward journey</h2><p>{active ? 'Only clinic approved discounts appear here.' : 'Your points are saved while the clinic finalizes discount levels.'}</p></div><RewardClimb points={available} policy={data.redemptionPolicy} paused={wallet?.reconciliationRequired}/></div>
+      {!wallet?.legacyReconciled && <div className="wallet-callout">Previous profile points: {data.legacyPoints === null ? 'not recorded' : `${data.legacyPoints.toLocaleString('en-IN')} awaiting a clinic check`}. They are separate from the available balance above.</div>}
+      {wallet?.reconciliationRequired && <div className="wallet-callout" role="alert">The clinic needs to check a refunded reward. New discounts are paused until that review is complete.</div>}
+
+      <div className="wallet-activity-panel"><div className="wallet-section-head"><span className="wallet-eyebrow">Your record</span><h2>Recent activity</h2><p>Verified wallet changes appear here.</p></div>
+        {entries.length ? <ul className="wallet-activity-list">{entries.slice(0, 5).map((entry: any) => <li key={entry.id}><span className="wallet-activity-icon">{entry.type === 'earn' ? <ArrowDownLeft size={19}/> : <ArrowUpRight size={19}/>}</span><div><strong>{entry.type === 'earn' ? 'Points earned' : entry.type === 'apply' ? 'Discount applied' : entry.type === 'reserve' ? 'Points reserved' : 'Wallet update'}</strong><small>{entry.at ? new Date(entry.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date unavailable'}{entry.convertible === false ? ' · Awaiting clinic check' : ''}</small></div><b>{typeof entry.points === 'number' ? `${entry.type === 'earn' ? '+' : ''}${entry.points.toLocaleString('en-IN')}` : '—'}</b></li>)}</ul> : <p className="wallet-no-activity">No verified wallet activity yet. It will appear after eligible care is completed and approved.</p>}
+        {entries.length > 5 && <details className="wallet-details"><summary>View all activity</summary><ul className="wallet-activity-list">{entries.slice(5).map((entry: any) => <li key={entry.id}><span className="wallet-activity-icon"><Clock3 size={18}/></span><div><strong>{entry.type}</strong><small>{entry.at ? new Date(entry.at).toLocaleDateString('en-IN') : 'Date unavailable'}</small></div><b>{typeof entry.points === 'number' ? entry.points.toLocaleString('en-IN') : '—'}</b></li>)}</ul></details>}
+      </div>
+
+      {reservations.length > 0 && <div className="wallet-action-panel"><div className="wallet-section-head"><span className="wallet-eyebrow">At the hospital</span><h2>Active reservations</h2></div>{reservations.map((item: any) => <div className="wallet-reservation" key={item.id}><div><strong>{item.points} points reserved</strong><p>{item.basis === 'entire-bill' ? `${item.percent}% off the recorded ₹${(item.totalPaise / 100).toFixed(2)} bill` : 'Invoice discount'} · Expires {new Date(item.expiresAt).toLocaleString('en-IN')}</p></div><button disabled={busy} onClick={() => void run({ type: 'release', id: item.id })}>Release</button>{staff && <button disabled={busy || !reference} onClick={() => void run({ type: 'apply', id: item.id, billingReference: reference })}>Confirm on invoice</button>}</div>)}</div>}
+
+      {!staff && active && <details className="wallet-action-panel wallet-details"><summary>Use points at the hospital</summary><p>Ask billing staff for the invoice ID. Reserving a discount holds points for 15 minutes; staff confirms it on the bill before points are spent.</p><label>Invoice ID<input className={field} value={invoice} onChange={event => setInvoice(event.target.value)}/></label><label>Discount<select className={field} value={tierId} onChange={event => setTierId(event.target.value)}><option value="">Choose a discount</option>{tiers.map((tier: any) => <option key={tier.id} value={tier.id}>{tier.points} points · {tier.percent}% off the entire bill</option>)}</select></label><button className="wallet-primary-action" disabled={busy || !invoice || !tierId || wallet?.reconciliationRequired} onClick={() => { const fingerprint = invoice + ':' + tierId; if (reservation.current.fingerprint !== fingerprint) reservation.current = { fingerprint, id: crypto.randomUUID() }; void run({ type: 'reserveTier', id: reservation.current.id, invoiceId: invoice, tierId }); }}>Reserve discount</button></details>}
+
+      {staff && <details className="wallet-action-panel wallet-details"><summary>Staff billing controls</summary><label>Actual billing reference<input className={field} value={reference} onChange={event => setReference(event.target.value)}/></label><label>Entire invoice total in paise<input type="number" min="1" step="1" className={field} value={eligible} onChange={event => setEligible(event.target.value)}/></label><button className="wallet-primary-action" disabled={busy || !reference || !eligible} onClick={() => void run({ type: 'registerInvoice', reference, eligiblePaise: Number(eligible), totalPaise: Number(eligible) })}>Record confirmed invoice</button>{data.role === 'manager' && !wallet?.legacyReconciled && <button className="wallet-secondary-action" disabled={busy || data.legacyPoints === null} onClick={() => void run({ type: 'reconcileLegacy', expectedPoints: data.legacyPoints })}>Reconcile previous profile points</button>}{data.role === 'manager' && <><h3>Verified membership</h3><label>Plan<select className={field} value={plan} onChange={event => setPlan(event.target.value)}><option value="essential">Essential</option><option value="advanced">Advanced</option><option value="prestige">Premium</option></select></label><label>Paid period begins<input type="datetime-local" className={field} value={start} onChange={event => setStart(event.target.value)}/></label><label>Paid period ends<input type="datetime-local" className={field} value={end} onChange={event => setEnd(event.target.value)}/></label><button className="wallet-secondary-action" disabled={busy || !reference || !start || !end} onClick={() => void run({ type: 'verifySubscription', plan, status: 'active', paymentReference: reference, startsAt: new Date(start).getTime(), endsAt: new Date(end).getTime() })}>Confirm verified payment</button><button className="wallet-secondary-action" disabled={busy || !reference || !start || !end} onClick={() => void run({ type: 'verifySubscription', plan, status: 'cancelled', paymentReference: reference, startsAt: new Date(start).getTime(), endsAt: new Date(end).getTime() })}>Record cancellation</button></>}</details>}
+      {staff && data.role === 'manager' && <RedemptionPolicyEditor busy={busy} onSave={policy => void run({ type: 'configureRedemption', policy })}/>}
+      {staff && entries.some((entry: any) => entry.type === 'earn' || entry.type === 'apply' || entry.status === 'reconciliation-required') && <details className="wallet-action-panel wallet-details"><summary>Staff refund review</summary>{entries.map((entry: any) => <div key={entry.id} className="wallet-reservation"><span>{entry.type} · {entry.points ?? '—'} points</span>{data.role === 'manager' && entry.status === 'reconciliation-required' && <button disabled={busy} onClick={() => void run({ type: 'settleRefund', id: entry.id })}>Settle refund</button>}{entry.type === 'earn' && entry.convertible === true && <button disabled={busy || !reference} onClick={() => void run({ type: 'reverseEarn', entryId: entry.id, billingReference: reference })}>Record service refund</button>}{entry.type === 'apply' && <button disabled={busy || !reference} onClick={() => void run({ type: 'reverse', id: entry.id.replace('apply-', ''), billingReference: reference })}>Reverse invoice discount</button>}</div>)}</details>}
+    </>}
+    {notice && <p role="status" className="wallet-notice">{notice}</p>}
+  </section>;
 }

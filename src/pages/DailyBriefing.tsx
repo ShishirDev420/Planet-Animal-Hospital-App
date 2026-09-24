@@ -356,7 +356,7 @@ export default function DailyBriefing() {
               animate={shouldReduceMotion ? undefined : { scale: [1, 1.025, 1], opacity: [0.7, 0.86, 0.7] }}
               transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <div className="absolute right-5 top-5 h-14 w-14 overflow-hidden rounded-full border border-black/25 bg-[#f4c40a] p-1 shadow-[0_0_22px_rgba(254,199,8,0.18)]">
+            <div className="absolute right-5 top-5 h-14 w-14 overflow-hidden rounded-full border border-black/25 bg-[#f4c40a] p-1">
               <img src={planetLogo} alt="Planet Animal Hospital" className="h-full w-full rounded-full object-cover" />
             </div>
 

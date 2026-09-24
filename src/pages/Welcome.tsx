@@ -7,6 +7,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { Loader2 } from 'lucide-react';
+import PlanetSoul from '../components/PlanetSoul';
 
 const getAuthErrorMessage = (error: any): string => {
   const code = error?.code || '';
@@ -225,7 +226,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const busy = isEmailLoading || isGoogleLoading;
   const setters = { parentName: setParentName, petName: setPetName, petType: setPetType, breed: setBreed, age: setAge, gender: setGender, weight: setWeight, phone: setPhone, additionalDetails: setAdditionalDetails };
   return <main className="onboarding-shell"><div className="onboarding-wrap">
-    <header className="onboarding-brand"><img src="https://lh3.googleusercontent.com/d/1zldPukvYCnUvn5i2V9gqpDuR8WKhZ1_4" alt="Planet Animal Hospital Logo" referrerPolicy="no-referrer" /><p><strong>Planet Animal</strong>Hospital &amp; Wellness</p></header>
+    <header className="onboarding-brand"><PlanetSoul compact className="onboarding-brand-soul" /><p><strong>Planet Animal</strong>Hospital &amp; Wellness</p></header>
     <div className="onboarding-intro"><h1>{needsOnboarding ? 'Their care starts with you.' : 'A familiar place. A little more care.'}</h1><p>{needsOnboarding ? 'Create your pet’s profile in two short steps.' : 'Your pet’s records, care journey and next visit, together.'}</p></div>
     <section className="onboarding-card" aria-label={needsOnboarding ? 'Create your pet profile' : 'Sign in to Planet Animal'}>
       {needsOnboarding ? <OnboardingForm values={{ parentName, petName, petType, breed, age, gender, weight, phone, additionalDetails }} onChange={(key, value) => { setters[key](value); setAuthError(''); }} onSubmit={() => void handleCompleteProfile()} saving={isProfileSaving} error={authError} /> : <>
