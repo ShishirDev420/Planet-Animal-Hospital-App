@@ -5,3 +5,4 @@
 .home-reward-pets{position:absolute;z-index:1;right:-2%;bottom:-1%;width:112%;max-width:none;height:auto;object-fit:contain;filter:drop-shadow(0 18px 25px #0006)}.home-reward-level{z-index:2;display:flex;align-items:center;gap:.35rem;bottom:5%}.home-reward-orbit{opacity:.75}
 @media(max-width:800px){.home-reward-visual{top:7rem;right:-1rem;width:10rem;height:10rem;opacity:.76}.home-reward-pets{right:0;bottom:0;width:100%}.home-reward-orbit{min-width:8rem;min-height:8rem;width:8rem;height:8rem}.home-reward-level{display:none}}
 @media(max-width:480px){.home-reward-visual{top:7rem;right:.1rem;width:6.7rem;height:6.7rem;opacity:.82}.home-reward-pets{width:100%}.home-reward-copy h2{max-width:16rem}.home-reward-copy>p:not(.home-reward-fineprint):not(.home-reward-warning){max-width:12rem}}
+@media(max-width:360px){.home-reward-visual{top:9rem;right:-.5rem;width:6rem;height:6rem}.home-reward-copy>p:not(.home-reward-fineprint):not(.home-reward-warning){max-width:9.5rem}}

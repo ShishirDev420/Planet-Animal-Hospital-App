@@ -3,7 +3,7 @@ import ClinicWallet from '../components/ClinicWallet';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import StaffPrescriptions from '../components/StaffPrescriptions';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { careRequest } from '../lib/care/client';
 import { careSummary, type CareState, type PilotConfig, type Role } from '../lib/care/domain';
@@ -18,15 +18,17 @@ function StaffCareSession() {
   const [kind,setKind]=useState('scheduling'), [items,setItems]=useState<any[]>([]), [cursor,setCursor]=useState<string|null>(null), [role,setRole]=useState<Role>('parent');
   const [lookupUid,setLookupUid]=useState('');
   const [uid,setUid]=useState(''), [state,setState]=useState<CareState|null>(null), [config,setConfig]=useState<PilotConfig|null>(null), [stats,setStats]=useState<any>(null), [notice,setNotice]=useState(''), [busy,setBusy]=useState(false);
-  const loadQueue=async(next?:string)=>{try{const d=await careRequest(undefined,`?view=queue&kind=${kind}${next?'&cursor='+encodeURIComponent(next):''}`);setRole(d.role);setItems(d.items);setCursor(d.nextCursor);setNotice('');}catch(e){setNotice((e as Error).message);}};
+  const mutationActive=useRef(false), queueRequest=useRef(0), accountRequest=useRef(0);
+  const loadQueue=async(next?:string,clearNotice=true)=>{const request=++queueRequest.current;try{const d=await careRequest(undefined,`?view=queue&kind=${kind}${next?'&cursor='+encodeURIComponent(next):''}`);if(request!==queueRequest.current)return false;setRole(d.role);setItems(d.items);setCursor(d.nextCursor);if(clearNotice)setNotice('');return true;}catch(e){if(request===queueRequest.current)setNotice((e as Error).message);return false;}};
   useEffect(()=>{void loadQueue();},[kind]);
-  const loadAccount=async(owner=uid)=>{setBusy(true);try{const d=await careRequest(undefined,'?ownerUid='+encodeURIComponent(owner)); if(d.role==='parent')throw Error('Staff access required.');setState(d.state);setConfig(d.config);setStats(d.metrics);setUid(owner);setLookupUid(owner);setNotice('');}catch(e){setState(null);setNotice((e as Error).message);}finally{setBusy(false);}};
-  const act=async(body:Record<string,unknown>)=>{setBusy(true);try{await careRequest({...body,ownerUid:uid});await loadAccount();await loadQueue();setNotice('Saved by the care service.');}catch(e){setNotice((e as Error).message);}finally{setBusy(false);}};
+  const loadAccount=async(owner=uid,manageBusy=true)=>{const request=++accountRequest.current;if(manageBusy)setBusy(true);try{const d=await careRequest(undefined,'?ownerUid='+encodeURIComponent(owner));if(request!==accountRequest.current)return false;if(d.role==='parent')throw Error('Staff access required.');setState(d.state);setConfig(d.config);setStats(d.metrics);setUid(owner);setLookupUid(owner);setNotice('');return true;}catch(e){if(request===accountRequest.current){setState(null);setNotice((e as Error).message);}return false;}finally{if(manageBusy&&request===accountRequest.current)setBusy(false);}};
+  const act=async(body:Record<string,unknown>)=>{if(mutationActive.current)return;mutationActive.current=true;setBusy(true);try{await careRequest({...body,ownerUid:uid});const recordReady=uid?await loadAccount(uid,false):true;const queueReady=await loadQueue(undefined,false);if(recordReady&&queueReady)setNotice('Saved by the care service.');}catch(e){setNotice((e as Error).message);}finally{mutationActive.current=false;setBusy(false);}};
   const fields=(event:React.FormEvent<HTMLFormElement>)=>{event.preventDefault();return Object.fromEntries(new FormData(event.currentTarget));};
   const date=(value:FormDataEntryValue|undefined)=>value?new Date(String(value)).getTime():null;
   return <main className="min-h-screen bg-[#071912] px-4 py-8 text-white"><div className="mx-auto max-w-6xl">
     <Link to="/" className="text-[#fec708]">← Parent app</Link><h1 className="mt-5 font-heading text-3xl font-black">Care team workspace</h1><p className="mt-2 text-sm text-white/70">Recorded instructions, follow-ups and verified care. Access is checked by the server.</p>
-    {notice && <p role="status" className="my-4 rounded-xl border border-[#fec708]/30 p-3">{notice}</p>}
+    {!auth.currentUser && <div className="my-5 max-w-xl rounded-2xl border border-white/15 bg-white/5 p-5"><h2 className="font-semibold">Clinic team sign-in</h2><p className="mt-2 text-sm text-white/70">Sign in with your clinic-approved account to review care records. A clinic manager must assign the appropriate role.</p><Link to="/" className="mt-4 inline-flex rounded-xl bg-[#fec708] px-4 py-2.5 text-sm font-semibold text-[#071912]">Go to sign in</Link></div>}
+    {notice && auth.currentUser && <p role="status" className="my-4 rounded-xl border border-[#fec708]/30 p-3">{notice}</p>}
     {role!=='parent' && <>
       {uid && <ClinicWallet ownerUid={uid} staff />}
       <div className="my-5 flex flex-wrap gap-2">{[['scheduling','Needs scheduling'],['missed','Missed / unresolved follow-up'],['clinical','Needs clinical review']].map(([key,label])=><button key={key} aria-pressed={kind===key} className={careButton} onClick={()=>setKind(key)}>{label}</button>)}</div>

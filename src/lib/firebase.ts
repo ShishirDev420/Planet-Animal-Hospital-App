@@ -22,23 +22,23 @@ export const authPersistenceReady = setPersistence(auth, browserLocalPersistence
   console.error('[Firebase] Failed to enable local auth persistence:', err);
 });
 
-export async function checkFirebaseHealth(): Promise<{ auth: boolean; firestore: boolean }> {
-  const results = { auth: false, firestore: false };
+export async function checkFirebaseClientSetup(): Promise<{ authInitialized: boolean; firestoreNetworkEnabled: boolean }> {
+  const results = { authInitialized: false, firestoreNetworkEnabled: false };
 
   try {
     await (auth as any).authStateReady();
-    results.auth = true;
-    console.log('[Firebase Health] Auth reachable.');
+    results.authInitialized = true;
+    console.log('[Firebase] Auth state initialized.');
   } catch (e) {
-    console.error('[Firebase Health] Auth unreachable:', e);
+    console.error('[Firebase] Auth state could not initialize:', e);
   }
 
   try {
     await enableNetwork(db);
-    results.firestore = true;
-    console.log('[Firebase Health] Firestore reachable.');
+    results.firestoreNetworkEnabled = true;
+    console.log('[Firebase] Firestore network enabled; server reachability is unverified.');
   } catch (e) {
-    console.error('[Firebase Health] Firestore unreachable:', e);
+    console.error('[Firebase] Firestore network could not be enabled:', e);
   }
 
   return results;

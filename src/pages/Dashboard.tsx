@@ -24,6 +24,7 @@ import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmai
 import { db, auth } from '../lib/firebase';
 import { buildWhatsAppUrl, buildWhatsAppMessage, calculateBookingPoints } from '../lib/pawPoints';
 import { isPreviewDemoMode } from '../lib/demoMode';
+import { bookingQuickDate, indiaCalendarDate } from '../lib/bookingDates';
 
 enum OperationType {
   CREATE = 'create',
@@ -297,7 +298,8 @@ export default function Dashboard() {
   const parentPhone = petProfile?.phone || '';
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
   const whatsappMessage = `Hello Planet Animal Hospital, I am ${parentName}, ${petName}'s parent.\n\nI would like to request: ${selectedServices.map(s => s.name).join(', ')}.\nPreferred date: ${bookingDate}\nPreferred time: ${bookingTime} (India time)\n\nPlease confirm availability, charges and any preparation needed. Thank you!`;
-  const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const bookingToday = new Date();
+  const todayLocal = indiaCalendarDate(bookingToday);
   const isFutureBookingTime = (time: string) => {
     const match = time.match(/^(\d+):(\d+) (AM|PM)$/);
     if (!match || !bookingDate) return false;
@@ -679,10 +681,9 @@ export default function Dashboard() {
                       <label className="mb-4 block text-sm text-white/80">Choose any future date<input aria-label="Preferred appointment date" type="date" min={todayLocal} value={bookingDate} onInput={event => { setBookingDate(event.currentTarget.value); setBookingTime(''); }} onChange={event => { setBookingDate(event.target.value); setBookingTime(''); }} className="mt-2 w-full rounded-2xl border border-white/20 bg-white/10 p-3 text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-[#fec708]" /></label>
                       <div className="grid min-h-0 flex-1 grid-cols-4 content-start gap-2.5 overflow-hidden">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
-                          const date = new Date();
-                          date.setDate(date.getDate() + offset);
+                          const date = bookingQuickDate(offset, bookingToday);
                           const isToday = offset === 0;
-                          const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                          const dateStr = date.value;
                           const isSelected = bookingDate === dateStr;
 
                           return (
@@ -698,11 +699,11 @@ export default function Dashboard() {
                               )}
                             >
                               <span className="mb-1 text-[9px] font-black uppercase tracking-[0.12em] opacity-62">
-                                {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                {isToday ? 'Today' : date.weekday}
                               </span>
-                              <span className="text-2xl font-black leading-none">{date.getDate()}</span>
+                              <span className="text-2xl font-black leading-none">{date.day}</span>
                               <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] opacity-45">
-                                {date.toLocaleDateString('en-US', { month: 'short' })}
+                                {date.month}
                               </span>
                             </motion.button>
                           );

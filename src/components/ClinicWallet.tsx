@@ -50,18 +50,21 @@ function WalletSession({ ownerUid, staff }: { ownerUid?: string; staff: boolean 
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const mounted = useRef(true);
+  const mutationActive = useRef(false);
   const reservation = useRef({ fingerprint: '', id: '' });
   const load = async () => {
-    try { const result = await walletRequest(undefined, ownerUid); if (mounted.current) { setData(result); setNotice(''); } }
-    catch (error) { if (mounted.current) setNotice((error as Error).message); }
+    try { const result = await walletRequest(undefined, ownerUid); if (mounted.current) { setData(result); setNotice(''); } return true; }
+    catch (error) { if (mounted.current) { setData(null); setNotice((error as Error).message); } return false; }
     finally { if (mounted.current) setLoading(false); }
   };
   useEffect(() => { mounted.current = true; void load(); return () => { mounted.current = false; }; }, []);
   const run = async (body: Record<string, unknown>) => {
+    if (mutationActive.current) return;
+    mutationActive.current = true;
     setBusy(true);
-    try { const result = await walletRequest({ ...body, ...(ownerUid ? { ownerUid } : {}) }); await load(); if (mounted.current) setNotice(result.invoiceId ? `Invoice registered: ${result.invoiceId}` : 'Your wallet has been updated.'); }
+    try { const result = await walletRequest({ ...body, ...(ownerUid ? { ownerUid } : {}) }); const refreshed = await load(); if (mounted.current && refreshed) setNotice(result.invoiceId ? `Invoice registered: ${result.invoiceId}` : 'Your wallet has been updated.'); }
     catch (error) { if (mounted.current) setNotice((error as Error).message); }
-    finally { if (mounted.current) setBusy(false); }
+    finally { mutationActive.current = false; if (mounted.current) setBusy(false); }
   };
   const wallet = data?.wallet;
   const available = wallet && Number.isFinite(wallet.points) && Number.isFinite(wallet.reservedPoints) ? Math.max(0, wallet.points - wallet.reservedPoints) : null;

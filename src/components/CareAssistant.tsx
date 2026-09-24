@@ -31,6 +31,7 @@ function AssistantSession({ agent, requestService }: { agent: string; requestSer
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [availability, setAvailability] = useState('Checking availability…');
   const request = useRef({ prompt: '', id: '' });
+  const requestActive = useRef(false);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -38,12 +39,13 @@ function AssistantSession({ agent, requestService }: { agent: string; requestSer
     return () => { mounted.current = false; };
   }, [requestService]);
   const ask = async () => {
-    if (busy || !configured || !consent || !prompt.trim() || !pet) return;
+    if (requestActive.current || !configured || !consent || !prompt.trim() || !pet) return;
+    requestActive.current = true;
     setBusy(true); setError(''); setAnswer(null);
     if (request.current.prompt !== prompt) request.current = { prompt, id: crypto.randomUUID() };
     try { const result = await requestService({ agent, petId: care.petId, prompt, requestId: request.current.id, consent, adult: true }); if (mounted.current) { setAnswer(result.draft); setAllowance(result.allowance); } }
     catch (error) { if (mounted.current) setError((error as Error).message); }
-    finally { if (mounted.current) setBusy(false); }
+    finally { requestActive.current = false; if (mounted.current) setBusy(false); }
   };
   return <section className="ai-chat" aria-label="AI care conversation">
     <div className="ai-chat-context"><span className="ai-vet-eyebrow">Your conversation</span><h2>{pet ? `Let’s talk about ${pet.name}.` : 'Select your pet to begin.'}</h2><p>{pet ? 'We’ll use this pet’s recorded history and instructions to help you prepare better questions.' : 'Your saved pet details will appear here once your care record loads.'}</p>
@@ -56,7 +58,7 @@ function AssistantSession({ agent, requestService }: { agent: string; requestSer
       <div className="ai-question-chips" aria-label="Example questions"><button type="button" onClick={() => setPrompt('What details are missing from my pet’s recorded care?')}>What’s missing from the record?</button><button type="button" onClick={() => setPrompt('What questions should I ask the veterinarian about the recorded instructions?')}>Questions for my vet</button></div>
       <label className="ai-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)}/><span>I’m 18 or older and agree to send this question and {pet?.name || 'my pet'}’s recorded care text to the clinic’s AI service. Images are not sent. Drafts are kept for seven days and do not count as veterinary approval.</span></label>
       <button type="button" className="ai-send" onClick={() => void ask()} disabled={!care.state || !pet || busy || !configured || !consent || !prompt.trim() || allowance?.dailyRemaining === 0 || allowance?.monthlyRemaining === 0}>{busy ? 'Preparing your answer…' : 'Ask about my pet'}<Send size={18}/></button>
-      {error && <div role="alert" className="ai-error"><p>{error}</p><button type="button" onClick={() => { request.current = { prompt: '', id: '' }; void ask(); }} disabled={busy}>Start a new request <ArrowRight size={15}/></button></div>}
+      {error && <div role="alert" className="ai-error"><p>{error}</p><button type="button" onClick={() => { request.current = { prompt: '', id: '' }; void ask(); }} disabled={busy}>Start a new request (uses your allowance) <ArrowRight size={15}/></button></div>}
       {answer && <article className="ai-answer" aria-live="polite"><span className="ai-vet-eyebrow">A starting point for your visit</span><h3>Here’s what we found</h3><p>{answer.summary}</p>{answer.discussionTopics.length > 0 && <><h4>Questions to bring to your veterinarian</h4><ul>{answer.discussionTopics.map((topic, index) => <li key={index}><Check size={17}/><div>{topic.question}{topic.sourceId && <a href={EDUCATION.find(source => source.id === topic.sourceId)?.url} target="_blank" rel="noopener noreferrer">Read general veterinary guidance <ArrowRight size={13}/></a>}</div></li>)}</ul></>}{answer.uncertainty.map((item, index) => <p className="ai-uncertainty" key={index}>{item}</p>)}<small>No treatment, appointment, reward or care record has been changed by this answer. Follow your veterinarian’s instructions.</small></article>}
     </div>
   </section>;

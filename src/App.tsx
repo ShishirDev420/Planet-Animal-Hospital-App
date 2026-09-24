@@ -5,14 +5,15 @@
 
 import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, authPersistenceReady, db, checkFirebaseHealth } from './lib/firebase';
+import { auth, authPersistenceReady, db, checkFirebaseClientSetup } from './lib/firebase';
 import { isPreviewDemoMode } from './lib/demoMode';
 import Layout from './components/Layout';
 import Welcome from './pages/Welcome';
 import ErrorBoundary from './components/ErrorBoundary';
 import PlanetOrbLoader from './components/PlanetOrbLoader';
+import Logo from './components/Logo';
 import { useCare } from './lib/care/client';
 
 const StaffCare = lazy(() => import('./pages/StaffCare'));
@@ -47,6 +48,7 @@ export default function App() {
   const startupRedirectHandledRef = useRef(false);
 
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
+  const [authRetry, setAuthRetry] = useState(0);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -56,6 +58,7 @@ export default function App() {
 
     let loadingTimeout: number | null = null;
     let cancelled = false;
+    let authGeneration = 0;
     let unsubscribe: (() => void) | null = null;
 
     const fetchUserDocWithRetry = async (uid: string, attempt = 1): Promise<AuthStatus> => {
@@ -82,9 +85,10 @@ export default function App() {
 
       unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (cancelled) return;
+        const request = ++authGeneration;
         if (user) {
           const nextStatus = await fetchUserDocWithRetry(user.uid);
-          if (!cancelled) setAuthStatus(nextStatus);
+          if (!cancelled && request === authGeneration && auth.currentUser?.uid === user.uid) setAuthStatus(nextStatus);
         } else {
           setAuthStatus('unauthenticated');
         }
@@ -92,15 +96,16 @@ export default function App() {
     });
 
     loadingTimeout = window.setTimeout(() => {
-      setAuthStatus((current) => (current === 'loading' ? 'unauthenticated' : current));
+      setAuthStatus((current) => (current === 'loading' ? 'profile-sync-error' : current));
     }, 20000);
 
     return () => {
       cancelled = true;
+      authGeneration++;
       if (unsubscribe) unsubscribe();
       if (loadingTimeout) window.clearTimeout(loadingTimeout);
     };
-  }, [isDemoMode]);
+  }, [isDemoMode, authRetry]);
 
   useEffect(() => {
     if (authStatus === 'loading' || isPreviewRoute || isInsideFrame || startupRedirectHandledRef.current) {
@@ -111,9 +116,9 @@ export default function App() {
   }, [authStatus, isPreviewRoute, isInsideFrame]);
 
   useEffect(() => {
-    checkFirebaseHealth().then(({ auth: authReachable, firestore: fsReachable }) => {
-      if (!authReachable || !fsReachable) {
-        console.error('[App] Firebase health check failed. Auth:', authReachable, 'Firestore:', fsReachable);
+    checkFirebaseClientSetup().then(({ authInitialized, firestoreNetworkEnabled }) => {
+      if (!authInitialized || !firestoreNetworkEnabled) {
+        console.error('[App] Firebase client setup incomplete. Auth:', authInitialized, 'Firestore network:', firestoreNetworkEnabled);
       }
     });
   }, []);
@@ -130,11 +135,15 @@ export default function App() {
 
   if (authStatus === 'profile-sync-error') {
     return (
-      <PlanetOrbLoader
-        fullscreen
-        label="Restoring Your Profile"
-        detail="You're still signed in. Reconnecting to your saved pet profile."
-      />
+      <main className="flex min-h-[100dvh] items-center justify-center bg-[#071912] px-5 text-white">
+        <section className="w-full max-w-md rounded-[2rem] border border-white/15 bg-[#10251a] p-7 shadow-2xl" aria-labelledby="profile-error-title">
+          <Logo className="h-16 w-16" />
+          <h1 id="profile-error-title" className="mt-6 text-2xl font-bold">Your care space could not load</h1>
+          <p className="mt-3 text-sm leading-6 text-white/75">We could not confirm your saved profile. Your care record has not been changed.</p>
+          <button className="mt-6 w-full rounded-xl bg-[#fec708] px-5 py-3 font-semibold text-[#071912]" onClick={() => { setAuthStatus('loading'); setAuthRetry(value => value + 1); }}>Try again</button>
+          {auth.currentUser && <button className="mt-3 w-full rounded-xl border border-white/20 px-5 py-3 text-sm" onClick={() => void signOut(auth)}>Sign out</button>}
+        </section>
+      </main>
     );
   }
 
