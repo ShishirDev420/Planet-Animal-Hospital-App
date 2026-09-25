@@ -155,7 +155,7 @@ function NavItem({ to, icon, label, isCenter }: { to: string; icon: React.ReactN
       className={({ isActive }) =>
         cn(
           "flex flex-col items-center gap-0.5 transition-all duration-300 relative",
-          isActive ? "text-planet-yellow" : "text-planet-yellow/40 hover:text-planet-yellow"
+          isActive ? "text-planet-yellow" : "text-white/70 hover:text-white"
         )
       }
     >

@@ -1169,3 +1169,13 @@
 /* Soft background atmosphere keeps attention on care and the original logo. */
 .mobile-shell-orb-field { opacity: .3; }
 .planet-orbital-background { opacity: .35; }
+
+/* Keep the first care actions visible before the rewards story on phones. */
+.mobile-first-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin: .25rem 0 .5rem; }
+.mobile-first-actions button { display: inline-flex; min-height: 3.25rem; align-items: center; justify-content: center; gap: .45rem; border-radius: .9rem; padding: .55rem .7rem; font-size: .76rem; font-weight: 750; line-height: 1.2; transition: transform 160ms cubic-bezier(.25,1,.5,1), background-color 160ms ease, border-color 160ms ease; }
+.mobile-first-action-primary { background: #fec708; color: #10251b; }
+.mobile-first-action-secondary { border: 1px solid rgb(254 199 8 / 32%); background: rgb(254 199 8 / 7%); color: #fff4cc; }
+.mobile-first-actions button:active { transform: scale(.98); }
+.mobile-first-actions button:focus-visible { outline: 2px solid #fec708; outline-offset: 3px; }
+@media (max-width: 360px) { .mobile-first-actions { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .mobile-first-actions button { transition: none; } .mobile-first-actions button:active { transform: none; } }

@@ -430,16 +430,22 @@ export default function Dashboard() {
             </div>
             <PlanetSoul compact className="mobile-dashboard-soul" />
           </div>
+          <div className="mobile-first-actions" aria-label="Start caring for your pet">
+            <button type="button" className="mobile-first-action-primary" onClick={() => { setBookingStep('services'); setIsBookVisitOpen(true); }}>
+              <Calendar size={17} aria-hidden="true" /> Request a visit <ArrowRight size={16} aria-hidden="true" />
+            </button>
+            <button type="button" className="mobile-first-action-secondary" onClick={() => navigate({ pathname: '/records', search: location.search })}>
+              <FileText size={17} aria-hidden="true" /> Health records
+            </button>
+          </div>
         </div>
       </header>
 
       <section className="hidden lg:block desktop-pet-overview" aria-label="Pet care overview">
-        <div className="desktop-pet-overview-main"><h2>{petName}’s<span>care space</span></h2><p>Your next step in care, all in one place.</p><button className="desktop-primary-button" onClick={() => navigate({pathname:'/roadmap',search:location.search})}>View health roadmap <ArrowRight size={17}/></button></div>
+        <div className="desktop-pet-overview-main"><h2>{petName}’s<span>care space</span></h2><p>Request a visit for {petName}. The hospital will confirm your preferred time.</p><button className="desktop-primary-button" onClick={() => { setBookingStep('services'); setIsBookVisitOpen(true); }}>Request a visit <ArrowRight size={17}/></button></div>
         <PlanetSoul compact className="desktop-care-soul" />
         <button className="desktop-profile-link" onClick={() => navigate({pathname:'/profiles',search:location.search})}>View pet profile <ArrowRight size={15}/></button>
       </section>
-
-      <HomeRewardProgress demo={isDemoMode} onBook={() => { setBookingStep('services'); setIsBookVisitOpen(true); }} onWallet={() => navigate({ pathname: '/rewards', search: location.search })} />
 
       {/* Pawl Daily Briefing Card */}
       <motion.div
@@ -481,6 +487,8 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      <HomeRewardProgress demo={isDemoMode} onBook={() => { setBookingStep('services'); setIsBookVisitOpen(true); }} onWallet={() => navigate({ pathname: '/rewards', search: location.search })} />
+
       {bookingNotice && <p role="status" className="rounded-2xl border border-planet-yellow/20 bg-white/5 p-4 text-sm text-planet-yellow">{bookingNotice}</p>}
       {/* Quick Actions */}
       <div className="desktop-actions-section">
@@ -510,7 +518,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Book Visit Full-Screen Flow */}
+      {/* Visit request flow */}
       {createPortal(<AnimatePresence>
         {isBookVisitOpen && (
           <motion.div
@@ -536,7 +544,7 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <p className="cinematic-kicker mb-2 text-[9px] tracking-[0.24em]">Plan your visit</p>
                     <h2 id="booking-title" className="cinematic-section-title text-[2.35rem] leading-[0.88] tracking-[-0.065em] sm:text-[2.65rem]">
-                      Book <span className="text-planet-yellow">Visit</span>
+                      Request a <span className="text-planet-yellow">visit</span>
                     </h2>
                     <p className="mt-1.5 text-xs font-bold leading-5 text-white/54 sm:text-sm">
                       {petProfile?.name ? `Choose your preferred visit for ${petProfile.name}.` : 'Schedule a care slot with Planet Animal.'}
@@ -547,7 +555,7 @@ export default function Dashboard() {
                     whileTap={{ scale: 0.92 }}
                     onClick={closeBookVisit}
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/12 bg-white/[0.06] text-white/70 shadow-[0_16px_40px_rgba(0,0,0,0.34)] transition-colors hover:border-[#fec708]/24 hover:text-white"
-                    id="booking-close" aria-label="Close Book Visit"
+                    id="booking-close" aria-label="Close visit request"
                 >
                   <X size={20}/>
                 </motion.button>
@@ -723,7 +731,7 @@ export default function Dashboard() {
                     >
                       <div className="mb-3">
                         <p className="cinematic-kicker text-[9px] tracking-[0.22em]">Preferred Time</p>
-                        <p className="mt-1 text-xs font-bold text-white/42">Clinic hours: daily, 10 AM–10 PM (India time), per Google. Holiday hours may differ. The clinic confirms your requested time.</p>
+                        <p className="mt-1 text-xs font-bold text-white/60">Choose a preferred time. The clinic will confirm availability, including on holidays.</p>
                       </div>
                       <div className="grid min-h-0 flex-1 content-start gap-2.5 overflow-hidden">
                         {BOOKING_TIMES.map((group) => (

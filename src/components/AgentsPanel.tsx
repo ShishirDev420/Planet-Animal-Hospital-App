@@ -1,16 +1,15 @@
 import CareAssistant from './CareAssistant';
 import CareWorkflow from './CareWorkflow';
-import { useCare } from '../lib/care/client';
 import { careSummary } from '../lib/care/domain';
-import { AnimatePresence, motion, type Variants } from 'framer-motion';
-import { ArrowRight, CalendarClock, CheckCircle2, ChevronRight, Loader2, Map, Pill, Send, Sparkles, TicketPercent } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
+import { ArrowRight, CalendarClock, CheckCircle2, ChevronDown, Pill, TicketPercent } from 'lucide-react';
 import type { ElementType, ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { usePetProfile } from '../hooks/usePetProfile';
 import type { PritpawlRoadmap } from '../lib/pritpawlRoadmap';
 
 import { cn } from '../lib/utils';
+import './agents-panel.css';
 
 type AgentId = 'pawl' | 'pawlina' | 'pritpawl';
 type AgentStatus = 'Guide' | 'Planning';
@@ -59,7 +58,7 @@ const agents: Agent[] = [
     purpose: 'Earn, redeem, and climb loyalty tiers with less guesswork.',
     description: 'Guides pet parents through Paw Points, reward timing, loyalty tiers, and staff-verified care completion.',
     status: 'Guide',
-    cta: 'Open Rewards',
+    cta: 'Open my wallet',
     Icon: TicketPercent,
     Avatar: PawlAvatar,
     quickPrompts: ['Show my tier path', 'Find point multipliers', 'Best redemption today'],
@@ -77,7 +76,7 @@ const agents: Agent[] = [
     purpose: 'Follow recorded care, request appointments, and keep follow-ups visible.',
     description: 'Coordinates approved reminders and appointment requests. Clinical questions go to the care team.',
     status: 'Guide',
-    cta: 'Book Visit',
+    cta: 'Request a visit',
     Icon: CalendarClock,
     Avatar: PawlinaAvatar,
     quickPrompts: ['Book next vaccine', 'Cancel my appointment', 'Move my appointment', 'Call Planet Animal Hospital'],
@@ -95,7 +94,7 @@ const agents: Agent[] = [
     purpose: 'Understand the next step recorded and approved by your veterinarian.',
     description: 'Organizes approved instructions and gathers parent updates. Missing instructions remain unavailable until the team provides them.',
     status: 'Guide',
-    cta: 'Explain My Next Step',
+    cta: 'View health roadmap',
     Icon: Pill,
     Avatar: PritpawlAvatar,
     quickPrompts: ['Life-max my pet\'s health', 'Show nutrition & exercise plan', 'Track my roadmap progress'],
@@ -120,13 +119,13 @@ const pawPointTiers = [
 ];
 
 export default function AgentsPanel() {
+  const reduceMotion = useReducedMotion();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [careOpen, setCareOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { agentId } = useParams();
-  const { profile, updateProfile } = usePetProfile();
-  const care = useCare();
   const activeAgent = useMemo(() => agents.find((agent) => agent.id === agentId) ?? agents[0], [agentId]);
-  const agentState = useMemo(() => getAgentState(profile, care.state, care.petId), [profile, care.state, care.petId]);
   const withSearch = (path: string) => {
     if (!location.search) return path;
     return `${path}${path.includes('?') ? '&' : '?'}${location.search.slice(1)}`;
@@ -135,164 +134,73 @@ export default function AgentsPanel() {
   const selectAgent = (agent: Agent) => {
     navigate(withSearch(`/agents/${agent.id}`));
   };
+  const openPrimaryAction = () => {
+    const path = activeAgent.id === 'pawl' ? '/rewards' : activeAgent.id === 'pawlina' ? '/?openBooking=true' : '/roadmap';
+    navigate(withSearch(path));
+  };
 
   return (
-    <section className="relative min-h-full overflow-hidden px-4 pb-32 pt-16 text-white sm:px-6 lg:px-0 lg:pb-16">
+    <section className="agents-page relative min-h-full overflow-hidden px-4 pb-32 pt-8 text-white sm:px-6 lg:px-0 lg:pb-16">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
           key={activeAgent.id}
-          initial={{ opacity: 0 }}
+          initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: reduceMotion ? 0 : 0.35 }}
           className="absolute inset-x-[-20%] top-[-28%] h-[520px] blur-3xl"
           style={{ background: activeAgent.theme.mesh }}
         />
         <div className="absolute inset-0 neural-mesh-grid opacity-[0.08]" />
       </div>
 
-      <motion.div variants={container} initial="hidden" animate="show" className="mx-auto max-w-6xl">
-        <motion.div variants={item} className="mb-5">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Choose Your Agent</p>
-              <p className="mt-1 text-sm font-semibold text-white/70">One shared care record across Pawl, Pawlina, and Pritpawl.</p>
-            </div>
-            <span className="hidden rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/45 sm:inline-flex">
-              Shared care workspace
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            {agents.map((agent) => (
-              <AgentSwitchCard key={agent.id} agent={agent} active={agent.id === activeAgent.id} state={agentState} onClick={() => selectAgent(agent)} />
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.header variants={item} className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 shadow-2xl backdrop-blur-2xl">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-planet-yellow opacity-60" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-planet-yellow" />
-              </span>
-              <span className="font-heading text-[10px] font-black uppercase tracking-[0.26em] text-planet-yellow">Paw Agent Console</span>
-            </div>
-            <h1 className="font-heading text-4xl font-black leading-[0.92] tracking-tight text-white sm:text-5xl lg:text-7xl">
-              Active agent, live chat.
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-white/58 sm:text-base">
-              All three guides use the same recorded care status. Complete the next action below without switching agents.
-            </p>
-          </div>
-
-          <div className="liquid-glass flex items-center gap-4 rounded-[1.6rem] px-4 py-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-planet-yellow text-black shadow-[0_0_32px_rgba(254,199,8,0.25)]">
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Live Routing</p>
-              <p className="text-sm font-bold text-white">Pawl, Pawlina, Pritpawl</p>
-            </div>
-          </div>
+      <motion.div variants={container} initial={reduceMotion ? false : 'hidden'} animate="show" className="mx-auto max-w-6xl">
+        <motion.header variants={item} className="agents-heading">
+          <p className="agents-eyebrow">Your care team</p>
+          <h1>Choose your care agent.</h1>
+          <p>Pick a guide, then open recorded care and requests when you need them.</p>
         </motion.header>
 
-        <CareWorkflow />
-        <motion.div variants={item} className="grid grid-cols-1 gap-4 xl:grid-cols-[410px_minmax(0,1fr)]">
-          <AgentCard agent={activeAgent} state={agentState} isActive onSelect={() => selectAgent(activeAgent)} />
-          <CareAssistant agent={activeAgent.id} />
+        <motion.div variants={item} role="group" aria-label="Choose a care agent" className="agents-choices">
+          {agents.map((agent) => (
+            <AgentChoice key={agent.id} agent={agent} active={agent.id === activeAgent.id} onClick={() => selectAgent(agent)} />
+          ))}
+        </motion.div>
+
+        <motion.article key={activeAgent.id} initial={reduceMotion ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.25, 1, 0.5, 1] }} className="agent-focus" style={{ background: activeAgent.theme.mesh, borderColor: activeAgent.theme.ring }}>
+          <div className="agent-focus-identity">
+            <AgentAvatar agent={activeAgent} />
+            <div>
+              <p className="agents-eyebrow" style={{ color: activeAgent.theme.accent }}>Selected guide</p>
+              <h2>{activeAgent.name}</h2>
+              <p className="agent-focus-role">{activeAgent.role}</p>
+            </div>
+          </div>
+          <p className="agent-focus-purpose">{activeAgent.purpose}</p>
+          <p className="agent-focus-boundary">{activeAgent.description}</p>
+          <button type="button" className="agent-focus-action" style={{ backgroundColor: activeAgent.theme.accent }} onClick={openPrimaryAction}>{activeAgent.cta}<ArrowRight size={18}/></button>
+        </motion.article>
+
+        <motion.div variants={item} className="agents-more">
+          <details className="agents-disclosure" onToggle={(event) => setChatOpen(event.currentTarget.open)}>
+            <summary><span><strong>Ask {activeAgent.name} a question</strong><small>Available when the clinic enables AI chat</small></span><ChevronDown size={19}/></summary>
+            {chatOpen && <CareAssistant agent={activeAgent.id} />}
+          </details>
+          <details className="agents-disclosure" onToggle={(event) => setCareOpen(event.currentTarget.open)}>
+            <summary><span><strong>Recorded care and requests</strong><small>Follow-ups, prescriptions, wallet and pet history</small></span><ChevronDown size={19}/></summary>
+            {careOpen && <CareWorkflow />}
+          </details>
         </motion.div>
       </motion.div>
     </section>
   );
 }
 
-function AgentCard({ agent, state, isActive, onSelect }: { agent: Agent; state: ReturnType<typeof getAgentState>; isActive?: boolean; onSelect: () => void }) {
-  const Icon = agent.Icon;
-  const metrics = getLiveMetrics(agent.id, state);
-
+function AgentChoice({ agent, active, onClick }: { agent: Agent; active: boolean; onClick: () => void }) {
   return (
-    <motion.button
-      variants={item}
-      whileHover={{ y: -6, scale: 1.01 }}
-      whileTap={{ scale: 0.985 }}
-      onClick={onSelect}
-      className={cn(
-        'group relative min-h-[450px] overflow-hidden rounded-[2rem] border p-5 text-left shadow-2xl transition-colors duration-500',
-        isActive ? 'border-white/24 bg-white/[0.10]' : 'border-white/10 bg-white/[0.055] hover:border-white/20',
-      )}
-      style={{ boxShadow: isActive ? `0 24px 70px ${agent.theme.glow}` : undefined }}
-    >
-      <div className="absolute inset-0 opacity-95" style={{ background: agent.theme.mesh }} />
-      <motion.div className="absolute -right-20 -top-20 h-56 w-56 rounded-full blur-3xl" animate={{ scale: [1, 1.08, 1], opacity: [0.42, 0.65, 0.42] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }} style={{ backgroundColor: agent.theme.glow }} />
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.16),transparent_35%,rgba(255,255,255,0.04))]" />
-
-      <div className="relative z-10 flex h-full flex-col">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <AgentAvatar agent={agent} large />
-          <StatusPill status={agent.status} color={agent.theme.accent} />
-        </div>
-
-        <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.20em] text-white/68 backdrop-blur-xl">
-          <Icon size={13} style={{ color: agent.theme.accent }} />
-          {agent.role}
-        </div>
-
-        <h2 className="font-heading text-4xl font-black tracking-tight text-white">{agent.name}</h2>
-        <p className="mt-2 text-sm font-semibold leading-6 text-white/76">{agent.purpose}</p>
-        <p className="mt-3 text-sm leading-6 text-white/50">{agent.description}</p>
-
-        <div className="mt-auto pt-6">
-          <div className="mb-5 grid grid-cols-2 gap-3">
-            {metrics.map((metric) => (
-              <div key={metric.label} className="rounded-2xl border border-white/10 bg-black/20 px-3 py-3 backdrop-blur-xl">
-                <p className="text-[9px] font-black uppercase tracking-[0.20em] text-white/34">{metric.label}</p>
-                <p className="mt-1 font-heading text-lg font-black text-white">{metric.value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-black text-black shadow-xl" style={{ backgroundColor: agent.theme.accent }}>
-            <span>{agent.cta}</span>
-            <ChevronRight size={18} />
-          </div>
-        </div>
-      </div>
-    </motion.button>
-  );
-}
-
-function AgentSwitchCard({ agent, active, state, onClick }: { agent: Agent; active: boolean; state: ReturnType<typeof getAgentState>; onClick: () => void }) {
-  const Icon = agent.Icon;
-  const metric = getLiveMetrics(agent.id, state)[0];
-
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'group relative min-h-[126px] overflow-hidden rounded-[1.75rem] border p-3 text-left shadow-2xl transition-all duration-300',
-        active ? 'border-white/28 bg-white/[0.11]' : 'border-white/10 bg-white/[0.045] hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.08]',
-      )}
-      style={{ boxShadow: active ? `0 18px 46px ${agent.theme.glow}` : undefined }}
-      aria-pressed={active}
-    >
-      <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-90" style={{ background: agent.theme.mesh }} />
-      {active && <div className="absolute inset-0 opacity-95" style={{ background: agent.theme.mesh }} />}
-      <div className="absolute right-[-36px] top-[-44px] h-28 w-28 rounded-full blur-3xl" style={{ backgroundColor: agent.theme.glow }} />
-      <div className="relative z-10 flex items-center gap-3">
-        <AgentAvatar agent={agent} compact />
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-1.5">
-            <Icon size={13} style={{ color: agent.theme.accent }} />
-            <p className="truncate text-[9px] font-black uppercase tracking-[0.16em] text-white/42">{agent.role}</p>
-          </div>
-          <p className="truncate font-heading text-xl font-black text-white">{agent.name}</p>
-          <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-white/62">{agent.purpose}</p>
-        </div>
-      </div>
-      <div className="relative z-10 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 backdrop-blur-xl">
-        <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-white/40">{metric.label}</p>
-        <p className="truncate text-xs font-black text-white">{metric.value}</p>
-      </div>
-      {active && <CheckCircle2 className="absolute right-3 top-3 z-20 h-4 w-4 shrink-0" style={{ color: agent.theme.accent }} />}
+    <button type="button" onClick={onClick} className={cn('agent-choice', active && 'is-active')} style={{ '--agent-mesh': agent.theme.mesh, '--agent-ring': agent.theme.ring, '--agent-glow': agent.theme.glow } as React.CSSProperties} aria-pressed={active}>
+      <AgentAvatar agent={agent} compact />
+      <span className="agent-choice-copy"><strong>{agent.name}</strong><small>{agent.role}</small></span>
+      {active && <CheckCircle2 className="agent-choice-check" size={17} style={{ color: agent.theme.accent }} />}
     </button>
   );
 }
@@ -419,10 +327,11 @@ function createInitialMessages(profile: any): Record<AgentId, ChatMessage[]> {
 }
 
 function AgentAvatar({ agent, large = false, compact = false }: { agent: Agent; large?: boolean; compact?: boolean }) {
+  const reduceMotion = useReducedMotion();
   const Avatar = agent.Avatar;
   return (
     <div className={cn('relative shrink-0', large ? 'h-28 w-28' : compact ? 'h-16 w-16' : 'h-20 w-20')}>
-      <motion.div className="absolute inset-0 rounded-[1.7rem]" animate={{ rotate: [0, 3, 0, -3, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} style={{ backgroundColor: agent.theme.ring, filter: 'blur(18px)' }} />
+      <motion.div className="absolute inset-0 rounded-[1.7rem]" animate={reduceMotion ? undefined : { rotate: [0, 3, 0, -3, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} style={{ backgroundColor: agent.theme.ring, filter: 'blur(18px)' }} />
       <div className="relative h-full w-full overflow-hidden rounded-[1.65rem] border border-white/25 bg-black shadow-2xl">
         <Avatar />
         <div className="absolute inset-0 bg-gradient-to-br from-white/18 via-transparent to-black/20" />

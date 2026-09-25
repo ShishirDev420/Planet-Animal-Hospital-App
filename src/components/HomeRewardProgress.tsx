@@ -6,7 +6,6 @@ import { auth } from '../lib/firebase';
 import { walletRequest } from './ClinicWallet';
 import { rewardPosition } from './RewardClimb';
 import type { RedemptionPolicy } from '../lib/care/redemption';
-import careCompanions from '../assets/care-companions.webp';
 import './home-rewards.css';
 
 type Balance = { points: number | null; policy?: RedemptionPolicy; paused?: boolean };
@@ -20,11 +19,11 @@ export function HomeRewardCard({ balance, notice, onBook, onWallet }: { balance:
       <div className="home-reward-points"><span>{points === null ? '—' : points.toLocaleString('en-IN')}</span><div><strong>Paw Points</strong><small>available to use</small></div></div>
       <div className="home-reward-next"><span>{ready ? next ? 'Next approved reward' : 'Current approved reward' : 'Your next reward'}</span><strong>{ready ? `${next?.percent ?? current?.percent}% off the entire bill` : notice || 'Appears when approved by the clinic'}</strong>{ready && next && <small>{(next.points - points!).toLocaleString('en-IN')} points to go</small>}</div>
       {ready && <div className="home-reward-meter" role="progressbar" aria-label="Progress to next Paw Points reward" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(fraction * 100)} aria-valuetext={next ? `${next.points - points!} more points to the next reward` : 'Highest approved reward reached'}><motion.span initial={reduced ? false : { scaleX: 0 }} animate={{ scaleX: fraction }} transition={{ duration: reduced ? 0 : 1.2, ease: [0.22, 1, 0.36, 1] }}/></div>}
-      <div className="home-reward-actions"><button type="button" onClick={onWallet}>Explore my wallet <ArrowRight size={17}/></button><button type="button" onClick={onBook}><CalendarDays size={17}/> Book a visit</button></div>
+      <div className="home-reward-actions"><button type="button" onClick={onWallet}>Explore my wallet <ArrowRight size={17}/></button><button type="button" onClick={onBook}><CalendarDays size={17}/> Request a visit</button></div>
       <p className="home-reward-fineprint">Eligible care earns points after completion and clinic approval. Booking alone earns no points.</p>
       {balance?.paused && <p className="home-reward-warning">The clinic needs to review your wallet before points can be used.</p>}
     </div>
-    <div className="home-reward-visual" aria-hidden="true"><div className="home-reward-orbit"><span className="home-reward-orbit-ring ring-one"/><span className="home-reward-orbit-ring ring-two"/><span className="home-reward-orbit-ring ring-three"/><span className="home-reward-star star-one">✦</span><span className="home-reward-star star-two">✧</span><span className="home-reward-star star-three">✦</span></div><img className="home-reward-pets" src={careCompanions} alt=""/><span className="home-reward-level"><PawPrint size={12}/> {ready ? `LEVEL ${level} OF ${tiers.length}` : 'PAW POINTS'}</span></div>
+    <div className="home-reward-visual" aria-hidden="true"><div className="home-reward-orbit"><span className="home-reward-orbit-ring ring-one"/><span className="home-reward-orbit-ring ring-two"/><span className="home-reward-orbit-ring ring-three"/><span className="home-reward-core"><PawPrint size={42} strokeWidth={1.6}/></span><span className="home-reward-star star-one">✦</span><span className="home-reward-star star-two">✧</span><span className="home-reward-star star-three">✦</span></div><span className="home-reward-level"><PawPrint size={12}/> {ready ? `LEVEL ${level} OF ${tiers.length}` : 'PAW POINTS'}</span></div>
   </section>;
 }
 

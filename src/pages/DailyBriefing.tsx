@@ -1,8 +1,7 @@
 import CareWorkflow from '../components/CareWorkflow';
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ChevronRight, Circle, HeartPulse, Moon, PawPrint, ShieldCheck, SunMedium, Sunrise, Trophy, Zap } from 'lucide-react';
-import { increment } from 'firebase/firestore';
+import { ArrowLeft, CheckCircle2, ChevronRight, Circle, HeartPulse, Moon, PawPrint, ShieldCheck, SunMedium, Sunrise, Trophy } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import planetLogo from '../assets/planet-logo.png';
 import { usePetProfile } from '../hooks/usePetProfile';
@@ -13,8 +12,6 @@ import { cn } from '../lib/utils';
 import { isPreviewDemoMode } from '../lib/demoMode';
 
 const PERIOD_ORDER: TimePeriod[] = ['morning', 'afternoon', 'evening'];
-const POINTS_PER_BRIEFING = 5;
-const DAILY_BRIEFING_POINTS = PERIOD_ORDER.length * POINTS_PER_BRIEFING;
 
 type ParsedBriefing = {
   intro: string;
@@ -143,6 +140,7 @@ function parseBriefing(text: string, period: TimePeriod, petName: string): Parse
 }
 
 function PeriodGlyph({ period, complete = false, large = false }: { period: TimePeriod; complete?: boolean; large?: boolean }) {
+  const reduceMotion = useReducedMotion();
   const visual = periodVisuals[period];
   const Icon = visual.Icon;
   const size = large ? 'h-16 w-16' : 'h-7 w-7';
@@ -152,7 +150,7 @@ function PeriodGlyph({ period, complete = false, large = false }: { period: Time
     <div className={cn('relative grid shrink-0 place-items-center rounded-full', size, visual.orbClass)}>
       <motion.span
         className={cn('absolute rounded-full border', large ? 'inset-[-7px]' : 'inset-[-5px]', visual.ringClass)}
-        animate={complete ? { scale: [1, 1.1, 1], opacity: [0.5, 0.9, 0.5] } : { scale: [1, 1.06, 1], opacity: [0.34, 0.64, 0.34] }}
+        animate={reduceMotion ? undefined : complete ? { scale: [1, 1.1, 1], opacity: [0.5, 0.9, 0.5] } : { scale: [1, 1.06, 1], opacity: [0.34, 0.64, 0.34] }}
         transition={{ duration: complete ? 1.4 : 3.8, repeat: Infinity, ease: 'easeInOut' }}
       />
       {complete ? <CheckCircle2 size={iconSize} absoluteStrokeWidth /> : <Icon size={iconSize} absoluteStrokeWidth />}
@@ -161,6 +159,7 @@ function PeriodGlyph({ period, complete = false, large = false }: { period: Time
 }
 
 function BriefingSkeleton() {
+  const reduceMotion = useReducedMotion();
   return (
     <div className="space-y-3">
       {[0, 1, 2, 3].map((item) => (
@@ -168,13 +167,13 @@ function BriefingSkeleton() {
           <div className="flex items-center gap-3">
             <motion.div
               className="h-9 w-9 rounded-full bg-[#fec708]/16"
-              animate={{ opacity: [0.35, 0.75, 0.35] }}
+              animate={reduceMotion ? undefined : { opacity: [0.35, 0.75, 0.35] }}
               transition={{ duration: 1.4, repeat: Infinity, delay: item * 0.08 }}
             />
             <motion.div
               className="h-3 rounded-full bg-white/[0.08]"
-              initial={{ width: '38%' }}
-              animate={{ width: [`${44 + item * 8}%`, `${62 + item * 7}%`, `${44 + item * 8}%`] }}
+              style={{ width: `${44 + item * 8}%` }}
+              animate={reduceMotion ? undefined : { opacity: [0.45, 0.85, 0.45] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
             />
           </div>
@@ -185,6 +184,7 @@ function BriefingSkeleton() {
 }
 
 function CareActionCard({ item, index, period }: { item: string; index: number; period: TimePeriod }) {
+  const reduceMotion = useReducedMotion();
   const visual = periodVisuals[period];
 
   return (
@@ -193,7 +193,7 @@ function CareActionCard({ item, index, period }: { item: string; index: number; 
       variants={actionIn}
       initial="hidden"
       animate="visible"
-      whileTap={{ scale: 0.985 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.985 }}
       className="group relative overflow-hidden rounded-[1.45rem] border border-white/[0.075] bg-[linear-gradient(145deg,rgba(255,255,255,0.074),rgba(255,255,255,0.028))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_16px_34px_rgba(0,0,0,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#fec708]/20 hover:bg-white/[0.07]"
     >
       <div className="absolute right-[-48px] top-[-56px] h-28 w-28 rounded-full bg-[#fec708]/[0.045] blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
@@ -201,7 +201,7 @@ function CareActionCard({ item, index, period }: { item: string; index: number; 
         <div className={cn('relative mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border text-[11px] font-black tabular-nums', visual.ringClass)}>
           <motion.span
             className="absolute inset-1 rounded-full border border-white/10"
-            animate={{ rotate: 360 }}
+            animate={reduceMotion ? undefined : { rotate: 360 }}
             transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
           />
           {String(index + 1).padStart(2, '0')}
@@ -217,6 +217,7 @@ function CareActionCard({ item, index, period }: { item: string; index: number; 
 }
 
 function PeriodSelector({ activePeriod, completedPeriods, onPeriodClick }: { activePeriod: TimePeriod; completedPeriods: TimePeriod[]; onPeriodClick: (period: TimePeriod) => void }) {
+  const reduceMotion = useReducedMotion();
   return (
     <motion.div variants={riseIn} className="rounded-[1.35rem] border border-white/[0.08] bg-black/34 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.055),0_16px_42px_rgba(0,0,0,0.22)]">
       <div className="grid grid-cols-3 gap-1.5">
@@ -230,7 +231,7 @@ function PeriodSelector({ activePeriod, completedPeriods, onPeriodClick }: { act
               key={period}
               type="button"
               onClick={() => onPeriodClick(period)}
-              whileTap={{ scale: 0.96 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.96 }}
               className={cn(
                 'relative min-h-[4.35rem] overflow-hidden rounded-[1rem] px-2 py-2.5 text-center transition-colors duration-300',
                 active ? visual.activeTab : 'border border-white/[0.06] bg-white/[0.035] text-white/46 hover:bg-white/[0.06] hover:text-white/76',
@@ -240,7 +241,7 @@ function PeriodSelector({ activePeriod, completedPeriods, onPeriodClick }: { act
                 <motion.div
                   layoutId="active-briefing-period"
                   className="absolute inset-0 rounded-[1rem] bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.26),transparent_52%)]"
-                  transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: reduceMotion ? 0 : 0.42, ease: [0.16, 1, 0.3, 1] }}
                 />
               )}
               <div className="relative flex flex-col items-center gap-1.5">
@@ -248,7 +249,7 @@ function PeriodSelector({ activePeriod, completedPeriods, onPeriodClick }: { act
                 <div className="min-w-0 max-w-full">
                   <p className="truncate text-[9px] font-black uppercase tracking-[0.11em]">{period}</p>
                   <p className={cn('mt-0.5 hidden text-[10px] font-bold leading-none sm:block', active ? 'text-black/58' : 'text-white/28')}>
-                    {complete ? 'Banked' : active ? 'Open now' : 'Preview'}
+                    {complete ? 'Read' : active ? 'Open now' : 'Preview'}
                   </p>
                 </div>
               </div>
@@ -265,7 +266,7 @@ export default function DailyBriefing() {
   const location = useLocation();
   const shouldReduceMotion = useReducedMotion();
   const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
-  const { profile, loading: profileLoading, updateProfile } = usePetProfile();
+  const { profile, loading: profileLoading } = usePetProfile();
   const { currentPeriod } = useTimeOfDay();
 
   const uid = profile?.uid || profile?.parentName || 'demo';
@@ -283,6 +284,7 @@ export default function DailyBriefing() {
   const { message, loading: messageLoading, error: messageError } = usePawlMessage(profile, profileLoading, activePeriod);
   const [justCompleted, setJustCompleted] = useState(false);
   const [awardNotice, setAwardNotice] = useState<string | null>(null);
+  const [careOpen, setCareOpen] = useState(false);
 
   const petName = profile?.petName || 'Your pet';
   const display = PERIOD_DISPLAY[activePeriod];
@@ -294,13 +296,12 @@ export default function DailyBriefing() {
   const parsedBriefing = useMemo(() => parseBriefing(message || '', activePeriod, petName), [message, activePeriod, petName]);
   const petMeta = useMemo(() => [profile?.breed, profile?.age, profile?.weight].filter(Boolean).join(' • '), [profile?.breed, profile?.age, profile?.weight]);
   const today = useMemo(() => new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }), []);
-  const points = Number(profile?.pawPoints || 0);
 
   const handleBackHome = () => {
     navigate({ pathname: '/', search: location.search });
   };
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     if (isActiveComplete || justCompleted) return;
 
     setJustCompleted(true);
@@ -317,12 +318,11 @@ export default function DailyBriefing() {
   return (
     <motion.div
       variants={pageStagger}
-      initial="hidden"
+      initial={shouldReduceMotion ? false : 'hidden'}
       animate="visible"
       className="relative -mt-[var(--preview-safe-area-top,0px)] min-h-full overflow-hidden bg-[#071912] px-4 pb-32 pt-[calc(var(--preview-safe-area-top,0px)+1rem)] text-white"
     >
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_74%_4%,rgba(254,199,8,0.055),transparent_34%),radial-gradient(circle_at_12%_24%,rgba(44,128,90,0.10),transparent_30%),linear-gradient(180deg,#08140e_0%,#071912_44%,#040806_100%)]" />
-      <CareWorkflow />
       <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.035] mix-blend-soft-light" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 180 180%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.65%22/%3E%3C/svg%3E")' }} />
       <motion.div
         className="pointer-events-none absolute right-[-46%] top-[4rem] z-0 h-[380px] w-[380px] rounded-full bg-[#fec708]/10 blur-3xl"
@@ -346,7 +346,7 @@ export default function DailyBriefing() {
 
             <div className="flex items-center gap-2 rounded-full border border-[#fec708]/20 bg-[#fec708]/10 px-3 py-1.5 text-[#fec708] shadow-[0_16px_38px_rgba(254,199,8,0.08)]">
               <PawPrint size={13} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">{points.toLocaleString()} pts</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Daily care</span>
             </div>
           </div>
 
@@ -373,16 +373,16 @@ export default function DailyBriefing() {
         <PeriodSelector activePeriod={activePeriod} completedPeriods={completedPeriods} onPeriodClick={setActivePeriod} />
 
         <motion.div variants={riseIn} className="my-4 flex items-center gap-3">
-          <span className="text-[9px] font-black uppercase tracking-[0.22em] text-white/38">{completedCount}/{totalPeriods} complete</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.22em] text-white/38">{completedCount}/{totalPeriods} read</span>
           <div className="h-2 flex-1 overflow-hidden rounded-full border border-white/[0.055] bg-black/34 shadow-[inset_0_1px_5px_rgba(0,0,0,0.42)]">
             <motion.div
               className="h-full rounded-full bg-[linear-gradient(90deg,#fec708,#f5dd76,#09c987)] shadow-[0_0_20px_rgba(254,199,8,0.34)]"
               initial={{ width: 0 }}
-              animate={{ width: `${Math.max(progressPercent, 4)}%` }}
+              animate={{ width: `${progressPercent}%` }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             />
           </div>
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-[#fec708]">Recorded follow-through</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-[#fec708]">Briefings read</span>
         </motion.div>
 
         {allComplete ? (
@@ -398,9 +398,9 @@ export default function DailyBriefing() {
             >
               <Trophy size={42} absoluteStrokeWidth />
             </motion.div>
-            <p className="cinematic-kicker mb-3">Care Loop Complete</p>
-            <h2 className="cinematic-section-title text-4xl">All done today.</h2>
-            <p className="cinematic-copy mx-auto mt-4 max-w-sm text-sm">{petName} has the full daily care rhythm logged. Tomorrow's ritual will be ready with fresh prompts.</p>
+            <p className="cinematic-kicker mb-3">Daily briefings read</p>
+            <h2 className="cinematic-section-title text-4xl">All briefings read.</h2>
+            <p className="cinematic-copy mx-auto mt-4 max-w-sm text-sm">You have read all three briefings for {petName}. This does not record treatment or award points.</p>
             <div className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full bg-[#fec708] px-5 py-3 text-black shadow-[0_18px_42px_rgba(254,199,8,0.22)]">
               <PawPrint size={15} />
               <span className="text-[11px] font-black uppercase tracking-[0.18em]">Briefings marked read</span>
@@ -441,10 +441,6 @@ export default function DailyBriefing() {
                     {petMeta}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#fec708]/18 bg-[#fec708]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.17em] text-[#fec708]">
-                  <Zap size={12} />
-                  Care verified by staff earns rewards
-                </span>
               </div>
 
               {messageLoading ? (
@@ -489,7 +485,7 @@ export default function DailyBriefing() {
                 <div className="mb-4 flex items-center gap-2 text-white/38">
                   <motion.span
                     className={cn('h-1.5 w-1.5 rounded-full', messageError ? 'bg-amber-300' : 'bg-emerald-400')}
-                    animate={{ scale: [1, 1.6, 1], opacity: [0.45, 1, 0.45] }}
+                    animate={shouldReduceMotion ? undefined : { scale: [1, 1.6, 1], opacity: [0.45, 1, 0.45] }}
                     transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   />
                   <span className="truncate text-[9px] font-black uppercase tracking-[0.22em]">
@@ -501,9 +497,9 @@ export default function DailyBriefing() {
                   <motion.button
                     type="button"
                     onClick={handleComplete}
-                    disabled={justCompleted}
-                    whileTap={{ scale: 0.97 }}
-                    whileHover={{ y: -1 }}
+                    disabled={justCompleted || messageLoading || Boolean(messageError)}
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+                    whileHover={shouldReduceMotion ? undefined : { y: -1 }}
                     className="group relative flex w-full items-center justify-between overflow-hidden rounded-[1.45rem] bg-[#fec708] px-5 py-4 text-black shadow-[0_20px_48px_rgba(254,199,8,0.24)] transition-all disabled:opacity-80"
                   >
                     <motion.span
@@ -516,8 +512,8 @@ export default function DailyBriefing() {
                         <CheckCircle2 size={17} />
                       </span>
                       <span className="text-left">
-                        <span className="block text-[12px] font-black uppercase tracking-[0.18em]">{justCompleted ? 'Care banked' : 'Mark complete'}</span>
-                        <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-black/54">Mark this briefing read</span>
+                        <span className="block text-[12px] font-black uppercase tracking-[0.18em]">{messageError ? 'Briefing unavailable' : justCompleted ? 'Marked as read' : 'Mark as read'}</span>
+                        <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-black/54">No treatment or points recorded</span>
                       </span>
                     </span>
                     <ChevronRight className="relative h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -525,13 +521,20 @@ export default function DailyBriefing() {
                 ) : (
                   <div className="flex items-center justify-center gap-2 rounded-[1.45rem] border border-emerald-400/16 bg-emerald-400/10 px-5 py-4 text-emerald-300">
                     <CheckCircle2 size={18} />
-                    <span className="text-[11px] font-black uppercase tracking-[0.18em]">Briefing complete. Points banked.</span>
+                    <span className="text-[11px] font-black uppercase tracking-[0.18em]">Briefing read. Care record unchanged.</span>
                   </div>
                 )}
               </div>
             </motion.section>
           </AnimatePresence>
         )}
+
+        <details className="mt-5 rounded-[1.4rem] border border-white/10 bg-[#10251c]" onToggle={(event) => setCareOpen(event.currentTarget.open)}>
+          <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fec708]">
+            Recorded care and requests <ChevronRight size={18} aria-hidden="true" />
+          </summary>
+          {careOpen && <div className="px-3 pb-3"><CareWorkflow /></div>}
+        </details>
       </div>
     </motion.div>
   );
