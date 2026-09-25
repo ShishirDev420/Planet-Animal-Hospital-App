@@ -1,0 +1,9 @@
+# Manual medical records access
+
+The customer app reads `users/{ownerUid}/medicalRecords/{recordId}` in the named Firestore database specified by `firebase-applet-config.json`. These are manually entered, unverified records. Private prescription images and veterinarian-approved care use the separate authenticated server workflow.
+
+The `MEDICAL_RECORDS_RULES` block in `firestore.rules` grants the owner read and manual record create/edit/delete access. Trusted clinic claims (`clinicId: planet-animal`, `clinicRole: coordinator | veterinarian | manager`) grant read access only. Parents cannot write prescriptions, verified records, appointment links, images, medications, diagnoses, or extra approval fields through this collection. Clinical approval remains server controlled.
+
+On 25 September 2026, the named production database still used an older ruleset that allowed public access to the legacy `users`, `requests`, and `pointsQueue` collections. A narrowly merged ruleset was deployed to `cloud.firestore/ai-studio-aa984190-a2cb-4039-9f1a-ec67f3d1594b` so the staff terminal's existing collection behavior was not changed by this records repair. The released ruleset was `cd637c2e-ad44-4b35-b7e2-d01563305eb0`. Deploying the full repository `firestore.rules` to production would change those legacy permissions; coordinate that migration with the staff terminal and clinic identity setup first. The broad legacy permissions remain a separate privacy issue.
+
+Run `npm run test:records:emulator` with Java available to verify owner isolation, clinic claim reads, and immutable clinical fields. To also check a separately prepared candidate rules file, set `MEDICAL_RECORDS_RULES_CANDIDATE` to its path before running the command. The signed-in production parent account was used for read and filter checks only; real clinical records and staff identities were not fabricated for live write testing.

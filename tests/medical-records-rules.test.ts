@@ -16,7 +16,9 @@ const manualRecord = (changes: Record<string, unknown> = {}) => ({
 });
 
 test('medical records: owner and trusted staff reads; parent-only manual writes; clinical fields immutable', async () => {
-  for (const file of ['firestore.rules', '../live-medical-records.rules']) {
+  const files = ['firestore.rules'];
+  if (process.env.MEDICAL_RECORDS_RULES_CANDIDATE) files.push(process.env.MEDICAL_RECORDS_RULES_CANDIDATE);
+  for (const file of files) {
     const environment = await initializeTestEnvironment({
       projectId: 'demo-planet-care',
       firestore: { host: '127.0.0.1', port: 8088, rules: readFileSync(resolve(file), 'utf8') },
