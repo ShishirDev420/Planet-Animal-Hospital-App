@@ -13,7 +13,6 @@ import Logo from '../components/Logo';
 import LogoutModal from '../components/LogoutModal';
 import DualAvatar from '../components/DualAvatar';
 import PlanetOrbLoader from '../components/PlanetOrbLoader';
-import PlanetSoul from '../components/PlanetSoul';
 import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { usePawlMessage } from '../hooks/usePawlMessage';
@@ -25,6 +24,7 @@ import { db, auth } from '../lib/firebase';
 import { buildWhatsAppUrl, buildWhatsAppMessage, calculateBookingPoints } from '../lib/pawPoints';
 import { isPreviewDemoMode } from '../lib/demoMode';
 import { bookingQuickDate, indiaCalendarDate } from '../lib/bookingDates';
+import './dashboard-refinement.css';
 
 enum OperationType {
   CREATE = 'create',
@@ -307,7 +307,8 @@ export default function Dashboard() {
     return new Date(`${bookingDate}T${String(hour).padStart(2, '0')}:${match[2]}:00+05:30`).getTime() > Date.now();
   };
   const whatsappUrl = `https://wa.me/919004290923?text=${encodeURIComponent(whatsappMessage)}`;
-  const briefingNeedsAttention = !isPeriodComplete(currentPeriod);
+  const hasApprovedCare = Boolean(care.state?.milestones.some(milestone => milestone.petId === care.petId && milestone.status === 'approved'));
+  const briefingNeedsAttention = hasApprovedCare && !isPeriodComplete(currentPeriod);
   const bookingStepIndex = BOOKING_STEPS.findIndex((step) => step.id === bookingStep);
   const bookingReady = selectedServices.length > 0 && bookingDate >= todayLocal && isFutureBookingTime(bookingTime);
   const bookingStepAllowed: Record<BookingStep, boolean> = {
@@ -384,7 +385,7 @@ export default function Dashboard() {
         {/* Header with Logo */}
       <header className="pt-4 mb-2 mobile-header-row">
         <div className="hidden lg:block desktop-dashboard-heading">
-          <div><p className="desktop-eyebrow">A good day starts with care</p><h1>Hi, {petProfile?.parentName || 'Pet Parent'}<span className="desktop-greeting-dot">.</span></h1><p>Let's keep {petName} healthy, happy and a little more loved.</p></div>
+          <div><p className="desktop-eyebrow">Your care space</p><h1>Good to see you, {petProfile?.parentName || 'Pet Parent'}<span className="desktop-greeting-dot">.</span></h1><p>Care for {petName}, with the next step always clear.</p></div>
           <button onClick={() => setIsLogoutModalOpen(true)} className="desktop-quiet-button" aria-label="Logout"><LogOut size={16}/> Sign out</button>
         </div>
 
@@ -423,28 +424,25 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="mobile-greeting-with-soul">
-            <div className="mb-5 mt-2 mobile-header-greeting">
-              <h2 className="cinematic-section-title text-3xl drop-shadow-md">Hi, {petProfile?.parentName || 'Pet Parent'}</h2>
-              <p className="cinematic-copy mt-1 text-sm">Let's keep {petName} healthy today.</p>
+          <div className="dashboard-mobile-intro">
+            <p className="dashboard-intro-eyebrow">Good to see you, {petProfile?.parentName || 'Pet Parent'}</p>
+            <h2>{petName}’s care,<br/><span>in one place.</span></h2>
+            <p className="dashboard-intro-copy">Request a visit or open the health record. The clinic confirms appointment times.</p>
+            <div className="mobile-first-actions" aria-label="Start caring for your pet">
+              <button type="button" className="mobile-first-action-primary" onClick={() => { setBookingStep('services'); setIsBookVisitOpen(true); }}>
+                <Calendar size={17} aria-hidden="true" /> Request a visit
+              </button>
+              <button type="button" className="mobile-first-action-secondary" onClick={() => navigate({ pathname: '/records', search: location.search })}>
+                <FileText size={17} aria-hidden="true" /> Health records
+              </button>
             </div>
-            <PlanetSoul compact className="mobile-dashboard-soul" />
-          </div>
-          <div className="mobile-first-actions" aria-label="Start caring for your pet">
-            <button type="button" className="mobile-first-action-primary" onClick={() => { setBookingStep('services'); setIsBookVisitOpen(true); }}>
-              <Calendar size={17} aria-hidden="true" /> Request a visit <ArrowRight size={16} aria-hidden="true" />
-            </button>
-            <button type="button" className="mobile-first-action-secondary" onClick={() => navigate({ pathname: '/records', search: location.search })}>
-              <FileText size={17} aria-hidden="true" /> Health records
-            </button>
           </div>
         </div>
       </header>
 
       <section className="hidden lg:block desktop-pet-overview" aria-label="Pet care overview">
-        <div className="desktop-pet-overview-main"><h2>{petName}’s<span>care space</span></h2><p>Request a visit for {petName}. The hospital will confirm your preferred time.</p><button className="desktop-primary-button" onClick={() => { setBookingStep('services'); setIsBookVisitOpen(true); }}>Request a visit <ArrowRight size={17}/></button></div>
-        <PlanetSoul compact className="desktop-care-soul" />
-        <button className="desktop-profile-link" onClick={() => navigate({pathname:'/profiles',search:location.search})}>View pet profile <ArrowRight size={15}/></button>
+        <div className="desktop-pet-overview-main"><p className="dashboard-intro-eyebrow">Start here</p><h2>Plan a visit<span>for {petName}.</span></h2><p>Choose a service and preferred time. The hospital will confirm availability.</p><div className="dashboard-desktop-actions"><button className="desktop-primary-button" onClick={() => { setBookingStep('services'); setIsBookVisitOpen(true); }}>Request a visit <ArrowRight size={17}/></button><button className="desktop-records-button" onClick={() => navigate({pathname:'/records',search:location.search})}>Health records <ArrowRight size={15}/></button></div></div>
+        <div className="desktop-care-emblem" aria-hidden="true"><PawPrint size={62} strokeWidth={1.35}/></div>
       </section>
 
       {/* Pawl Daily Briefing Card */}
@@ -467,9 +465,9 @@ export default function Dashboard() {
           <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2">
               <p className="cinematic-kicker text-[9px] tracking-[0.2em]">Daily Briefing</p>
-              <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">
+              {hasApprovedCare && <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/42">
                 {completedCount >= totalPeriods ? 'Done' : `${completedCount}/${totalPeriods}`}
-              </span>
+              </span>}
               {briefingNeedsAttention && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-[#fec708]/20 bg-[#fec708]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[#fec708]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#fec708] shadow-[0_0_10px_rgba(254,199,8,0.8)]" />
@@ -487,37 +485,9 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      <HomeRewardProgress demo={isDemoMode} onBook={() => { setBookingStep('services'); setIsBookVisitOpen(true); }} onWallet={() => navigate({ pathname: '/rewards', search: location.search })} />
+      <HomeRewardProgress demo={isDemoMode} onWallet={() => navigate({ pathname: '/rewards', search: location.search })} />
 
       {bookingNotice && <p role="status" className="rounded-2xl border border-planet-yellow/20 bg-white/5 p-4 text-sm text-planet-yellow">{bookingNotice}</p>}
-      {/* Quick Actions */}
-      <div className="desktop-actions-section">
-        <h3 className="cinematic-card-title mb-4 text-xl drop-shadow-sm mobile-quick-actions-title">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mobile-quick-actions-grid">
-          <ActionCard
-            icon={<FileText className="text-planet-yellow" />}
-            title="Medical Records"
-            subtitle="Vaccines & History"
-            onClick={() => navigate({ pathname: '/records', search: location.search })}
-            className="mobile-action-card"
-          />
-          <ActionCard
-            icon={<Bot className="text-planet-yellow" />}
-            title="AI Vet"
-            subtitle="AI Care Assistant"
-            onClick={() => navigate({ pathname: '/ai', search: location.search })}
-            className="mobile-action-card"
-          />
-          <ActionCard
-            icon={<Map className="text-planet-yellow" />}
-            title="Roadmap"
-            subtitle="Longevity Plan"
-            onClick={() => navigate({ pathname: '/roadmap', search: location.search })}
-            className="mobile-action-card"
-          />
-        </div>
-      </div>
-
       {/* Visit request flow */}
       {createPortal(<AnimatePresence>
         {isBookVisitOpen && (

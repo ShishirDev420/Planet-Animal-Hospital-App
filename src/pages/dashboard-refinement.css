@@ -1,0 +1,61 @@
+/* One clear care action first; wallet and education follow. */
+.dashboard-mobile-intro {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 1.35rem;
+  border: 1px solid rgb(254 199 8 / 24%);
+  border-radius: 1.45rem;
+  background: radial-gradient(circle at 100% 0%, rgb(254 199 8 / 13%), transparent 40%), linear-gradient(135deg, #1a3929, #10271c 72%);
+  box-shadow: 0 22px 44px rgb(0 0 0 / 14%);
+}
+.dashboard-mobile-intro:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 13rem;
+  height: 13rem;
+  right: -7rem;
+  top: -7rem;
+  border: 1px solid rgb(254 199 8 / 17%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2rem rgb(254 199 8 / 3%), 0 0 0 4rem rgb(254 199 8 / 2%);
+}
+.dashboard-intro-eyebrow { color: #ffe18a; font-size: .65rem; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
+.dashboard-mobile-intro h2 { max-width: 17rem; margin: .7rem 0 .7rem; font-family: var(--font-heading, Georgia, serif); font-size: clamp(2rem, 8vw, 2.5rem); font-weight: 800; letter-spacing: -.06em; line-height: 1.02; }
+.dashboard-mobile-intro h2 span { color: #ffdb67; }
+.dashboard-intro-copy { max-width: 19rem; color: #d0decf; font-size: .8rem; line-height: 1.55; }
+.dashboard-mobile-intro .mobile-first-actions { margin: 1.2rem 0 0; }
+.dashboard-mobile-intro .mobile-first-actions button { min-height: 3.1rem; }
+.dashboard-desktop-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.1rem; margin-top: 1.2rem; }
+.desktop-records-button { display: inline-flex; align-items: center; gap: .45rem; min-height: 2.75rem; color: #ffe18a; font-size: .78rem; font-weight: 700; }
+.desktop-records-button:hover { color: white; }
+.desktop-records-button:focus-visible { outline: 2px solid #fec708; outline-offset: 3px; }
+.desktop-care-emblem { align-self: center; justify-self: center; display: grid; place-items: center; width: 8.5rem; height: 8.5rem; border: 1px solid rgb(254 199 8 / 25%); border-radius: 50%; background: radial-gradient(circle, rgb(254 199 8 / 10%), transparent 70%); color: #ffda60; box-shadow: 0 0 0 1.2rem rgb(254 199 8 / 4%), 0 0 0 2.4rem rgb(254 199 8 / 2%); }
+
+@media (max-width: 1023px) {
+  .mobile-dashboard { padding: 1rem 1rem 1.5rem; }
+  .mobile-dashboard .mobile-header-row { margin-bottom: 0; padding-top: 0; }
+  .mobile-dashboard .mobile-header-row > div:first-child > div:first-child { padding-block: .35rem .9rem; }
+  .mobile-dashboard .mobile-briefing-card { min-height: 6.3rem; margin-top: 1rem !important; margin-bottom: 1rem !important; border-radius: 1.25rem; }
+  .mobile-dashboard .home-reward-card { margin: 0; }
+}
+@media (max-width: 360px) {
+  .dashboard-mobile-intro { padding: 1.15rem; }
+  .dashboard-mobile-intro h2 { font-size: 1.95rem; }
+  .dashboard-mobile-intro .mobile-first-actions { grid-template-columns: 1fr; }
+}
+@media (min-width: 1024px) {
+  .desktop-workspace .mobile-dashboard { gap: 1rem 1.25rem; }
+  .desktop-workspace .desktop-pet-overview { display: grid; grid-template-columns: minmax(0, 1fr) 9rem; min-height: 15rem; background: radial-gradient(circle at 85% 18%, rgb(254 199 8 / 9%), transparent 28%), linear-gradient(125deg, #1a3929, #142d21); border-color: rgb(254 199 8 / 22%); }
+  .desktop-workspace .desktop-pet-overview-main { padding: 1.5rem 1.8rem; }
+  .desktop-workspace .desktop-pet-overview h2 { margin: .45rem 0 .5rem; font-size: clamp(2rem, 2.8vw, 2.6rem); font-weight: 750; line-height: 1.04; }
+  .desktop-workspace .desktop-pet-overview h2 span { color: #ffdb72; }
+  .desktop-workspace .desktop-pet-overview-main > p:not(.dashboard-intro-eyebrow) { max-width: 22rem; color: #c9d8ca; font-size: .76rem; line-height: 1.5; }
+  .desktop-workspace .desktop-primary-button { margin: 0; font-size: .75rem; border-radius: .7rem; padding: .85rem 1rem; }
+  .desktop-workspace .mobile-briefing-card { min-height: 15rem; padding: 1.5rem; }
+  .desktop-workspace .mobile-briefing-card .line-clamp-2 { margin-top: 1rem; line-height: 1.6; }
+  .desktop-workspace .home-reward-card { margin: 0; }
+}
+@media (max-width: 1120px) and (min-width: 1024px) { .desktop-care-emblem { width: 6.5rem; height: 6.5rem; } .desktop-workspace .desktop-pet-overview { grid-template-columns: minmax(0, 1fr) 7rem; } }
+@media (prefers-reduced-motion: reduce) { .dashboard-mobile-intro .mobile-first-actions button { transition: none; } }
