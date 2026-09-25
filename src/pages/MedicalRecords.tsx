@@ -1,12 +1,12 @@
 import PrescriptionWorkspace from '../components/PrescriptionWorkspace';
 import { useCare } from '../lib/care/client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Plus, Pill, Syringe, FlaskConical, Scissors,
   Stethoscope, FileText, NotepadText, Search, ChevronDown,
-  Download, FileDown, Camera, Calendar, User,
+  Download, FileDown, Camera, Calendar, User, AlertCircle,
 } from 'lucide-react';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { getRecords, createRecord, uploadRecordFile } from '../lib/medicalRecords';
@@ -43,22 +43,30 @@ export default function MedicalRecords() {
 
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const latestFetch = useRef(0);
   const [filter, setFilter] = useState<MedicalRecordType | 'all'>('all');
   const [showAdd, setShowAdd] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [editingRecord, setEditingRecord] = useState<MedicalRecord | null>(null);
 
   const fetchRecords = useCallback(async () => {
+    const fetchId = ++latestFetch.current;
     setLoading(true);
+    setLoadError(false);
     try {
       const data = filter === 'all'
         ? await getRecords(userId)
         : await getRecords(userId, filter);
-      setRecords(data);
+      if (fetchId === latestFetch.current) setRecords(data);
     } catch (err) {
       console.error('Failed to fetch records:', err);
+      if (fetchId === latestFetch.current) {
+        setRecords([]);
+        setLoadError(true);
+      }
     } finally {
-      setLoading(false);
+      if (fetchId === latestFetch.current) setLoading(false);
     }
   }, [userId, filter]);
 
@@ -98,6 +106,7 @@ export default function MedicalRecords() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
+              aria-label="Back to home"
               className="p-2 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/30 dark:border-slate-700/30 hover:bg-white dark:hover:bg-slate-800 transition-colors"
             >
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-300" />
@@ -107,13 +116,14 @@ export default function MedicalRecords() {
                 Medical Records
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {petName}'s complete health history
+                {petName}'s saved health records
               </p>
             </div>
           </div>
           <button
             onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-planet-yellow/20"
+            disabled={loading || loadError}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-planet-yellow/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus size={18} />
             Add Record
@@ -145,6 +155,24 @@ export default function MedicalRecords() {
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 rounded-2xl bg-white/60 dark:bg-slate-800/60 animate-pulse" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div role="alert" className="text-center py-16 px-4">
+          <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-5">
+            <AlertCircle size={36} className="text-amber-500" />
+          </div>
+          <h2 className="cinematic-card-title text-lg text-slate-900 dark:text-white mb-2">
+            Medical records unavailable
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
+            We couldn’t check {petName}'s saved records right now. Please try again later.
+          </p>
+          <button
+            onClick={fetchRecords}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all"
+          >
+            Retry loading records
+          </button>
         </div>
       ) : records.length === 0 ? (
         <motion.div
