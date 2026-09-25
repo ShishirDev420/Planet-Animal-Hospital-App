@@ -131,9 +131,8 @@ export default function MedicalRecords() {
         </div>
       </header>
 
-      <PrescriptionWorkspace key={String(care.state?.ownerUid)+care.petId}/>
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-2">
+      {!loadError && <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-2">
         {FILTER_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -147,7 +146,7 @@ export default function MedicalRecords() {
             {opt.label}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* Records List */}
       {loading ? (
@@ -252,6 +251,10 @@ export default function MedicalRecords() {
           })}
         </div>
       )}
+
+      <div className="mt-8">
+        <PrescriptionWorkspace key={String(care.state?.ownerUid)+care.petId}/>
+      </div>
 
       {/* Add Record Modal */}
       <AnimatePresence>
