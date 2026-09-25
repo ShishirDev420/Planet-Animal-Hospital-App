@@ -39,9 +39,11 @@ export default function RecordDetail({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const config = TYPE_CONFIG[record.type] || TYPE_CONFIG.other;
   const Icon = config.icon;
+  const canChange = !record.verified && record.type !== 'prescription';
 
   const formatDate = (ts: any) => {
     if (!ts) return '';
@@ -67,10 +69,14 @@ export default function RecordDetail({
   };
 
   const handleDelete = async () => {
+    if (!canChange || !window.confirm('Permanently delete this unverified record?')) return;
+    setDeleteError('');
     setDeleting(true);
     try {
       await deleteRecord(userId, record.id);
       onDelete();
+    } catch {
+      setDeleteError('This record could not be deleted. Please try again later.');
     } finally {
       setDeleting(false);
     }
@@ -273,14 +279,15 @@ export default function RecordDetail({
           </div>
 
           {/* Actions Footer */}
+          {deleteError && <p role="alert" className="px-4 text-sm text-rose-500">{deleteError}</p>}
           <div className="p-4 border-t border-slate-100 dark:border-slate-800 shrink-0 flex gap-3">
-            <button
+            {canChange && <button
               onClick={() => onEdit(record)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               <Edit3 size={16} />
               Edit
-            </button>
+            </button>}
             <button
               onClick={handleDownloadPDF}
               disabled={loading}
@@ -293,14 +300,14 @@ export default function RecordDetail({
               )}
               Download PDF
             </button>
-            <button
+            {canChange && <button
               onClick={handleDelete}
               disabled={deleting}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-sm font-bold hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors disabled:opacity-50 ml-auto"
             >
               <Trash2 size={16} />
               {deleting ? 'Deleting...' : 'Delete'}
-            </button>
+            </button>}
           </div>
         </motion.div>
       </motion.div>

@@ -9,7 +9,8 @@ import {
   Download, FileDown, Camera, Calendar, User, AlertCircle,
 } from 'lucide-react';
 import { usePetProfile } from '../hooks/usePetProfile';
-import { getRecords, createRecord, uploadRecordFile } from '../lib/medicalRecords';
+import { auth } from '../lib/firebase';
+import { getRecords, createRecord, updateRecord, uploadRecordFile } from '../lib/medicalRecords';
 import { generateRecordPDF } from '../lib/pdfGenerator';
 import type { MedicalRecord, MedicalRecordInput, MedicalRecordType } from '../lib/medicalRecords';
 import AddRecordModal from '../components/AddRecordModal';
@@ -37,9 +38,9 @@ const FILTER_OPTIONS: { label: string; value: MedicalRecordType | 'all' }[] = [
 export default function MedicalRecords() {
   const care=useCare();
   const navigate = useNavigate();
-  const { profile } = usePetProfile();
+  const { profile, loading: profileLoading } = usePetProfile();
   const petName = profile?.petName || profile?.name || 'Your Pet';
-  const userId = profile?.uid || 'demo';
+  const userId = auth.currentUser?.uid || profile?.uid || '';
 
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +55,12 @@ export default function MedicalRecords() {
     const fetchId = ++latestFetch.current;
     setLoading(true);
     setLoadError(false);
+    if (!userId) {
+      setRecords([]);
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
     try {
       const data = filter === 'all'
         ? await getRecords(userId)
@@ -71,11 +78,23 @@ export default function MedicalRecords() {
   }, [userId, filter]);
 
   useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
+    if (!profileLoading) fetchRecords();
+  }, [fetchRecords, profileLoading]);
 
   const handleSave = async (input: MedicalRecordInput) => {
-    await createRecord(userId, input);
+    if (!userId) throw new Error('Sign in to save medical records.');
+    if (editingRecord) {
+      await updateRecord(userId, editingRecord.id, {
+        title: input.title,
+        date: input.date,
+        vetName: input.vetName,
+        clinicName: input.clinicName,
+        description: input.description,
+        instructions: input.instructions,
+      });
+    } else {
+      await createRecord(userId, input);
+    }
     setShowAdd(false);
     setEditingRecord(null);
     await fetchRecords();
@@ -261,6 +280,7 @@ export default function MedicalRecords() {
         {showAdd && (
           <AddRecordModal
             petName={petName}
+            record={editingRecord}
             onSave={handleSave}
             onClose={() => {
               setShowAdd(false);

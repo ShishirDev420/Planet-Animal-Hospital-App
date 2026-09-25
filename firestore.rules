@@ -64,6 +64,62 @@ service cloud.firestore {
         !incoming().diff(existing()).affectedKeys().hasAny(['uid','createdAt','pawPoints','currentPlan','role','clinicRole','wallet','balance','entitlements','careApproved']);
     }
 
+    // BEGIN MEDICAL_RECORDS_RULES
+    // Legacy manually entered records are separate from the server-reviewed prescription and care workflow.
+    match /users/{userId}/medicalRecords/{recordId} {
+      function isRecordOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isClinicStaff() {
+        return request.auth != null &&
+          request.auth.token.clinicId == 'planet-animal' &&
+          request.auth.token.clinicRole in ['coordinator', 'veterinarian', 'manager'];
+      }
+
+      function isParentEditableRecord(data) {
+        return data.keys().hasAll([
+            'type', 'title', 'date', 'vetName', 'clinicName', 'description', 'tags',
+            'imageRef', 'pdfRef', 'ocrRawText', 'medications', 'instructions',
+            'diagnosis', 'followUpDate', 'appointmentId', 'verified', 'createdAt', 'updatedAt'
+          ]) &&
+          data.keys().hasOnly([
+            'type', 'title', 'date', 'vetName', 'clinicName', 'description', 'tags',
+            'imageRef', 'pdfRef', 'ocrRawText', 'medications', 'instructions',
+            'diagnosis', 'followUpDate', 'appointmentId', 'verified', 'createdAt', 'updatedAt'
+          ]) &&
+          data.type in ['vaccine', 'lab_result', 'surgery', 'visit_note', 'other'] &&
+          data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+          data.date is timestamp &&
+          data.vetName is string && data.vetName.size() <= 200 &&
+          data.clinicName is string && data.clinicName.size() <= 200 &&
+          data.description is string && data.description.size() <= 5000 &&
+          data.instructions is string && data.instructions.size() <= 5000 &&
+          data.tags is list && data.tags.size() == 0 &&
+          data.medications is list && data.medications.size() == 0 &&
+          data.imageRef == '' && data.pdfRef == '' && data.ocrRawText == '' &&
+          data.diagnosis == '' && data.followUpDate == '' &&
+          data.appointmentId == null && data.verified == false &&
+          data.createdAt is timestamp && data.updatedAt is timestamp;
+      }
+
+      allow get, list: if isRecordOwner() || isClinicStaff();
+      allow create: if isRecordOwner() && recordId.size() <= 128 &&
+        isParentEditableRecord(request.resource.data) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
+      allow update: if isRecordOwner() &&
+        isParentEditableRecord(resource.data) &&
+        isParentEditableRecord(request.resource.data) &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'date', 'vetName', 'clinicName', 'description', 'instructions', 'updatedAt'
+        ]);
+      allow delete: if isRecordOwner() && isParentEditableRecord(resource.data);
+    }
+    // END MEDICAL_RECORDS_RULES
+
     match /pointsQueue/{documentId} {
       allow read: if isSignedIn() && existing().userId == request.auth.uid;
       allow write: if false;

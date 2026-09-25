@@ -108,12 +108,16 @@ function docToRecord(id: string, data: any): MedicalRecord {
 }
 
 export async function getRecords(userId: string, type?: MedicalRecordType): Promise<MedicalRecord[]> {
-  let q = query(recordsCollection(userId), orderBy('date', 'desc'));
-  if (type) {
-    q = query(recordsCollection(userId), where('type', '==', type), orderBy('date', 'desc'));
-  }
+  // The type filter uses its single-field index; sort locally to avoid a
+  // separate composite index for every manually entered record category.
+  const q = type
+    ? query(recordsCollection(userId), where('type', '==', type))
+    : query(recordsCollection(userId), orderBy('date', 'desc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => docToRecord(d.id, d.data()));
+  const records = snapshot.docs.map((d) => docToRecord(d.id, d.data()));
+  return type
+    ? records.sort((a, b) => (b.date?.toMillis?.() || 0) - (a.date?.toMillis?.() || 0))
+    : records;
 }
 
 export async function getRecord(userId: string, recordId: string): Promise<MedicalRecord | null> {
@@ -135,11 +139,11 @@ export async function createRecord(userId: string, input: MedicalRecordInput): P
 export async function updateRecord(
   userId: string,
   recordId: string,
-  updates: Partial<MedicalRecordInput>,
+  updates: Pick<MedicalRecordInput, 'title' | 'date' | 'vetName' | 'clinicName' | 'description' | 'instructions'>,
 ): Promise<void> {
   await updateDoc(doc(recordsCollection(userId), recordId), {
     ...updates,
-    date: updates.date ? Timestamp.fromDate(updates.date) : undefined,
+    date: Timestamp.fromDate(updates.date),
     updatedAt: serverTimestamp(),
   });
 }

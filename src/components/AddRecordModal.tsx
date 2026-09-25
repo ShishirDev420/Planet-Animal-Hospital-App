@@ -6,12 +6,13 @@ import {
   Pill, Syringe, FlaskConical, Scissors, Stethoscope, NotepadText,
   Save,
 } from 'lucide-react';
-import type { MedicalRecordType, MedicalRecordInput } from '../lib/medicalRecords';
+import type { MedicalRecord, MedicalRecordType, MedicalRecordInput } from '../lib/medicalRecords';
 
 type Step = 'type' | 'manual' | 'saving';
 
 interface AddRecordModalProps {
   petName: string;
+  record?: MedicalRecord | null;
   onSave: (input: MedicalRecordInput) => Promise<void>;
   onClose: () => void;
 }
@@ -25,18 +26,18 @@ const RECORD_TYPES: { value: MedicalRecordType; label: string; icon: any; color:
   { value: 'other', label: 'Other', icon: NotepadText, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-900/20', description: 'Any other medical document' },
 ];
 
-export default function AddRecordModal({ petName, onSave, onClose }: AddRecordModalProps) {
+export default function AddRecordModal({ petName, record, onSave, onClose }: AddRecordModalProps) {
   const [saveError,setSaveError]=useState('');
   const [privatePrescription,setPrivatePrescription]=useState(false);
-  const [step, setStep] = useState<Step>('type');
-  const [recordType, setRecordType] = useState<MedicalRecordType>('prescription');
+  const [step, setStep] = useState<Step>(record ? 'manual' : 'type');
+  const [recordType, setRecordType] = useState<MedicalRecordType>(record?.type || 'prescription');
   // Manual form state
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [vetName, setVetName] = useState('');
-  const [clinicName, setClinicName] = useState('');
-  const [description, setDescription] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [title, setTitle] = useState(record?.title || '');
+  const [date, setDate] = useState(record?.date?.toDate?.().toISOString().split('T')[0] || new Date().toISOString().split('T')[0]);
+  const [vetName, setVetName] = useState(record?.vetName || '');
+  const [clinicName, setClinicName] = useState(record?.clinicName || '');
+  const [description, setDescription] = useState(record?.description || '');
+  const [instructions, setInstructions] = useState(record?.instructions || '');
 
   const handleTypeSelect = (type: MedicalRecordType) => {
     setRecordType(type);
@@ -48,6 +49,7 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
   };
 
   const handleSave = async () => {
+    setSaveError('');
     setStep('saving');
 
     const input: MedicalRecordInput = {
@@ -94,7 +96,7 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
             <div>
               <h2 className="cinematic-card-title text-lg text-slate-900 dark:text-white">
                 {step === 'type' && 'Add Medical Record'}
-                {step === 'manual' && 'Enter Details'}
+                {step === 'manual' && (record ? 'Edit Medical Record' : 'Enter Details')}
                 {step === 'saving' && 'Saving...'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -195,7 +197,7 @@ export default function AddRecordModal({ petName, onSave, onClose }: AddRecordMo
                   className="flex-1 py-3 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all flex items-center justify-center gap-2"
                 >
                   <Save size={16} />
-                  Save Record
+                  {record ? 'Save Changes' : 'Save Record'}
                 </button>
               </>
             )}
