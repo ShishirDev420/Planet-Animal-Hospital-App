@@ -46,7 +46,13 @@ service cloud.firestore {
     
     function isValidRequestItem(data) {
        return data.userId is string && data.userId.size() <= 128 &&
-              data.status is string && data.status.size() <= 32;
+              data.status is string && data.status.size() <= 32 &&
+              data.patient is string && data.patient.size() <= 128 &&
+              data.reason is string && data.reason.size() <= 500 &&
+              data.date is string && data.date.size() <= 64 &&
+              data.time is string && data.time.size() <= 64 &&
+              data.points == 0 && data.createdAt == request.time &&
+              data.keys().hasOnly(['userId','patient','reason','date','time','points','status','createdAt']);
     }
 
     match /users/{userId} {
@@ -131,8 +137,15 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidId(documentId) &&
                     isValidRequestItem(incoming()) &&
                     incoming().userId == request.auth.uid &&
-                    incoming().status == 'pending' && (!('points' in incoming()) || incoming().points == 0);
-      allow update: if isStaff() || (isSignedIn() && existing().userId == request.auth.uid && incoming().userId == existing().userId && incoming().diff(existing()).affectedKeys().hasOnly(['status','date','time']) && incoming().status in ['pending','cancelled']);
+                    incoming().status == 'pending';
+      allow update: if (isStaff() && existing().status == 'pending' &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt']) &&
+                    incoming().status in ['reviewed','cancelled'] &&
+                    incoming().reviewedBy == request.auth.uid && incoming().reviewedAt == request.time) ||
+                    (isSignedIn() && existing().userId == request.auth.uid &&
+                    existing().status == 'pending' && incoming().userId == existing().userId &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status','date','time']) &&
+                    incoming().status in ['pending','cancelled']);
       allow delete: if false;
     }
   }

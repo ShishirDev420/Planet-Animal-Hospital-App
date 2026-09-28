@@ -9,6 +9,8 @@ import { careRequest } from '../lib/care/client';
 import { careSummary, type CareState, type PilotConfig, type Role } from '../lib/care/domain';
 import { careButton, careInput } from '../components/CareWorkflow';
 
+const legacyTerminalUrl = import.meta.env.VITE_STAFF_TERMINAL_URL;
+
 export default function StaffCare() {
   const [session,setSession]=useState(auth.currentUser?.uid||'signed-out');
   useEffect(()=>onAuthStateChanged(auth,user=>setSession(user?.uid||'signed-out')),[]);
@@ -27,6 +29,7 @@ function StaffCareSession() {
   const date=(value:FormDataEntryValue|undefined)=>value?new Date(String(value)).getTime():null;
   return <main className="min-h-screen bg-[#071912] px-4 py-8 text-white"><div className="mx-auto max-w-6xl">
     <Link to="/" className="text-[#fec708]">← Parent app</Link><h1 className="mt-5 font-heading text-3xl font-black">Care team workspace</h1><p className="mt-2 text-sm text-white/70">Recorded instructions, follow-ups and verified care. Access is checked by the server.</p>
+    {role !== 'parent' && legacyTerminalUrl && <a href={legacyTerminalUrl} className="mt-4 inline-flex rounded-xl border border-[#fec708]/50 px-4 py-2.5 text-sm font-semibold text-[#fec708]" rel="noopener noreferrer">Open legacy request terminal ↗</a>}
     {!auth.currentUser && <div className="my-5 max-w-xl rounded-2xl border border-white/15 bg-white/5 p-5"><h2 className="font-semibold">Clinic team sign-in</h2><p className="mt-2 text-sm text-white/70">Sign in with your clinic-approved account to review care records. A clinic manager must assign the appropriate role.</p><Link to="/" className="mt-4 inline-flex rounded-xl bg-[#fec708] px-4 py-2.5 text-sm font-semibold text-[#071912]">Go to sign in</Link></div>}
     {notice && auth.currentUser && <p role="status" className="my-4 rounded-xl border border-[#fec708]/30 p-3">{notice}</p>}
     {role!=='parent' && <>
