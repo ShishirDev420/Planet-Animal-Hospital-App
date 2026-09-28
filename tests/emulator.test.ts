@@ -20,6 +20,7 @@ test('real Auth + Firestore: owner isolation, one completion award, no double sp
  }
  assert.equal((await call('wallet',undefined)).status,401);assert.equal((await call('wallet','other',undefined,'?ownerUid=parent')).status,403);
  await services.db.doc('careSettings/redemption').set({legacyCreditEnabled:true});await services.db.doc('users/parent').set({pawPoints:500,uid:'parent'});await services.db.doc('careAccounts/parent').set(emptyState('parent','Synthetic Pet'));
+ const beforeCare=(await call('wallet','parent')).data;assert.equal(beforeCare.wallet.points,0);assert.equal(beforeCare.walletExists,false);assert.equal(beforeCare.legacyPoints,500);
  assert.equal((await call('care','manager',{type:'configure',config:{version:'emulator-only',workflowName:'Synthetic test',rules:{fixture:{points:40,creditPaise:1000}}}})).status,200);
  const now=Date.now();assert.equal((await call('care','vet',{type:'approve',ownerUid:'parent',petId:'primary',id:'step',title:'Synthetic follow-up',instructions:'Recorded test instructions',sourceRef:'synthetic-source',windowStart:null,dueAt:null,reminderAt:null,ruleId:'fixture'})).status,200);
  assert.equal((await call('care','parent',{type:'book',petId:'primary',milestoneId:'step',requestedFor:now+86400000})).status,200);

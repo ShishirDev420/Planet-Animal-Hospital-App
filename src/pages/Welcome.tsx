@@ -91,7 +91,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
         email: user.email,
         displayName: user.displayName || 'Pet Parent',
         petName: 'Pending',
-        pawPoints: 500,
+        pawPoints: 0,
         currentPlan: 'free',
         createdAt: serverTimestamp(),
       });
@@ -99,7 +99,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
     }
 
     const data = existingProfile.data();
-    // Existing zero balances must never re-trigger the registration bonus.
+    // Historical points remain separate until the clinic reconciles them.
     const hasCompletedProfile = Boolean(data?.petName && data.petName !== 'Pending');
     return { hasCompletedProfile };
   };
@@ -127,7 +127,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
           phone: phone.trim() || '',
           displayName: userCredential.user.displayName || 'Pet Parent',
           petName: 'Pending',
-          pawPoints: 500,
+          pawPoints: 0,
           currentPlan: 'free',
           createdAt: serverTimestamp()
         });

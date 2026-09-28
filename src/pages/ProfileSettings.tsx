@@ -1,9 +1,8 @@
 import LinkedSignInMethods from '../components/LinkedSignInMethods';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut, Phone } from 'lucide-react';
-import { useProfileImages } from '../hooks/useProfileImages';
+import { ArrowLeft, Bell, Activity, Utensils, Save, User, Mail, Dog, Stethoscope, LogOut, Phone, PawPrint } from 'lucide-react';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { signOut } from 'firebase/auth';
 import { useCare } from '../lib/care/client';
@@ -12,9 +11,8 @@ import { auth } from '../lib/firebase';
 export default function ProfileSettings() {
   const navigate = useNavigate();
   const care = useCare();
-  const { profile, updateProfile } = usePetProfile();
+  const { profile, loading: profileLoading, updateProfile } = usePetProfile();
   const [name, setName] = useState(profile?.parentName || '');
-  const [email, setEmail] = useState('');
   const [weight, setWeight] = useState(profile?.weight?.replace(/[^0-9.]/g, '') || '');
   const [unit, setUnit] = useState(profile?.weight?.includes('kg') ? 'kg' : 'lbs');
   const [diet, setDiet] = useState(profile?.dietaryPreferences || '');
@@ -23,52 +21,34 @@ export default function ProfileSettings() {
   const [age, setAge] = useState(profile?.age || '');
   const [gender, setGender] = useState(profile?.gender || '');
   const [phone, setPhone] = useState(profile?.phone || '');
-  const [reminders, setReminders] = useState(true);
-  const [marketing, setMarketing] = useState(false);
+  const [reminderBusy, setReminderBusy] = useState(false);
+  const [reminderNotice, setReminderNotice] = useState('');
+  const isPrimaryPet = care.petId === 'primary';
 
   useEffect(() => {
-    if (profile) {
-      if (profile.parentName) setName(profile.parentName);
-      if (profile.weight) {
-        setWeight(profile.weight.replace(/[^0-9.]/g, ''));
-        setUnit(profile.weight.includes('kg') ? 'kg' : 'lbs');
-      }
-      if (profile.dietaryPreferences) setDiet(profile.dietaryPreferences);
-      if (profile.surgicalHistory) setSurgicalHistory(profile.surgicalHistory);
-      if (profile.medicalHistory) setMedicalHistory(profile.medicalHistory);
-      if (profile.age) setAge(profile.age);
-      if (profile.gender) setGender(profile.gender);
-      if (profile.phone !== undefined) setPhone(profile.phone);
-    }
+    setName(profile?.parentName || '');
+    setWeight(profile?.weight?.replace(/[^0-9.]/g, '') || '');
+    setUnit(profile?.weight?.includes('kg') ? 'kg' : 'lbs');
+    setDiet(profile?.dietaryPreferences || '');
+    setSurgicalHistory(profile?.surgicalHistory || '');
+    setMedicalHistory(profile?.medicalHistory || '');
+    setAge(profile?.age || '');
+    setGender(profile?.gender || '');
+    setPhone(profile?.phone || '');
   }, [profile]);
 
-  const { userImage, petImage, updateUserImage, updatePetImage } = useProfileImages();
-  const user = { photoUrl: userImage };
-  const pet = { photoUrl: petImage };
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
-  const userFileInputRef = useRef<HTMLInputElement>(null);
-  const petFileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setter(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (profileLoading || care.loading || !profile) { setSaveError(true); return; }
+    if (isPrimaryPet && weight.trim() && (!Number.isFinite(Number(weight)) || Number(weight) <= 0)) { setSaveError(true); return; }
     setIsSaving(true);
     setSaveError(false);
     try {
-      await updateProfile({ parentName: name, weight: `${weight}${unit}`, dietaryPreferences: diet, surgicalHistory, medicalHistory, age, gender, phone: phone.trim() });
+      await updateProfile(isPrimaryPet ? { parentName: name.trim(), ...(weight.trim() ? { weight: `${weight}${unit}` } : {}), dietaryPreferences: diet, surgicalHistory, medicalHistory, age, gender, phone: phone.trim() } : { parentName: name.trim(), phone: phone.trim() });
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
     } catch (err) {
@@ -77,6 +57,20 @@ export default function ProfileSettings() {
       setTimeout(() => setSaveError(false), 3000);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleReminderChange = async () => {
+    if (!care.state || reminderBusy) return;
+    setReminderBusy(true);
+    setReminderNotice('');
+    try {
+      await care.command({ type: 'preferences', inApp: !care.state.preferences.inApp, snoozeUntil: null });
+      setReminderNotice('In-app reminder preference saved.');
+    } catch (cause) {
+      setReminderNotice((cause as Error).message || 'Reminder preference could not be saved.');
+    } finally {
+      setReminderBusy(false);
     }
   };
 
@@ -109,6 +103,7 @@ export default function ProfileSettings() {
       <header className="flex items-center justify-between mb-8 pt-4">
         <button 
           onClick={() => navigate('/')}
+          aria-label="Back to home"
           className="p-3 bg-white/80 rounded-2xl shadow-sm active:scale-90 transition-transform flex items-center gap-2 dark:bg-neutral-900 dark:border dark:border-white/10"
         >
           <ArrowLeft size={20} className="text-slate-600 dark:text-white/90" />
@@ -118,61 +113,10 @@ export default function ProfileSettings() {
         <div className="w-11" /> {/* Spacer */}
       </header><LinkedSignInMethods />
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center mb-10"
-      >
-        <div className="flex flex-row items-center justify-center -space-x-4 relative mb-8 mt-2 p-1">
-          <div className="absolute inset-0 z-0 rounded-full bg-planet-yellow/20 opacity-50 blur-md animate-[pulse_3s_ease-in-out_infinite]"></div>
-          
-          <div className="relative w-24 h-24 rounded-full bg-white/5 backdrop-blur-md border-[1.5px] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] flex items-center justify-center overflow-hidden">
-            {user.photoUrl && <img src={user.photoUrl} alt="Parent" className="w-full h-full object-cover" />}
-          </div>
-          
-          <div className="relative w-24 h-24 rounded-full bg-white/5 backdrop-blur-md border-[1.5px] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] flex items-center justify-center overflow-hidden">
-            {pet.photoUrl && <img src={pet.photoUrl} alt={profile?.name || "Pet"} className="w-full h-full object-cover" />}
-          </div>
-        </div>
-
-        <input 
-          type="file" 
-          accept="image/*" 
-          className="hidden" 
-          ref={userFileInputRef} 
-          onChange={(e) => handleImageUpload(e, updateUserImage)} 
-        />
-        <input 
-          type="file" 
-          accept="image/*" 
-          className="hidden" 
-          ref={petFileInputRef} 
-          onChange={(e) => handleImageUpload(e, updatePetImage)} 
-        />
-        
-        <div className="flex gap-4 w-full max-w-sm">
-          <motion.button 
-            onClick={() => userFileInputRef.current?.click()}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2 hover:bg-white/90 dark:hover:bg-white/10 transition-colors group"
-          >
-            <div className="bg-slate-100 dark:bg-white/10 p-2 rounded-full text-slate-600 dark:text-white/90 border border-transparent dark:border-white/5 group-hover:bg-slate-200 dark:group-hover:bg-white/20 transition-colors"><Camera size={16} /></div>
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Edit {profile?.parentName || "Parent"}'s Photo</span>
-          </motion.button>
-          <motion.button 
-            onClick={() => petFileInputRef.current?.click()}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-1 bg-white/80 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-xl py-3 rounded-2xl flex flex-col items-center gap-2 hover:bg-white/90 dark:hover:bg-white/10 transition-colors group"
-          >
-            <div className="bg-planet-yellow/20 p-2 rounded-full text-planet-yellow group-hover:bg-planet-yellow/30 transition-colors"><Camera size={16} /></div>
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Edit {profile?.name || "Pet"}'s Photo</span>
-          </motion.button>
-        </div>
-      </motion.div>
+      <div className="mb-8 flex items-center justify-center gap-3" aria-hidden="true">
+        <span className="grid h-16 w-16 place-items-center rounded-2xl border border-white/15 bg-white/5 text-white/70"><User size={28}/></span>
+        <span className="grid h-16 w-16 place-items-center rounded-2xl border border-[#fec708]/25 bg-[#fec708]/10 text-[#fec708]"><PawPrint size={28}/></span>
+      </div>
 
       <motion.div 
         variants={containerVariants}
@@ -190,6 +134,7 @@ export default function ProfileSettings() {
               </label>
               <input 
                 type="text" 
+                aria-label="Full Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
@@ -201,10 +146,13 @@ export default function ProfileSettings() {
               </label>
               <input 
                 type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                aria-label="Email Address"
+                value={auth.currentUser?.email || profile?.email || ''}
+                readOnly
+                aria-describedby="account-email-note"
                 className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
               />
+              <p id="account-email-note" className="text-xs text-white/60">Your sign-in email is managed by your authentication provider.</p>
             </div>
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold font-body text-slate-300 mb-1">
@@ -212,6 +160,7 @@ export default function ProfileSettings() {
               </label>
               <input 
                 type="tel" 
+                aria-label="Mobile Number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
@@ -221,8 +170,8 @@ export default function ProfileSettings() {
           </div>
         </motion.section>
 
-        {/* Pet's Profile */}
-        <motion.section variants={itemVariants} className="space-y-4">
+        {/* The legacy profile stores details for the first pet only. */}
+        {isPrimaryPet ? <motion.section variants={itemVariants} className="space-y-4">
           <h2 className="cinematic-card-title mb-4 border-b border-white/10 px-2 pb-2 text-xl drop-shadow-sm">{profile?.name || "Pet"}'s Profile</h2>
           <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-5">
             <div className="space-y-2">
@@ -231,6 +180,7 @@ export default function ProfileSettings() {
               </label>
               <input 
                 type="text" 
+                aria-label="Breed"
                 value={profile?.breed || "Unknown"}
                 disabled
                 className="w-full bg-slate-100/50 dark:bg-white/5 border border-transparent dark:border-white/5 rounded-2xl py-3 px-4 outline-none text-slate-500 dark:text-slate-300 font-body font-medium cursor-not-allowed shadow-inner"
@@ -243,6 +193,7 @@ export default function ProfileSettings() {
                 </label>
                 <input 
                   type="text" 
+                  aria-label="Age"
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
                   className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium placeholder-gray-400"
@@ -253,6 +204,7 @@ export default function ProfileSettings() {
                   Gender
                 </label>
                 <select 
+                  aria-label="Gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
                   className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium appearance-none placeholder-gray-400"
@@ -271,18 +223,23 @@ export default function ProfileSettings() {
               <div className="flex w-full items-center gap-3">
                 <input 
                   type="number" 
+                aria-label="Current Weight"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                   className="flex-1 min-w-0 bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-xl font-heading font-bold text-slate-800 dark:text-slate-100 placeholder-gray-400"
                 />
                 <div className="flex shrink-0 bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 rounded-2xl p-1 shadow-sm">
                   <button 
+                    type="button"
+                    aria-pressed={unit === 'lbs'}
                     onClick={() => setUnit('lbs')}
                     className={`px-4 rounded-xl font-bold transition-colors ${unit === 'lbs' ? 'bg-white shadow-sm text-slate-800 dark:bg-white/20 dark:text-white' : 'text-slate-400 dark:text-white/40'}`}
                   >
                     lbs
                   </button>
                   <button 
+                    type="button"
+                    aria-pressed={unit === 'kg'}
                     onClick={() => setUnit('kg')}
                     className={`px-4 rounded-xl font-bold transition-colors ${unit === 'kg' ? 'bg-white shadow-sm text-slate-800 dark:bg-white/20 dark:text-white' : 'text-slate-400 dark:text-white/40'}`}
                   >
@@ -297,6 +254,7 @@ export default function ProfileSettings() {
                 <Utensils size={16} className="text-orange-500" /> Dietary Preferences
               </label>
               <select 
+                aria-label="Dietary Preferences"
                 value={diet}
                 onChange={(e) => setDiet(e.target.value)}
                 className="w-full bg-white/60 dark:bg-white/10 border border-transparent dark:border-white/5 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-emerald-500 rounded-2xl py-3 px-4 outline-none transition-all shadow-inner text-slate-800 dark:text-slate-100 font-body font-medium appearance-none placeholder-gray-400"
@@ -314,6 +272,7 @@ export default function ProfileSettings() {
                 <Stethoscope size={16} className="text-red-500" /> Medical History
               </label>
               <textarea 
+                aria-label="Medical History"
                 value={medicalHistory}
                 onChange={(e) => setMedicalHistory(e.target.value)}
                 placeholder="e.g., allergies, chronic conditions..."
@@ -327,6 +286,7 @@ export default function ProfileSettings() {
                 <Stethoscope size={16} className="text-blue-500" /> Surgical History
               </label>
               <textarea 
+                aria-label="Surgical History"
                 value={surgicalHistory}
                 onChange={(e) => setSurgicalHistory(e.target.value)}
                 placeholder="e.g., ACL repair, spay/neuter..."
@@ -335,31 +295,23 @@ export default function ProfileSettings() {
               />
             </div>
           </div>
-        </motion.section>
+        </motion.section> : <motion.section variants={itemVariants} className="rounded-3xl border border-white/15 bg-white/5 p-5 text-sm leading-6 text-white/75"><h2 className="cinematic-card-title mb-2 text-xl text-white">This pet's care details</h2><p>Use the selected pet's care space to share history and prescriptions. Your first pet's profile details are kept separate.</p><button type="button" className="mt-4 min-h-11 rounded-xl bg-[#fec708] px-4 font-bold text-[#071912]" onClick={() => navigate('/roadmap')}>Open care space</button></motion.section>}
 
-        {/* App Preferences */}
+        {/* In-app reminders use the server-backed care preference. */}
         <motion.section variants={itemVariants} className="space-y-4">
           <h2 className="cinematic-card-title mb-4 border-b border-white/10 px-2 pb-2 text-xl drop-shadow-sm">App Preferences</h2>
-          <div className="bg-white/10 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 p-5 rounded-3xl shadow-xl space-y-6">
-            <div className="flex items-center justify-between">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <h4 className="font-heading font-bold text-slate-800 flex items-center gap-2 dark:text-white">
-                  <Bell size={16} className="text-indigo-500" /> Appointment & Health Reminders
-                </h4>
-                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1 leading-relaxed">Get notified 24h before visits.</p>
+                <h3 className="flex items-center gap-2 font-heading font-bold text-white">
+                  <Bell size={16} className="text-[#fec708]" /> In-app care reminders
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-white/65">Show reminders in this app when a veterinarian-approved follow-up date is recorded. External messages are not connected.</p>
               </div>
-              <Toggle isOn={reminders} onToggle={() => setReminders(!reminders)} />
+              <button type="button" role="switch" aria-label="In-app care reminders" aria-checked={care.state?.preferences.inApp || false} disabled={!care.state || reminderBusy} onClick={() => void handleReminderChange()} className={`relative h-8 w-14 shrink-0 rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fec708] disabled:opacity-45 ${care.state?.preferences.inApp ? 'bg-[#fec708]' : 'bg-white/25'}`}><span className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${care.state?.preferences.inApp ? 'translate-x-6' : 'translate-x-0'}`}/></button>
             </div>
-            
-            <div className="h-px bg-slate-200/50 w-full dark:bg-white/10" />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-heading font-bold text-slate-800 dark:text-white">Marketing & Promotions</h4>
-                <p className="font-body font-medium text-slate-500 dark:text-slate-300 text-xs mt-1 leading-relaxed">Promos and new proactive plans.</p>
-              </div>
-              <Toggle isOn={marketing} onToggle={() => setMarketing(!marketing)} />
-            </div>
+            {reminderNotice && <p role="status" className="mt-3 text-xs text-[#fec708]">{reminderNotice}</p>}
+            <p className="mt-3 text-xs text-white/50">This preference saves immediately.</p>
           </div>
         </motion.section>
       </motion.div>
@@ -367,7 +319,7 @@ export default function ProfileSettings() {
       {/* Save Button */}
       <div className="flex flex-col gap-4 mt-12 pb-10 px-5">
         <motion.button
-          disabled={isSaving}
+          disabled={isSaving || profileLoading || care.loading || !profile}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleSave}
@@ -411,21 +363,5 @@ export default function ProfileSettings() {
       </div>
       </div>
     </div>
-  );
-}
-
-function Toggle({ isOn, onToggle }: { isOn: boolean, onToggle: () => void }) {
-  return (
-    <motion.div 
-      className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 shrink-0 ${isOn ? 'bg-planet-yellow' : 'bg-slate-300'}`}
-      onClick={onToggle}
-    >
-      <motion.div 
-        className="bg-white w-6 h-6 rounded-full shadow-md"
-        layout
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        animate={{ x: isOn ? 24 : 0 }}
-      />
-    </motion.div>
   );
 }

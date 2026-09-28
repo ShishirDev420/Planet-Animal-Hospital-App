@@ -55,7 +55,7 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidId(userId) &&
                        isValidUser(incoming()) &&
                        incoming().uid == userId &&
-                       (incoming().pawPoints == 0 || incoming().pawPoints == 500) &&
+                       incoming().pawPoints == 0 &&
                        (!('currentPlan' in incoming()) || incoming().currentPlan == 'free') &&
                        !incoming().keys().hasAny(['role','clinicRole','wallet','balance','entitlements','careApproved']) &&
                        incoming().createdAt == request.time &&

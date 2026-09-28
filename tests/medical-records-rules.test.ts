@@ -7,6 +7,26 @@ import { collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, setD
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) throw new Error('Firestore emulator required; refusing to test production.');
 
+test('new parent profiles start at zero; historical points cannot be self-granted', async () => {
+  const environment = await initializeTestEnvironment({
+    projectId: 'demo-planet-care',
+    firestore: { host: '127.0.0.1', port: 8088, rules: readFileSync(resolve('firestore.rules'), 'utf8') },
+  });
+  try {
+    await environment.clearFirestore();
+    const owner = environment.authenticatedContext('new-parent').firestore();
+    const bonusOwner = environment.authenticatedContext('bonus-parent').firestore();
+    const profile = { uid: 'new-parent', email: 'new-parent@example.test', petName: 'Pending', pawPoints: 0, currentPlan: 'free', createdAt: serverTimestamp() };
+    await assertSucceeds(setDoc(doc(owner, 'users/new-parent'), profile));
+    assert.equal((await getDoc(doc(owner, 'users/new-parent'))).data()?.pawPoints, 0);
+    await assertFails(setDoc(doc(owner, 'users/another-parent'), { ...profile, uid: 'another-parent' }));
+    await assertFails(setDoc(doc(bonusOwner, 'users/bonus-parent'), { ...profile, uid: 'bonus-parent', pawPoints: 500 }));
+    await assertFails(setDoc(doc(owner, 'users/new-parent'), { ...profile, pawPoints: 500 }));
+  } finally {
+    await environment.cleanup();
+  }
+});
+
 const manualRecord = (changes: Record<string, unknown> = {}) => ({
   type: 'vaccine', title: 'Synthetic vaccine record', date: Timestamp.fromDate(new Date('2026-09-01')),
   vetName: '', clinicName: '', description: 'Synthetic test data', tags: [],

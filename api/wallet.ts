@@ -30,7 +30,7 @@ export function createWalletHandler(getServices=database) {return async(req:any,
     });
     const [w,profile,care,entries,reservations,redemption]=await Promise.all([root.get(),db.doc(`users/${owner}`).get(),db.doc(`careAccounts/${owner}`).get(),root.collection('entries').orderBy('at','desc').limit(50).get(),root.collection('reservations').where('status','==','reserved').limit(50).get(),db.doc('careSettings/redemption').get()]);
     const state=care.data() as CareState|undefined;
-    return send(200,{role:actor.role,wallet:w.exists?normalizeWallet(w.data() as Wallet,now):null,legacyPoints:profile.data()?.pawPoints??null,pendingPoints:state?.milestones.filter(m=>m.status==='approved'&&m.booking.status==='confirmed').reduce((n,m)=>n+(m.walletReward?.points||0),0)||0,entries:entries.docs.map(d=>({id:d.id,...d.data()})),reservations:reservations.docs.map(d=>d.data()),policy:WALLET_POLICY,redemptionPolicy:redemption.data()||null,scope:'latest 50 ledger entries; clinic credit only'});
+    return send(200,{role:actor.role,wallet:normalizeWallet(w.exists?w.data() as Wallet:emptyWallet(),now),walletExists:w.exists,legacyPoints:profile.data()?.pawPoints??null,pendingPoints:state?.milestones.filter(m=>m.status==='approved'&&m.booking.status==='confirmed').reduce((n,m)=>n+(m.walletReward?.points||0),0)||0,entries:entries.docs.map(d=>({id:d.id,...d.data()})),reservations:reservations.docs.map(d=>d.data()),policy:WALLET_POLICY,redemptionPolicy:redemption.data()||null,scope:'latest 50 ledger entries; clinic credit only'});
   }
   const type=b.type;
   if(type==='configureRedemption') {

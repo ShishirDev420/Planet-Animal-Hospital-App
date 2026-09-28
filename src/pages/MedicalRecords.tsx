@@ -39,7 +39,9 @@ export default function MedicalRecords() {
   const care=useCare();
   const navigate = useNavigate();
   const { profile, loading: profileLoading } = usePetProfile();
-  const petName = profile?.petName || profile?.name || 'Your Pet';
+  const primaryPetName = profile?.petName || profile?.name || 'Your Pet';
+  const petName = care.state?.pets.find(p => p.id === care.petId)?.name || primaryPetName;
+  const isPrimaryPet = care.petId === 'primary';
   const userId = auth.currentUser?.uid || profile?.uid || '';
 
   const [records, setRecords] = useState<MedicalRecord[]>([]);
@@ -135,23 +137,26 @@ export default function MedicalRecords() {
                 Medical Records
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {petName}'s saved health records
+                {isPrimaryPet ? 'Saved account records and prescriptions' : `${petName}'s linked prescriptions`}
               </p>
             </div>
           </div>
-          <button
+          {isPrimaryPet && <button
             onClick={() => setShowAdd(true)}
             disabled={loading || loadError}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-planet-yellow text-black font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-planet-yellow/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus size={18} />
             Add Record
-          </button>
+          </button>}
         </div>
       </header>
 
+      {/* Older manual records have no pet ID, so show them only with the first pet. */}
+      {isPrimaryPet && <p className="mb-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">Older saved records are stored under your account without a pet link. Check the document before using it for a pet's care.</p>}
+      {!isPrimaryPet && <p className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-50/70 p-4 text-sm leading-relaxed text-slate-700 dark:bg-amber-900/20 dark:text-slate-200">Older manually saved records appear with your first pet because they do not have a verified pet link. Prescriptions below are linked to {petName}.</p>}
       {/* Filter Tabs */}
-      {!loadError && <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-2">
+      {isPrimaryPet && !loadError && <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-2">
         {FILTER_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -168,7 +173,7 @@ export default function MedicalRecords() {
       </div>}
 
       {/* Records List */}
-      {loading ? (
+      {isPrimaryPet && (loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 rounded-2xl bg-white/60 dark:bg-slate-800/60 animate-pulse" />
@@ -183,7 +188,7 @@ export default function MedicalRecords() {
             Medical records unavailable
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
-            We couldn’t check {petName}'s saved records right now. Please try again later.
+            We couldn’t check the saved account records right now. Please try again later.
           </p>
           <button
             onClick={fetchRecords}
@@ -205,7 +210,7 @@ export default function MedicalRecords() {
             No Medical Records Yet
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
-            Keep {petName}'s health history organized. Scan prescriptions, log vaccinations, and track lab results.
+            Add your first saved record, or scan a prescription in the pet-linked section below.
           </p>
           <button
             onClick={() => setShowAdd(true)}
@@ -269,7 +274,7 @@ export default function MedicalRecords() {
             );
           })}
         </div>
-      )}
+      ))}
 
       <div className="mt-8">
         <PrescriptionWorkspace key={String(care.state?.ownerUid)+care.petId}/>

@@ -16,6 +16,7 @@ export async function careRequest(body?: Record<string, unknown>, query = '') {
 }
 type Workspace = { state: CareState | null; role: Role; config: PilotConfig | null; loading: boolean; error: string; petId: string; setPetId: (id: string) => void; refresh: () => Promise<void>; command: (body: Record<string, unknown>) => Promise<void> };
 const Context = createContext<Workspace | null>(null);
+const selectedPetKey = (uid: string) => `planet_animal_selected_pet:${uid}`;
 // Used only by the isolated local review entry, excluded from production routes.
 export const CareReviewProvider = Context.Provider;
 export function CareProvider({ children }: { children: ReactNode }) {
@@ -33,7 +34,7 @@ export function CareProvider({ children }: { children: ReactNode }) {
     finally { if (g === generation.current && request === seq.current) setLoading(false); }
   };
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, () => { generation.current++; setState(null); setRole('parent'); setConfig(null); setPetId('primary'); setLoading(true); void refresh(); });
+    const unsubscribe = onAuthStateChanged(auth, user => { generation.current++; setState(null); setRole('parent'); setConfig(null); try { setPetId(user ? localStorage.getItem(selectedPetKey(user.uid)) || 'primary' : 'primary'); } catch { setPetId('primary'); } setLoading(true); void refresh(); });
     const focus = () => { if (!document.hidden) void refresh(); };
     window.addEventListener('focus', focus);
     const timer = window.setInterval(focus, 60000);
@@ -45,6 +46,11 @@ export function CareProvider({ children }: { children: ReactNode }) {
     const data = await careRequest({ ...body, petId: body.petId || petId });
     if (g === generation.current && uid === auth.currentUser?.uid) { seq.current++; accept(data); }
   };
-  return <Context.Provider value={{ state, role, config, loading, error, petId, setPetId, refresh, command }}>{children}</Context.Provider>;
+  const selectPet = (id: string) => {
+    setPetId(id);
+    const uid = auth.currentUser?.uid;
+    if (uid) { try { localStorage.setItem(selectedPetKey(uid), id); } catch { /* Selection remains active for this visit. */ } }
+  };
+  return <Context.Provider value={{ state, role, config, loading, error, petId, setPetId: selectPet, refresh, command }}>{children}</Context.Provider>;
 }
 export function useCare() { const value = useContext(Context); if (!value) throw new Error('CareProvider is required'); return value; }

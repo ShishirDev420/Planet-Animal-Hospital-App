@@ -10,6 +10,7 @@ import { useTimeOfDay, type TimePeriod, PERIOD_DISPLAY } from '../hooks/useTimeO
 import { useCheckInStatus } from '../hooks/useCheckInStatus';
 import { cn } from '../lib/utils';
 import { isPreviewDemoMode } from '../lib/demoMode';
+import { useCare } from '../lib/care/client';
 
 const PERIOD_ORDER: TimePeriod[] = ['morning', 'afternoon', 'evening'];
 
@@ -264,12 +265,14 @@ function PeriodSelector({ activePeriod, completedPeriods, onPeriodClick }: { act
 export default function DailyBriefing() {
   const navigate = useNavigate();
   const location = useLocation();
+  const care = useCare();
   const shouldReduceMotion = useReducedMotion();
   const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
   const { profile, loading: profileLoading } = usePetProfile();
   const { currentPeriod } = useTimeOfDay();
 
-  const uid = profile?.uid || profile?.parentName || 'demo';
+  const owner = profile?.uid || profile?.parentName || 'demo';
+  const uid = care.petId === 'primary' ? owner : `${owner}:${care.petId}`;
   const {
     completedPeriods,
     completePeriod,
@@ -286,7 +289,7 @@ export default function DailyBriefing() {
   const [awardNotice, setAwardNotice] = useState<string | null>(null);
   const [careOpen, setCareOpen] = useState(false);
 
-  const petName = profile?.petName || 'Your pet';
+  const petName = care.state?.pets.find(pet => pet.id === care.petId)?.name || profile?.petName || 'Your pet';
   const display = PERIOD_DISPLAY[activePeriod];
   const visual = periodVisuals[activePeriod];
   const Icon = visual.Icon;
@@ -294,7 +297,7 @@ export default function DailyBriefing() {
   const nextIncompleteAfterActive = PERIOD_ORDER.slice(PERIOD_ORDER.indexOf(activePeriod) + 1).find((period) => !completedPeriods.includes(period));
 
   const parsedBriefing = useMemo(() => parseBriefing(message || '', activePeriod, petName), [message, activePeriod, petName]);
-  const petMeta = useMemo(() => [profile?.breed, profile?.age, profile?.weight].filter(Boolean).join(' • '), [profile?.breed, profile?.age, profile?.weight]);
+  const petMeta = useMemo(() => care.petId === 'primary' ? [profile?.breed, profile?.age, profile?.weight].filter(Boolean).join(' • ') : '', [care.petId, profile?.breed, profile?.age, profile?.weight]);
   const today = useMemo(() => new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }), []);
 
   const handleBackHome = () => {
@@ -314,6 +317,40 @@ export default function DailyBriefing() {
       setAwardNotice(null);
     }, 760);
   };
+
+  const hasApprovedStep = care.state?.milestones.some(milestone => milestone.petId === care.petId && milestone.status === 'approved');
+  if (!care.loading && care.state && !hasApprovedStep) {
+    return <main className="min-h-full bg-[#071912] px-5 pb-32 pt-6 text-white">
+      <div className="mx-auto max-w-2xl">
+        <button type="button" onClick={handleBackHome} className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#fec708]"><ArrowLeft size={17}/> Back to home</button>
+        <div className="rounded-[2rem] border border-[#fec708]/20 bg-[radial-gradient(circle_at_100%_0%,rgba(254,199,8,.11),transparent_40%),linear-gradient(135deg,#173325,#0b1c13)] p-7 sm:p-10">
+          <p className="cinematic-kicker">{petName}'s daily care</p>
+          <h1 className="cinematic-section-title mt-4 text-4xl leading-tight">A clear next step starts with the care team.</h1>
+          <p className="mt-4 max-w-lg text-base leading-7 text-white/75">There is no veterinarian-approved next step recorded for {petName} yet. You can request a visit or check the care space for records and follow-up.</p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <button type="button" onClick={() => navigate({pathname:'/',search:`${location.search ? location.search + '&' : '?'}openBooking=true`})} className="min-h-12 rounded-xl bg-[#fec708] px-5 font-bold text-[#071912] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Request a visit</button>
+            <button type="button" onClick={() => navigate({pathname:'/roadmap',search:location.search})} className="min-h-12 rounded-xl border border-white/20 px-5 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fec708]">Open care space</button>
+          </div>
+          <p className="mt-6 text-xs leading-5 text-white/60">The hospital confirms appointments and care instructions. No treatment or points are recorded by opening this page.</p>
+        </div>
+      </div>
+    </main>;
+  }
+
+  if (!care.loading && !care.state) {
+    return <main className="min-h-full bg-[#071912] px-5 pb-32 pt-6 text-white">
+      <div className="mx-auto max-w-2xl">
+        <button type="button" onClick={handleBackHome} className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80"><ArrowLeft size={17}/> Back to home</button>
+        <div role="status" className="rounded-[2rem] border border-[#fec708]/20 bg-[#10251a] p-7 sm:p-10">
+          <p className="cinematic-kicker">Daily care</p>
+          <h1 className="cinematic-section-title mt-4 text-4xl leading-tight">Recorded care is unavailable.</h1>
+          <p className="mt-4 max-w-lg text-base leading-7 text-white/75">We cannot show a verified next step for {petName} right now. Please try again or contact the hospital directly for care instructions.</p>
+          {!isDemoMode && <button type="button" onClick={() => void care.refresh()} className="mt-7 min-h-12 rounded-xl bg-[#fec708] px-5 font-bold text-[#071912]">Try again</button>}
+          {isDemoMode && <p className="mt-5 text-sm text-white/60">This preview does not include signed-in care records.</p>}
+        </div>
+      </div>
+    </main>;
+  }
 
   return (
     <motion.div

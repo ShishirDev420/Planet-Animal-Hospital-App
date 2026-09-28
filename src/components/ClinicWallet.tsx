@@ -87,7 +87,7 @@ function WalletSession({ ownerUid, staff }: { ownerUid?: string; staff: boolean 
       </div>
 
       <div className="wallet-journey-panel"><div className="wallet-section-head"><span className="wallet-eyebrow">Your next chapter</span><h2>Reward journey</h2><p>{active ? 'Only clinic approved discounts appear here.' : 'Your points are saved while the clinic finalizes discount levels.'}</p></div><RewardClimb points={available} policy={data.redemptionPolicy} paused={wallet?.reconciliationRequired}/></div>
-      {!wallet?.legacyReconciled && <div className="wallet-callout">Previous profile points: {data.legacyPoints === null ? 'not recorded' : `${data.legacyPoints.toLocaleString('en-IN')} awaiting a clinic check`}. They are separate from the available balance above.</div>}
+      {!wallet?.legacyReconciled && Number.isFinite(data.legacyPoints) && data.legacyPoints > 0 && <div className="wallet-callout">Previous profile points: {data.legacyPoints.toLocaleString('en-IN')} awaiting a clinic check. They are separate from the available balance above.</div>}
       {wallet?.reconciliationRequired && <div className="wallet-callout" role="alert">The clinic needs to check a refunded reward. New discounts are paused until that review is complete.</div>}
 
       <div className="wallet-activity-panel"><div className="wallet-section-head"><span className="wallet-eyebrow">Your record</span><h2>Recent activity</h2><p>Verified wallet changes appear here.</p></div>

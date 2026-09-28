@@ -11,9 +11,7 @@ import {
 import { cn } from '../lib/utils';
 import Logo from '../components/Logo';
 import LogoutModal from '../components/LogoutModal';
-import DualAvatar from '../components/DualAvatar';
 import PlanetOrbLoader from '../components/PlanetOrbLoader';
-import { useProfileImages } from '../hooks/useProfileImages';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { usePawlMessage } from '../hooks/usePawlMessage';
 import { useTimeOfDay, PERIOD_DISPLAY } from '../hooks/useTimeOfDay';
@@ -182,23 +180,26 @@ export default function Dashboard() {
   const location = useLocation();
   const isDemoMode = isPreviewDemoMode(location.search, location.pathname);
   const { profile: realPetProfile, loading: realProfileLoading, error: profileError } = usePetProfile();
+  const care = useCare();
 
   const petProfile = useMemo(() => realPetProfile, [realPetProfile]);
 
   const profileLoading = useMemo(() => isDemoMode ? false : realProfileLoading, [isDemoMode, realProfileLoading]);
+  const bookingServices = useMemo(() => care.petId === 'primary' && String(realPetProfile?.petType || '').toLowerCase() === 'dog'
+    ? BOOKING_SERVICES
+    : BOOKING_SERVICES.filter(service => service.id !== 4 && service.id !== 5), [care.petId, realPetProfile?.petType]);
 
   const { message: pawlMessage, loading: pawlLoading, error: pawlError } = usePawlMessage(petProfile, profileLoading);
   const { currentPeriod } = useTimeOfDay();
+  const checkInOwner = realPetProfile?.uid || realPetProfile?.parentName || 'demo';
   const { completedCount, totalPeriods, isPeriodComplete } = useCheckInStatus(
-    realPetProfile?.uid || realPetProfile?.parentName || 'demo',
+    care.petId === 'primary' ? checkInOwner : `${checkInOwner}:${care.petId}`,
     currentPeriod
   );
   const [isAuthReady, setIsAuthReady] = useState(isDemoMode);
   const [userId, setUserId] = useState<string | null>(isDemoMode ? 'demo-user' : null);
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
-  const { userImage: harshalImage, petImage: johnnyImage } = useProfileImages();
-  const care = useCare();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
 
@@ -237,7 +238,7 @@ export default function Dashboard() {
 
     const serviceQuery = params.get('service')?.toLowerCase();
     if (serviceQuery) {
-      const suggestedService = BOOKING_SERVICES.find((service) => service.name.toLowerCase().includes(serviceQuery));
+      const suggestedService = bookingServices.find((service) => service.name.toLowerCase().includes(serviceQuery));
       if (suggestedService) {
         setSelectedServices([suggestedService]);
         setBookingStep('date');
@@ -254,7 +255,7 @@ export default function Dashboard() {
       setBookingTime(time);
       setBookingStep('confirm');
     }
-  }, [location.search]);
+  }, [location.search, bookingServices]);
 
   useEffect(() => {
     if (!isBookVisitOpen) return;
@@ -294,7 +295,7 @@ export default function Dashboard() {
   };
 
   const parentName = petProfile?.parentName || "Pet Parent";
-  const petName = care.state?.pets.find(pet => pet.id === bookingPetId)?.name || petProfile?.name || 'Pet';
+  const petName = care.state?.pets.find(pet => pet.id === (bookingPetId || care.petId))?.name || petProfile?.name || 'Pet';
   const parentPhone = petProfile?.phone || '';
   const briefingPreview = getBriefingPreview(pawlMessage, pawlLoading, petName);
   const whatsappMessage = `Hello Planet Animal Hospital, I am ${parentName}, ${petName}'s parent.\n\nI would like to request: ${selectedServices.map(s => s.name).join(', ')}.\nPreferred date: ${bookingDate}\nPreferred time: ${bookingTime} (India time)\n\nPlease confirm availability, charges and any preparation needed. Thank you!`;
@@ -368,7 +369,10 @@ export default function Dashboard() {
         ? !isFutureBookingTime(bookingTime)
         : !bookingReady || (trackBooking && !bookingPetId);
 
-  if (profileLoading || !isAuthReady || (!isDemoMode && !petProfile)) {
+  if (!profileLoading && isAuthReady && !isDemoMode && !petProfile) {
+    return <main className="flex min-h-[70dvh] items-center justify-center px-5 text-white"><section className="max-w-md rounded-[2rem] border border-white/15 bg-[#10251a] p-7"><Logo className="h-14 w-14"/><h1 className="cinematic-section-title mt-5 text-2xl">Your saved profile is unavailable.</h1><p className="mt-3 text-sm leading-6 text-white/70">We could not show your pet's care space. No record has been changed.</p><button type="button" className="mt-5 min-h-11 rounded-xl bg-[#fec708] px-5 font-bold text-[#071912]" onClick={() => window.location.reload()}>Try again</button>{profileError && <p role="status" className="mt-3 text-xs text-white/60">If this continues, contact the hospital to check your account access.</p>}</section></main>;
+  }
+  if (profileLoading || !isAuthReady) {
     return (
       <PlanetOrbLoader
         label="Planet Animal Hospital"
@@ -471,7 +475,7 @@ export default function Dashboard() {
               {briefingNeedsAttention && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-[#fec708]/20 bg-[#fec708]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[#fec708]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#fec708] shadow-[0_0_10px_rgba(254,199,8,0.8)]" />
-                  Due
+                  Unread
                 </span>
               )}
             </div>
@@ -595,7 +599,7 @@ export default function Dashboard() {
                       </div>
 
                       <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2.5 overflow-y-auto overscroll-contain hide-scrollbar">
-                        {BOOKING_SERVICES.map((service) => {
+                        {bookingServices.map((service) => {
                           const isSelected = selectedServices.some(s => s.id === service.id);
                           const ServiceIcon = service.icon;
                           return (
