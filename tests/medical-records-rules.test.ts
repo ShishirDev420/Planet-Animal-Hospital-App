@@ -16,9 +16,14 @@ test('new parent profiles start at zero; historical points cannot be self-grante
     await environment.clearFirestore();
     const owner = environment.authenticatedContext('new-parent').firestore();
     const bonusOwner = environment.authenticatedContext('bonus-parent').firestore();
+    const staff = environment.authenticatedContext('clinic-coordinator', { clinicId: 'planet-animal', clinicRole: 'coordinator' }).firestore();
+    const anonymous = environment.unauthenticatedContext().firestore();
     const profile = { uid: 'new-parent', email: 'new-parent@example.test', petName: 'Pending', pawPoints: 0, currentPlan: 'free', createdAt: serverTimestamp() };
     await assertSucceeds(setDoc(doc(owner, 'users/new-parent'), profile));
     assert.equal((await getDoc(doc(owner, 'users/new-parent'))).data()?.pawPoints, 0);
+    await assertSucceeds(getDocs(collection(staff, 'users')));
+    await assertFails(getDoc(doc(anonymous, 'users/new-parent')));
+    await assertFails(getDocs(collection(anonymous, 'users')));
     await assertFails(setDoc(doc(owner, 'users/another-parent'), { ...profile, uid: 'another-parent' }));
     await assertFails(setDoc(doc(bonusOwner, 'users/bonus-parent'), { ...profile, uid: 'bonus-parent', pawPoints: 500 }));
     await assertFails(setDoc(doc(owner, 'users/new-parent'), { ...profile, pawPoints: 500 }));
