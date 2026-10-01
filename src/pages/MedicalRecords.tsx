@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { usePetProfile } from '../hooks/usePetProfile';
 import { auth } from '../lib/firebase';
+import { isPreviewDemoMode } from '../lib/demoMode';
 import { getRecords, createRecord, updateRecord, uploadRecordFile } from '../lib/medicalRecords';
 import { generateRecordPDF } from '../lib/pdfGenerator';
 import type { MedicalRecord, MedicalRecordInput, MedicalRecordType } from '../lib/medicalRecords';
@@ -42,7 +43,8 @@ export default function MedicalRecords() {
   const primaryPetName = profile?.petName || profile?.name || 'Your Pet';
   const petName = care.state?.pets.find(p => p.id === care.petId)?.name || primaryPetName;
   const isPrimaryPet = care.petId === 'primary';
-  const userId = auth.currentUser?.uid || profile?.uid || '';
+  const visualDemo = isPreviewDemoMode();
+  const userId = visualDemo ? '' : auth.currentUser?.uid || '';
 
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,8 @@ export default function MedicalRecords() {
     const fetchId = ++latestFetch.current;
     setLoading(true);
     setLoadError(false);
+    setRecords([]);
+    if (!isPrimaryPet) { setLoading(false); return; }
     if (!userId) {
       setRecords([]);
       setLoadError(true);
@@ -77,14 +81,18 @@ export default function MedicalRecords() {
     } finally {
       if (fetchId === latestFetch.current) setLoading(false);
     }
-  }, [userId, filter]);
+  }, [userId, filter, isPrimaryPet]);
 
   useEffect(() => {
+    setSelectedRecord(null);
+    setEditingRecord(null);
+    setShowAdd(false);
     if (!profileLoading) fetchRecords();
+    return () => { latestFetch.current++; };
   }, [fetchRecords, profileLoading]);
 
   const handleSave = async (input: MedicalRecordInput) => {
-    if (!userId) throw new Error('Sign in to save medical records.');
+    if (!userId || !isPrimaryPet || visualDemo) throw new Error('Sign in to save medical records.');
     if (editingRecord) {
       await updateRecord(userId, editingRecord.id, {
         title: input.title,

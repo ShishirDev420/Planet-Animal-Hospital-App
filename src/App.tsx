@@ -86,9 +86,17 @@ export default function App() {
       unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (cancelled) return;
         const request = ++authGeneration;
+        if (loadingTimeout) window.clearTimeout(loadingTimeout);
         if (user) {
+          setAuthStatus('loading');
+          loadingTimeout = window.setTimeout(() => {
+            if (!cancelled && request === authGeneration) setAuthStatus('profile-sync-error');
+          }, 20000);
           const nextStatus = await fetchUserDocWithRetry(user.uid);
-          if (!cancelled && request === authGeneration && auth.currentUser?.uid === user.uid) setAuthStatus(nextStatus);
+          if (!cancelled && request === authGeneration && auth.currentUser?.uid === user.uid) {
+            if (loadingTimeout) window.clearTimeout(loadingTimeout);
+            setAuthStatus(nextStatus);
+          }
         } else {
           setAuthStatus('unauthenticated');
         }

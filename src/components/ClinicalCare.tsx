@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { auth } from '../lib/firebase';
+import { assertLiveCareAccess } from '../lib/demoMode';
 import { useCare } from '../lib/care/client';
 import { requestCareJson } from '../lib/care/request';
 import { ANALYSIS_DEPTH, EMPTY_DETAILS, approvedAnalysisText, type ClinicalAnalysis, type ClinicalEvidence, type ClinicalContent, type ClinicalTier, type PetDetails } from '../lib/care/clinical';
@@ -9,6 +10,7 @@ import type { CareState } from '../lib/care/domain';
 const input = 'w-full min-w-0 rounded-xl border border-white/20 bg-black/30 p-3 text-sm text-white';
 const button = 'rounded-xl bg-planet-yellow px-4 py-3 text-sm font-semibold text-black disabled:opacity-40';
 export async function clinicalRequest(ownerUid: string, petId: string, body?: Record<string,unknown>) {
+  assertLiveCareAccess();
   const user = auth.currentUser; if (!user) throw new Error('Sign in to view pet care.');
   const data = await requestCareJson(`/api/clinical?ownerUid=${encodeURIComponent(ownerUid)}&petId=${encodeURIComponent(petId)}`, {method:body?'POST':'GET',headers:{Authorization:`Bearer ${await user.getIdToken()}`,'Content-Type':'application/json'},...(body?{body:JSON.stringify({...body,ownerUid,petId})}:{})},{timeoutMs:55000});
   if (auth.currentUser?.uid !== user.uid) throw new Error('Account changed. Reopen this care record.');

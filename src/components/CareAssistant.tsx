@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, MessageCircleMore, Send, Sparkles } from 'lucide-react';
 import { auth } from '../lib/firebase';
+import { assertLiveCareAccess } from '../lib/demoMode';
 import { useCare } from '../lib/care/client';
 import { requestCareJson } from '../lib/care/request';
 import { EDUCATION, type AssistantDraft } from '../lib/care/assistant';
 
 type Allowance = { dailyRemaining: number; dailyLimit: number; monthlyRemaining: number; monthlyLimit: number };
 export async function assistantRequest(body?: Record<string, unknown>) {
+  assertLiveCareAccess();
   const user = auth.currentUser;
   if (!user) throw new Error('Sign in to use your free requests.');
   const data = await requestCareJson('/api/assistant', { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${await user.getIdToken()}`, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) }, { timeoutMs: 35000 });

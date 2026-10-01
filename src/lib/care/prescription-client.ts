@@ -1,5 +1,7 @@
 import { auth } from '../firebase';
+import { assertLiveCareAccess } from '../demoMode';
 export async function prescriptionRequest(body?: Record<string,unknown>, query='', progress?: (n:number)=>void): Promise<any> {
+  assertLiveCareAccess();
   const user=auth.currentUser;if(!user)throw new Error('Sign in to use private prescriptions.');
   const token=await user.getIdToken();
   return new Promise((resolve,reject)=>{
@@ -17,6 +19,7 @@ export async function prescriptionRequest(body?: Record<string,unknown>, query='
   });
 }
 export async function prescriptionSource(id:string,ownerUid:string) {
+  assertLiveCareAccess();
   const user=auth.currentUser;if(!user)throw new Error('Sign in to view this source.');
   const response=await fetch(`/api/prescriptions?id=${encodeURIComponent(id)}&ownerUid=${encodeURIComponent(ownerUid)}`,{headers:{Authorization:`Bearer ${await user.getIdToken()}`}});
   if(!response.ok)throw new Error('Source unavailable or expired.');

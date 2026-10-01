@@ -50,6 +50,7 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   const [authError, setAuthError] = useState('');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
   const [socialChoice, setSocialChoice] = useState<SocialProvider>('google');
   const [isSignUp, setIsSignUp] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
@@ -209,21 +210,26 @@ export default function Welcome({ initialOnboarding = false, onComplete }: { ini
   };
 
   const handleForgotPassword = async () => {
-    if (!email) {
+    if (isResetLoading) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
       setAuthError('Please enter your email to reset password.');
       return;
     }
+    setIsResetLoading(true);
     try {
       setAuthError('');
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, cleanEmail);
       alert('Password reset email sent! Please check your inbox.');
     } catch (e: any) {
       console.error('Password reset failed', e);
       setAuthError(getAuthErrorMessage(e));
+    } finally {
+      setIsResetLoading(false);
     }
   };
 
-  const busy = isEmailLoading || isGoogleLoading;
+  const busy = isEmailLoading || isGoogleLoading || isResetLoading;
   const setters = { parentName: setParentName, petName: setPetName, petType: setPetType, breed: setBreed, age: setAge, gender: setGender, weight: setWeight, phone: setPhone, additionalDetails: setAdditionalDetails };
   return <main className="onboarding-shell"><div className="onboarding-wrap">
     <header className="onboarding-brand"><span className="onboarding-brand-mark"><Logo size="sm" /></span><p><strong>Planet Animal</strong>Hospital &amp; Wellness</p></header>

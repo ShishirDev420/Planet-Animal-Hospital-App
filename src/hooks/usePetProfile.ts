@@ -97,7 +97,12 @@ export function usePetProfile() {
     }
 
     let unsubscribeSnapshot: (() => void) | null = null;
+    let generation = 0;
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      const request = ++generation;
+      setProfile(null);
+      setError(null);
+      setLoading(Boolean(user));
       if (unsubscribeSnapshot) {
         unsubscribeSnapshot();
         unsubscribeSnapshot = null;
@@ -105,6 +110,7 @@ export function usePetProfile() {
       if (user) {
         const docRef = doc(db, 'users', user.uid);
         unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+          if (request !== generation) return;
           if (docSnap.exists()) {
             setProfile(normalizeProfile(docSnap.data()));
             setError(null);
@@ -113,6 +119,7 @@ export function usePetProfile() {
           }
           setLoading(false);
         }, (err) => {
+          if (request !== generation) return;
           console.error('onSnapshot error in usePetProfile:', err);
           setProfile(null);
           setError(err);
@@ -125,6 +132,7 @@ export function usePetProfile() {
     });
 
     return () => {
+      generation++;
       unsubscribeAuth();
       if (unsubscribeSnapshot) unsubscribeSnapshot();
     };

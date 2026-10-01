@@ -4,9 +4,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
 import type { CareState, PilotConfig, Role } from './domain';
 import { useLocation } from 'react-router-dom';
-import { isPreviewDemoMode } from '../demoMode';
+import { isPreviewDemoMode, assertLiveCareAccess } from '../demoMode';
 
 export async function careRequest(body?: Record<string, unknown>, query = '') {
+  assertLiveCareAccess();
   const user = auth.currentUser;
   if (!user) throw new Error('Sign in to view your recorded care.');
   const data = await requestCareJson(`/api/care${query}`, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${await user.getIdToken()}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
@@ -44,7 +45,9 @@ export function CareProvider({ children }: { children: ReactNode }) {
     if (visualDemo) throw new Error('Visual previews cannot change patient care records.');
     const g = generation.current; const uid = auth.currentUser?.uid;
     const data = await careRequest({ ...body, petId: body.petId || petId });
-    if (g === generation.current && uid === auth.currentUser?.uid) { seq.current++; accept(data); }
+    if (g !== generation.current || uid !== auth.currentUser?.uid) throw new Error('Account changed. Reopen the care record.');
+    // A save supersedes an older refresh, including its loading state.
+    seq.current++; accept(data); setLoading(false);
   };
   const selectPet = (id: string) => {
     setPetId(id);
