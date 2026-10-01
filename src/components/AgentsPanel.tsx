@@ -141,13 +141,13 @@ export default function AgentsPanel() {
 
   return (
     <section className="agents-page relative min-h-full overflow-hidden px-4 pb-32 pt-8 text-white sm:px-6 lg:px-0 lg:pb-16">
-      <div className="pointer-events-none absolute inset-0 -z-10">
+      <div className="agents-ambience" aria-hidden="true">
         <motion.div
           key={activeAgent.id}
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: reduceMotion ? 0 : 0.35 }}
-          className="absolute inset-x-[-20%] top-[-28%] h-[520px] blur-3xl"
+          className="agents-ambience-color"
           style={{ background: activeAgent.theme.mesh }}
         />
         <div className="absolute inset-0 neural-mesh-grid opacity-[0.08]" />

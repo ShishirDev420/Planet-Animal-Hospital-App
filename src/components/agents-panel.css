@@ -36,3 +36,7 @@
 @media(max-width:800px){.agents-heading h1{font-size:2.45rem}.agent-choice{flex-direction:column;align-items:flex-start;gap:.45rem;min-height:7.8rem;padding:.65rem}.agent-choice-copy strong{font-size:1rem}.agent-choice-copy small{font-size:.61rem}.agent-choice-check{right:.5rem;top:.5rem}.agent-focus{grid-template-columns:1fr;gap:.7rem}.agent-focus-action{grid-column:1;grid-row:auto;justify-self:start;margin-top:.35rem}.agent-focus:after{right:-9rem}.agents-disclosure>.ai-chat{padding:0 .7rem .7rem}}
 @media(max-width:360px){.agents-choices{gap:.45rem}.agent-choice{padding:.5rem}.agent-choice-copy strong{font-size:.92rem}.agent-choice-copy small{font-size:.57rem}}
 @media(prefers-reduced-motion:reduce){.agent-choice,.agent-choice:before,.agent-focus-action,.agents-disclosure summary svg{transition:none}.agent-choice:hover,.agent-focus-action:hover{transform:none}}
+.agents-page{isolation:isolate}
+/* Fade the decoration itself; foreground cards and avatars stay crisp. */
+.agents-ambience{position:absolute;inset:0 0 auto;height:680px;max-height:100%;z-index:-1;pointer-events:none;mask-image:radial-gradient(ellipse closest-side at 50% 50%,#000 12%,#0009 45%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse closest-side at 50% 50%,#000 12%,#0009 45%,transparent 100%)}
+.agents-ambience-color{position:absolute;inset:0;filter:blur(40px)}

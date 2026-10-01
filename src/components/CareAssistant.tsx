@@ -5,6 +5,7 @@ import { assertLiveCareAccess } from '../lib/demoMode';
 import { useCare } from '../lib/care/client';
 import { requestCareJson } from '../lib/care/request';
 import { EDUCATION, type AssistantDraft } from '../lib/care/assistant';
+import './care-assistant.css';
 
 type Allowance = { dailyRemaining: number; dailyLimit: number; monthlyRemaining: number; monthlyLimit: number };
 export async function assistantRequest(body?: Record<string, unknown>) {
